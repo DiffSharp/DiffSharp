@@ -1,6 +1,6 @@
 
 
-#I "../tests/DiffSharp.Tests/bin/Debug/netcoreapp3.1"
+#I "../tests/DiffSharp.Tests/bin/Debug/net5.0"
 #r "DiffSharp.Core.dll"
 #r "DiffSharp.Backends.Reference.dll"
 #r "DiffSharp.Backends.Torch.dll"

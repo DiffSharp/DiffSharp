@@ -1,6 +1,7 @@
 ﻿(*** condition: prepare ***)
-#I "../tests/DiffSharp.Tests/bin/Debug/netcoreapp3.1"
+#I "../tests/DiffSharp.Tests/bin/Debug/net5.0"
 #r "DiffSharp.Core.dll"
+#r "DiffSharp.Data.dll"
 #r "DiffSharp.Backends.Torch.dll"
 (*** condition: fsx ***)
 #if FSX
@@ -14,20 +15,20 @@
 (*** condition: fsx ***)
 #if FSX
 // This is a workaround for https://github.com/dotnet/fsharp/issues/10136, necessary in F# scripts and .NET Interactive
-// Make sure to update the parts of the native load path related to version number ([cpu](https://www.nuget.org/packages/libtorch-cpu/),[gpu](https://www.nuget.org/packages/libtorch-cuda-10.2-win-x64/) and cpu/gpu depending on your backend choice.
-System.Runtime.InteropServices.NativeLibrary.Load(let path1 = System.IO.Path.GetDirectoryName(typeof<DiffSharp.dsharp>.Assembly.Location) in if System.Runtime.InteropServices.RuntimeInformation.IsOSPlatform(System.Runtime.InteropServices.OSPlatform.Linux) then path1 + "/../../../../libtorch-cpu/1.7.0.1/runtimes/linux-x64/native/libtorch.so" else path1 + "/../../../../libtorch-cpu/1.7.0.1/runtimes/win-x64/native/torch_cpu.dll")
+// Make sure to update the parts of the native load path related to version number ([cpu](https://www.nuget.org/packages/libtorch-cpu/),[gpu](https://www.nuget.org/packages/libtorch-cuda-11.1-win-x64/) and cpu/gpu depending on your backend choice.
+System.Runtime.InteropServices.NativeLibrary.Load(let path1 = System.IO.Path.GetDirectoryName(typeof<DiffSharp.dsharp>.Assembly.Location) in if System.Runtime.InteropServices.RuntimeInformation.IsOSPlatform(System.Runtime.InteropServices.OSPlatform.Linux) then path1 + "/../../../../libtorch-cpu/1.8.0.7/runtimes/linux-x64/native/libtorch.so" else path1 + "/../../../../libtorch-cpu/1.8.0.7/runtimes/win-x64/native/torch_cpu.dll")
 #r "nuget: DiffSharp-cpu,{{fsdocs-package-version}}"
 #endif // FSX
 
 (*** condition: ipynb ***)
 #if IPYNB
 // This is a workaround for https://github.com/dotnet/fsharp/issues/10136, necessary in F# scripts and .NET Interactive
-// Make sure to update the parts of the native load path related to version number ([cpu](https://www.nuget.org/packages/libtorch-cpu/),[gpu](https://www.nuget.org/packages/libtorch-cuda-10.2-win-x64/) and cpu/gpu depending on your backend choice.
-System.Runtime.InteropServices.NativeLibrary.Load(let path1 = System.IO.Path.GetDirectoryName(typeof<DiffSharp.dsharp>.Assembly.Location) in if System.Runtime.InteropServices.RuntimeInformation.IsOSPlatform(System.Runtime.InteropServices.OSPlatform.Linux) then path1 + "/../../../../libtorch-cpu/1.7.0.1/runtimes/linux-x64/native/libtorch.so" else path1 + "/../../../../libtorch-cpu/1.7.0.1/runtimes/win-x64/native/torch_cpu.dll")
+// Make sure to update the parts of the native load path related to version number ([cpu](https://www.nuget.org/packages/libtorch-cpu/),[gpu](https://www.nuget.org/packages/libtorch-cuda-11.1-win-x64/) and cpu/gpu depending on your backend choice.
+System.Runtime.InteropServices.NativeLibrary.Load(let path1 = System.IO.Path.GetDirectoryName(typeof<DiffSharp.dsharp>.Assembly.Location) in if System.Runtime.InteropServices.RuntimeInformation.IsOSPlatform(System.Runtime.InteropServices.OSPlatform.Linux) then path1 + "/../../../../libtorch-cpu/1.8.0.7/runtimes/linux-x64/native/libtorch.so" else path1 + "/../../../../libtorch-cpu/1.8.0.7/runtimes/win-x64/native/torch_cpu.dll")
 
 // Set up formatting for notebooks
 Formatter.SetPreferredMimeTypeFor(typeof<obj>, "text/plain")
-Formatter.Register(fun (x:obj) (writer: TextWriter) -> fprintfn writer "%120A" x )
+Formatter.Register(fun x writer -> fprintfn writer "%120A" x )
 #endif // IPYNB
 
 (**
@@ -58,7 +59,6 @@ Now examine the device and backend:
 let device = t.device
 let backend = t.backend
 
-(*** include-fsi-output ***)
 (** 
 
 To move a tensor to the GPU use the following:
