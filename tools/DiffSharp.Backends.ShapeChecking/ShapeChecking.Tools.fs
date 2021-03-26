@@ -63,7 +63,7 @@ module Tools =
                 | Some (obj, _) -> obj
                 | None ->  box p
 
-            let res = pty.GetType().InvokeMember("ParseSymbolic", BindingFlags.Static ||| BindingFlags.Public ||| BindingFlags.NonPublic ||| BindingFlags.InvokeMethod,null, null, [| box env; box (syms :> ISymScope); box spec; box loc |])
+            let res = pty.InvokeMember("ParseSymbolic", BindingFlags.Static ||| BindingFlags.Public ||| BindingFlags.NonPublic ||| BindingFlags.InvokeMethod,null, null, [| box env; box (syms :> ISymScope); box spec; box loc |])
             res
 
         let getSampleArg (givenArgInfo: (obj * SourceLocation) option) (p: ParameterInfo) (dflt: 'T) loc : 'T =
@@ -83,7 +83,7 @@ module Tools =
         member _.GetArg optionals givenArgInfo (p: ParameterInfo) loc : obj * Diagnostic[] =
             let pty = p.ParameterType
             let pts = pty.ToString()
-            if p.GetCustomAttributes<SymbolicAttribute>() |> Seq.length > 0 then
+            if pty.GetCustomAttributes<SymbolicAttribute>() |> Seq.length > 0 then
                 getSymbolicArg givenArgInfo p loc |> box, [||]
             elif pts = "DiffSharp.ShapeChecking.ISymScope" || pts = "DiffSharp.ShapeChecking.SymScope" then
                 syms |> box, [||]

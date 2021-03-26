@@ -33,7 +33,7 @@ Formatter.SetPreferredMimeTypeFor(typeof<obj>, "text/plain")
 Formatter.Register(fun (x:obj) (writer: TextWriter) -> fprintfn writer "%120A" x )
 #endif // IPYNB
 
-#compilertool @"e:\GitHub\dsyme\FSharp.Compiler.PortaCode\FSharp.Tools.LiveChecks.Analyzer\bin\Debug\netstandard2.0"
+#compilertool @"e:\GitHub\dsyme\FSharp.Compiler.PortaCode\FSharp.Tools.LiveChecks.Analyzer\bin\Debug\netstandard2.0\publish"
 
 open System
 open DiffSharp
@@ -46,7 +46,7 @@ let Assert b = if not b then failwith "assertion constraint failed"
 
 [<ShapeCheck("N,M")>]
 let f (x: Tensor) = 
-   let res = x.transpose(0,1)
+   let res = dsharp.cat[x; x.transpose(0,1)]
    //let res = dsharp.cat[x;x;x;x] 
    res
 

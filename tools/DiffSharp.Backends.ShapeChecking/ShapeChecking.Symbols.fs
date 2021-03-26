@@ -6,6 +6,8 @@ open System.Collections.Generic
 open DiffSharp.ShapeChecking
 open Microsoft.Z3
 
+#nowarn "44"
+
 type SourceLocation = 
    { File: string
      StartLine: int 

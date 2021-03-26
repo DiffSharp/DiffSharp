@@ -2966,6 +2966,10 @@ type Tensor =
                 | _ -> push tt
         push [(value, t)]
 
+    static member ParseSymbolic(env: Map<string, ISym>, syms: ISymScope, spec: obj, location: obj) =
+        let shape = Shape.ParseSymbolic(env, syms, spec, location)
+        TensorC(RawTensor.Zeros(shape))
+
 and TensorOp =
     | AddTT of Tensor * Tensor
     | AddTTConst of Tensor
