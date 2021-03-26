@@ -34,8 +34,8 @@ To use a local build of FSharp.Formatting:
 
 Then:
 
-       ..\FSharp.Formatting\src\FSharp.Formatting.CommandTool\bin\Debug\netcoreapp3.1\fsdocs.exe watch 
-       ..\FSharp.Formatting\src\FSharp.Formatting.CommandTool\bin\Debug\netcoreapp3.1\fsdocs.exe build --clean --output ../DiffSharp-docs
+       ..\FSharp.Formatting\src\FSharp.Formatting.CommandTool\bin\Debug\net5.0\fsdocs.exe watch 
+       ..\FSharp.Formatting\src\FSharp.Formatting.CommandTool\bin\Debug\net5.0\fsdocs.exe build --clean --output ../DiffSharp-docs
 
 ## Generated Notebooks
 

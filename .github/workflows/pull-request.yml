@@ -25,4 +25,4 @@ jobs:
     - name: Test
       run: dotnet test --configuration Release --no-restore --verbosity normal
     - name: Run fsdocs
-      run: dotnet fsdocs build --eval --strict --property Configuration=Release
+      run: dotnet fsdocs build --eval --strict --properties Configuration=Release
