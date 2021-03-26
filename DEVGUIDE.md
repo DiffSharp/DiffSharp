@@ -48,9 +48,7 @@ To build, test and pack TorchSharp in that repo do this:
 
 You will see something like this
 
-    Packing LibTorch.Cuda.10.2.Redist nupkg (takes a long time!)...
     Successfully created package 'C:\GitHub\dsyme\TorchSharp\bin/packages/Debug/TorchSharp.0.3.0-local-Debug-20200520.nupkg'.
-    Successfully created package 'C:\GitHub\dsyme\TorchSharp\bin/packages/Debug/LibTorch.Cuda.10.2.Redist.0.3.0-local-Debug-20200520.nupkg'.
     Successfully created package 'C:\GitHub\dsyme\TorchSharp\bin/packages/Debug/LibTorch.Redist.0.3.0-local-Debug-20200520.nupkg'.
 
 with warning:
@@ -63,7 +61,6 @@ When rebuilding the TorchSharp you will need to clear your package cache to pick
 
     rmdir /q /s %USERPROFILE%\.nuget\packages\torchsharp
     rmdir /q /s %USERPROFILE%\.nuget\packages\LibTorch.Redist
-    rmdir /q /s %USERPROFILE%\.nuget\packages\LibTorch.Cuda.10.2.Redist
     dotnet restore
 
 The LibTorch packages are quite large and you may need to watch disk space.
@@ -79,7 +76,7 @@ over those cracks by working around the problems in the Torch backend.
 
 By default in-branch testing is only done on CPU.  To enable on GPU/CUDA you must:
 
-1. Make sure you have a device eligible for CUDA 10.2 and all device drivers installed (e.g. install the appropriate NVIDIA CUDA SDK)
+1. Make sure you have a device eligible for CUDA 11.1 and all device drivers installed (e.g. install the appropriate NVIDIA CUDA SDK)
 
 2. Manually enable Torch CUDA binaries in `DiffSharp.Tests.fsproj` or set the `DIFFSHARP_TESTGPU` environment variable to `true` (e.g. `dotnet test /p:DIFFSHARP_TESTGPU=true`)
 
