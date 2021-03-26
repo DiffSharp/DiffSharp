@@ -2,7 +2,6 @@
 
   <PropertyGroup>
     <TargetFramework>net5.0</TargetFramework>
-
     <IsPackable>false</IsPackable>
     <GenerateProgramFile>false</GenerateProgramFile>
     <PlatformTarget>x64</PlatformTarget>
@@ -49,11 +48,11 @@
 
   <!-- Choose the appropriate version of libtorch for our current OS and environment -->
   <ItemGroup Condition="'$(DIFFSHARP_TESTGPU)' == 'true' AND $([MSBuild]::IsOsPlatform(Linux))">
-    <PackageReference Include="libtorch-cuda-10.2-linux-x64" Version="$(LibTorchNugetVersion)" />
+    <PackageReference Include="libtorch-cuda-11.1-linux-x64" Version="$(LibTorchNugetVersion)" />
   </ItemGroup>
 
   <ItemGroup Condition="'$(DIFFSHARP_TESTGPU)' == 'true' AND $([MSBuild]::IsOsPlatform(Windows))">
-    <PackageReference Include="libtorch-cuda-10.2-win-x64" Version="$(LibTorchNugetVersion)" />
+    <PackageReference Include="libtorch-cuda-11.1-win-x64" Version="$(LibTorchNugetVersion)" />
   </ItemGroup>
 
   <ItemGroup Condition="'$(DIFFSHARP_TESTGPU)' != 'true'">
