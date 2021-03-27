@@ -901,7 +901,7 @@ type TestModel () =
         let m = VAE(xdim*xdim, zdim)
         let x = dsharp.stack(Array.init n (fun _ -> dsharp.eye(xdim)*dsharp.rand([xdim;xdim])))
 
-        let lr, steps = 1e-3, 50
+        let lr, steps = 1e-2, 50
         let optimizer = Adam(m, lr=dsharp.tensor(lr))
         let loss0 = float <| m.loss(x)
         let mutable loss = loss0
