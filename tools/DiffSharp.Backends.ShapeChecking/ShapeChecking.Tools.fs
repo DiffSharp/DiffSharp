@@ -54,10 +54,12 @@ module Tools =
           Message = err.Message
           LocationStack = Array.append [| loc |] stack }
 
+    let isOptionTy (pty: Type) = pty.IsGenericType && pty.GetGenericTypeDefinition().FullName = "Microsoft.FSharp.Core.FSharpOption`1" 
+    let isSymbolicTy (pty: Type) = pty.GetCustomAttributes<SymbolicAttribute>() |> Seq.length > 0
+
     type ParserLogic(env: Map<string, ISym>, syms: SymScope) =
 
-        let getSymbolicArg givenArgInfo (p: ParameterInfo) loc : obj =
-            let pty = p.ParameterType
+        let getSymbolicArg givenArgInfo (p: ParameterInfo) (pty: Type) loc : obj =
             let spec =
                 match givenArgInfo with 
                 | Some (obj, _) -> obj
@@ -82,41 +84,45 @@ module Tools =
 
         member _.GetArg optionals givenArgInfo (p: ParameterInfo) loc : obj * Diagnostic[] =
             let pty = p.ParameterType
-            let pts = pty.ToString()
             if pty.GetCustomAttributes<SymbolicAttribute>() |> Seq.length > 0 then
-                getSymbolicArg givenArgInfo p loc |> box, [||]
-            elif pts = "DiffSharp.ShapeChecking.ISymScope" || pts = "DiffSharp.ShapeChecking.SymScope" then
+                getSymbolicArg givenArgInfo p pty loc |> box, [||]
+            elif isSymbolicTy pty then
                 syms |> box, [||]
-            elif pts = "System.Int32" then 
+            elif pty = typeof<int32> then 
                 getSampleArg givenArgInfo p 1 loc |> box, [||]
-            elif pts = "System.Single" then 
+            elif pty = typeof<int64> then 
+                getSampleArg givenArgInfo p 1L loc |> box, [||]
+            elif pty = typeof<single> then 
                 getSampleArg givenArgInfo p 1.0f loc |> box, [||]
-            elif pts = "System.Double" then 
+            elif pty = typeof<double> then 
                 getSampleArg givenArgInfo p 1.0 loc |> box, [||]
-            elif pts = "System.Boolean" then 
+            elif pty = typeof<bool> then 
                 getSampleArg givenArgInfo p true loc |> box, [||]
-            elif pts = "System.String" then 
+            elif pty = typeof<string> then 
                 getSampleArg givenArgInfo p "" loc|> box, [||]
-            elif optionals && pty.IsGenericType && pty.GetGenericTypeDefinition().FullName = "Microsoft.FSharp.Core.FSharpOption`1" then 
-                getSymbolicArg givenArgInfo p loc |> Some |> box, [||]
-            elif optionals && pts = "Microsoft.FSharp.Core.FSharpOption`1[System.Boolean]" then 
-                getSampleArg givenArgInfo p true loc |> Some |> box, [||]
-            elif optionals && pts = "Microsoft.FSharp.Core.FSharpOption`1[System.Int32]" then 
-                getSampleArg givenArgInfo p 1 loc |> Some |> box, [||]
-            elif optionals && pts = "Microsoft.FSharp.Core.FSharpOption`1[System.Single]" then 
-                getSampleArg givenArgInfo p 1.0f loc |> Some |> box, [||]
-            elif optionals && pts = "Microsoft.FSharp.Core.FSharpOption`1[System.Double]" then 
-                getSampleArg givenArgInfo p 1.0 loc |> Some |> box, [||]
-            elif optionals && pts = "Microsoft.FSharp.Core.FSharpOption`1[System.String]" then 
-                getSampleArg givenArgInfo p "" loc |> Some |> box, [||]
-            elif pts.StartsWith("Microsoft.FSharp.Core.FSharpOption`1[") then 
-                let warns = 
-                    if optionals then 
-                        let msg = sprintf "Optional model parameter '%s' has unknown type '%O' for shape checking. A 'None' value will be assumed." p.Name p.ParameterType
-                        [| { Severity=1; LocationStack=[| loc |]; Message=msg; Number=1999 } |]
-                    else
-                        [| |]
-                null, warns
+            elif optionals && isOptionTy pty then
+                if isSymbolicTy pty.GenericTypeArguments.[0] then 
+                    getSymbolicArg givenArgInfo p pty loc |> Some |> box, [||]
+                elif pty.GenericTypeArguments.[0] = typeof<bool> then 
+                    getSampleArg givenArgInfo p true loc |> Some |> box, [||]
+                elif pty.GenericTypeArguments.[0] = typeof<int32> then 
+                    getSampleArg givenArgInfo p 1 loc |> Some |> box, [||]
+                elif pty.GenericTypeArguments.[0] = typeof<int64> then 
+                    getSampleArg givenArgInfo p 1L loc |> Some |> box, [||]
+                elif pty.GenericTypeArguments.[0] = typeof<single> then 
+                    getSampleArg givenArgInfo p 1.0f loc |> Some |> box, [||]
+                elif pty.GenericTypeArguments.[0] = typeof<double> then 
+                    getSampleArg givenArgInfo p 1.0 loc |> Some |> box, [||]
+                elif pty.GenericTypeArguments.[0] = typeof<string> then 
+                    getSampleArg givenArgInfo p "" loc |> Some |> box, [||]
+                else
+                    let warns = 
+                        if optionals then 
+                            let msg = sprintf "Optional model parameter '%s' has unknown type '%O' for shape checking. A 'None' value will be assumed." p.Name p.ParameterType
+                            [| { Severity=1; LocationStack=[| loc |]; Message=msg; Number=1999 } |]
+                        else
+                            [| |]
+                    null, warns
             else 
                 let msg = sprintf "Model parameter '%s' has unknown type '%O' for shape checking. A 'null' value will be assumed. Consider changing the type or extending the shape checking tools to understand this type of argument" p.Name p.ParameterType
                 null, [| { Severity=1; LocationStack=[| loc |]; Message=msg; Number=1999 } |]
