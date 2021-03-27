@@ -257,7 +257,7 @@ type Model() =
         m.forwardCompose (f target) input parameters
 
     /// <summary>TBD</summary>
-    override m.ToString() = sprintf "%s--nparameters:%A" (m.getString()) m.nparameters
+    override m.ToString() = sprintf "%s, nparameters:%A" (m.getString()) m.nparameters
 
     /// <summary>TBD</summary>
     static member create ps f =
