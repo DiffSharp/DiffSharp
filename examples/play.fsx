@@ -5,6 +5,8 @@
 #r "DiffSharp.Backends.Reference.dll"
 #r "DiffSharp.Backends.Torch.dll"
 
+#compilertool @"e:\GitHub\dsyme\FSharp.Compiler.PortaCode\FSharp.Tools.LiveChecks.Analyzer\bin\Debug\netstandard2.0\publish"
+
 open System
 open DiffSharp
 open DiffSharp.Model
@@ -20,7 +22,7 @@ let t = dsharp.tensor([1,2,3]).argmax(0)
 //let t = dsharp.tensor([[1,2,3],[4,5,6]], backend=Backend.Reference).argmax(1)
 //let t = dsharp.tensor([[1,2,3],[4,5,6]], backend=Backend.Torch).argmax(0)
 //let t = dsharp.tensor([[1,2,3],[4,5,6]]).argmax(2)
-let t = dsharp.tensor([[1.;4.];[2.;3.]]).argmax(0)
+//let t = dsharp.tensor([[1.;4.];[2.;3.]]).argmax(0)
 let t1 = dsharp.tensor([4.;1.;20.;3.])
 let t2 = dsharp.tensor([[1.;4.];[2.;3.]])
 let t3 = dsharp.tensor([[[ 7.6884; 65.9125;  4.0114];
@@ -36,4 +38,3 @@ let t3 = dsharp.tensor([[[ 7.6884; 65.9125;  4.0114];
                      [49.9120; 60.3023; 53.0838]]])
 t2.argmin(0, keepDim=true)
 t1.argmin(0)
-t2.argmax(2, keepDim=)

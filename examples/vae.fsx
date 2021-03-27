@@ -46,8 +46,8 @@ let Assert b = if not b then failwith "assertion constraint failed"
 
 [<ShapeCheck("N,M")>]
 let f (x: Tensor) = 
-   let res = dsharp.cat[x; x.transpose(0,1)]
-   //let res = dsharp.cat[x;x;x;x] 
+   //let res = dsharp.cat[x; x.transpose(0,1)]
+   let res = dsharp.cat[x;x;x;x;x] 
    res
 
 
