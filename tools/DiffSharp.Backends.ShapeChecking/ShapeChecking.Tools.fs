@@ -101,19 +101,20 @@ module Tools =
             elif pty = typeof<string> then 
                 getSampleArg givenArgInfo p "" loc|> box, [||]
             elif optionals && isOptionTy pty then
-                if isSymbolicTy pty.GenericTypeArguments.[0] then 
+                let pty = pty.GenericTypeArguments.[0]
+                if isSymbolicTy pty then 
                     getSymbolicArg givenArgInfo p pty loc |> Some |> box, [||]
-                elif pty.GenericTypeArguments.[0] = typeof<bool> then 
+                elif pty = typeof<bool> then 
                     getSampleArg givenArgInfo p true loc |> Some |> box, [||]
-                elif pty.GenericTypeArguments.[0] = typeof<int32> then 
+                elif pty = typeof<int32> then 
                     getSampleArg givenArgInfo p 1 loc |> Some |> box, [||]
-                elif pty.GenericTypeArguments.[0] = typeof<int64> then 
+                elif pty = typeof<int64> then 
                     getSampleArg givenArgInfo p 1L loc |> Some |> box, [||]
-                elif pty.GenericTypeArguments.[0] = typeof<single> then 
+                elif pty = typeof<single> then 
                     getSampleArg givenArgInfo p 1.0f loc |> Some |> box, [||]
-                elif pty.GenericTypeArguments.[0] = typeof<double> then 
+                elif pty = typeof<double> then 
                     getSampleArg givenArgInfo p 1.0 loc |> Some |> box, [||]
-                elif pty.GenericTypeArguments.[0] = typeof<string> then 
+                elif pty = typeof<string> then 
                     getSampleArg givenArgInfo p "" loc |> Some |> box, [||]
                 else
                     let warns = 

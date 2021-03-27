@@ -9,6 +9,7 @@
     <OutputType>Exe</OutputType>
     <TargetFramework>net5.0</TargetFramework>
     <IsPackable>false</IsPackable>
+    <IsPublishable>false</IsPublishable>
     <DefineConstants Condition="'$(TINY)' == 'true'">$(DefineConstants);TINY</DefineConstants>
     <DIFFSHARP_TESTGPU Condition="'$(TINY)' == 'true'">false</DIFFSHARP_TESTGPU>
     <PlatformTarget>x64</PlatformTarget>

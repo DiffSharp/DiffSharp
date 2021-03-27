@@ -211,7 +211,7 @@ Call stack: %A""" (sym.ToString()) (System.Diagnostics.StackTrace(fNeedFileInfo=
 
     member this.ConstrainSymbolic(other: Int) : unit =
         if not (this =~= other) then
-            failwithf "Shape mismatch. Expected '%O' but got '%O'" other this
+            failwithf "Shape checking mismatch for Int. Expected '%O' but got '%O'" other this
 
 #else
 

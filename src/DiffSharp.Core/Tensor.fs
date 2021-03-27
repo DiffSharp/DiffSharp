@@ -2970,6 +2970,10 @@ type Tensor =
         let shape = Shape.ParseSymbolic(env, syms, spec, location)
         TensorC(RawTensor.Zeros(shape))
 
+    member this.ConstrainSymbolic(other: Tensor) : unit =
+        if not (this.shapex =~= other.shapex) then
+            failwithf "Shape mismatch for tensor. Expected '%O' but got '%O'" other this
+
 and TensorOp =
     | AddTT of Tensor * Tensor
     | AddTTConst of Tensor
