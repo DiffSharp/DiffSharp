@@ -119,7 +119,7 @@ type ParameterDict() =
     /// <summary>TBD</summary>
     member d.unflatten(tensors:Tensor) =
         if tensors.dim <> 1 then failwithf "Expecting 1d tensors but received tensors with shape %A" tensors.shapex
-        if not (tensors.nelementx =~= d.nelementx) then failwithf "Expecting tensors.nelement (%A) and ParameterDict.nelement (%A) to be the same" tensors.nelement d.nelement
+        if not (tensors.nelementx =~= d.nelementx) then failwithf "Expecting tensors.nelementx (%A) and ParameterDict.nelementx (%A) to be the same" tensors.nelementx d.nelementx
         let shapes = [|for t in d.values.Values do t.value.shapex|]
         let sizes = [|for s in shapes do Shape.nelementx s|]
         let ts = Array.map2 (fun (t:Tensor) (s:Shape) -> t.view(s)) (tensors.split(sizes)) shapes
@@ -246,6 +246,9 @@ type BaseModel() =
         m.parameters.move(?dtype=dtype, ?device=device, ?backend=backend)
 
     /// <summary>TBD</summary>
+    member m.nparametersx = m.parameters.nelementx
+
+    /// <summary>TBD</summary>
     member m.nparameters = m.parameters.nelement
 
     /// <summary>TBD</summary>
@@ -265,7 +268,7 @@ type BaseModel() =
     member m.save(fileName) = saveBinary m fileName
 
     /// <summary>TBD</summary>
-    override m.ToString() = sprintf "%s--nparameters:%A" (m.getString()) m.nparameters
+    override m.ToString() = sprintf "%s--nparameters:%A" (m.getString()) m.nparametersx
 
 [<AbstractClass>]
 type Model<'In, 'Out>() =
