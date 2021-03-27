@@ -55,7 +55,13 @@ module Tools =
           LocationStack = Array.append [| loc |] stack }
 
     let isOptionTy (pty: Type) = pty.IsGenericType && pty.GetGenericTypeDefinition().FullName = "Microsoft.FSharp.Core.FSharpOption`1" 
+
     let isSymbolicTy (pty: Type) = pty.GetCustomAttributes<SymbolicAttribute>() |> Seq.length > 0
+
+    // e.g.  mkSome typeof<string> (box "a");;
+    let mkSome (pty: System.Type) (v: obj) =
+        let uc = Reflection.FSharpType.GetUnionCases(typedefof<int option>.MakeGenericType([| pty |])) |> Array.find (fun uc -> uc.Name = "Some")
+        Reflection.FSharpValue.MakeUnion(uc, [| v |])
 
     type ParserLogic(env: Map<string, ISym>, syms: SymScope) =
 
@@ -103,7 +109,7 @@ module Tools =
             elif optionals && isOptionTy pty then
                 let pty = pty.GenericTypeArguments.[0]
                 if isSymbolicTy pty then 
-                    getSymbolicArg givenArgInfo p pty loc |> Some |> box, [||]
+                    getSymbolicArg givenArgInfo p pty loc |> mkSome pty |> box, [||]
                 elif pty = typeof<bool> then 
                     getSampleArg givenArgInfo p true loc |> Some |> box, [||]
                 elif pty = typeof<int32> then 
