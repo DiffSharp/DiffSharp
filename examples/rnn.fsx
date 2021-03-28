@@ -67,6 +67,54 @@ type RNNCell(inFeatures, outFeatures, ?nonlinearity, ?bias, ?batchFirst) =
         let output = dsharp.stack output
         if batchFirst then output.transpose(0, 1) else output
 
+type LSTMCell(inFeatures, outFeatures, ?bias, ?batchFirst) =
+    inherit Model()
+    let bias = defaultArg bias true
+    let batchFirst = defaultArg batchFirst false
+    let k = 1./sqrt (float outFeatures)
+    let wih = Parameter(Weight.uniform([|inFeatures; outFeatures*4|], k))
+    let whh = Parameter(Weight.uniform([|outFeatures; outFeatures*4|], k))
+    let b = Parameter(if bias then Weight.uniform([|outFeatures*4|], k) else dsharp.tensor([]))
+    let h = Parameter <| dsharp.tensor([]) // Not a paramter to be trained, this is for keeping hidden state
+    let c = Parameter <| dsharp.tensor([]) // Not a paramter to be trained, this is for keeping hidden state
+    do base.add([wih;whh;b],["LSTMCell-weight-ih";"LSTMCell-weight-hh";"LSTMCell-bias"])
+
+    member _.hidden 
+        with get () = h.value
+        and set v = h.value <- v
+
+    member _.cell
+        with get () = c.value
+        and set v = c.value <- v
+
+    override _.getString() = sprintf "LSTMCell(%A, %A)" inFeatures outFeatures
+
+    member r.reset() = r.hidden <- dsharp.tensor([])
+
+    override r.forward(value) =
+        let value, seqLen, batchSize = rnnShape value inFeatures batchFirst
+        if r.hidden.nelement = 0 then r.hidden <- dsharp.zeros([batchSize; outFeatures])
+        if r.cell.nelement = 0 then r.cell <- dsharp.zeros([batchSize; outFeatures])
+        let output = Array.create seqLen (dsharp.tensor([]))
+        for i in 0..seqLen-1 do
+            let v = value.[i]
+            // r.hidden <- dsharp.matmul(v, wih.value) + dsharp.matmul(h.value, whh.value)
+            // if bias then r.hidden <- r.hidden + b.value
+            let x2h = dsharp.matmul(v, wih.value)
+            let h2h = dsharp.matmul(h.value, whh.value)
+            let mutable pre = x2h + h2h
+            if bias then pre <- pre + b.value
+            let pretan = pre.[*,..outFeatures-1].tanh()
+            let presig = pre.[*,outFeatures..].sigmoid()
+            let inputGate = presig.[*,..outFeatures-1]
+            let forgetGate = presig.[*,outFeatures..(2*outFeatures)-1]
+            let outputGate = presig.[*,(2*outFeatures)..]
+            r.cell <- (inputGate*pretan) + (forgetGate*c.value)
+            r.hidden <- outputGate*c.value.tanh()
+            output.[i] <- r.hidden
+        let output = dsharp.stack output
+        if batchFirst then output.transpose(0, 1) else output
+
 
 type RNN(inFeatures, outFeatures, ?numLayers, ?nonlinearity, ?bias, ?batchFirst, ?dropout, ?bidirectional) =
     inherit Model()
@@ -117,6 +165,69 @@ type RNN(inFeatures, outFeatures, ?numLayers, ?nonlinearity, ?bias, ?batchFirst,
         if batchFirst then output.transpose(0, 1) else output
 
 
+type LSTM(inFeatures, outFeatures, ?numLayers, ?bias, ?batchFirst, ?dropout, ?bidirectional) =
+    inherit Model()
+    let numLayers = defaultArg numLayers 1
+    let dropout = defaultArg dropout 0.
+    let bidirectional = defaultArg bidirectional false
+    let batchFirst = defaultArg batchFirst false
+    let numDirections = if bidirectional then 2 else 1
+    let makeLayers () = Array.init numLayers (fun i -> if i = 0 then LSTMCell(inFeatures, outFeatures, ?bias=bias) else LSTMCell(outFeatures, outFeatures, ?bias=bias))
+    let layers = makeLayers()
+    let layersReverse = if bidirectional then makeLayers() else [||]
+    let dropoutLayer = Dropout(dropout)
+    let hs = Parameter <| dsharp.tensor([]) // Not a parameter to be trained, it is for keeping hidden state
+    let cs = Parameter <| dsharp.tensor([]) // Not a parameter to be trained, it is for keeping hidden state
+    do 
+        base.add(layers |> Array.map box, Array.init numLayers (fun i -> sprintf "LSTM-layer-%A" i))
+        if bidirectional then base.add(layersReverse |> Array.map box, Array.init numLayers (fun i -> sprintf "LSTM-layer-reverse-%A" i))
+        if dropout > 0. then base.add([dropoutLayer], ["LSTM-dropout"])
+
+    member _.hidden
+        with get () = hs.value
+        and set v = hs.value <- v
+
+    member _.cell
+        with get () = cs.value
+        and set v = cs.value <- v
+
+    override _.getString() = sprintf "LSTM(%A, %A, numLayers:%A, bidirectional:%A)" inFeatures outFeatures numLayers bidirectional
+
+    member r.reset() =
+        r.hidden <- dsharp.tensor([])
+        r.cell <- dsharp.tensor([])
+
+    override r.forward(value) =
+        let value, _, batchSize = rnnShape value inFeatures batchFirst
+        if r.hidden.nelement = 0 then r.hidden <- dsharp.zeros([numLayers*numDirections; batchSize; outFeatures])
+        if r.cell.nelement = 0 then r.cell <- dsharp.zeros([numLayers*numDirections; batchSize; outFeatures])
+        let newhs = Array.create (numLayers*numDirections) (dsharp.tensor([]))
+        let newcs = Array.create (numLayers*numDirections) (dsharp.tensor([]))
+        let mutable hFwd = value
+        for i in 0..numLayers-1 do 
+            layers.[i].hidden <- r.hidden.[i]
+            layers.[i].cell <- r.cell.[i]
+            hFwd <- layers.[i].forward(hFwd)
+            if dropout > 0. && i < numLayers-1 then hFwd <- dropoutLayer.forward(hFwd)
+            newhs.[i] <- layers.[i].hidden
+            newcs.[i] <- layers.[i].cell
+        let output = 
+            if bidirectional then
+                let mutable hRev = value.flip([0])
+                for i in 0..numLayers-1 do 
+                    layersReverse.[i].hidden <- r.hidden.[numLayers+i]
+                    layersReverse.[i].cell <- r.cell.[numLayers+i]
+                    hRev <- layersReverse.[i].forward(hRev)
+                    if dropout > 0. && i < numLayers-1 then hRev <- dropoutLayer.forward(hRev)
+                    newhs.[numLayers+i] <- layersReverse.[i].hidden
+                    newcs.[numLayers+i] <- layersReverse.[i].cell
+                dsharp.cat([hFwd; hRev], 2)
+            else hFwd
+        r.hidden <- dsharp.stack(newhs)
+        r.cell <- dsharp.stack(newcs)
+        if batchFirst then output.transpose(0, 1) else output
+
+
 type TextDataset(text:string, seqLength, ?chars) =
     inherit Dataset()
     // """0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ!"#$%&\'()*+,-./:;?@[\\]^_`{|}~ """
@@ -150,7 +261,7 @@ type TextDataset(text:string, seqLength, ?chars) =
 download "https://storage.googleapis.com/download.tensorflow.org/data/shakespeare.txt" "./shakespeare.txt"
 let corpus = System.IO.File.ReadAllText("./shakespeare.txt")
 
-let seqLen = 64
+let seqLen = 32
 let batchSize = 16
 
 let dataset = TextDataset(corpus, seqLen)
@@ -184,7 +295,7 @@ let optimizer = Adam(languageModel, lr=dsharp.tensor(0.001))
 
 let losses = ResizeArray()
 
-let epochs = 2
+let epochs = 10
 let validInterval = 100
 
 let start = System.DateTime.Now
