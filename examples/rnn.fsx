@@ -98,8 +98,6 @@ type LSTMCell(inFeatures, outFeatures, ?bias, ?batchFirst) =
         let output = Array.create seqLen (dsharp.tensor([]))
         for i in 0..seqLen-1 do
             let v = value.[i]
-            // r.hidden <- dsharp.matmul(v, wih.value) + dsharp.matmul(h.value, whh.value)
-            // if bias then r.hidden <- r.hidden + b.value
             let x2h = dsharp.matmul(v, wih.value)
             let h2h = dsharp.matmul(h.value, whh.value)
             let mutable pre = x2h + h2h
