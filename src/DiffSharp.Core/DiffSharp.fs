@@ -695,6 +695,11 @@ type dsharp =
     /// <param name="times">The number of repetitions for each element.</param>
     static member repeat(input:Tensor, dim:int, times:int) = input.repeat(dim, times)
 
+    /// <summary>Get a slice of a tensor</summary>
+    /// <param name="input">The input tensor.</param>
+    /// <param name="index">Index describing the slice.</param>
+    static member slice(input:Tensor, index:seq<int>) = input.[index |> Seq.toArray]
+
     /// <summary>Returns a new tensor with the same data as the self tensor but of a different shape.</summary>
     /// <remarks>The returned tensor shares the same data and must have the same number of elements, but may have a different size. For a tensor to be viewed, the new view size must be compatible with its original size.
     ///   The returned tensor shares the same data and must have the same number of elements, but may have a different size. 

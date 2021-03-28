@@ -16,7 +16,7 @@ open DiffSharp.Optim
 open DiffSharp.Util
 open DiffSharp.Distributions
 
-open System.Collections.Generic
+open System.IO
 
 dsharp.config(backend=Backend.Torch, device=Device.CPU)
 dsharp.seed(1)
@@ -87,9 +87,9 @@ type RNN(inFeatures, outFeatures, ?numLayers, ?nonlinearity, ?bias, ?batchFirst,
 
     member _.hidden
         with get () = hs.value
-        and set (v:Tensor) = hs.value <- v
+        and set v = hs.value <- v
 
-    override _.getString() = sprintf "RNN(%A, %A, numLayers:%A)" inFeatures outFeatures numLayers
+    override _.getString() = sprintf "RNN(%A, %A, numLayers:%A, bidirectional:%A)" inFeatures outFeatures numLayers bidirectional
 
     member r.reset() = r.hidden <- dsharp.tensor([])
 
@@ -146,28 +146,45 @@ type TextDataset(text:string, seqLength, ?chars) =
         let target = sequences.[i] |> dsharp.tensor
         data, target
 
-let seqLen = 32
+let seqLen = 64
 
-let corpus = "A merry little surge of electricity piped by automatic alarm from the mood organ beside his bed awakened Rick Deckard."
-// download "https://storage.googleapis.com/download.tensorflow.org/data/shakespeare.txt" "./shakespeare.txt"
-// let corpus = System.IO.File.ReadAllText("./shakespeare.txt").[..50]
+// let corpus = "A merry little surge of electricity piped by automatic alarm from the mood organ beside his bed awakened Rick Deckard."
+download "https://storage.googleapis.com/download.tensorflow.org/data/shakespeare.txt" "./shakespeare.txt"
+let corpus = System.IO.File.ReadAllText("./shakespeare.txt")
 
-let dataset = TextDataset(corpus, 32)
-let loader = dataset.loader(batchSize=8, shuffle=true)
+let dataset = TextDataset(corpus, seqLen)
+let loader = dataset.loader(batchSize=16, shuffle=true)
 
 let rnn = RNN(dataset.numChars, 512, numLayers=2, batchFirst=true)
-let net =
+let languageModel =
     rnn
     --> dsharp.view([-1; 512])
     --> Linear(512, dataset.numChars)
 
-print net
+print languageModel
 
-let optimizer = Adam(net, lr=dsharp.tensor(0.001))
+let modelFileName = "rnn_language_model.params"
+if File.Exists(modelFileName) then 
+    printfn "Resuming training from existing model params found: %A" modelFileName
+    languageModel.loadParameters(modelFileName)
+
+let predict (text:string) len =
+    rnn.reset()
+    let mutable prediction = text
+    let mutable last = text
+    for i in 1..len do
+        let lastTensor = last |> dataset.textToTensor
+        let nextCharProbs = lastTensor.unsqueeze(0) --> languageModel --> dsharp.slice([-1]) --> dsharp.softmax(-1)
+        last <- Categorical(nextCharProbs).sample() |> int |> dataset.indexToChar |> string
+        prediction <- prediction + last
+    prediction
+
+
+let optimizer = Adam(languageModel, lr=dsharp.tensor(0.001))
 
 let losses = ResizeArray()
 
-let epochs = 40
+let epochs = 2
 let validInterval = 100
 
 let start = System.DateTime.Now
@@ -176,31 +193,22 @@ for epoch = 1 to epochs do
         let input =  x.[*,..seqLen-2]
         let target = t.[*,1..]
         rnn.reset()
-        net.reverseDiff()
-        let output = input --> net
+        languageModel.reverseDiff()
+        let output = input --> languageModel
         let loss = dsharp.crossEntropyLoss(output, target.view(-1))
         loss.reverse()
         optimizer.step()
         losses.Add(float loss)
-        printfn "%A Epoch: %A/%A minibatch: %A/%A goss: %A" (System.DateTime.Now - start) epoch epochs (i+1) loader.length (float loss)
+        printfn "%A Epoch: %A/%A minibatch: %A/%A loss: %A" (System.DateTime.Now - start) epoch epochs (i+1) loader.length (float loss)
 
         if i % validInterval = 0 then
+            printfn "\nSample from language model:\n%A\n" (predict "We " 256)
+
+            languageModel.saveParameters(modelFileName)
+
             let plt = Pyplot()
             plt.plot(losses |> dsharp.tensor)
             plt.xlabel("Iterations")
             plt.ylabel("Loss")
             plt.tightLayout()
             plt.savefig (sprintf "rnn_loss_epoch_%A_minibatch_%A.pdf" epoch (i+1))
-
-
-rnn.reset()
-let mutable text = "A"
-let len = 200
-for i in 0..len-1 do
-    let lastChar = text.[i] 
-    let lastCharTensor = lastChar|> string |> dataset.textToTensor
-    let nextCharProbs = lastCharTensor --> dsharp.unsqueeze(0) --> net --> dsharp.squeeze() --> dsharp.softmax(-1)
-    let nextChar = Categorical(nextCharProbs).sample() |> int |> dataset.indexToChar
-    text <- text + (string nextChar)
-print text
-
