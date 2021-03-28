@@ -1243,6 +1243,10 @@ type dsharp with
     /// <summary>Get the primal and derivative values of the tensor.</summary>
     static member primalDerivative (tensor:Tensor) = tensor.primal, tensor.derivative
 
+    /// <summary>Produce a new constant (non-differentiated) tensor.</summary>
+    /// <param name="tensor">The input.</param>
+    static member noDiff (tensor:Tensor) = tensor.noDiff()
+
     /// <summary>Produce a new tensor suitable for calculating the forward-mode derivative at the given level tag.</summary>
     /// <param name="tag">The level tag.</param>
     /// <param name="derivative">The derivative of the input.</param>

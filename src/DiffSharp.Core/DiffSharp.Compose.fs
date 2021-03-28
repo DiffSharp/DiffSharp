@@ -149,7 +149,7 @@ type dsharp with
     static member transpose(dim0:int, dim1:int) = fun (a:Tensor) -> a.transpose(dim0, dim1)
 
     /// <summary>TBD</summary>
-    static member squeeze(dim:int) = fun (a:Tensor) -> a.squeeze(dim=dim)
+    static member squeeze(?dim:int) = fun (a:Tensor) -> a.squeeze(?dim=dim)
 
     /// <summary>TBD</summary>
     static member unsqueeze(dim:int) = fun (a:Tensor) -> a.unsqueeze(dim)
