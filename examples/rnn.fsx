@@ -146,14 +146,15 @@ type TextDataset(text:string, seqLength, ?chars) =
         let target = sequences.[i] |> dsharp.tensor
         data, target
 
-let seqLen = 64
-
 // let corpus = "A merry little surge of electricity piped by automatic alarm from the mood organ beside his bed awakened Rick Deckard."
 download "https://storage.googleapis.com/download.tensorflow.org/data/shakespeare.txt" "./shakespeare.txt"
 let corpus = System.IO.File.ReadAllText("./shakespeare.txt")
 
+let seqLen = 64
+let batchSize = 16
+
 let dataset = TextDataset(corpus, seqLen)
-let loader = dataset.loader(batchSize=16, shuffle=true)
+let loader = dataset.loader(batchSize=batchSize, shuffle=true)
 
 let rnn = RNN(dataset.numChars, 512, numLayers=2, batchFirst=true)
 let languageModel =
@@ -179,7 +180,6 @@ let predict (text:string) len =
         prediction <- prediction + last
     prediction
 
-
 let optimizer = Adam(languageModel, lr=dsharp.tensor(0.001))
 
 let losses = ResizeArray()
@@ -202,7 +202,7 @@ for epoch = 1 to epochs do
         printfn "%A Epoch: %A/%A minibatch: %A/%A loss: %A" (System.DateTime.Now - start) epoch epochs (i+1) loader.length (float loss)
 
         if i % validInterval = 0 then
-            printfn "\nSample from language model:\n%A\n" (predict "We " 256)
+            printfn "\nSample from language model:\n%A\n" (predict "We " 512)
 
             languageModel.saveParameters(modelFileName)
 
