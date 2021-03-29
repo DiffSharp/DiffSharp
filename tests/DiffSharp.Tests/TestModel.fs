@@ -946,7 +946,7 @@ type TestModel () =
         let rnn = RNN(din, dout, numLayers=numLayers, bidirectional=false)
         let output = input --> rnn
         let outputShape = output.shape
-        let outputShapeCorrect = [seqLen; batchSize; dout]
+        let outputShapeCorrect = [|seqLen; batchSize; dout|]
         Assert.AreEqual(outputShapeCorrect, outputShape)
 
         // Batch first
@@ -954,16 +954,16 @@ type TestModel () =
         let rnn = RNN(din, dout, numLayers=numLayers, batchFirst=true, bidirectional=false)
         let output = input --> rnn
         let outputShape = output.shape
-        let outputShapeCorrect = [batchSize; seqLen; dout]
+        let outputShapeCorrect = [|batchSize; seqLen; dout|]
         Assert.AreEqual(outputShapeCorrect, outputShape)
 
         let hiddenShape = rnn.hidden.shape
-        let hiddenShapeCorrect = [numLayers*numDirections; batchSize; dout]
+        let hiddenShapeCorrect = [|numLayers*numDirections; batchSize; dout|]
         Assert.AreEqual(hiddenShapeCorrect, hiddenShape)
 
         rnn.reset()
         let hiddenShape = rnn.hidden.shape
-        let hiddenShapeCorrect = [0]
+        let hiddenShapeCorrect = [|0|]
         Assert.AreEqual(hiddenShapeCorrect, hiddenShape)
 
         let steps = 64
@@ -1006,7 +1006,7 @@ type TestModel () =
         let lstm = LSTM(din, dout, numLayers=numLayers, bidirectional=false)
         let output = input --> lstm
         let outputShape = output.shape
-        let outputShapeCorrect = [seqLen; batchSize; dout]
+        let outputShapeCorrect = [|seqLen; batchSize; dout|]
         Assert.AreEqual(outputShapeCorrect, outputShape)
 
         // Batch first
@@ -1014,21 +1014,21 @@ type TestModel () =
         let lstm = LSTM(din, dout, numLayers=numLayers, batchFirst=true, bidirectional=false)
         let output = input --> lstm
         let outputShape = output.shape
-        let outputShapeCorrect = [batchSize; seqLen; dout]
+        let outputShapeCorrect = [|batchSize; seqLen; dout|]
         Assert.AreEqual(outputShapeCorrect, outputShape)
 
         let hiddenShape = lstm.hidden.shape
-        let hiddenShapeCorrect = [numLayers*numDirections; batchSize; dout]
+        let hiddenShapeCorrect = [|numLayers*numDirections; batchSize; dout|]
         let cellShape = lstm.cell.shape
-        let cellShapeCorrect = [numLayers*numDirections; batchSize; dout]
+        let cellShapeCorrect = [|numLayers*numDirections; batchSize; dout|]
         Assert.AreEqual(hiddenShapeCorrect, hiddenShape)
         Assert.AreEqual(cellShapeCorrect, cellShape)
 
         lstm.reset()
         let hiddenShape = lstm.hidden.shape
-        let hiddenShapeCorrect = [0]
+        let hiddenShapeCorrect = [|0|]
         let cellShape = lstm.cell.shape
-        let cellShapeCorrect = [0]
+        let cellShapeCorrect = [|0|]
         Assert.AreEqual(hiddenShapeCorrect, hiddenShape)
         Assert.AreEqual(cellShapeCorrect, cellShape)
 
