@@ -73,4 +73,33 @@ type TensorDataset(data:Tensor, target:Tensor) =
     override d.item(i) = data.[i], target.[i]
 
 
+type TextDataset(text:string, seqLength, ?chars) =
+    inherit Dataset()
+    // """0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ!"#$%&\'()*+,-./:;?@[\\]^_`{|}~ """
+    let _chars = (defaultArg chars text) |> Seq.distinct |> Seq.toArray |> Array.sort
+    let onehot = memoize dsharp.onehot
+    let _charToIndex = memoize (fun c -> try Array.findIndex ((=) c) _chars with _ -> failwithf "Character %A not found in this TextDataset (chars: %A)" c _chars)
+    let _indexToChar(index) = _chars.[index]
+    let textToIndices(text:string) = text |> Seq.map _charToIndex |> Seq.toArray
+    let indicesToTensor(indices) = indices |> Array.map (fun i -> onehot(_chars.Length, i)) |> dsharp.stack
+    let sequences = 
+        if seqLength > text.Length then failwithf "Expecting text.Length (%A) >= seqLength (%A)" text.Length seqLength
+        [|for i in 0..(text.Length - seqLength + 1)-1 do text.Substring(i, seqLength)|] |> Array.map textToIndices
+
+    member d.indexToChar(i) = _indexToChar(i)
+    member d.charToIndex(c) = _charToIndex(c)
+    member d.textToTensor(text:string) = text |> textToIndices |> indicesToTensor
+    member d.tensorToText(tensor:Tensor) =
+        if tensor.dim <> 2 then failwithf "Expecting a 2d tensor with shape seqLen x features, received tensor with shape %A" tensor.shape 
+        let t2text (tens:Tensor) = [|for i in 0..tens.shape.[0]-1 do tens.[i].argmax().[0]|] |> Array.map _indexToChar |> System.String |> string
+        tensor |> t2text
+
+    member d.chars = _chars
+    member d.numChars = _chars.Length
+    override d.length = sequences.Length
+    override d.item(i) =
+        let data = sequences.[i] |> indicesToTensor
+        let target = sequences.[i] |> dsharp.tensor
+        data, target
+
 // More datasets (MNIST, CIFAR, etc.) are implemented in DiffSharp.Data project
