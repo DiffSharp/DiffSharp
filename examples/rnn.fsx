@@ -4,8 +4,13 @@
 #r "DiffSharp.Core.dll"
 #r "DiffSharp.Data.dll"
 #r "DiffSharp.Backends.Torch.dll"
-// #r "nuget: libtorch-cuda-11.1-linux-x64, 1.8.0.7"
-System.Runtime.InteropServices.NativeLibrary.Load("/home/gunes/anaconda3/lib/python3.8/site-packages/torch/lib/libtorch.so")
+
+// Libtorch binaries
+// Option A: you can use a platform-specific nuget package
+// #r "nuget: libtorch-cuda-11.1-win-x64, 1.8.0.7"
+#r "nuget: libtorch-cuda-11.1-linux-x64, 1.8.0.7"
+// Option B: you can use a local libtorch installation
+// System.Runtime.InteropServices.NativeLibrary.Load("/home/gunes/anaconda3/lib/python3.8/site-packages/torch/lib/libtorch.so")
 
 
 open DiffSharp
