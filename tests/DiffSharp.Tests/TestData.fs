@@ -269,3 +269,46 @@ type TestData () =
         for _ in loaderDrop.epoch() do nBatchesDropActual <- nBatchesDropActual + 1
         Assert.AreEqual(nBatchesDropCorrect, nBatchesDrop)
         Assert.AreEqual(nBatchesDropCorrect, nBatchesDropActual)
+
+    [<Test>]
+    member _.TestTextDataset () =
+        let text = "A merry little surge of electricity piped by automatic alarm from the mood organ beside his bed awakened Rick Deckard."
+        let seqLen = 6
+        let dataset = TextDataset(text, seqLen)
+
+        let datasetChars = dataset.chars
+        let datasetCharsCorrect = [|' '; '.'; 'A'; 'D'; 'R'; 'a'; 'b'; 'c'; 'd'; 'e'; 'f'; 'g'; 'h'; 'i'; 'k'; 'l'; 'm'; 'n'; 'o'; 'p'; 'r'; 's'; 't'; 'u'; 'w'; 'y'|]
+        Assert.AreEqual(datasetCharsCorrect, datasetChars)
+
+        let datasetLen = dataset.length
+        let datasetLenCorrect = 113
+        Assert.AreEqual(datasetLenCorrect, datasetLen)
+
+        let input, target = dataset.[1]
+        let inputCorrect = dsharp.tensor([[1., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.],
+                                            [0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 1., 0., 0., 0., 0., 0., 0., 0., 0., 0.],
+                                            [0., 0., 0., 0., 0., 0., 0., 0., 0., 1., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.],
+                                            [0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 1., 0., 0., 0., 0., 0.],
+                                            [0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 1., 0., 0., 0., 0., 0.],
+                                            [0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 1.]])
+        let targetCorrect = dsharp.tensor([0., 16., 9., 20., 20., 25.])
+        Assert.AreEqual(inputCorrect, input)
+        Assert.AreEqual(targetCorrect, target)
+
+        let inputText = dataset.tensorToText input
+        let inputTextCorrect = " merry"
+        Assert.AreEqual(inputTextCorrect, inputText)
+
+        let text = "Deckard"
+        let textTensor = dataset.textToTensor text
+        let textTensorCorrect = dsharp.tensor([[0., 0., 0., 1., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.],
+                                                [0., 0., 0., 0., 0., 0., 0., 0., 0., 1., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.],
+                                                [0., 0., 0., 0., 0., 0., 0., 1., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.],
+                                                [0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 1., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.],
+                                                [0., 0., 0., 0., 0., 1., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.],
+                                                [0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 1., 0., 0., 0., 0., 0.],
+                                                [0., 0., 0., 0., 0., 0., 0., 0., 1., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.]])
+        Assert.AreEqual(textTensorCorrect, textTensor)
+
+        let text2 = dataset.tensorToText textTensor
+        Assert.AreEqual(text, text2)

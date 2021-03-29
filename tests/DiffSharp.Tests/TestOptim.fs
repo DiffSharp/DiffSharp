@@ -26,6 +26,22 @@ type TestOptim () =
         (1. - x)**2 + 100. * (y - x**2)**2
 
     [<Test>]
+    member _.TestOptimizerStep () =
+        let net = Linear(din, dout)
+        let optimizer = SGD(net)
+        let step0 = optimizer.stateStep
+        let step0Correct = 0
+        net.reverseDiff()
+        let y = net.forward(inputs)
+        let loss = dsharp.mseLoss(y, targets)
+        loss.reverse()
+        optimizer.step()
+        let step1 = optimizer.stateStep
+        let step1Correct = 1
+        Assert.AreEqual(step0Correct, step0)
+        Assert.AreEqual(step1Correct, step1)
+
+    [<Test>]
     member _.TestOptimModelSGDStyle1 () =
         // Trains a linear regressor
         let net = Linear(din, dout)
