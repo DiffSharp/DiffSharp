@@ -89,7 +89,10 @@ type ParameterDict() =
     ///  After this call the current parameters of the model will have attached derivatives for forward mode propagation.
     /// </remarks>
     member d.forwardDiff(derivatives:ParameterDict, ?tag:uint32) = 
-        d.iter(fun (n, p) -> p.forwardDiff(derivatives.[n], ?tag=tag))
+        // This is to be extra cautious about all Parameters in the ParameterDict getting the same tag, which is crucial for correctness of differentiation results
+        // If we leave the default tag value to be determined by each underlying tensor, there is a risk that the tag can somehow change during the ParameterDict .iter call
+        let tag = defaultArg tag GlobalNestingLevel.Current
+        d.iter(fun (n, p) -> p.forwardDiff(derivatives.[n], tag=tag))
 
     /// <summary>
     ///  Adjust the parameters to include support for reverse-mode automatic differentiation.
@@ -101,7 +104,10 @@ type ParameterDict() =
     ///  will be available. 
     /// </remarks>
     member d.reverseDiff(?tag:uint32) = 
-        d.iter(fun (_, p) -> p.reverseDiff(?tag=tag))
+        // This is to be extra cautious about all Parameters in the ParameterDict getting the same tag, which is crucial for correctness of differentiation results
+        // If we leave the default tag value to be determined by each underlying tensor, there is a risk that the tag can somehow change during the ParameterDict .iter call
+        let tag = defaultArg tag GlobalNestingLevel.Current
+        d.iter(fun (_, p) -> p.reverseDiff(tag=tag))
 
     /// <summary>TBD</summary>
     member d.noDiff() = d.iter(fun (_, p) -> p.noDiff())
