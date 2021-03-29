@@ -158,13 +158,13 @@ type TestModel () =
 
         let p = net.parametersVector
         let x = dsharp.randn([1;10])
-        ignore <| dsharp.grad (net.forwardCompose dsharp.sum x) p
+        ignore <| dsharp.grad (net.asFunction x >> dsharp.sum) p
         Assert.True(net.parametersVector.isNoDiff())
 
     [<Test>]
     member _.TestModelForwardParameters () =
         let net = ModelStyle1a()
-        let f = net.forwardParameters
+        let f = net.asFunction
         let p = net.parametersVector
         let x = dsharp.randn([1;10])
         let y = f x p
@@ -173,7 +173,7 @@ type TestModel () =
     [<Test>]
     member _.TestModelForwardCompose () =
         let net = ModelStyle1a()
-        let f = net.forwardCompose dsharp.sin
+        let f x p = net.asFunction x p |> dsharp.sin
         let p = net.parametersVector
         let x = dsharp.randn([1;10])
         let y = f x p
@@ -182,11 +182,11 @@ type TestModel () =
     [<Test>]
     member _.TestModelForwardLoss () =
         let net = ModelStyle1a()
-        let f = net.forwardLoss dsharp.mseLoss
+        let f t x p = net.asFunction x p |> dsharp.mseLoss t
         let p = net.parametersVector
         let x = dsharp.randn([1;10])
         let t = dsharp.randn([1;20])
-        let y = f x t p
+        let y = f t x p
         Assert.CheckEqual(([| |]: int array), y.shape)
 
     [<Test>]
@@ -283,11 +283,10 @@ type TestModel () =
         let net = Linear(din, dout)
 
         let lr, steps = 1e-2, 1000
-        let loss = net.forwardLoss dsharp.mseLoss
-        let mutable p = net.parametersVector
+        let loss inputs p = net.asFunction inputs p |> dsharp.mseLoss targets
         for _ in 0..steps do
-            let g = dsharp.grad (loss inputs targets) p
-            p <- p - lr * g
+            let g = dsharp.grad (loss inputs) net.parametersVector
+            net.parametersVector <- net.parametersVector - lr * g
         let y = net.forward inputs
         Assert.True(targets.allclose(y, 0.01))
 

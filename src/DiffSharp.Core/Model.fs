@@ -95,15 +95,34 @@ type ParameterDict() =
     /// <summary>TBD</summary>
     member d.iter(f:string*Parameter->unit) = for KeyValue(n, p) in d.values do f(n,p)
 
-    /// <summary>TBD</summary>
+    /// <summary>
+    ///  Adjust the parameters to include support for forward-mode automatic differentiation.
+    /// </summary>
+    /// <param name="derivatives">The derivatives of the parameters</param>
+    /// <param name="tag">The level tag for nested differentiation.  Defaults to the current global nesting level</param>
+    /// <remarks>
+    ///  After this call the current parameters of the model will have attached derivatives for forward mode propagation.
+    /// </remarks>
     member d.forwardDiff(derivatives:ParameterDict, ?tag:uint32) = 
+        // This is to be extra cautious about all Parameters in the ParameterDict getting the same tag, which is crucial for correctness of differentiation results
+        // If we leave the default tag value to be determined by each underlying tensor, there is a risk that the tag can somehow change during the ParameterDict .iter call
         let tag = defaultArg tag GlobalNestingLevel.Current
-        d.iter(fun (n, p) -> p.forwardDiff(derivatives.[n], tag))
+        d.iter(fun (n, p) -> p.forwardDiff(derivatives.[n], tag=tag))
 
-    /// <summary>TBD</summary>
+    /// <summary>
+    ///  Adjust the parameters to include support for reverse-mode automatic differentiation.
+    /// </summary>
+    /// <param name="tag">The level tag for nested differentiation.  Defaults to the current global nesting level</param>
+    /// <remarks>
+    ///  After this call the current parameters of the model will support reverse-mode propagation. After the completion
+    ///  of the corresponding <c>reverse</c> operation, the computed derivative
+    ///  will be available. 
+    /// </remarks>
     member d.reverseDiff(?tag:uint32) = 
+        // This is to be extra cautious about all Parameters in the ParameterDict getting the same tag, which is crucial for correctness of differentiation results
+        // If we leave the default tag value to be determined by each underlying tensor, there is a risk that the tag can somehow change during the ParameterDict .iter call
         let tag = defaultArg tag GlobalNestingLevel.Current
-        d.iter(fun (_, p) -> p.reverseDiff(tag))
+        d.iter(fun (_, p) -> p.reverseDiff(tag=tag))
 
     /// <summary>TBD</summary>
     member d.noDiff() = d.iter(fun (_, p) -> p.noDiff())
@@ -231,23 +250,37 @@ type Model() =
                 m.parameters.add(mm.parameters.map(fun (nn, pp:Parameter) -> (nextName nn, pp)))
             | _ -> failwithf "Unsupported type. Expecting a Parameter or Model"
 
-    /// <summary>TBD</summary>
-    member m.forwardDiff(derivatives:ParameterDict) = m.parameters.forwardDiff(derivatives)
+    /// <summary>
+    ///  Adjust the parameters of the model to include support for forward-mode automatic differentiation.
+    /// </summary>
+    /// <param name="derivatives">The derivatives of the parameters</param>
+    /// <param name="tag">The level tag for nested differentiation.  Defaults to the current global nesting level</param>
+    /// <remarks>
+    ///  After this call the current parameters of the model will have attached derivatives for forward mode propagation.
+    /// </remarks>
+    member m.forwardDiff(derivatives:ParameterDict, ?tag) = m.parameters.forwardDiff(derivatives, ?tag=tag)
 
-    /// <summary>TBD</summary>
-    member m.reverseDiff() = m.parameters.reverseDiff()
+    /// <summary>
+    ///  Adjust the parameters of the model to include support for reverse-mode automatic differentiation.
+    /// </summary>
+    /// <param name="tag">The level tag for nested differentiation.  Defaults to the current global nesting level</param>
+    /// <remarks>
+    ///  After this call the current parameters of the model will support reverse-mode propagation. After the completion
+    ///  of the corresponding <c>reverse</c> operation, the computed derivative will be available. 
+    /// </remarks>
+    member m.reverseDiff(?tag) = m.parameters.reverseDiff(?tag=tag)
 
     /// <summary>TBD</summary>
     member m.noDiff() = m.parameters.noDiff()
 
-    /// <summary>TBD</summary>
+    /// <summary>Moves the parameters of the model to the given configuration</summary>
     member m.move(?dtype, ?device, ?backend) = m.parameters.move(?dtype=dtype, ?device=device, ?backend=backend)
 
-    /// <summary>TBD</summary>
+    /// <summary>Gets the number of parameters of the model</summary>
     member m.nparameters = m.parameters.nelement
 
-    /// <summary>TBD</summary>
-    abstract member forward: Tensor -> Tensor
+    /// <summary>Compute the output of the model with resepct to the given inputs</summary>
+    abstract member forward: input: Tensor -> Tensor
 
     abstract member getString: unit -> string
     default m.getString() =
@@ -259,18 +292,18 @@ type Model() =
         sb.Append(")") |> ignore
         sb.ToString()
 
-    /// <summary>TBD</summary>
-    member m.forwardParameters (input:Tensor) (parameters:Tensor) =
-        m.parametersVector <- parameters
-        let f = m.forward(input) in m.noDiff(); f
-
-    /// <summary>TBD</summary>
-    member m.forwardCompose (f:Tensor->Tensor) (input:Tensor) (parameters:Tensor) =
-        m.forwardParameters input parameters |> f
-
-    /// <summary>TBD</summary>
-    member m.forwardLoss (f:Tensor->Tensor->Tensor) (input:Tensor) (target:Tensor) (parameters:Tensor) =
-        m.forwardCompose (f target) input parameters
+    /// <summary>Use the model as a function of its input and parameters</summary>
+    /// <remarks>
+    ///    The resulting function can be composed with a loss function and differentiated.
+    ///    During execution the parameters of the model are temporarily set to the supplied parameters.
+    /// </remarks>
+    member m.asFunction (input:Tensor) (parameters:Tensor) =
+        let old = m.parametersVector
+        try 
+            m.parametersVector <- parameters
+            m.forward(input) 
+        finally
+            m.parametersVector <- old
 
     /// <summary>TBD</summary>
     override m.ToString() = sprintf "%s, nparameters:%A" (m.getString()) m.nparameters

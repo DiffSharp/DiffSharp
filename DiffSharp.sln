@@ -27,8 +27,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "docs", "docs", "{841AB16F-5
 	ProjectSection(SolutionItems) = preProject
 		docs\_template.html = docs\_template.html
 		docs\api-overview.fsx = docs\api-overview.fsx
-		docs\examples-topic1.fsx = docs\examples-topic1.fsx
-		docs\getting-started-topic1.fsx = docs\getting-started-topic1.fsx
 		docs\getting-started-torch.fsx = docs\getting-started-torch.fsx
 		docs\index.fsx = docs\index.fsx
 	EndProjectSection
@@ -37,7 +35,7 @@ Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "DiffSharp.Benchmarks", "tes
 EndProject
 Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "DiffSharp.Benchmarks.Python", "tests\DiffSharp.Benchmarks.Python\DiffSharp.Benchmarks.Python.fsproj", "{7A70BEBA-C1E6-4091-9CCD-5C5216F9DD1E}"
 EndProject
-Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "DiffSharp.Data", "src\DiffSharp.Data\DiffSharp.Data.fsproj", "{4F470580-35C4-429C-B378-18ADEC387016}"
+Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "DiffSharp.Data", "src\DiffSharp.Data\DiffSharp.Data.fsproj", "{4F470580-35C4-429C-B378-18ADEC387016}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
