@@ -207,7 +207,7 @@ type Tensor =
     ///  Returns the input tensor with added support for forward-mode automatic differentiation.
     /// </summary>
     /// <remarks>
-    ///  Any tensors produced using this tensor will also have derivatives computed using forward propagation.
+    ///  Any tensors produced using this tensor will have attached derivatives for forward mode propagation.
     ///  The current global nesting level is used for nested differentiation.
     /// </remarks>
     member t.forwardDiff(derivative:Tensor, ?tag:uint32) = 
@@ -219,10 +219,11 @@ type Tensor =
     /// <summary>
     ///  Returns the input tensor with added support for reverse-mode automatic differentiation.
     /// </summary>
+    /// <param name="tag">The level tag for nested differentiation.  Defaults to the current global nesting level</param>
     /// <remarks>
     ///  Any tensors produced using this tensor will also support reverse-mode propagation. After the completion
     ///  of the corresponding <c>reverse</c> operation on the overall result tensor, the computed derivative
-    ///  will be available. The current global nesting level is used for nested differentiation.
+    ///  will be available. 
     /// </remarks>
     member t.reverseDiff(?tag:uint32) = 
         let tag = defaultArg tag GlobalNestingLevel.Current

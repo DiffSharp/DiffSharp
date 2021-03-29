@@ -21,6 +21,13 @@
     <Compile Include="Distributions.fs" />
     <Compile Include="Data.fs" />
     <Compile Include="Model.fs" />
+    <Compile Include="Model.Linear.fs" />
+    <Compile Include="Model.Conv.fs" />
+    <Compile Include="Model.ConvTranspose.fs" />
+    <Compile Include="Model.Dropout.fs" />
+    <Compile Include="Model.BatchNorm.fs" />
+    <Compile Include="Model.Recurrent.fs" />
+    <Compile Include="Model.VAE.fs" />
     <Compile Include="Optim.fs" />
 	  <PackageReference Update="FSharp.Core" Version="$(FSharpCoreVersion)" />
   </ItemGroup>

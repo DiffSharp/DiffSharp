@@ -39,6 +39,12 @@ Getting Started with DiffSharp and Torch
 
 To use the Torch backend for DiffSharp, reference one of
 
+* [`DiffSharp-lite`](https://www.nuget.org/packages/DiffSharp-lite) - This includes the DiffSharp Torch backend but no LibTorch
+  binaries.  You will have to add an explicit load of the relevant native library, e.g.
+
+      open System.Runtime.InteropServices
+      NativeLibrary.Load("/home/gunes/anaconda3/lib/python3.8/site-packages/torch/lib/libtorch.so")
+
 * [`DiffSharp-cpu`](https://www.nuget.org/packages/DiffSharp-cpu) - This includes the Torch backend using CPU only.
 
 * [`DiffSharp-cuda-linux`](https://www.nuget.org/packages/DiffSharp-cuda-linux), [`DiffSharp-cuda-windows`](https://www.nuget.org/packages/DiffSharp-cuda-windows) - These include the Torch CPU/GPU backend for Linux and Windows respectively. Large download.

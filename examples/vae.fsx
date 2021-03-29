@@ -1,34 +1,17 @@
 #!/usr/bin/env -S dotnet fsi
 
-(*** condition: prepare ***)
 #I "../tests/DiffSharp.Tests/bin/Debug/net5.0"
 #r "DiffSharp.Core.dll"
+#r "DiffSharp.Data.dll"
 #r "DiffSharp.Backends.Torch.dll"
-(*** condition: fsx ***)
-#if FSX
-#r "nuget: DiffSharp-cpu,{{fsdocs-package-version}}"
-#endif // FSX
-(*** condition: ipynb ***)
-#if IPYNB
-#r "nuget: DiffSharp-cpu,{{fsdocs-package-version}}"
-#endif // IPYNB
 
-(*** condition: fsx ***)
-#if FSX
-// This is a workaround for https://github.com/dotnet/fsharp/issues/10136, necessary in F# scripts and .NET Interactive
-System.Runtime.InteropServices.NativeLibrary.Load(let path1 = System.IO.Path.GetDirectoryName(typeof<DiffSharp.dsharp>.Assembly.Location) in if System.Runtime.InteropServices.RuntimeInformation.IsOSPlatform(System.Runtime.InteropServices.OSPlatform.Linux) then path1 + "/../../../../libtorch-cpu/1.5.6/runtimes/linux-x64/native/libtorch.so" else path1 + "/../../../../libtorch-cpu/1.5.6/runtimes/win-x64/native/torch_cpu.dll")
-#r "nuget: DiffSharp-cpu,{{fsdocs-package-version}}"
-#endif // FSX
+// Libtorch binaries
+// Option A: you can use a platform-specific nuget package
+// #r "nuget: libtorch-cuda-11.1-win-x64, 1.8.0.7"
+#r "nuget: libtorch-cuda-11.1-linux-x64, 1.8.0.7"
+// Option B: you can use a local libtorch installation
+// System.Runtime.InteropServices.NativeLibrary.Load("/home/gunes/anaconda3/lib/python3.8/site-packages/torch/lib/libtorch.so")
 
-(*** condition: ipynb ***)
-#if IPYNB
-// This is a workaround for https://github.com/dotnet/fsharp/issues/10136, necessary in F# scripts and .NET Interactive
-System.Runtime.InteropServices.NativeLibrary.Load(let path1 = System.IO.Path.GetDirectoryName(typeof<DiffSharp.dsharp>.Assembly.Location) in if System.Runtime.InteropServices.RuntimeInformation.IsOSPlatform(System.Runtime.InteropServices.OSPlatform.Linux) then path1 + "/../../../../libtorch-cpu/1.5.6/runtimes/linux-x64/native/libtorch.so" else path1 + "/../../../../libtorch-cpu/1.5.6/runtimes/win-x64/native/torch_cpu.dll")
-
-// Set up formatting for notebooks
-Formatter.SetPreferredMimeTypeFor(typeof<obj>, "text/plain")
-Formatter.Register(fun (x:obj) (writer: TextWriter) -> fprintfn writer "%120A" x )
-#endif // IPYNB
 
 open DiffSharp
 open DiffSharp.Model
@@ -106,9 +89,14 @@ let batchSize = 32
 let validInterval = 250
 let numSamples = 32
 
-let trainSet = MNIST("../data", train=true, transform=id)
+let urls = ["https://ossci-datasets.s3.amazonaws.com/mnist/train-images-idx3-ubyte.gz";
+            "https://ossci-datasets.s3.amazonaws.com/mnist/train-labels-idx1-ubyte.gz";
+            "https://ossci-datasets.s3.amazonaws.com/mnist/t10k-images-idx3-ubyte.gz";
+            "https://ossci-datasets.s3.amazonaws.com/mnist/t10k-labels-idx1-ubyte.gz"]
+
+let trainSet = MNIST("../data", urls=urls, train=true, transform=id)
 let trainLoader = trainSet.loader(batchSize=batchSize, shuffle=true)
-let validSet = MNIST("../data", train=false, transform=id)
+let validSet = MNIST("../data", urls=urls, train=false, transform=id)
 let validLoader = validSet.loader(batchSize=batchSize, shuffle=false)
 
 let model = VAE(28*28, 20, [400])

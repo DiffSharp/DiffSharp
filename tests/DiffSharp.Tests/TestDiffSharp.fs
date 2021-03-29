@@ -135,6 +135,13 @@ type TestDiffSharp () =
             Assert.CheckEqual(t, t2)
 
     [<Test>]
+    member this.TestSlice () =
+        let t = dsharp.tensor([1, 2, 3])
+        let tSlice = t |> dsharp.slice([0])
+        let tSliceCorrect = t.[0]
+        Assert.CheckEqual(tSliceCorrect, tSlice)
+
+    [<Test>]
     member this.TestDiff () =
         let x = dsharp.tensor(1.5)
         let fx, d = dsharp.fdiff fscalarvect3 x

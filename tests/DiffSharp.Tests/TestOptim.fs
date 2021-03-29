@@ -26,6 +26,22 @@ type TestOptim () =
         (1. - x)**2 + 100. * (y - x**2)**2
 
     [<Test>]
+    member _.TestOptimizerStep () =
+        let net = Linear(din, dout)
+        let optimizer = SGD(net)
+        let step0 = optimizer.stateStep
+        let step0Correct = 0
+        net.reverseDiff()
+        let y = net.forward(inputs)
+        let loss = dsharp.mseLoss(y, targets)
+        loss.reverse()
+        optimizer.step()
+        let step1 = optimizer.stateStep
+        let step1Correct = 1
+        Assert.AreEqual(step0Correct, step0)
+        Assert.AreEqual(step1Correct, step1)
+
+    [<Test>]
     member _.TestOptimModelSGDStyle1 () =
         // Trains a linear regressor
         let net = Linear(din, dout)
@@ -55,12 +71,12 @@ type TestOptim () =
         // Trains a linear regressor
         let net = Linear(din, dout)
         let lr, epochs = 1e-1, 250
-        let loss = net.forwardLoss dsharp.mseLoss
-        let mutable p = net.parametersVector
         for _ in 0..epochs do
             for _, inputs, targets in dataloader.epoch() do
-                let g = dsharp.grad (loss inputs targets) p
-                p <- p - lr * g
+                let loss p = net.asFunction inputs p |> dsharp.mseLoss targets
+                let g = dsharp.grad loss net.parametersVector
+                net.parametersVector <- net.parametersVector - lr * g
+
         let y = net.forward inputs
         Assert.True(targets.allclose(y, 0.1, 0.1))
 

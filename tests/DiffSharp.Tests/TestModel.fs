@@ -158,13 +158,13 @@ type TestModel () =
 
         let p = net.parametersVector
         let x = dsharp.randn([1;10])
-        ignore <| dsharp.grad (net.forwardCompose dsharp.sum x) p
+        ignore <| dsharp.grad (net.asFunction x >> dsharp.sum) p
         Assert.True(net.parametersVector.isNoDiff())
 
     [<Test>]
     member _.TestModelForwardParameters () =
         let net = ModelStyle1a()
-        let f = net.forwardParameters
+        let f = net.asFunction
         let p = net.parametersVector
         let x = dsharp.randn([1;10])
         let y = f x p
@@ -173,7 +173,7 @@ type TestModel () =
     [<Test>]
     member _.TestModelForwardCompose () =
         let net = ModelStyle1a()
-        let f = net.forwardCompose dsharp.sin
+        let f x p = net.asFunction x p |> dsharp.sin
         let p = net.parametersVector
         let x = dsharp.randn([1;10])
         let y = f x p
@@ -182,11 +182,11 @@ type TestModel () =
     [<Test>]
     member _.TestModelForwardLoss () =
         let net = ModelStyle1a()
-        let f = net.forwardLoss dsharp.mseLoss
+        let f t x p = net.asFunction x p |> dsharp.mseLoss t
         let p = net.parametersVector
         let x = dsharp.randn([1;10])
         let t = dsharp.randn([1;20])
-        let y = f x t p
+        let y = f t x p
         Assert.CheckEqual(([| |]: int array), y.shape)
 
     [<Test>]
@@ -283,11 +283,10 @@ type TestModel () =
         let net = Linear(din, dout)
 
         let lr, steps = 1e-2, 1000
-        let loss = net.forwardLoss dsharp.mseLoss
-        let mutable p = net.parametersVector
+        let loss inputs p = net.asFunction inputs p |> dsharp.mseLoss targets
         for _ in 0..steps do
-            let g = dsharp.grad (loss inputs targets) p
-            p <- p - lr * g
+            let g = dsharp.grad (loss inputs) net.parametersVector
+            net.parametersVector <- net.parametersVector - lr * g
         let y = net.forward inputs
         Assert.True(targets.allclose(y, 0.01))
 
@@ -901,7 +900,7 @@ type TestModel () =
         let m = VAE(xdim*xdim, zdim)
         let x = dsharp.stack(Array.init n (fun _ -> dsharp.eye(xdim)*dsharp.rand([xdim;xdim])))
 
-        let lr, steps = 1e-3, 50
+        let lr, steps = 1e-2, 50
         let optimizer = Adam(m, lr=dsharp.tensor(lr))
         let loss0 = float <| m.loss(x)
         let mutable loss = loss0
@@ -932,3 +931,134 @@ type TestModel () =
         Assert.AreEqual(lin2NamesCorrect, lin2Names)
         Assert.AreEqual(lin3NamesCorrect, lin3Names)
 
+    [<Test>]
+    member _.TestModelRNN () =
+        let din = 8
+        let dout = 10
+        let seqLen = 4
+        let batchSize = 16
+        let numLayers = 3
+        let numDirections = 1
+
+        // Seq first
+        let input = dsharp.randn([seqLen; batchSize; din])
+        let rnn = RNN(din, dout, numLayers=numLayers, bidirectional=false)
+        let output = input --> rnn
+        let outputShape = output.shape
+        let outputShapeCorrect = [|seqLen; batchSize; dout|]
+        Assert.AreEqual(outputShapeCorrect, outputShape)
+
+        // Batch first
+        let input = dsharp.randn([batchSize; seqLen; din])
+        let rnn = RNN(din, dout, numLayers=numLayers, batchFirst=true, bidirectional=false)
+        let output = input --> rnn
+        let outputShape = output.shape
+        let outputShapeCorrect = [|batchSize; seqLen; dout|]
+        Assert.AreEqual(outputShapeCorrect, outputShape)
+
+        let hiddenShape = rnn.hidden.shape
+        let hiddenShapeCorrect = [|numLayers*numDirections; batchSize; dout|]
+        Assert.AreEqual(hiddenShapeCorrect, hiddenShape)
+
+        rnn.reset()
+        let hiddenShape = rnn.hidden.shape
+        let hiddenShapeCorrect = [|0|]
+        Assert.AreEqual(hiddenShapeCorrect, hiddenShape)
+
+        let steps = 64
+        let lr = 0.01
+        let optimizer = Adam(rnn, lr=dsharp.tensor(lr))
+        let target = dsharp.randn([batchSize; seqLen; dout])
+        let output = input --> rnn
+        let mutable loss = dsharp.mseLoss(output, target)
+        let loss0 = float loss
+
+        let hiddenDepthBefore = rnn.hidden.depth
+        let hiddenDepthBeforeCorrect = 0
+
+        for i in 1..steps do
+            rnn.reset()
+            rnn.reverseDiff()
+            let output = input --> rnn
+            loss <- dsharp.mseLoss(output, target)
+            loss.reverse()
+            optimizer.step()
+        let lossFinal = float loss
+        let hiddenDepthAfter = rnn.hidden.depth
+        let hiddenDepthAfterCorrect = 1
+
+        Assert.Less(lossFinal, loss0/2.)
+        Assert.AreEqual(hiddenDepthBeforeCorrect, hiddenDepthBefore)
+        Assert.AreEqual(hiddenDepthAfterCorrect, hiddenDepthAfter)
+
+    [<Test>]
+    member _.TestModelLSTM () =
+        let din = 8
+        let dout = 10
+        let seqLen = 4
+        let batchSize = 16
+        let numLayers = 2
+        let numDirections = 1
+
+        // Seq first
+        let input = dsharp.randn([seqLen; batchSize; din])
+        let lstm = LSTM(din, dout, numLayers=numLayers, bidirectional=false)
+        let output = input --> lstm
+        let outputShape = output.shape
+        let outputShapeCorrect = [|seqLen; batchSize; dout|]
+        Assert.AreEqual(outputShapeCorrect, outputShape)
+
+        // Batch first
+        let input = dsharp.randn([batchSize; seqLen; din])
+        let lstm = LSTM(din, dout, numLayers=numLayers, batchFirst=true, bidirectional=false)
+        let output = input --> lstm
+        let outputShape = output.shape
+        let outputShapeCorrect = [|batchSize; seqLen; dout|]
+        Assert.AreEqual(outputShapeCorrect, outputShape)
+
+        let hiddenShape = lstm.hidden.shape
+        let hiddenShapeCorrect = [|numLayers*numDirections; batchSize; dout|]
+        let cellShape = lstm.cell.shape
+        let cellShapeCorrect = [|numLayers*numDirections; batchSize; dout|]
+        Assert.AreEqual(hiddenShapeCorrect, hiddenShape)
+        Assert.AreEqual(cellShapeCorrect, cellShape)
+
+        lstm.reset()
+        let hiddenShape = lstm.hidden.shape
+        let hiddenShapeCorrect = [|0|]
+        let cellShape = lstm.cell.shape
+        let cellShapeCorrect = [|0|]
+        Assert.AreEqual(hiddenShapeCorrect, hiddenShape)
+        Assert.AreEqual(cellShapeCorrect, cellShape)
+
+        let steps = 100
+        let lr = 0.01
+        let optimizer = Adam(lstm, lr=dsharp.tensor(lr))
+        let target = dsharp.randn([batchSize; seqLen; dout])
+        let output = input --> lstm
+        let mutable loss = dsharp.mseLoss(output, target)
+        let loss0 = float loss
+
+        let hiddenDepthBefore = lstm.hidden.depth
+        let hiddenDepthBeforeCorrect = 0
+        let cellDepthBefore = lstm.cell.depth
+        let cellDepthBeforeCorrect = 0
+
+        for i in 1..steps do
+            lstm.reset()
+            lstm.reverseDiff()
+            let output = input --> lstm
+            loss <- dsharp.mseLoss(output, target)
+            loss.reverse()
+            optimizer.step()
+        let lossFinal = float loss
+        let hiddenDepthAfter = lstm.hidden.depth
+        let hiddenDepthAfterCorrect = 1
+        let cellDepthAfter = lstm.cell.depth
+        let cellDepthAfterCorrect = 1
+
+        Assert.Less(lossFinal, loss0/2.)
+        Assert.AreEqual(hiddenDepthBeforeCorrect, hiddenDepthBefore)
+        Assert.AreEqual(hiddenDepthAfterCorrect, hiddenDepthAfter)
+        Assert.AreEqual(cellDepthBeforeCorrect, cellDepthBefore)
+        Assert.AreEqual(cellDepthAfterCorrect, cellDepthAfter)
