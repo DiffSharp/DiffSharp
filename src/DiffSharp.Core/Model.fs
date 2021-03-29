@@ -195,7 +195,7 @@ type BaseModel() =
     let parameterPrefixes = Dictionary<string, int>()
 
     /// <summary>TBD</summary>
-    member val SubModelsDict = Dictionary<string, BaseModel>()
+    member val subModels = Dictionary<string, BaseModel>()
 
     /// <summary>TBD</summary>
     member m.train() = 
@@ -220,8 +220,8 @@ type BaseModel() =
     /// <summary>TBD</summary>
     member m.allModels
         with get () =
-            if m.SubModelsDict.Count = 0 then [m]
-            else [for sm in m.SubModelsDict.Values do yield! sm.allModels]
+            if m.subModels .Count = 0 then [m]
+            else [for sm in m.subModels .Values do yield! sm.allModels]
 
     /// <summary>TBD</summary>
     member m.init(f:string*Tensor->Tensor) = for KeyValue(n, p) in m.parameters.values do p.value <- f(n, p.value)
@@ -246,16 +246,9 @@ type BaseModel() =
                 m.parameters.add(n, p)
             | :? Model as mm ->
                 let n = if names.Length > 0 then names.[i] else sprintf "model-%s" (Random.UUID())
-                m.SubModelsDict.Add(n, mm)
-                parameterDict.add(mm.parameters.map(fun (nn, pp:Parameter) -> (nextName nn, pp)))
-            | :? (Parameter * string) as pn -> 
-                let (p,n) = pn
-                parameterDict.add(n, p)
-            | :? (BaseModel * string) as mmn -> 
-                let (mm,n) = mmn
-                m.SubModelsDict.Add(n, mm)
-                parameterDict.add(parameterDict.map(fun (nn, pp:Parameter) -> (n + "__" + nn, pp)))
-            | t -> failwithf "Unsupported type %A. Expecting a Parameter or Model" (t.GetType())
+                m.subModels.Add(n, mm)
+                m.parameters.add(mm.parameters.map(fun (nn, pp:Parameter) -> (nextName nn, pp)))
+            | _ -> failwithf "Unsupported type. Expecting a Parameter or Model"
 
     /// <summary>
     ///  Adjust the parameters of the model to include support for forward-mode automatic differentiation.
