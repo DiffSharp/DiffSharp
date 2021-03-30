@@ -2804,10 +2804,10 @@ type Tensor =
                         | AcosT(a) -> push (check(-td / Tensor.Sqrt(1. - a.primal*a.primal), a) :: tt)
                         | AtanT(a) -> push (check(td / (1. + a.primal*a.primal), a) :: tt)
                         | NewT -> push tt
-                        | OpUnaryT(a, rev) -> push (check(rev(td, a.primal), a) :: tt)
-                        | OpBinaryTT(a, b, rev) -> let ad, bd = rev(td, a.primal, b.primal) in push (check(ad, a) :: check(bd, b) :: tt)
-                        | OpBinaryTC(a, b, rev) -> let ad = rev(td, a.primal, b) in push (check(ad, a) :: tt)
-                        | OpBinaryCT(a, b, rev) -> let bd = rev(td, a, b.primal) in push (check(bd, b) :: tt)
+                        | OpUnaryT(a, rev) -> push (check(rev(t.primal, td, a.primal), a) :: tt)
+                        | OpBinaryTT(a, b, rev) -> let ad, bd = rev(t.primal, td, a.primal, b.primal) in push (check(ad, a) :: check(bd, b) :: tt)
+                        | OpBinaryTC(a, b, rev) -> let ad = rev(t.primal, td, a.primal, b) in push (check(ad, a) :: tt)
+                        | OpBinaryCT(a, b, rev) -> let bd = rev(t.primal, td, a, b.primal) in push (check(bd, b) :: tt)
                     else push tt
                 | _ -> push tt
         push [(value, t)]
@@ -2916,22 +2916,22 @@ and TensorOp =
     | AcosT of Tensor
     | AtanT of Tensor
     | NewT
-    | OpUnaryT of Tensor*(Tensor*Tensor->Tensor)
-    | OpBinaryTT of Tensor*Tensor*(Tensor*Tensor*Tensor->Tensor*Tensor)
-    | OpBinaryTC of Tensor*Tensor*(Tensor*Tensor*Tensor->Tensor)
-    | OpBinaryCT of Tensor*Tensor*(Tensor*Tensor*Tensor->Tensor)
+    | OpUnaryT of Tensor*(Tensor*Tensor*Tensor->Tensor)
+    | OpBinaryTT of Tensor*Tensor*(Tensor*Tensor*Tensor*Tensor->Tensor*Tensor)
+    | OpBinaryTC of Tensor*Tensor*(Tensor*Tensor*Tensor*Tensor->Tensor)
+    | OpBinaryCT of Tensor*Tensor*(Tensor*Tensor*Tensor*Tensor->Tensor)
 
 
 [<AbstractClass>]
 type UnaryOp() =
     abstract fRaw: RawTensor->RawTensor
-    abstract df_da: Tensor->Tensor
+    abstract df_da: Tensor*Tensor->Tensor
 
 [<AbstractClass>]
 type BinaryOp() =
     abstract fRaw: RawTensor*RawTensor->RawTensor
-    abstract df_da: Tensor*Tensor->Tensor
-    abstract df_db: Tensor*Tensor->Tensor
+    abstract df_da: Tensor*Tensor*Tensor->Tensor
+    abstract df_db: Tensor*Tensor*Tensor->Tensor
 
 
 type Tensor with
@@ -2939,18 +2939,18 @@ type Tensor with
         fun a ->
             let fRaw = ext.fRaw
             let fTensor = Tensor.Op ext
-            let dfTensorFwd(cp,ap,ad) = ad*ext.df_da(ap)
-            let dfTensorRev(a) = OpUnaryT(a, (fun (cd,ap) -> cd*ext.df_da(ap)))
+            let dfTensorFwd(cp,ap,ad) = ad*ext.df_da(ap,cp)
+            let dfTensorRev(a) = OpUnaryT(a, (fun (cp,cd,ap) -> cd*ext.df_da(ap,cp)))
             Tensor.OpUnary(a, fRaw, fTensor, dfTensorFwd, dfTensorRev)
 
     static member Op(ext: BinaryOp) =
         fun (a, b) ->
             let fRaw = ext.fRaw
             let fTensor = Tensor.Op ext
-            let dfTensorFwdTT(cp,ap,ad,bp,bd) = ad*ext.df_da(ap,bp) + bd*ext.df_db(ap,bp)
-            let dfTensorFwdTC(cp,ap,ad) = ad*ext.df_da(ap,b)
-            let dfTensorFwdCT(cp,bp,bd) = bd*ext.df_db(a,bp)
-            let dfTensorRevTT(a,b) = OpBinaryTT(a, b, (fun (cd,ap,bp) -> (cd*ext.df_da(ap,bp)), (cd*ext.df_db(ap,bp))))
-            let dfTensorRevTC(a,b) = OpBinaryTC(a, b, (fun (cd,ap,b) -> (cd*ext.df_da(ap,b))))
-            let dfTensorRevCT(a,b) = OpBinaryCT(a, b, (fun (cd,a,bp) -> (cd*ext.df_db(a,bp))))
+            let dfTensorFwdTT(cp,ap,ad,bp,bd) = ad*ext.df_da(ap,bp,cp) + bd*ext.df_db(ap,bp,cp)
+            let dfTensorFwdTC(cp,ap,ad) = ad*ext.df_da(ap,b,cp)
+            let dfTensorFwdCT(cp,bp,bd) = bd*ext.df_db(a,bp,cp)
+            let dfTensorRevTT(a,b) = OpBinaryTT(a, b, (fun (cp,cd,ap,bp) -> (cd*ext.df_da(ap,bp,cp)), (cd*ext.df_db(ap,bp,cp))))
+            let dfTensorRevTC(a,b) = OpBinaryTC(a, b, (fun (cp,cd,ap,b) -> (cd*ext.df_da(ap,b,cp))))
+            let dfTensorRevCT(a,b) = OpBinaryCT(a, b, (fun (cp,cd,a,bp) -> (cd*ext.df_db(a,bp,cp))))
             Tensor.OpBinary(a, b, fRaw, fTensor, dfTensorFwdTT, dfTensorFwdTC, dfTensorFwdCT, dfTensorRevTT, dfTensorRevTC, dfTensorRevCT)
