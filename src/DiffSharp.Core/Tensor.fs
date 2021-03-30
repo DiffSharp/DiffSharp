@@ -2924,14 +2924,14 @@ and TensorOp =
 
 [<AbstractClass>]
 type UnaryOp() =
-    abstract fRaw: RawTensor->RawTensor
-    abstract df_da: Tensor*Tensor->Tensor
+    abstract fRaw: a:RawTensor->RawTensor
+    abstract df_da: a:Tensor*fa:Tensor->Tensor
 
 [<AbstractClass>]
 type BinaryOp() =
-    abstract fRaw: RawTensor*RawTensor->RawTensor
-    abstract df_da: Tensor*Tensor*Tensor->Tensor
-    abstract df_db: Tensor*Tensor*Tensor->Tensor
+    abstract fRaw: a:RawTensor*b:RawTensor->RawTensor
+    abstract df_da: a:Tensor*b:Tensor*fab:Tensor->Tensor
+    abstract df_db: a:Tensor*b:Tensor*fab:Tensor->Tensor
 
 
 type Tensor with
