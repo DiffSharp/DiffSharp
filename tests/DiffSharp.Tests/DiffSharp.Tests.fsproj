@@ -30,6 +30,7 @@
     <Compile Include="TestDerivatives.Conv.fs" />
     <Compile Include="TestDerivatives.MaxPool.fs" />
     <Compile Include="TestDistributions.fs" />
+    <Compile Include="TestExtensions.fs" />
     <Compile Include="TestData.fs" />
     <Compile Include="TestModel.fs" />
     <Compile Include="TestOptim.fs" />
