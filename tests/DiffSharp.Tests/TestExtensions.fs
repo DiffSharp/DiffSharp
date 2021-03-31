@@ -11,7 +11,7 @@ open DiffSharp
 // #nowarn "0058"
 
 [<TestFixture>]
-module TestOps =
+module TestExtensions =
 
     type Tensor with
         member a.sinExt() = 
