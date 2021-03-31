@@ -83,3 +83,45 @@ module TestOps =
                     member _.fd_df_db(a,b,f,fd) = a.transposeExt().matmulExt(fd)
                 }
                 (a,b)
+
+    let compareUnaryOps op1 op2 count initializer =
+        for i in 1..count do
+            let x = initializer()
+            let xd = dsharp.randnLike(x)
+            let zd = dsharp.randnLike(x)
+
+            let fwdx = x.forwardDiff(xd)
+            let fwdz1 : Tensor = op1 fwdx
+            let fwdz2 : Tensor = op2 fwdx
+            let fwdzd1 = fwdz1.derivative
+            let fwdzd2 = fwdz2.derivative
+
+            let revx1 = x.reverseDiff()
+            let revx2 = x.reverseDiff()
+            let revz1 = op1 revx1
+            let revz2 = op1 revx2
+            revz1.reverse(zd)
+            revz2.reverse(zd)
+            let revxd1 = revx1.derivative
+            let revxd2 = revx2.derivative
+
+            printfn "fwdz1 %A" fwdz1
+            printfn "fwdz2 %A" fwdz2
+            printfn "fwdzd1 %A" fwdzd1
+            printfn "fwdzd2 %A" fwdzd2
+            printfn "revz1 %A" revz1
+            printfn "revz2 %A" revz2
+            printfn "revxd1 %A" revxd1
+            printfn "revxd2 %A\n" revxd2
+
+            Assert.True(fwdz1.allclose(fwdz2, 0.01))
+            Assert.True(fwdzd1.allclose(fwdzd2, 0.01))
+            Assert.True(revz1.allclose(revz2, 0.01))
+            Assert.True(revxd1.allclose(revxd2, 0.01))
+
+    [<Test>]
+    let TestExtensions() =
+        compareUnaryOps (fun t -> t.sin()) (fun t -> t.sinExt()) 10 (fun () -> dsharp.randn(10))
+        compareUnaryOps (fun t -> t.cos()) (fun t -> t.cosExt()) 10 (fun () -> dsharp.randn(10))
+        compareUnaryOps (fun t -> t.exp()) (fun t -> t.expExt()) 10 (fun () -> dsharp.randn(10))
+        compareUnaryOps (fun t -> t.log()) (fun t -> t.logExt()) 10 (fun () -> dsharp.randn(10).abs())
