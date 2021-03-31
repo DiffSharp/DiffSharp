@@ -88,7 +88,6 @@ module TestOps =
         for i in 1..count do
             let x = initializer()
             let xd = dsharp.randnLike(x)
-            let zd = dsharp.randnLike(x)
 
             let fwdx = x.forwardDiff(xd)
             let fwdz1 : Tensor = op1 fwdx
@@ -96,6 +95,7 @@ module TestOps =
             let fwdzd1 = fwdz1.derivative
             let fwdzd2 = fwdz2.derivative
 
+            let zd = dsharp.randnLike(fwdz1)
             let revx1 = x.reverseDiff()
             let revx2 = x.reverseDiff()
             let revz1 = op1 revx1
@@ -105,6 +105,50 @@ module TestOps =
             let revxd1 = revx1.derivative
             let revxd2 = revx2.derivative
 
+            // printfn "x %A" x
+            // printfn "fwdz1 %A" fwdz1
+            // printfn "fwdz2 %A" fwdz2
+            // printfn "fwdzd1 %A" fwdzd1
+            // printfn "fwdzd2 %A" fwdzd2
+            // printfn "revz1 %A" revz1
+            // printfn "revz2 %A" revz2
+            // printfn "revxd1 %A" revxd1
+            // printfn "revxd2 %A\n" revxd2
+
+            Assert.True(fwdz1.allclose(fwdz2, 0.01))
+            Assert.True(fwdzd1.allclose(fwdzd2, 0.01))
+            Assert.True(revz1.allclose(revz2, 0.01))
+            Assert.True(revxd1.allclose(revxd2, 0.01))
+
+    let compareBinaryOps op1 op2 count initializer =
+        for i in 1..count do
+            let x, y = initializer()
+            let xd = dsharp.randnLike(x)
+            let yd = dsharp.randnLike(y)
+
+            let fwdx = x.forwardDiff(xd)
+            let fwdy = y.forwardDiff(yd)
+            let fwdz1 : Tensor = op1 fwdx fwdy
+            let fwdz2 : Tensor = op2 fwdx fwdy
+            let fwdzd1 = fwdz1.derivative
+            let fwdzd2 = fwdz2.derivative
+
+            let zd = dsharp.randnLike(fwdz1)
+            let revx1 = x.reverseDiff()
+            let revy1 = y.reverseDiff()
+            let revx2 = x.reverseDiff()
+            let revy2 = y.reverseDiff()
+            let revz1 = op1 revx1 revy1
+            let revz2 = op1 revx2 revy2
+            revz1.reverse(zd)
+            revz2.reverse(zd)
+            let revxd1 = revx1.derivative
+            let revxd2 = revx2.derivative
+            let revyd1 = revy1.derivative
+            let revyd2 = revy2.derivative
+
+            printfn "x %A" x
+            printfn "y %A" y
             printfn "fwdz1 %A" fwdz1
             printfn "fwdz2 %A" fwdz2
             printfn "fwdzd1 %A" fwdzd1
@@ -112,16 +156,25 @@ module TestOps =
             printfn "revz1 %A" revz1
             printfn "revz2 %A" revz2
             printfn "revxd1 %A" revxd1
-            printfn "revxd2 %A\n" revxd2
+            printfn "revxd2 %A" revxd2
+            printfn "revyd1 %A" revyd1
+            printfn "revyd2 %A\n" revyd2
 
             Assert.True(fwdz1.allclose(fwdz2, 0.01))
             Assert.True(fwdzd1.allclose(fwdzd2, 0.01))
             Assert.True(revz1.allclose(revz2, 0.01))
             Assert.True(revxd1.allclose(revxd2, 0.01))
+            Assert.True(revyd1.allclose(revyd2, 0.01))
 
     [<Test>]
     let TestExtensions() =
-        compareUnaryOps (fun t -> t.sin()) (fun t -> t.sinExt()) 10 (fun () -> dsharp.randn(10))
-        compareUnaryOps (fun t -> t.cos()) (fun t -> t.cosExt()) 10 (fun () -> dsharp.randn(10))
-        compareUnaryOps (fun t -> t.exp()) (fun t -> t.expExt()) 10 (fun () -> dsharp.randn(10))
-        compareUnaryOps (fun t -> t.log()) (fun t -> t.logExt()) 10 (fun () -> dsharp.randn(10).abs())
+        let n = 10
+        compareUnaryOps (fun x -> x.sin()) (fun x -> x.sinExt()) n (fun () -> dsharp.randn(10))
+        compareUnaryOps (fun x -> x.cos()) (fun x -> x.cosExt()) n (fun () -> dsharp.randn(10))
+        compareUnaryOps (fun x -> x.exp()) (fun x -> x.expExt()) n (fun () -> dsharp.randn(10))
+        compareUnaryOps (fun x -> x.log()) (fun x -> x.logExt()) n (fun () -> dsharp.randn(10).abs())
+        compareUnaryOps (fun x -> x.transpose()) (fun x -> x.transposeExt()) n (fun () -> dsharp.randn([4; 3]))
+
+        compareBinaryOps (fun x y -> x.pow(y)) (fun x y -> x.powExt(y)) n (fun () -> dsharp.randn(10).abs(), dsharp.randn(10))
+        compareBinaryOps (fun x y -> x.mul(y)) (fun x y -> x.mulExt(y)) n (fun () -> dsharp.randn(10), dsharp.randn(10))
+        compareBinaryOps (fun x y -> x.matmul(y)) (fun x y -> x.matmulExt(y)) 10 (fun () -> dsharp.randn([4; 3]), dsharp.randn([3; 5]))
