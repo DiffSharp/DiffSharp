@@ -34,7 +34,7 @@ type TestDerivativesNested () =
         // Siskind, J.M., Pearlmutter, B.A. Nesting forward-mode AD in a functional framework. Higher-Order Symb Comput 21, 361–376 (2008). https://doi.org/10.1007/s10990-008-9037-1
         // Page 2
 
-        let rosenbrock (x:Tensor) (y:Tensor)= 
+        let rosenbrock (x:Tensor) (y:Tensor) = 
             (1. - x)**2 + 100. * (y - x**2)**2
 
         let x0 = dsharp.tensor(0.9)
