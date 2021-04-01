@@ -27,6 +27,32 @@ type TestDerivativesNested () =
         let dCorrect = dsharp.tensor(2)
         Assert.CheckEqual(dCorrect, d)
 
+
+    [<Test>]
+    member _.TestDerivativesNestedMin () =
+        // 2nd order (fwd-on-fwd, because fgrad below is using fwd for scalar arguments) 
+        // Siskind, J.M., Pearlmutter, B.A. Nesting forward-mode AD in a functional framework. Higher-Order Symb Comput 21, 361–376 (2008). https://doi.org/10.1007/s10990-008-9037-1
+        // Page 2
+
+        let rosenbrock (x:Tensor) (y:Tensor)= 
+            (1. - x)**2 + 100. * (y - x**2)**2
+
+        let x0 = dsharp.tensor(0.9)
+
+        let min f =
+            let lr = 0.001
+            let tolerance = 0.1
+            let rec iter x =
+                let fx, gx = dsharp.fgrad f x
+                if float fx <= tolerance then fx
+                else iter (x - lr*gx)
+            iter x0
+
+        let fmin = min (fun x -> min (fun y -> rosenbrock x y))
+        let fminCorrect = dsharp.zero()
+
+        Assert.True(fminCorrect.allclose(fmin, 0.1, 0.1))
+
     [<Test>]
     member _.TestDerivativesNestedChargedParticle () =
         // 3rd order (fwd-on-fwd-on-rev)
@@ -57,15 +83,11 @@ type TestDerivativesNested () =
             xtf.[0]*xtf.[0]
 
         let argminNewton f x =
-            let mutable x = x
-            let mutable i = 0
-            let mutable converged = false
-            while not converged do
+            let rec iter i x =
                 let dfdx = dsharp.diff f x
-                x <- x - dfdx / (dsharp.diff (dsharp.diff f) x)
-                i <- i + 1
-                if float (dfdx.abs()) < errorTolerance then converged <- true
-            i, x
+                if float (dfdx.abs()) < errorTolerance then i, x
+                else iter (i+1) (x - dfdx/(dsharp.diff (dsharp.diff f) x))
+            iter 1 x
 
         let w0 = dsharp.tensor(0.)
         let i, wf = argminNewton naiveEuler w0
@@ -159,5 +181,6 @@ type TestDerivativesNested () =
         Assert.True(f''''xCorrect.allclose(f''''x, 0.01))
         Assert.True(f'''''xCorrect.allclose(f'''''x, 0.01))
         Assert.True(f''''''xCorrect.allclose(f''''''x, 0.01))
+
 
 // Random pipelines of fwd-fwd-rev-fwd, etc.
