@@ -50,6 +50,13 @@ type Tensor =
         | TensorF(tp,_,_) -> tp.primalRaw
         | TensorR(tp,_,_,_,_) -> tp.primalRaw
 
+    /// Gets the raw value of the tensor ignoring all its derivatives
+    member t.nestingTag =
+        match t with
+        | TensorC(_) -> failwithf "Cannot get nesting tag of constant tensor"
+        | TensorF(_,_,tt) -> tt
+        | TensorR(_,_,_,_,tt) -> tt
+
     /// Converts the tensor to a new tensor with the given element type
     member t.cast(dtype) =
         if t.dtype = dtype then t else
@@ -810,10 +817,10 @@ type Tensor =
         | _ -> 
         let res = value |> DataConverter.tryFlatArrayAndShape<Tensor> // support creation of new Tensor from a structure holding scalar Tensors
         match res with
-        | Some (array, shape) -> 
-            let array = array |> Array.map float32
-            let value = ArrayND.init shape (fun ii -> array.[indexToFlatIndex shape ii])
-            TensorC(RawTensor.Create(value, ?dtype=dtype, ?device=device, ?backend=backend))
+        | Some (tensors, shape) -> 
+            let allScalar = tensors |> Array.forall (fun t -> t.dim = 0)
+            if not allScalar then failwithf "Combining tensors in an array is only supported where all tensors in the array are scalar (zero-dimensional). Check other operations like stack, cat to combine tensors."
+            Tensor.stack(tensors).view(shape)
         | None ->
             TensorC(RawTensor.Create(value, ?dtype=dtype, ?device=device, ?backend=backend))        
 
@@ -832,7 +839,11 @@ type Tensor =
     static member stack(tensors:seq<Tensor>, ?dim:int) = 
         let dim = defaultArg dim 0 
         let tensors = tensors |> Seq.toArray
-        // TODO: check if all Tensors are of the same type (Tensor, TensorF, or TensorR) and have the same nesting tag
+        let allSameDiffType = tensors |> Array.forall (fun t -> t.isSameDiffType(tensors.[0]))
+        if not allSameDiffType then failwithf "Cannot stack tensors with different differentiation type (TensorC, TensorF, TensorR)."
+        if not (tensors.[0].isNoDiff()) then
+            let allSameTag = tensors |> Array.forall (fun t -> t.nestingTag = tensors.[0].nestingTag)
+            if not allSameTag then failwithf "Cannot stack tensors with different nesting tags."
         let shapes = tensors |> Array.map (fun t -> t.shape)
         Shape.checkCanStack shapes dim |> ignore
         match Seq.head tensors with
@@ -864,7 +875,13 @@ type Tensor =
     static member cat(tensors:seq<Tensor>, ?dim: int) = 
         let dim = defaultArg dim 0 
         let tensors = tensors |> Seq.toArray
-        // TODO: check if all Tensors are of the same nesting variety (Tensor, TensorF, or TensorR), have the same nesting tag, and have the same dtype, device, backend
+        let allSameDiffType = tensors |> Array.forall (fun t -> t.isSameDiffType(tensors.[0]))
+        if not allSameDiffType then failwithf "Cannot cat tensors with different differentiation type (TensorC, TensorF, TensorR)."
+        if not (tensors.[0].isNoDiff()) then
+            let allSameTag = tensors |> Array.forall (fun t -> t.nestingTag = tensors.[0].nestingTag)
+            if not allSameTag then failwithf "Cannot cat tensors with different nesting tags."
+        let shapes = tensors |> Array.map (fun t -> t.shape)
+        Shape.checkCanCat shapes dim |> ignore
         match Seq.head tensors with
         | TensorC(ap) -> TensorC(ap.CatTs((tensors |> Array.map (fun t -> t.primalRaw)), dim))
         | TensorF(_,_,at) ->
