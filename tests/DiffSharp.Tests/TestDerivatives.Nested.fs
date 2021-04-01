@@ -17,8 +17,10 @@ type TestDerivativesNested () =
     [<Test>]
     member _.TestDerivativesNestedPerturbationConfusion () =
         // 2nd order (fwd-on-fwd)
+        // Perturbation confusion example
         // Siskind, J.M., Pearlmutter, B.A. Nesting forward-mode AD in a functional framework. Higher-Order Symb Comput 21, 361–376 (2008). https://doi.org/10.1007/s10990-008-9037-1
         // Page 4
+
         let x0 = dsharp.tensor(1)
         let y0 = dsharp.tensor(2)
         let d = dsharp.diff (fun x -> x * dsharp.diff (fun y -> x * y) y0) x0
@@ -28,8 +30,10 @@ type TestDerivativesNested () =
     [<Test>]
     member _.TestDerivativesNestedChargedParticle () =
         // 3rd order (fwd-on-fwd-on-rev)
+        // Nested optimization of a charged particle's trajectory
         // Siskind, J.M., Pearlmutter, B.A. Nesting forward-mode AD in a functional framework. Higher-Order Symb Comput 21, 361–376 (2008). https://doi.org/10.1007/s10990-008-9037-1
         // Page 13
+        
         let dt = dsharp.tensor(0.1)
         let x0 = dsharp.tensor([0., 8.])
         let x'0 = dsharp.tensor([0.75, 0.])
@@ -69,3 +73,50 @@ type TestDerivativesNested () =
         
         Assert.AreEqual(iCorrect, i)
         Assert.True(wfCorrect.allclose(wf, 0.01))
+
+    [<Test>]
+    member _.TestDerivativesNestedHessian () =
+        // 2nd order (rev-on-fwd and rev-on-rev)
+        // Compares Hessian-vector product to vector-Hessian product
+        
+        let rosenbrock (x:Tensor) = 
+            let x, y = x.[0], x.[1]
+            (1. - x)**2 + 100. * (y - x**2)**2
+
+        // Analytical Hessian for Rosenbrock
+        let rosenbrockHessian (x:Tensor) = 
+            let x, y = x.[0], x.[1]
+            dsharp.tensor([[2.+1200.*x*x-400.*y, -400.*x],[-400.*x, 200.*dsharp.one()]])
+
+        // Jacobian-vector product (fwd)
+        let jacobianv f x v =
+            let _, d = dsharp.evalForwardDiff f x v
+            d
+
+        // Vector-jacobian product (rev)
+        let vjacobian f x v =
+            let _, r = dsharp.evalReverseDiff f x
+            r v
+
+        // Hessian-vector product (rev-on-fwd)
+        let hessianv f x v =
+            let gv xx = jacobianv f xx v
+            let hv = vjacobian gv x (dsharp.tensor(1.))
+            hv
+
+        // Vector-Hessian product (rev-on-rev)
+        let vhessian f x v =
+            let vg xx = vjacobian f xx (dsharp.tensor(1.))
+            let vh = vjacobian vg x v
+            vh
+
+        let x = dsharp.randn(2)
+        let v = dsharp.randn(2)
+
+        // Should be the same because Hessian is symmetric
+        let hv = hessianv rosenbrock x v
+        let vh = vhessian rosenbrock x v
+        let hvCorrect = rosenbrockHessian(x).matmul(v)
+
+        Assert.True(hvCorrect.allclose(hv, 0.01))
+        Assert.True(hvCorrect.allclose(vh, 0.01))
