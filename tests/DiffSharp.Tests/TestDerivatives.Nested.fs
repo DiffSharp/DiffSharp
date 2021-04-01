@@ -120,3 +120,44 @@ type TestDerivativesNested () =
 
         Assert.True(hvCorrect.allclose(hv, 0.01))
         Assert.True(hvCorrect.allclose(vh, 0.01))
+
+    [<Test>]
+    member _.TestDerivativesNestedTanh () =
+        // 6th order (fwd-on-fwd-on-fwd-on-fwd-on-fwd-on-fwd)
+        // Inspired by https://github.com/HIPS/autograd
+
+        let sech (x:Tensor) = 1 / x.cosh()
+
+        let f (x:Tensor) = x.tanh()
+        let f' (x:Tensor) = let s = sech x in s*s
+        let f'' (x:Tensor) = let s = sech x in -2.*x.tanh()*s*s
+        let f''' (x:Tensor) = let t, s = x.tanh(), sech x in 4*t*t*s*s - 2*s*s*s*s
+        let f'''' (x:Tensor) = let t, s = x.tanh(), sech x in 16*t*s*s*s*s - 8*t*t*t*s*s
+        let f''''' (x:Tensor) = let t, s = x.tanh(), sech x in 8*s*s*(2*t*t*t*t + 2*s*s*s*s - 11*t*t*s*s)
+        let f'''''' (x:Tensor) = let t, s = x.tanh(), sech x in -16*t*s*s*(2*t*t*t*t + 17*s*s*s*s - 26*t*t*s*s)
+
+        let x = dsharp.randn(1).squeeze()
+
+        let d = dsharp.diff
+        let f'x = d f x
+        let f''x = d (d f) x
+        let f'''x = d (d (d f)) x
+        let f''''x = d (d (d (d f))) x
+        let f'''''x = d (d (d (d (d f)))) x
+        let f''''''x = d (d (d (d (d (d f))))) x
+
+        let f'xCorrect = f' x
+        let f''xCorrect = f'' x
+        let f'''xCorrect = f''' x
+        let f''''xCorrect = f'''' x
+        let f'''''xCorrect = f''''' x
+        let f''''''xCorrect = f'''''' x
+
+        Assert.True(f'xCorrect.allclose(f'x, 0.01))
+        Assert.True(f''xCorrect.allclose(f''x, 0.01))
+        Assert.True(f'''xCorrect.allclose(f'''x, 0.01))
+        Assert.True(f''''xCorrect.allclose(f''''x, 0.01))
+        Assert.True(f'''''xCorrect.allclose(f'''''x, 0.01))
+        Assert.True(f''''''xCorrect.allclose(f''''''x, 0.01))
+
+// Random pipelines of fwd-fwd-rev-fwd, etc.
