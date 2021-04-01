@@ -354,10 +354,11 @@ type Tensor =
                 | TensorR(_,_,o,_,_) -> 
                     let c, _ = Reflection.FSharpValue.GetUnionFields(o, typeof<TensorOp>)
                     let fields = c.GetFields()
-                    let mutable ret = sprintf "TensorR %A %s" t.shape c.Name
+                    let mutable ret = sprintf "TensorR %A %s" t.shape (o.ToString())
                     for field in fields do
                         let fv = field.GetValue(o)
-                        ret <- ret + sprintf "\n%s%s" (String.replicate d " ") (parents fv (d+1))
+                        if fv :? Tensor then 
+                            ret <- ret + sprintf "\n%s%s" (String.replicate d " ") (parents fv (d+1))
                     ret
             | :? (Tensor array) as ts ->
                 // p <- p |> List.append (ts |> Array.toList)
@@ -367,7 +368,8 @@ type Tensor =
                     ret <- ret + sprintf "%s%s%s" prefix (String.replicate d " ") (parents t (d+1))
                     prefix <- "\n"
                 ret
-            | _ -> indentNewLines (sprintf "%A" t) d
+            // | _ -> indentNewLines (sprintf "%A" t) d
+            | _ -> ""
         let ps = parents t 1
         p |> List.rev, ps
 
@@ -2652,10 +2654,10 @@ type Tensor =
                         | AcosT(a) -> reset (a::tt)
                         | AtanT(a) -> reset (a::tt)
                         | NewT -> reset tt
-                        | OpUnaryT(a,_) -> reset (a::tt)
-                        | OpBinaryTT(a,b,_) -> reset (a::b::tt)
-                        | OpBinaryTC(a,_,_) -> reset (a::tt)
-                        | OpBinaryCT(_,b,_) -> reset (b::tt)
+                        | OpUnaryT(a,_,_) -> reset (a::tt)
+                        | OpBinaryTT(a,b,_,_) -> reset (a::b::tt)
+                        | OpBinaryTC(a,_,_,_) -> reset (a::tt)
+                        | OpBinaryCT(_,b,_,_) -> reset (b::tt)
                     else reset tt
                 | _ -> reset tt
         reset [t]
@@ -2821,10 +2823,10 @@ type Tensor =
                         | AcosT(a) -> push (check(-td / Tensor.Sqrt(1. - a.primal*a.primal), a) :: tt)
                         | AtanT(a) -> push (check(td / (1. + a.primal*a.primal), a) :: tt)
                         | NewT -> push tt
-                        | OpUnaryT(a, rev) -> push (check(rev(a.primal, t.primal, td), a) :: tt)
-                        | OpBinaryTT(a, b, rev) -> let ad, bd = rev(a.primal, b.primal, t.primal, td) in push (check(ad, a) :: check(bd, b) :: tt)
-                        | OpBinaryTC(a, b, rev) -> let ad = rev(a.primal, b, t.primal, td) in push (check(ad, a) :: tt)
-                        | OpBinaryCT(a, b, rev) -> let bd = rev(a, b.primal, t.primal, td) in push (check(bd, b) :: tt)
+                        | OpUnaryT(a, rev, _) -> push (check(rev(a.primal, t.primal, td), a) :: tt)
+                        | OpBinaryTT(a, b, rev, _) -> let ad, bd = rev(a.primal, b.primal, t.primal, td) in push (check(ad, a) :: check(bd, b) :: tt)
+                        | OpBinaryTC(a, b, rev, _) -> let ad = rev(a.primal, b, t.primal, td) in push (check(ad, a) :: tt)
+                        | OpBinaryCT(a, b, rev, _) -> let bd = rev(a, b.primal, t.primal, td) in push (check(bd, b) :: tt)
                     else push tt
                 | _ -> push tt
         push [(value, t)]
@@ -2933,28 +2935,39 @@ and TensorOp =
     | AcosT of Tensor
     | AtanT of Tensor
     | NewT
-    | OpUnaryT of Tensor*(Tensor*Tensor*Tensor->Tensor)
-    | OpBinaryTT of Tensor*Tensor*(Tensor*Tensor*Tensor*Tensor->Tensor*Tensor)
-    | OpBinaryTC of Tensor*Tensor*(Tensor*Tensor*Tensor*Tensor->Tensor)
-    | OpBinaryCT of Tensor*Tensor*(Tensor*Tensor*Tensor*Tensor->Tensor)
+    | OpUnaryT of Tensor*(Tensor*Tensor*Tensor->Tensor)*string
+    | OpBinaryTT of Tensor*Tensor*(Tensor*Tensor*Tensor*Tensor->Tensor*Tensor)*string
+    | OpBinaryTC of Tensor*Tensor*(Tensor*Tensor*Tensor*Tensor->Tensor)*string
+    | OpBinaryCT of Tensor*Tensor*(Tensor*Tensor*Tensor*Tensor->Tensor)*string
+
+    override op.ToString() =
+        match op with
+        | OpUnaryT(_,_,s) -> s
+        | OpBinaryTT(_,_,_,s) -> s
+        | OpBinaryTC(_,_,_,s) -> s
+        | OpBinaryCT(_,_,_,s) -> s
+        | NewT -> "NewT" // Needed because op.GetType().Name does not give "NewT" for this case and gives "TensorOp"
+        | _ -> op.GetType().Name
 
 [<AbstractClass>]
-type UnaryOp() =
+type UnaryOp(name:string) =
+    member _.name = name
     abstract fRaw: a:RawTensor->RawTensor
     abstract ad_df_da: a:Tensor*ad:Tensor*f:Tensor->Tensor
     abstract fd_df_da: a:Tensor*f:Tensor*fd:Tensor->Tensor
 
 
 [<AbstractClass>]
-type UnaryOpElementwise() =
-    inherit UnaryOp()
+type UnaryOpElementwise(name) =
+    inherit UnaryOp(name)
     abstract df_da: a:Tensor*f:Tensor->Tensor
     override op.ad_df_da(a,ad,f) = ad*op.df_da(a,f)
     override op.fd_df_da(a,f,fd) = fd*op.df_da(a,f)
 
 
 [<AbstractClass>]
-type BinaryOp() =
+type BinaryOp(name:string) =
+    member _.name = name
     abstract fRaw: a:RawTensor*b:RawTensor->RawTensor
     abstract ad_df_da: a:Tensor*ad:Tensor*b:Tensor*f:Tensor->Tensor
     abstract bd_df_db: a:Tensor*b:Tensor*bd:Tensor*f:Tensor->Tensor
@@ -2963,8 +2976,8 @@ type BinaryOp() =
 
 
 [<AbstractClass>]
-type BinaryOpElementwise() =
-    inherit BinaryOp()
+type BinaryOpElementwise(name) =
+    inherit BinaryOp(name)
     abstract df_da: a:Tensor*b:Tensor*f:Tensor->Tensor
     abstract df_db: a:Tensor*b:Tensor*f:Tensor->Tensor
     override op.ad_df_da(a,ad,b,f) = ad*op.df_da(a,b,f)
@@ -2979,7 +2992,7 @@ type Tensor with
             let fRaw = ext.fRaw
             let fTensor = Tensor.Op ext
             let dfFwd(ap,ad,fp) = ext.ad_df_da(ap,ad,fp) // ad*ext.df_da(ap,fp)
-            let dfRev(a) = OpUnaryT(a, (fun (ap,fp,fd) -> ext.fd_df_da(ap,fp,fd))) // fd*ext.df_da(ap,fp)
+            let dfRev(a) = OpUnaryT(a, (fun (ap,fp,fd) -> ext.fd_df_da(ap,fp,fd)), ext.name) // fd*ext.df_da(ap,fp)
             Tensor.OpUnary(a, fRaw, fTensor, dfFwd, dfRev)
 
     static member Op(ext: BinaryOp) =
@@ -2989,7 +3002,7 @@ type Tensor with
             let dfFwdTT(ap,ad,bp,bd,fp) = ext.ad_df_da(ap,ad,bp,fp) + ext.bd_df_db(ap,bp,bd,fp)
             let dfFwdTC(ap,ad,fp) = ext.ad_df_da(ap,ad,b,fp)
             let dfFwdCT(bp,bd,fp) = ext.bd_df_db(a,bp,bd,fp)
-            let dfRevTT(a,b) = OpBinaryTT(a, b, (fun (ap,bp,fp,fd) -> (ext.fd_df_da(ap,bp,fp,fd)), (ext.fd_df_db(ap,bp,fp,fd))))
-            let dfRevTC(a,b) = OpBinaryTC(a, b, (fun (ap,b,fp,fd) -> (ext.fd_df_da(ap,b,fp,fd))))
-            let dfRevCT(a,b) = OpBinaryCT(a, b, (fun (a,bp,fp,fd) -> (ext.fd_df_db(a,bp,fp,fd))))
+            let dfRevTT(a,b) = OpBinaryTT(a, b, (fun (ap,bp,fp,fd) -> (ext.fd_df_da(ap,bp,fp,fd)), (ext.fd_df_db(ap,bp,fp,fd))), ext.name+"TT")
+            let dfRevTC(a,b) = OpBinaryTC(a, b, (fun (ap,b,fp,fd) -> (ext.fd_df_da(ap,b,fp,fd))), ext.name+"TC")
+            let dfRevCT(a,b) = OpBinaryCT(a, b, (fun (a,bp,fp,fd) -> (ext.fd_df_db(a,bp,fp,fd))), ext.name+"CT")
             Tensor.OpBinary(a, b, fRaw, fTensor, dfFwdTT, dfFwdTC, dfFwdCT, dfRevTT, dfRevTC, dfRevCT)
