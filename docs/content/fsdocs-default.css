@@ -273,7 +273,8 @@ body {
 /*--------------------------------------------------------------------------*/
 
 #fsdocs-content code {
-    font-size: 0.83rem;
+    /* font-size: 0.83rem; */
+    font: 0.85rem 'Roboto Mono', monospace;
     background-color: #f7f7f900;
     border: 0px;
     padding: 0px;
@@ -419,7 +420,9 @@ body {
 
 .fsdocs-param-name,
 .fsdocs-return-name {
-    font-weight: 600;
+    font-weight: 900;
+    font-size: 0.85rem;
+    font-family: 'Roboto Mono', monospace;
 }
 /* strings --- and stlyes for other string related formats */
 #fsdocs-content span.s {
