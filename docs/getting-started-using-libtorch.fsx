@@ -32,7 +32,7 @@ Formatter.Register(fun x writer -> fprintfn writer "%120A" x )
 #endif // IPYNB
 
 (**
-[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/diffsharp/diffsharp.github.io/master?filepath=getting-started-torch.ipynb) [Script](getting-started-torch.fsx)
+[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/diffsharp/diffsharp.github.io/master?filepath=getting-started-using-libtorch.ipynb) [Script](getting-started-using-libtorch.fsx)
 
 Getting Started with DiffSharp and Torch
 =========

@@ -1,12 +1,14 @@
-@import url(https://fonts.googleapis.com/css?family=Droid+Sans|Droid+Sans+Mono|Open+Sans:400,600,700);
-
+/* @import url(https://fonts.googleapis.com/css?family=Droid+Sans|Droid+Sans+Mono|Open+Sans:400,600,700); */
+/* @import url('https://fonts.googleapis.com/css2?family=Hind+Vadodara&display=swap'); */
+@import url('https://fonts.googleapis.com/css2?family=Hind+Vadodara&family=Roboto+Mono&display=swap');
 /*--------------------------------------------------------------------------
   Formatting for page & standard document content
 /*--------------------------------------------------------------------------*/
 
 body {
     /* font-family: 'Open Sans', serif; */
-    font-family: FreightSans, Helvetica Neue, Helvetica, Arial, sans-serif;
+    /* font-family: Roboto, Helvetica Neue, Helvetica, Arial, sans-serif; */
+    font-family: 'Hind Vadodara', sans-serif;
     /*    padding-top: 0px;
     padding-bottom: 40px;
 */
@@ -211,6 +213,14 @@ body {
   Formatting xmldoc sections in fsdocs-content
 /*--------------------------------------------------------------------------*/
 
+.fsdocs-xmldoc {
+    font-size: 1.0rem;
+    line-height: 1.375rem;
+    letter-spacing: 0.01px;
+    font-weight: 500;
+    color: #262626;    
+}
+
 .fsdocs-xmldoc h1 {
     font-size: 1.2rem;
     margin: 10px 0px 0px 0px;
@@ -249,6 +259,12 @@ body {
     border-radius: 0;
 }
 
+#fsdocs-nav {
+    /* margin-left: -5px; */
+    /* width: 90%; */
+    font-size:0.95rem;
+}
+
 #fsdocs-nav li.nav-header{
     /* margin-left: -5px; */
     /* width: 90%; */
@@ -271,10 +287,13 @@ body {
 /*--------------------------------------------------------------------------*/
 
 #fsdocs-content code {
-    font-size: 0.83rem;
+    /* font-size: 0.83rem; */
+    font: 0.85rem 'Roboto Mono', monospace;
     background-color: #f7f7f900;
     border: 0px;
     padding: 0px;
+    /* word-wrap: break-word; */
+    /* white-space: pre; */
 }
 
 /* omitted */
@@ -286,7 +305,7 @@ body {
 }
 
 #fsdocs-content pre .fssnip code {
-    font: 9pt 'Droid Sans Mono',consolas,monospace;
+    font: 0.85rem 'Roboto Mono', monospace;
 }
 
 #fsdocs-content table.pre,
@@ -297,7 +316,7 @@ body {
     border-top: 0px solid #e3e3e3;
     border-collapse: separate;
     white-space: pre;
-    font: 9pt 'Droid Sans Mono',consolas,monospace;
+    font: 0.85rem 'Roboto Mono', monospace;
     width: 90%;
     /* margin: 10px 20px 20px 20px; */
     background-color: #f3f4f7;
@@ -307,31 +326,40 @@ body {
     max-width: none;
 }
 
-    #fsdocs-content pre.fssnip code {
-        font: 9pt 'Droid Sans Mono',consolas,monospace;
-    }
+#fsdocs-content pre.fssnip code {
+    font: 0.85rem 'Roboto Mono', monospace;
+}
 
-    #fsdocs-content table.pre pre {
-        padding: 0px;
-        margin: 0px;
-        border-radius: 0px;
-        width: 100%;
-    }
+#fsdocs-content table.pre pre {
+    padding: 0px;
+    margin: 0px;
+    border-radius: 0px;
+    width: 100%;
+}
 
-    #fsdocs-content table.pre td {
-        padding: 0px;
-        white-space: normal;
-        margin: 0px;
-    }
+#fsdocs-content table.pre td {
+    padding: 0px;
+    white-space: normal;
+    margin: 0px;
+}
 
-        #fsdocs-content table.pre td.lines {
-            width: 30px;
-        }
+#fsdocs-content table.pre td.lines {
+    width: 30px;
+}
 
 
 #fsdocs-content pre {
     word-wrap: inherit;
 }
+
+.fsdocs-example-header {
+    font-size: 1.0rem;
+    line-height: 1.375rem;
+    letter-spacing: 0.01px;
+    font-weight: 700;
+    color: #262626;    
+}
+
 /*--------------------------------------------------------------------------
   Formatting github source links
 /*--------------------------------------------------------------------------*/
@@ -405,9 +433,10 @@ body {
 #fsdocs-content h6 a,
 #fsdocs-content h6 a:hover,
 #fsdocs-content h6 a:focus {
-    color: inherit;
-    text-decoration: inherit;
-    outline: none
+    color: #262626;
+    text-decoration: none;
+    text-decoration-style: none;
+    /* outline: none */
 }
 
 /*--------------------------------------------------------------------------
@@ -415,12 +444,15 @@ body {
 /*--------------------------------------------------------------------------*/
 
 .fsdocs-param-name,
-.fsdocs-return-name {
-    font-weight: 600;
+.fsdocs-return-name,
+.fsdocs-param {
+    font-weight: 900;
+    font-size: 0.85rem;
+    font-family: 'Roboto Mono', monospace;
 }
 /* strings --- and stlyes for other string related formats */
 #fsdocs-content span.s {
-    color: #771212;
+    color: #dd1144;
 }
 /* printf formatters */
 #fsdocs-content span.pf {
@@ -437,7 +469,7 @@ body {
 }
 /* module */
 #fsdocs-content span.m {
-    color: #43AEC6;
+    color: #009999;
 }
 /* reference type */
 #fsdocs-content span.rt {
@@ -475,7 +507,7 @@ body {
     color: #e1e1e1;
 }
 #fsdocs-content span.fn {
-    color: #771212;
+    color: #990000;
 }
 /* active pattern */
 #fsdocs-content span.pat {
@@ -492,6 +524,7 @@ body {
 /* keywords */
 #fsdocs-content span.k {
     color: #b68015;
+    /* font-weight: bold; */
 }
 /* comment */
 #fsdocs-content span.c {
@@ -531,7 +564,7 @@ body {
 div.fsdocs-tip {
     background: #475b5f;
     border-radius: 4px;
-    font: 11pt 'Droid Sans', arial, sans-serif;
+    font: 0.85rem 'Roboto Mono', monospace;
     padding: 6px 8px 6px 8px;
     display: none;
     color: #d1d1d1;
@@ -540,5 +573,5 @@ div.fsdocs-tip {
 
     div.fsdocs-tip code {
         color: #d1d1d1;
-        font: 11pt 'Droid Sans', arial, sans-serif;
+        font: 0.85rem 'Roboto Mono', monospace;
     }
