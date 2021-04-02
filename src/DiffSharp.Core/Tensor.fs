@@ -2949,36 +2949,121 @@ and TensorOp =
         | NewT -> "NewT" // Needed because op.GetType().Name does not give "NewT" for this case and gives "TensorOp"
         | _ -> op.GetType().Name
 
+/// <summary>Defines a new op implementing a unary function and its derivatives.</summary>
+/// <remarks>
+/// <para>This type represents the most generic definition of a new op representing a unary function, allowing the specification of the <see cref="T:DiffSharp.Backends.RawTensor">RawTensor</see> operation, the derivative propagation rule for the forward differentiation mode and the derivative propagation rule for the reverse differentiation mode.</para>
+/// <para>In general, if you are implementing a simple elementwise op, you should prefer using the <see cref="T:DiffSharp.UnaryOpElementwise">UnaryOpElementwise</see> type, which is much simpler to use.</para>
+/// </remarks>
+/// <example>
+/// <code>
+/// { new UnaryOp("transpose") with
+///     member _.fRaw(a) = a.TransposeT2()
+///     member _.ad_df_da(a,ad,f) = ad.transpose()
+///     member _.fd_df_da(a,f,fd) = fd.transpose()
+/// }
+/// </code>
+/// </example>
 [<AbstractClass>]
 type UnaryOp(name:string) =
+
+    /// Name of the op.
     member _.name = name
+    /// RawTensor operation performing the op.
     abstract fRaw: a:RawTensor->RawTensor
+    /// Derivative propagation rule for forward differentiation mode.
     abstract ad_df_da: a:Tensor*ad:Tensor*f:Tensor->Tensor
+    /// Derivative propagation rule for reverse differentiation mode.
     abstract fd_df_da: a:Tensor*f:Tensor*fd:Tensor->Tensor
 
 
+/// <summary>Defines a new op implementing an elementwise unary function and its derivatives.</summary>
+/// <remarks>
+/// This type is specialized to elementwise ops. It requires the user to specify only the <see cref="T:DiffSharp.Backends.RawTensor">RawTensor</see> operation and the derivative of the function with respect to its argument. The corresponding derivative propagation rules for the forward and reverse modes are automatically generated.
+/// </remarks>
+/// <example>
+/// <code>
+/// { new UnaryOpElementwise("cos") with
+///     member _.fRaw(a) = a.CosT()
+///     member _.df_da(a,f) = -a.sin()
+/// }
+///
+/// { new UnaryOpElementwise("exp") with
+///     member _.fRaw(a) = a.ExpT()
+///     member _.df_da(a,f) = f
+/// }
+///
+/// { new UnaryOpElementwise("log") with
+///     member _.fRaw(a) = a.LogT()
+///     member _.df_da(a,f) = 1/a
+/// }
+/// </code>
+/// </example>
 [<AbstractClass>]
 type UnaryOpElementwise(name) =
     inherit UnaryOp(name)
+    /// Derivative of the function with respect to its argument.
     abstract df_da: a:Tensor*f:Tensor->Tensor
     override op.ad_df_da(a,ad,f) = ad*op.df_da(a,f)
     override op.fd_df_da(a,f,fd) = fd*op.df_da(a,f)
 
 
+/// <summary>Defines a new op implementing a binary function and its derivatives.</summary>
+/// <remarks>
+/// <para>This type represents the most generic definition of a new op representing a binary function, allowing the specification of the <see cref="T:DiffSharp.Backends.RawTensor">RawTensor</see> operation, the derivative propagation rule for the forward differentiation mode and the derivative propagation rule for the reverse differentiation mode.</para>
+/// <para>In general, if you are implementing a simple elementwise op, you should prefer using the <see cref="T:DiffSharp.BinaryOpElementwise">BinaryOpElementwise</see> type, which is much simpler to use.</para>
+/// </remarks>
+/// <example>
+/// <code>
+/// { new BinaryOp("matmul") with
+///     member _.fRaw(a,b) = a.MatMulTT(b)
+///     member _.ad_df_da(a,ad,b,f) = ad.matmul(b)
+///     member _.bd_df_db(a,b,bd,f) = a.matmul(bd)
+///     member _.fd_df_da(a,b,f,fd) = fd.matmul(b.transpose())
+///     member _.fd_df_db(a,b,f,fd) = a.transposeExt().matmul(fd)
+/// }
+/// </code>
+/// </example>
 [<AbstractClass>]
 type BinaryOp(name:string) =
+    /// Name of the op.
     member _.name = name
+    /// RawTensor operation performing the op.
     abstract fRaw: a:RawTensor*b:RawTensor->RawTensor
+    /// Derivative propagation rule for forward differentiation mode for the partial derivative with respect to the first argument of the function.
     abstract ad_df_da: a:Tensor*ad:Tensor*b:Tensor*f:Tensor->Tensor
+    /// Derivative propagation rule for forward differentiation mode for the partial derivative with respect to the second argument of the function.
     abstract bd_df_db: a:Tensor*b:Tensor*bd:Tensor*f:Tensor->Tensor
+    /// Derivative propagation rule for reverse differentiation mode for the partial derivative with respect to the first argument of the function.
     abstract fd_df_da: a:Tensor*b:Tensor*f:Tensor*fd:Tensor->Tensor
+    /// Derivative propagation rule for reverse differentiation mode for the partial derivative with respect to the second argument of the function.
     abstract fd_df_db: a:Tensor*b:Tensor*f:Tensor*fd:Tensor->Tensor
 
 
+/// <summary>Defines a new op implementing an elementwise binary function and its derivatives.</summary>
+/// <remarks>
+/// This type is specialized to elementwise ops. It requires the user to specify only the <see cref="T:DiffSharp.Backends.RawTensor">RawTensor</see> operation and the derivative of the function with respect to each argument. The corresponding derivative propagation rules for the forward and reverse modes are automatically generated.
+/// </remarks>
+/// <example>
+/// <code>
+/// { new BinaryOpElementwise("pow") with
+///     member _.fRaw(a,b) = a.PowTT(b)
+///     member _.df_da(a,b,f) = b * f / a
+///     member _.df_db(a,b,f) = f * a.log()
+/// }
+/// 
+/// { new BinaryOpElementwise("mul") with
+///     member _.fRaw(a,b) = a.MulTT(b)
+///     member _.df_da(a,b,f) = b
+///     member _.df_db(a,b,f) = a
+/// }
+/// </code>
+/// </example>
 [<AbstractClass>]
 type BinaryOpElementwise(name) =
     inherit BinaryOp(name)
+    /// Derivative of the function with respect to its first argument.
     abstract df_da: a:Tensor*b:Tensor*f:Tensor->Tensor
+    /// Derivative of the function with respect to its second argument.
     abstract df_db: a:Tensor*b:Tensor*f:Tensor->Tensor
     override op.ad_df_da(a,ad,b,f) = ad*op.df_da(a,b,f)
     override op.bd_df_db(a,b,bd,f) = bd*op.df_db(a,b,f)
@@ -2987,6 +3072,7 @@ type BinaryOpElementwise(name) =
 
 
 type Tensor with
+    /// Allows the definition of a new unary tensor op.
     static member Op(ext: UnaryOp) =
         fun a ->
             let fRaw = ext.fRaw
@@ -2994,7 +3080,8 @@ type Tensor with
             let dfFwd(ap,ad,fp) = ext.ad_df_da(ap,ad,fp) // ad*ext.df_da(ap,fp)
             let dfRev(a) = OpUnaryT(a, (fun (ap,fp,fd) -> ext.fd_df_da(ap,fp,fd)), ext.name) // fd*ext.df_da(ap,fp)
             Tensor.OpUnary(a, fRaw, fTensor, dfFwd, dfRev)
-
+    
+    /// Allows the definition of a new binary tensor op.
     static member Op(ext: BinaryOp) =
         fun (a, b) ->
             let fRaw = ext.fRaw
