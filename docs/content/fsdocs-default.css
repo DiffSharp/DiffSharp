@@ -1,12 +1,14 @@
-@import url(https://fonts.googleapis.com/css?family=Droid+Sans|Droid+Sans+Mono|Open+Sans:400,600,700);
-
+/* @import url(https://fonts.googleapis.com/css?family=Droid+Sans|Droid+Sans+Mono|Open+Sans:400,600,700); */
+/* @import url('https://fonts.googleapis.com/css2?family=Hind+Vadodara&display=swap'); */
+@import url('https://fonts.googleapis.com/css2?family=Hind+Vadodara&family=Roboto+Mono&display=swap');
 /*--------------------------------------------------------------------------
   Formatting for page & standard document content
 /*--------------------------------------------------------------------------*/
 
 body {
     /* font-family: 'Open Sans', serif; */
-    font-family: FreightSans, Helvetica Neue, Helvetica, Arial, sans-serif;
+    /* font-family: Roboto, Helvetica Neue, Helvetica, Arial, sans-serif; */
+    font-family: 'Hind Vadodara', sans-serif;
     /*    padding-top: 0px;
     padding-bottom: 40px;
 */
@@ -286,7 +288,7 @@ body {
 }
 
 #fsdocs-content pre .fssnip code {
-    font: 9pt 'Droid Sans Mono',consolas,monospace;
+    font: 0.85rem 'Roboto Mono', monospace;
 }
 
 #fsdocs-content table.pre,
@@ -297,7 +299,7 @@ body {
     border-top: 0px solid #e3e3e3;
     border-collapse: separate;
     white-space: pre;
-    font: 9pt 'Droid Sans Mono',consolas,monospace;
+    font: 0.85rem 'Roboto Mono', monospace;
     width: 90%;
     /* margin: 10px 20px 20px 20px; */
     background-color: #f3f4f7;
@@ -308,7 +310,7 @@ body {
 }
 
     #fsdocs-content pre.fssnip code {
-        font: 9pt 'Droid Sans Mono',consolas,monospace;
+        font: 0.85rem 'Roboto Mono', monospace;
     }
 
     #fsdocs-content table.pre pre {
@@ -405,9 +407,10 @@ body {
 #fsdocs-content h6 a,
 #fsdocs-content h6 a:hover,
 #fsdocs-content h6 a:focus {
-    color: inherit;
-    text-decoration: inherit;
-    outline: none
+    color: #212121;
+    text-decoration: none;
+    text-decoration-style: none;
+    /* outline: none */
 }
 
 /*--------------------------------------------------------------------------
