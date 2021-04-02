@@ -423,7 +423,7 @@ body {
 }
 /* strings --- and stlyes for other string related formats */
 #fsdocs-content span.s {
-    color: #771212;
+    color: #dd1144;
 }
 /* printf formatters */
 #fsdocs-content span.pf {
@@ -440,7 +440,7 @@ body {
 }
 /* module */
 #fsdocs-content span.m {
-    color: #43AEC6;
+    color: #009999;
 }
 /* reference type */
 #fsdocs-content span.rt {
@@ -478,7 +478,7 @@ body {
     color: #e1e1e1;
 }
 #fsdocs-content span.fn {
-    color: #771212;
+    color: #990000;
 }
 /* active pattern */
 #fsdocs-content span.pat {
@@ -495,6 +495,7 @@ body {
 /* keywords */
 #fsdocs-content span.k {
     color: #b68015;
+    /* font-weight: bold; */
 }
 /* comment */
 #fsdocs-content span.c {
