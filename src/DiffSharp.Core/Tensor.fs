@@ -3,7 +3,7 @@
 //
 // BSD 2-Clause License. See LICENSE in root of repository.
 
-namespace rec DiffSharp
+namespace DiffSharp
 
 open DiffSharp.Backends
 open DiffSharp.Util
