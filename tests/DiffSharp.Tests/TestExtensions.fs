@@ -18,7 +18,7 @@ module TestExtensions =
             Tensor.Op
                 { new UnaryOpElementwise("sinExt") with 
                     member _.fRaw(a) = a.SinT()
-                    member _.df_da(a,f) = a.cosExt()
+                    member _.dfda(a,f) = a.cosExt()
                 }
                 (a)
 
@@ -26,7 +26,7 @@ module TestExtensions =
             Tensor.Op
                 { new UnaryOpElementwise("cosExt") with
                     member _.fRaw(a) = a.CosT()
-                    member _.df_da(a,f) = -a.sinExt()
+                    member _.dfda(a,f) = -a.sinExt()
                 }
                 (a)
 
@@ -34,7 +34,7 @@ module TestExtensions =
             Tensor.Op
                 { new UnaryOpElementwise("expExt") with
                     member _.fRaw(a) = a.ExpT()
-                    member _.df_da(a,f) = f
+                    member _.dfda(a,f) = f
                 }
                 (a)
 
@@ -42,7 +42,7 @@ module TestExtensions =
             Tensor.Op
                 { new UnaryOpElementwise("logExt") with
                     member _.fRaw(a) = a.LogT()
-                    member _.df_da(a,f) = 1/a
+                    member _.dfda(a,f) = 1/a
                 }
                 (a)
 
@@ -50,8 +50,8 @@ module TestExtensions =
             Tensor.Op
                 { new UnaryOp("transposeExt") with
                     member _.fRaw(a) = a.TransposeT2()
-                    member _.ad_df_da(a,ad,f) = ad.transposeExt()
-                    member _.fd_df_da(a,f,fd) = fd.transposeExt()
+                    member _.ad_dfda(a,ad,f) = ad.transposeExt()
+                    member _.fd_dfda(a,f,fd) = fd.transposeExt()
                 }
                 (a)
 
@@ -59,8 +59,8 @@ module TestExtensions =
             Tensor.Op
                 { new BinaryOpElementwise("powExt") with
                     member _.fRaw(a,b) = a.PowTT(b)
-                    member _.df_da(a,b,f) = b * f / a
-                    member _.df_db(a,b,f) = f * a.logExt()
+                    member _.dfda(a,b,f) = b * f / a
+                    member _.dfdb(a,b,f) = f * a.logExt()
                 }
                 (a,b)
 
@@ -68,8 +68,8 @@ module TestExtensions =
             Tensor.Op
                 { new BinaryOpElementwise("mulExt") with
                     member _.fRaw(a,b) = a.MulTT(b)
-                    member _.df_da(a,b,f) = b
-                    member _.df_db(a,b,f) = a
+                    member _.dfda(a,b,f) = b
+                    member _.dfdb(a,b,f) = a
                 }
                 (a,b)
 
@@ -77,10 +77,10 @@ module TestExtensions =
             Tensor.Op
                 { new BinaryOp("matmulExt") with
                     member _.fRaw(a,b) = a.MatMulTT(b)
-                    member _.ad_df_da(a,ad,b,f) = ad.matmulExt(b)
-                    member _.bd_df_db(a,b,bd,f) = a.matmulExt(bd)
-                    member _.fd_df_da(a,b,f,fd) = fd.matmulExt(b.transposeExt())
-                    member _.fd_df_db(a,b,f,fd) = a.transposeExt().matmulExt(fd)
+                    member _.ad_dfda(a,ad,b,f) = ad.matmulExt(b)
+                    member _.bd_dfdb(a,b,bd,f) = a.matmulExt(bd)
+                    member _.fd_dfda(a,b,f,fd) = fd.matmulExt(b.transposeExt())
+                    member _.fd_dfdb(a,b,f,fd) = a.transposeExt().matmulExt(fd)
                 }
                 (a,b)
 
