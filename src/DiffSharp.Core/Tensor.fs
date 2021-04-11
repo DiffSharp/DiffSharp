@@ -2951,7 +2951,7 @@ and TensorOp =
 
 /// <summary>Defines a new op implementing a unary function and its derivatives.</summary>
 /// <remarks>
-/// <para>This type represents the most generic definition of a new op representing a unary function, allowing the specification of the <see cref="T:DiffSharp.Backends.RawTensor">RawTensor</see> operation, the derivative propagation rule for the forward differentiation mode and the derivative propagation rule for the reverse differentiation mode.</para>
+/// <para>This type represents the most generic definition of a new op representing a unary function, allowing the specification of: (1) the <see cref="T:DiffSharp.Backends.RawTensor">RawTensor</see> operation, (2) the derivative propagation rule for the forward differentiation mode and (3) the derivative propagation rule for the reverse differentiation mode.</para>
 /// <para>In general, if you are implementing a simple elementwise op, you should prefer using the <see cref="T:DiffSharp.UnaryOpElementwise">UnaryOpElementwise</see> type, which is much simpler to use.</para>
 /// </remarks>
 /// <example>
@@ -2963,16 +2963,27 @@ and TensorOp =
 /// }
 /// </code>
 /// </example>
+/// <param name="name">The name of the op.</param>
 [<AbstractClass>]
 type UnaryOp(name:string) =
 
     /// Name of the op.
     member _.name = name
-    /// RawTensor operation performing the op.
+    /// <summary>RawTensor operation \( f(a) \)performing the op.</summary>
+    /// <param name="a">The input tensor value \( a \).</param>
+    /// <returns>The output tensor value \( f(a) \).</returns>
     abstract fRaw: a:RawTensor->RawTensor
-    /// Derivative propagation rule for forward differentiation mode.
+    /// <summary>Derivative propagation rule for forward differentiation mode.</summary>
+    /// <param name="a">The input tensor \( a \)</param>
+    /// <param name="ad">The input tensor's derivative \( \frac{\partial a}{\partial x} \)</param>
+    /// <param name="f">The tensor holding the function's pre-computed primal evaluation result \( f(a) \), which can be one of the terms in the derivative computation (e.g., the derivative of the exponential function) and be reused.</param>
+    /// <returns>The tensor corresponding to \( \frac{\partial f(a)}{\partial x} = \frac{\partial a}{\partial x} \frac{\partial f(a)}{\partial a} \)</returns>
     abstract ad_df_da: a:Tensor*ad:Tensor*f:Tensor->Tensor
-    /// Derivative propagation rule for reverse differentiation mode.
+    /// <summary>Derivative propagation rule for reverse differentiation mode.</summary>
+    /// <param name="a">The input tensor \( a \)</param>
+    /// <param name="f">The tensor holding the function's pre-computed primal evaluation result \( f(a) \), which can be one of the terms in the derivative computation (e.g., the derivative of the exponential function) and be reused.</param>
+    /// <param name="fd">The derivative with respect to the function's output \( \frac{\partial y}{\partial f(a)} \)</param>
+    /// <returns>The tensor corresponding to \( \frac{\partial y}{\partial a} = \frac{\partial y}{\partial f(a)} \frac{\partial f(a)}{\partial a} \)</returns>
     abstract fd_df_da: a:Tensor*f:Tensor*fd:Tensor->Tensor
 
 
