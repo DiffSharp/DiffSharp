@@ -2949,17 +2949,17 @@ and TensorOp =
         | NewT -> "NewT" // Needed because op.GetType().Name does not give "NewT" for this case and gives "TensorOp"
         | _ -> op.GetType().Name
 
-/// <summary>Defines a new op implementing a unary function and its derivatives.</summary>
+/// <summary>Defines a new op implementing a unary function and its derivatives. Instances of this class are used with the <see cref="M:DiffSharp.Tensor.Op(DiffSharp.UnaryOp)"/> method to define a new differentiable tensor function that supports forward, reverse, and nested differentiation.</summary>
 /// <remarks>
-/// <para>This type represents the most generic definition of a new op representing a unary function, allowing the specification of the <see cref="T:DiffSharp.Backends.RawTensor">RawTensor</see> operation, the derivative propagation rule for the forward differentiation mode and the derivative propagation rule for the reverse differentiation mode.</para>
-/// <para>In general, if you are implementing a simple elementwise op, you should prefer using the <see cref="T:DiffSharp.UnaryOpElementwise">UnaryOpElementwise</see> type, which is much simpler to use.</para>
+/// <para>This type represents the most generic definition of a new op representing a unary function, allowing the specification of: (1) the <see cref="T:DiffSharp.Backends.RawTensor"/> operation, (2) the derivative propagation rule for the forward differentiation mode and (3) the derivative propagation rule for the reverse differentiation mode.</para>
+/// <para>In general, if you are implementing a simple elementwise op, you should prefer using the <see cref="T:DiffSharp.UnaryOpElementwise"/> type, which is much simpler to use.</para>
 /// </remarks>
 /// <example>
 /// <code>
 /// { new UnaryOp("transpose") with
 ///     member _.fRaw(a) = a.TransposeT2()
-///     member _.ad_df_da(a,ad,f) = ad.transpose()
-///     member _.fd_df_da(a,f,fd) = fd.transpose()
+///     member _.ad_dfda(a,ad,f) = ad.transpose()
+///     member _.fd_dfda(a,f,fd) = fd.transpose()
 /// }
 /// </code>
 /// </example>
@@ -2968,58 +2968,76 @@ type UnaryOp(name:string) =
 
     /// Name of the op.
     member _.name = name
-    /// RawTensor operation performing the op.
+
+    /// <summary>RawTensor operation \( f(a) \) performing the op.</summary>
+    /// <param name="a">The argument \( a \).</param>
+    /// <returns>The function's value \( f(a) \).</returns>
     abstract fRaw: a:RawTensor->RawTensor
-    /// Derivative propagation rule for forward differentiation mode.
-    abstract ad_df_da: a:Tensor*ad:Tensor*f:Tensor->Tensor
-    /// Derivative propagation rule for reverse differentiation mode.
-    abstract fd_df_da: a:Tensor*f:Tensor*fd:Tensor->Tensor
+
+    /// <summary>Derivative propagation rule for forward differentiation mode. This represents the derivative of \( f(a) \) with respect a value \( x \) earlier in the computation graph than the function's argument \( a \). In other words, it computes \( \frac{\partial f(a)}{\partial x} = \frac{\partial a}{\partial x} \frac{\partial f(a)}{\partial a} \).</summary>
+    /// <param name="a">The argument \( a \).</param>
+    /// <param name="ad">The argument's derivative \( \frac{\partial a}{\partial x} \).</param>
+    /// <param name="f">The function's pre-computed primal evaluation result \( f(a) \), which can be one of the terms involved in the derivative computation (e.g., the derivative of the exponential function) and be used without the need to recompute it.</param>
+    /// <returns>The tensor corresponding to \( \frac{\partial f(a)}{\partial x} = \frac{\partial a}{\partial x} \frac{\partial f(a)}{\partial a} \).</returns>
+    abstract ad_dfda: a:Tensor*ad:Tensor*f:Tensor->Tensor
+
+    /// <summary>Derivative propagation rule for reverse differentiation mode. This represents the derivative of a value \( y \), which comes later in the computation graph than the function's value \( f(a) \), with respect to the function's argument \( a \). In other words, it computes \( \frac{\partial y}{\partial a} = \frac{\partial y}{\partial f(a)} \frac{\partial f(a)}{\partial a} \).</summary>
+    /// <param name="a">The argument \( a \).</param>
+    /// <param name="f">The function's pre-computed primal evaluation result \( f(a) \), which can be one of the terms involved in the derivative computation (e.g., the derivative of the exponential function) and be used without the need to recompute it.</param>
+    /// <param name="fd">The derivative with respect to the function's output \( \frac{\partial y}{\partial f(a)} \).</param>
+    /// <returns>The tensor corresponding to \( \frac{\partial y}{\partial a} = \frac{\partial y}{\partial f(a)} \frac{\partial f(a)}{\partial a} \).</returns>
+    abstract fd_dfda: a:Tensor*f:Tensor*fd:Tensor->Tensor
 
 
-/// <summary>Defines a new op implementing an elementwise unary function and its derivatives.</summary>
+/// <summary>Defines a new op implementing an elementwise unary function and its derivatives. Instances of this class are used with the <see cref="M:DiffSharp.Tensor.Op(DiffSharp.UnaryOp)"/> method to define a new differentiable tensor function that supports forward, reverse, and nested differentiation.</summary>
 /// <remarks>
-/// This type is specialized to elementwise ops. It requires the user to specify only the <see cref="T:DiffSharp.Backends.RawTensor">RawTensor</see> operation and the derivative of the function with respect to its argument. The corresponding derivative propagation rules for the forward and reverse modes are automatically generated.
+/// <para>This type is specialized to elementwise ops. It requires the user to specify only (1) the <see cref="T:DiffSharp.Backends.RawTensor"/> operation and (2) the derivative of the function with respect to its argument. The corresponding derivative propagation rules for the forward and reverse differentiation modes are automatically generated.</para>
+/// <para>If you are implementing a complex op that is not elementwise, you can use the generic type <see cref="T:DiffSharp.UnaryOp"/>, which allows you to define the full derivative propagation rules.</para>
 /// </remarks>
 /// <example>
 /// <code>
 /// { new UnaryOpElementwise("cos") with
 ///     member _.fRaw(a) = a.CosT()
-///     member _.df_da(a,f) = -a.sin()
+///     member _.dfda(a,f) = -a.sin()
 /// }
 ///
 /// { new UnaryOpElementwise("exp") with
 ///     member _.fRaw(a) = a.ExpT()
-///     member _.df_da(a,f) = f
+///     member _.dfda(a,f) = f
 /// }
 ///
 /// { new UnaryOpElementwise("log") with
 ///     member _.fRaw(a) = a.LogT()
-///     member _.df_da(a,f) = 1/a
+///     member _.dfda(a,f) = 1/a
 /// }
 /// </code>
 /// </example>
 [<AbstractClass>]
 type UnaryOpElementwise(name) =
     inherit UnaryOp(name)
-    /// Derivative of the function with respect to its argument.
-    abstract df_da: a:Tensor*f:Tensor->Tensor
-    override op.ad_df_da(a,ad,f) = ad*op.df_da(a,f)
-    override op.fd_df_da(a,f,fd) = fd*op.df_da(a,f)
+    /// <summary>Derivative of the function with respect to its argument, \( \frac{\partial f(a)}{\partial a} \).</summary>
+    /// <param name="a">The argument \( a \)</param>
+    /// <param name="f">The function's pre-computed primal evaluation result \( f(a) \), which can be one of the terms involved in the derivative computation (e.g., the derivative of the exponential function) and be used without the need to recompute it.</param>
+    /// <returns>The tensor corresponding to \( \frac{\partial f(a)}{\partial a} \).</returns>
+    abstract dfda: a:Tensor*f:Tensor->Tensor
+
+    override op.ad_dfda(a,ad,f) = ad*op.dfda(a,f)
+    override op.fd_dfda(a,f,fd) = fd*op.dfda(a,f)
 
 
-/// <summary>Defines a new op implementing a binary function and its derivatives.</summary>
+/// <summary>Defines a new op implementing a binary function and its derivatives. Instances of this class are used with the <see cref="M:DiffSharp.Tensor.Op(DiffSharp.BinaryOp)"/> method to define a new differentiable tensor function that supports forward, reverse, and nested differentiation.</summary>
 /// <remarks>
-/// <para>This type represents the most generic definition of a new op representing a binary function, allowing the specification of the <see cref="T:DiffSharp.Backends.RawTensor">RawTensor</see> operation, the derivative propagation rule for the forward differentiation mode and the derivative propagation rule for the reverse differentiation mode.</para>
-/// <para>In general, if you are implementing a simple elementwise op, you should prefer using the <see cref="T:DiffSharp.BinaryOpElementwise">BinaryOpElementwise</see> type, which is much simpler to use.</para>
+/// <para>This type represents the most generic definition of a new op representing a binary function, allowing the specification of: (1) the <see cref="T:DiffSharp.Backends.RawTensor"/> operation, (2) the derivative propagation rule for the forward differentiation mode and (3) the derivative propagation rule for the reverse differentiation mode.</para>
+/// <para>In general, if you are implementing a simple elementwise op, you should prefer using the <see cref="T:DiffSharp.BinaryOpElementwise"/> type, which is much simpler to use.</para>
 /// </remarks>
 /// <example>
 /// <code>
 /// { new BinaryOp("matmul") with
 ///     member _.fRaw(a,b) = a.MatMulTT(b)
-///     member _.ad_df_da(a,ad,b,f) = ad.matmul(b)
-///     member _.bd_df_db(a,b,bd,f) = a.matmul(bd)
-///     member _.fd_df_da(a,b,f,fd) = fd.matmul(b.transpose())
-///     member _.fd_df_db(a,b,f,fd) = a.transposeExt().matmul(fd)
+///     member _.ad_dfda(a,ad,b,f) = ad.matmul(b)
+///     member _.bd_dfdb(a,b,bd,f) = a.matmul(bd)
+///     member _.fd_dfda(a,b,f,fd) = fd.matmul(b.transpose())
+///     member _.fd_dfdb(a,b,f,fd) = a.transposeExt().matmul(fd)
 /// }
 /// </code>
 /// </example>
@@ -3027,69 +3045,111 @@ type UnaryOpElementwise(name) =
 type BinaryOp(name:string) =
     /// Name of the op.
     member _.name = name
-    /// RawTensor operation performing the op.
+    /// <summary>RawTensor operation \( f(a, b) \) performing the op.</summary>
+    /// <param name="a">The first argument \( a \).</param>
+    /// <param name="b">The second argument \( b \).</param>
+    /// <returns>The function's value \( f(a, b) \).</returns>
     abstract fRaw: a:RawTensor*b:RawTensor->RawTensor
-    /// Derivative propagation rule for forward differentiation mode for the partial derivative with respect to the first argument of the function.
-    abstract ad_df_da: a:Tensor*ad:Tensor*b:Tensor*f:Tensor->Tensor
-    /// Derivative propagation rule for forward differentiation mode for the partial derivative with respect to the second argument of the function.
-    abstract bd_df_db: a:Tensor*b:Tensor*bd:Tensor*f:Tensor->Tensor
-    /// Derivative propagation rule for reverse differentiation mode for the partial derivative with respect to the first argument of the function.
-    abstract fd_df_da: a:Tensor*b:Tensor*f:Tensor*fd:Tensor->Tensor
-    /// Derivative propagation rule for reverse differentiation mode for the partial derivative with respect to the second argument of the function.
-    abstract fd_df_db: a:Tensor*b:Tensor*f:Tensor*fd:Tensor->Tensor
+
+    /// <summary>Derivative propagation rule for forward differentiation mode for the partial derivative with respect to the first argument of the function. This represents the contribution of the function's first argument \( a \) to the derivative of \( f(a, b) \) with respect a value \( x \) earlier in the computation graph than the function's arguments. In other words, it computes the first term in the right-hand side of the equation \( \frac{\partial f(a, b)}{\partial x} = \frac{\partial a}{\partial x} \frac{\partial f(a, b)}{\partial a} + \frac{\partial b}{\partial x} \frac{\partial f(a, b)}{\partial b} \).</summary>
+    /// <param name="a">The first argument \( a \).</param>
+    /// <param name="ad">The first argument's derivative \( \frac{\partial a}{\partial x} \).</param>
+    /// <param name="b">The second argument \( b \).</param>
+    /// <param name="f">The function's pre-computed primal evaluation result \( f(a, b) \), which can be one of the terms involved in the derivative computation (e.g., the derivative of the exponential function) and be used without the need to recompute it.</param>
+    /// <returns>The tensor corresponding to \( \frac{\partial a}{\partial x} \frac{\partial f(a, b)}{\partial a} \).</returns>
+    abstract ad_dfda: a:Tensor*ad:Tensor*b:Tensor*f:Tensor->Tensor
+
+    /// <summary>Derivative propagation rule for forward differentiation mode for the partial derivative with respect to the second argument of the function. This represents the contribution of the function's second argument \( b \) to the derivative of \( f(a, b) \) with respect a value \( x \) earlier in the computation graph than the function's arguments. In other words, it computes the second term in the right-hand side of the equation \( \frac{\partial f(a, b)}{\partial x} = \frac{\partial a}{\partial x} \frac{\partial f(a, b)}{\partial a} + \frac{\partial b}{\partial x} \frac{\partial f(a, b)}{\partial b} \).</summary>
+    /// <param name="a">The first argument \( a \).</param>
+    /// <param name="b">The second argument \( b \).</param>
+    /// <param name="bd">The second argument's derivative \( \frac{\partial b}{\partial x} \).</param>
+    /// <param name="f">The function's pre-computed primal evaluation result \( f(a, b) \), which can be one of the terms involved in the derivative computation (e.g., the derivative of the exponential function) and be used without the need to recompute it.</param>
+    /// <returns>The tensor corresponding to \( \frac{\partial b}{\partial x} \frac{\partial f(a, b)}{\partial b} \).</returns>
+    abstract bd_dfdb: a:Tensor*b:Tensor*bd:Tensor*f:Tensor->Tensor
+
+    /// <summary>Derivative propagation rule for reverse differentiation mode for the partial derivative with respect to the first argument of the function. This represents the derivative of a value \( y \), which comes later in the computation graph than the function's value \( f(a, b) \), with respect to the function's first argument \( a \). In other words, it computes \( \frac{\partial y}{\partial a} = \frac{\partial y}{\partial f(a, b)} \frac{\partial f(a, b)}{\partial a} \).</summary>
+    /// <param name="a">The first argument \( a \).</param>
+    /// <param name="b">The second argument \( b \).</param>
+    /// <param name="f">The function's pre-computed primal evaluation result \( f(a, b) \), which can be one of the terms involved in the derivative computation (e.g., the derivative of the exponential function) and be used without the need to recompute it.</param>
+    /// <param name="fd">The derivative with respect to the function's output \( \frac{\partial y}{\partial f(a, b)} \).</param>
+    /// <returns>The tensor corresponding to \( \frac{\partial y}{\partial a} = \frac{\partial y}{\partial f(a, b)} \frac{\partial f(a, b)}{\partial a} \).</returns>
+    abstract fd_dfda: a:Tensor*b:Tensor*f:Tensor*fd:Tensor->Tensor
+
+    /// <summary>Derivative propagation rule for reverse differentiation mode for the partial derivative with respect to the second argument of the function. This represents the derivative of a value \( y \), which comes later in the computation graph than the function's value \( f(a, b) \), with respect to the function's second argument \( b \). In other words, it computes \( \frac{\partial y}{\partial b} = \frac{\partial y}{\partial f(a, b)} \frac{\partial f(a, b)}{\partial b} \).</summary>
+    /// <param name="a">The first argument \( a \).</param>
+    /// <param name="b">The second argument \( b \).</param>
+    /// <param name="f">The function's pre-computed primal evaluation result \( f(a, b) \), which can be one of the terms involved in the derivative computation (e.g., the derivative of the exponential function) and be used without the need to recompute it.</param>
+    /// <param name="fd">The derivative with respect to the function's output \( \frac{\partial y}{\partial f(a, b)} \).</param>
+    /// <returns>The tensor corresponding to \( \frac{\partial y}{\partial b} = \frac{\partial y}{\partial f(a, b)} \frac{\partial f(a, b)}{\partial b} \).</returns>
+    abstract fd_dfdb: a:Tensor*b:Tensor*f:Tensor*fd:Tensor->Tensor
 
 
-/// <summary>Defines a new op implementing an elementwise binary function and its derivatives.</summary>
+/// <summary>Defines a new op implementing an elementwise binary function and its derivatives. Instances of this class are used with the <see cref="M:DiffSharp.Tensor.Op(DiffSharp.BinaryOp)"/> method to define a new differentiable tensor function that supports forward, reverse, and nested differentiation.</summary>
 /// <remarks>
-/// This type is specialized to elementwise ops. It requires the user to specify only the <see cref="T:DiffSharp.Backends.RawTensor">RawTensor</see> operation and the derivative of the function with respect to each argument. The corresponding derivative propagation rules for the forward and reverse modes are automatically generated.
+/// This type is specialized to elementwise ops. It requires the user to specify only (1) the <see cref="T:DiffSharp.Backends.RawTensor"/> operation and (2) the derivative of the function with respect to each argument. The corresponding derivative propagation rules for the forward and reverse differentiation modes are automatically generated.
+/// <para>If you are implementing a complex op that is not elementwise, you can use the generic type <see cref="T:DiffSharp.BinaryOp"/>, which allows you to define the full derivative propagation rules.</para>
 /// </remarks>
 /// <example>
 /// <code>
 /// { new BinaryOpElementwise("pow") with
 ///     member _.fRaw(a,b) = a.PowTT(b)
-///     member _.df_da(a,b,f) = b * f / a
-///     member _.df_db(a,b,f) = f * a.log()
+///     member _.dfda(a,b,f) = b * f / a
+///     member _.dfdb(a,b,f) = f * a.log()
 /// }
 /// 
 /// { new BinaryOpElementwise("mul") with
 ///     member _.fRaw(a,b) = a.MulTT(b)
-///     member _.df_da(a,b,f) = b
-///     member _.df_db(a,b,f) = a
+///     member _.dfda(a,b,f) = b
+///     member _.dfdb(a,b,f) = a
 /// }
 /// </code>
 /// </example>
 [<AbstractClass>]
 type BinaryOpElementwise(name) =
     inherit BinaryOp(name)
-    /// Derivative of the function with respect to its first argument.
-    abstract df_da: a:Tensor*b:Tensor*f:Tensor->Tensor
-    /// Derivative of the function with respect to its second argument.
-    abstract df_db: a:Tensor*b:Tensor*f:Tensor->Tensor
-    override op.ad_df_da(a,ad,b,f) = ad*op.df_da(a,b,f)
-    override op.bd_df_db(a,b,bd,f) = bd*op.df_db(a,b,f)
-    override op.fd_df_da(a,b,f,fd) = fd*op.df_da(a,b,f)
-    override op.fd_df_db(a,b,f,fd) = fd*op.df_db(a,b,f)
+    /// <summary>Derivative of the function with respect to its first argument, \( \frac{\partial f(a, b)}{\partial a} \).</summary>
+    /// <param name="a">The first argument \( a \)</param>
+    /// <param name="b">The second argument \( b \)</param>
+    /// <param name="f">The function's pre-computed primal evaluation result \( f(a, b) \), which can be one of the terms involved in the derivative computation (e.g., the derivative of the exponential function) and be used without the need to recompute it.</param>
+    /// <returns>The tensor corresponding to \( \frac{\partial f(a, b)}{\partial a} \).</returns>
+    abstract dfda: a:Tensor*b:Tensor*f:Tensor->Tensor
+
+    /// <summary>Derivative of the function with respect to its second argument, \( \frac{\partial f(a, b)}{\partial b} \).</summary>
+    /// <param name="a">The first argument \( a \)</param>
+    /// <param name="b">The second argument \( b \)</param>
+    /// <param name="f">The function's pre-computed primal evaluation result \( f(a, b) \), which can be one of the terms involved in the derivative computation (e.g., the derivative of the exponential function) and be used without the need to recompute it.</param>
+    /// <returns>The tensor corresponding to \( \frac{\partial f(a, b)}{\partial b} \).</returns>
+    abstract dfdb: a:Tensor*b:Tensor*f:Tensor->Tensor
+
+    override op.ad_dfda(a,ad,b,f) = ad*op.dfda(a,b,f)
+    override op.bd_dfdb(a,b,bd,f) = bd*op.dfdb(a,b,f)
+    override op.fd_dfda(a,b,f,fd) = fd*op.dfda(a,b,f)
+    override op.fd_dfdb(a,b,f,fd) = fd*op.dfdb(a,b,f)
 
 
 type Tensor with
-    /// Allows the definition of a new unary tensor op.
+    /// <summary>Allows the definition of a new unary tensor op.</summary>
+    /// <param name="ext">The definition of the new op.</param>
+    /// <returns>The new op.</returns>
     static member Op(ext: UnaryOp) =
         fun a ->
             let fRaw = ext.fRaw
             let fTensor = Tensor.Op ext
-            let dfFwd(ap,ad,fp) = ext.ad_df_da(ap,ad,fp) // ad*ext.df_da(ap,fp)
-            let dfRev(a) = OpUnaryT(a, (fun (ap,fp,fd) -> ext.fd_df_da(ap,fp,fd)), ext.name) // fd*ext.df_da(ap,fp)
+            let dfFwd(ap,ad,fp) = ext.ad_dfda(ap,ad,fp) // ad*ext.dfda(ap,fp)
+            let dfRev(a) = OpUnaryT(a, (fun (ap,fp,fd) -> ext.fd_dfda(ap,fp,fd)), ext.name) // fd*ext.dfda(ap,fp)
             Tensor.OpUnary(a, fRaw, fTensor, dfFwd, dfRev)
     
-    /// Allows the definition of a new binary tensor op.
+    /// <summary>Allows the definition of a new binary tensor op.</summary>
+    /// <param name="ext">The definition of the new op.</param>
+    /// <returns>The new op.</returns>
     static member Op(ext: BinaryOp) =
         fun (a, b) ->
             let fRaw = ext.fRaw
             let fTensor = Tensor.Op ext
-            let dfFwdTT(ap,ad,bp,bd,fp) = ext.ad_df_da(ap,ad,bp,fp) + ext.bd_df_db(ap,bp,bd,fp)
-            let dfFwdTC(ap,ad,fp) = ext.ad_df_da(ap,ad,b,fp)
-            let dfFwdCT(bp,bd,fp) = ext.bd_df_db(a,bp,bd,fp)
-            let dfRevTT(a,b) = OpBinaryTT(a, b, (fun (ap,bp,fp,fd) -> (ext.fd_df_da(ap,bp,fp,fd)), (ext.fd_df_db(ap,bp,fp,fd))), ext.name+"TT")
-            let dfRevTC(a,b) = OpBinaryTC(a, b, (fun (ap,b,fp,fd) -> (ext.fd_df_da(ap,b,fp,fd))), ext.name+"TC")
-            let dfRevCT(a,b) = OpBinaryCT(a, b, (fun (a,bp,fp,fd) -> (ext.fd_df_db(a,bp,fp,fd))), ext.name+"CT")
+            let dfFwdTT(ap,ad,bp,bd,fp) = ext.ad_dfda(ap,ad,bp,fp) + ext.bd_dfdb(ap,bp,bd,fp)
+            let dfFwdTC(ap,ad,fp) = ext.ad_dfda(ap,ad,b,fp)
+            let dfFwdCT(bp,bd,fp) = ext.bd_dfdb(a,bp,bd,fp)
+            let dfRevTT(a,b) = OpBinaryTT(a, b, (fun (ap,bp,fp,fd) -> (ext.fd_dfda(ap,bp,fp,fd)), (ext.fd_dfdb(ap,bp,fp,fd))), ext.name+"TT")
+            let dfRevTC(a,b) = OpBinaryTC(a, b, (fun (ap,b,fp,fd) -> (ext.fd_dfda(ap,b,fp,fd))), ext.name+"TC")
+            let dfRevCT(a,b) = OpBinaryCT(a, b, (fun (a,bp,fp,fd) -> (ext.fd_dfdb(a,bp,fp,fd))), ext.name+"CT")
             Tensor.OpBinary(a, b, fRaw, fTensor, dfFwdTT, dfFwdTC, dfFwdCT, dfRevTT, dfRevTC, dfRevCT)
