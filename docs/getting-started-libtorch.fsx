@@ -54,3 +54,4 @@ To move a tensor to the GPU use the following:
     let t2 = t.move(Device.GPU)
 
 *)
+printfn $"exiting {__SOURCE_FILE__}"
