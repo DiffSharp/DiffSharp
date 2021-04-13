@@ -27,6 +27,6 @@ jobs:
     - name: Codecov
       uses: codecov/codecov-action@v1
     - name: Check if script runs
-      run: dotnet fsi docs\getting-started-libtorch.fsx
+      run: dotnet fsi docs/getting-started-libtorch.fsx
     - name: Run fsdocs
       run: dotnet fsdocs build --eval --strict
