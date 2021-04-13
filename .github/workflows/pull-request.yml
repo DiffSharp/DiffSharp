@@ -29,4 +29,4 @@ jobs:
     - name: Check if problematic fsdocs script runs
       run: dotnet fsi docs/getting-started-libtorch.fsx
     - name: Run fsdocs
-      run: dotnet fsdocs build --eval --strict --properties Configuration=Release
+      run: dotnet fsdocs build --strict --properties Configuration=Release

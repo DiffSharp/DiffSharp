@@ -29,4 +29,4 @@ jobs:
     - name: Check if script runs
       run: dotnet fsi docs/getting-started-libtorch.fsx
     - name: Run fsdocs
-      run: dotnet fsdocs build --eval --strict
+      run: dotnet fsdocs build --strict

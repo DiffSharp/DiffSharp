@@ -15,11 +15,7 @@ This published version of the docs can be refreshed by these commands:
     dotnet tool restore
     git clone https://github.com/diffsharp/diffsharp.github.io ../DiffSharp-docs -b gh-pages --depth 1
 
-2. To Iterate on Literate Docs 
-
-    dotnet fsdocs watch --eval
-
-3. To Iterate on API Docs (requires evaluation off since DLLs get locked)
+2. To Iterate on Literate Docs and API Docs (requires evaluation off since DLLs get locked)
 
     dotnet fsdocs watch 
 
