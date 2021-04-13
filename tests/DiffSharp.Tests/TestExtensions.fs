@@ -15,7 +15,7 @@ module TestExtensions =
 
     type Tensor with
         member a.sinExt() = 
-            Tensor.Op
+            Tensor.UnaryOp
                 { new UnaryOpElementwise("sinExt") with 
                     member _.fRaw(a) = a.SinT()
                     member _.dfda(a,f) = a.cosExt()
@@ -23,7 +23,7 @@ module TestExtensions =
                 (a)
 
         member a.cosExt() =
-            Tensor.Op
+            Tensor.UnaryOp
                 { new UnaryOpElementwise("cosExt") with
                     member _.fRaw(a) = a.CosT()
                     member _.dfda(a,f) = -a.sinExt()
@@ -31,7 +31,7 @@ module TestExtensions =
                 (a)
 
         member a.expExt() =
-            Tensor.Op
+            Tensor.UnaryOp
                 { new UnaryOpElementwise("expExt") with
                     member _.fRaw(a) = a.ExpT()
                     member _.dfda(a,f) = f
@@ -39,7 +39,7 @@ module TestExtensions =
                 (a)
 
         member a.logExt() =
-            Tensor.Op
+            Tensor.UnaryOp
                 { new UnaryOpElementwise("logExt") with
                     member _.fRaw(a) = a.LogT()
                     member _.dfda(a,f) = 1/a
@@ -47,7 +47,7 @@ module TestExtensions =
                 (a)
 
         member a.transposeExt() =
-            Tensor.Op
+            Tensor.UnaryOp
                 { new UnaryOp("transposeExt") with
                     member _.fRaw(a) = a.TransposeT2()
                     member _.ad_dfda(a,ad,f) = ad.transposeExt()
@@ -56,7 +56,7 @@ module TestExtensions =
                 (a)
 
         member a.powExt(b) =
-            Tensor.Op
+            Tensor.BinaryOp
                 { new BinaryOpElementwise("powExt") with
                     member _.fRaw(a,b) = a.PowTT(b)
                     member _.dfda(a,b,f) = b * f / a
@@ -65,7 +65,7 @@ module TestExtensions =
                 (a,b)
 
         member a.mulExt(b) =
-            Tensor.Op
+            Tensor.BinaryOp
                 { new BinaryOpElementwise("mulExt") with
                     member _.fRaw(a,b) = a.MulTT(b)
                     member _.dfda(a,b,f) = b
@@ -74,7 +74,7 @@ module TestExtensions =
                 (a,b)
 
         member a.matmulExt(b) =
-            Tensor.Op
+            Tensor.BinaryOp
                 { new BinaryOp("matmulExt") with
                     member _.fRaw(a,b) = a.MatMulTT(b)
                     member _.ad_dfda(a,ad,b,f) = ad.matmulExt(b)

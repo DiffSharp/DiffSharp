@@ -2949,7 +2949,7 @@ and TensorOp =
         | NewT -> "NewT" // Needed because op.GetType().Name does not give "NewT" for this case and gives "TensorOp"
         | _ -> op.GetType().Name
 
-/// <summary>Defines a new op implementing a unary function and its derivatives. Instances of this class are used with the <see cref="M:DiffSharp.Tensor.Op(DiffSharp.UnaryOp)"/> method to define a new differentiable tensor function that supports forward, reverse, and nested differentiation.</summary>
+/// <summary>Defines a new op implementing a unary function and its derivatives. Instances of this class are used with the <see cref="M:DiffSharp.Tensor.UnaryOp(DiffSharp.UnaryOp)"/> method to define a new differentiable tensor function that supports forward, reverse, and nested differentiation.</summary>
 /// <remarks>
 /// <para>This type represents the most generic definition of a new op representing a unary function, allowing the specification of: (1) the <see cref="T:DiffSharp.Backends.RawTensor"/> operation, (2) the derivative propagation rule for the forward differentiation mode and (3) the derivative propagation rule for the reverse differentiation mode.</para>
 /// <para>In general, if you are implementing a simple elementwise op, you should prefer using the <see cref="T:DiffSharp.UnaryOpElementwise"/> type, which is much simpler to use.</para>
@@ -2989,7 +2989,7 @@ type UnaryOp(name:string) =
     abstract fd_dfda: a:Tensor*f:Tensor*fd:Tensor->Tensor
 
 
-/// <summary>Defines a new op implementing an elementwise unary function and its derivatives. Instances of this class are used with the <see cref="M:DiffSharp.Tensor.Op(DiffSharp.UnaryOp)"/> method to define a new differentiable tensor function that supports forward, reverse, and nested differentiation.</summary>
+/// <summary>Defines a new op implementing an elementwise unary function and its derivatives. Instances of this class are used with the <see cref="M:DiffSharp.Tensor.UnaryOp(DiffSharp.UnaryOp)"/> method to define a new differentiable tensor function that supports forward, reverse, and nested differentiation.</summary>
 /// <remarks>
 /// <para>This type is specialized to elementwise ops. It requires the user to specify only (1) the <see cref="T:DiffSharp.Backends.RawTensor"/> operation and (2) the derivative of the function with respect to its argument. The corresponding derivative propagation rules for the forward and reverse differentiation modes are automatically generated.</para>
 /// <para>If you are implementing a complex op that is not elementwise, you can use the generic type <see cref="T:DiffSharp.UnaryOp"/>, which allows you to define the full derivative propagation rules.</para>
@@ -3025,7 +3025,7 @@ type UnaryOpElementwise(name) =
     override op.fd_dfda(a,f,fd) = fd*op.dfda(a,f)
 
 
-/// <summary>Defines a new op implementing a binary function and its derivatives. Instances of this class are used with the <see cref="M:DiffSharp.Tensor.Op(DiffSharp.BinaryOp)"/> method to define a new differentiable tensor function that supports forward, reverse, and nested differentiation.</summary>
+/// <summary>Defines a new op implementing a binary function and its derivatives. Instances of this class are used with the <see cref="M:DiffSharp.Tensor.BinaryOp(DiffSharp.BinaryOp)"/> method to define a new differentiable tensor function that supports forward, reverse, and nested differentiation.</summary>
 /// <remarks>
 /// <para>This type represents the most generic definition of a new op representing a binary function, allowing the specification of: (1) the <see cref="T:DiffSharp.Backends.RawTensor"/> operation, (2) the derivative propagation rule for the forward differentiation mode and (3) the derivative propagation rule for the reverse differentiation mode.</para>
 /// <para>In general, if you are implementing a simple elementwise op, you should prefer using the <see cref="T:DiffSharp.BinaryOpElementwise"/> type, which is much simpler to use.</para>
@@ -3084,7 +3084,7 @@ type BinaryOp(name:string) =
     abstract fd_dfdb: a:Tensor*b:Tensor*f:Tensor*fd:Tensor->Tensor
 
 
-/// <summary>Defines a new op implementing an elementwise binary function and its derivatives. Instances of this class are used with the <see cref="M:DiffSharp.Tensor.Op(DiffSharp.BinaryOp)"/> method to define a new differentiable tensor function that supports forward, reverse, and nested differentiation.</summary>
+/// <summary>Defines a new op implementing an elementwise binary function and its derivatives. Instances of this class are used with the <see cref="M:DiffSharp.Tensor.BinaryOp(DiffSharp.BinaryOp)"/> method to define a new differentiable tensor function that supports forward, reverse, and nested differentiation.</summary>
 /// <remarks>
 /// This type is specialized to elementwise ops. It requires the user to specify only (1) the <see cref="T:DiffSharp.Backends.RawTensor"/> operation and (2) the derivative of the function with respect to each argument. The corresponding derivative propagation rules for the forward and reverse differentiation modes are automatically generated.
 /// <para>If you are implementing a complex op that is not elementwise, you can use the generic type <see cref="T:DiffSharp.BinaryOp"/>, which allows you to define the full derivative propagation rules.</para>
@@ -3130,22 +3130,23 @@ type BinaryOpElementwise(name) =
 type Tensor with
     /// <summary>Allows the definition of a new unary tensor op.</summary>
     /// <param name="ext">The definition of the new op.</param>
+    /// <param name="a">The input to the new op.</param>
     /// <returns>The new op.</returns>
-    static member Op(ext: UnaryOp) =
-        fun a ->
+    static member UnaryOp(ext: UnaryOp) a =
             let fRaw = ext.fRaw
-            let fTensor = Tensor.Op ext
+            let fTensor = Tensor.UnaryOp ext
             let dfFwd(ap,ad,fp) = ext.ad_dfda(ap,ad,fp) // ad*ext.dfda(ap,fp)
             let dfRev(a) = OpUnaryT(a, (fun (ap,fp,fd) -> ext.fd_dfda(ap,fp,fd)), ext.name) // fd*ext.dfda(ap,fp)
             Tensor.OpUnary(a, fRaw, fTensor, dfFwd, dfRev)
     
     /// <summary>Allows the definition of a new binary tensor op.</summary>
     /// <param name="ext">The definition of the new op.</param>
+    /// <param name="a">The first input to the new op.</param>
+    /// <param name="b">The second input to the new op.</param>
     /// <returns>The new op.</returns>
-    static member Op(ext: BinaryOp) =
-        fun (a, b) ->
+    static member BinaryOp(ext: BinaryOp) (a, b) =
             let fRaw = ext.fRaw
-            let fTensor = Tensor.Op ext
+            let fTensor = Tensor.BinaryOp ext
             let dfFwdTT(ap,ad,bp,bd,fp) = ext.ad_dfda(ap,ad,bp,fp) + ext.bd_dfdb(ap,bp,bd,fp)
             let dfFwdTC(ap,ad,fp) = ext.ad_dfda(ap,ad,b,fp)
             let dfFwdCT(bp,bd,fp) = ext.bd_dfdb(a,bp,bd,fp)
