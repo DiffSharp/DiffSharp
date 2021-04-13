@@ -27,9 +27,9 @@ The DiffSharp API is designed to be similar to [the PyTorch Python API](https://
 naming and idioms, and where elements have similar names the PyTorch documentation can generally be used as a guide.
 There are some improvements and DiffSharp supports a richer gradient/differentiation API.
 
-* [The `dsharp.*` API](/reference/diffsharp-dsharp.html)
+* The `cref:T:DiffSharp.dsharp` API
 
-* [Tensors](/reference/diffsharp-tensor.html)
+* The `cref:T:DiffSharp.Tensor` type
 
 * [Models](/reference/diffsharp-model.html)
 
