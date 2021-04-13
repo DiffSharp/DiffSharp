@@ -199,5 +199,3 @@ If you would like to cite this library, please use the following information:
 _Baydin, A.G., Pearlmutter, B.A., Radul, A.A. and Siskind, J.M., 2017. Automatic differentiation in machine learning: a survey. The Journal of Machine Learning Research, 18(1), pp.5595-5637._ ([link](https://arxiv.org/abs/1502.05767))
 
 *)
-printfn $"t4 = {t4}"
-printfn $"exiting {__SOURCE_FILE__}"
