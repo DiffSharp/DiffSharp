@@ -219,6 +219,34 @@ body {
   Formatting xmldoc sections in fsdocs-content
 /*--------------------------------------------------------------------------*/
 
+.fsdocs-xmldoc, .fsdocs-entity-xmldoc, .fsdocs-member-xmldoc {
+    font-size: 1.0rem;
+    line-height: 1.375rem;
+    letter-spacing: 0.01px;
+    font-weight: 500;
+    color: #262626;    
+}
+
+.fsdocs-xmldoc h1 {
+    font-size: 1.2rem;
+    margin: 10px 0px 0px 0px;
+}
+
+.fsdocs-xmldoc h2 {
+    font-size: 1.2rem;
+    margin: 10px 0px 0px 0px;
+}
+
+.fsdocs-xmldoc h3 {
+    font-size: 1.1rem;
+    margin: 10px 0px 0px 0px;
+}
+
+/* #fsdocs-nav .searchbox {
+    margin-top: 30px;
+    margin-bottom: 30px;
+} */
+
 #fsdocs-nav img.logo{
     width:90%;
     /* height:140px; */
@@ -305,7 +333,7 @@ body {
 }
 
 #fsdocs-content pre.fssnip code {
-        font: 9pt 'Droid Sans Mono',consolas,monospace;
+    font: 0.85rem 'Roboto Mono', monospace;
 }
 
 #fsdocs-content table.pre pre {
@@ -328,6 +356,14 @@ body {
 
 #fsdocs-content pre {
     word-wrap: inherit;
+}
+
+.fsdocs-example-header {
+    font-size: 1.0rem;
+    line-height: 1.375rem;
+    letter-spacing: 0.01px;
+    font-weight: 700;
+    color: #262626;    
 }
 
 /*--------------------------------------------------------------------------
