@@ -89,6 +89,12 @@ body {
 #fsdocs-content a {
     color: #4974D1;
 }
+/* remove the default bootstrap bold on dt elements */
+#fsdocs-content dt {
+    font-weight: normal;
+}
+
+
 
 /*--------------------------------------------------------------------------
   Formatting tables in fsdocs-content, using docs.microsoft.com tables
@@ -205,41 +211,13 @@ body {
     font-weight: bold;
 }
 
-.fsdocs-member-list .fsdocs-member-name {
+.fsdocs-member-list .fsdocs-member-usage {
     width: 35%;
 }
 
 /*--------------------------------------------------------------------------
   Formatting xmldoc sections in fsdocs-content
 /*--------------------------------------------------------------------------*/
-
-.fsdocs-xmldoc {
-    font-size: 1.0rem;
-    line-height: 1.375rem;
-    letter-spacing: 0.01px;
-    font-weight: 500;
-    color: #262626;    
-}
-
-.fsdocs-xmldoc h1 {
-    font-size: 1.2rem;
-    margin: 10px 0px 0px 0px;
-}
-
-.fsdocs-xmldoc h2 {
-    font-size: 1.2rem;
-    margin: 10px 0px 0px 0px;
-}
-
-.fsdocs-xmldoc h3 {
-    font-size: 1.1rem;
-    margin: 10px 0px 0px 0px;
-}
-
-/* #fsdocs-nav .searchbox {
-    margin-top: 30px;
-    margin-bottom: 30px;
-} */
 
 #fsdocs-nav img.logo{
     width:90%;
@@ -327,7 +305,7 @@ body {
 }
 
 #fsdocs-content pre.fssnip code {
-    font: 0.85rem 'Roboto Mono', monospace;
+        font: 9pt 'Droid Sans Mono',consolas,monospace;
 }
 
 #fsdocs-content table.pre pre {
@@ -350,14 +328,6 @@ body {
 
 #fsdocs-content pre {
     word-wrap: inherit;
-}
-
-.fsdocs-example-header {
-    font-size: 1.0rem;
-    line-height: 1.375rem;
-    letter-spacing: 0.01px;
-    font-weight: 700;
-    color: #262626;    
 }
 
 /*--------------------------------------------------------------------------
