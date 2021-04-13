@@ -97,8 +97,6 @@ General functions
 
 For more complicated functions, you can use the most general way of defining functions using the [`UnaryOp`](reference/diffsharp-unaryop.html) or [`BinaryOp`](reference/diffsharp-binaryop.html) types, which allow you to define the full forward and reverse mode differentiation rules. The documentation of these two types detail how they should be instantiated.
 
-You would then use the [`Tensor.Op`](reference/diffsharp-tensor.html#Op) method to create the `Tensor->Tensor` or `Tensor*Tensor->Tensor` function. You would typically also extend the [`Tensor`](reference/diffsharp-tensor.html) type with your newly defined function.
-
 Let's see several examples.
 
 $ f(A) = A^{\intercal} $, with the forward derivative propagation rule $ \frac{\partial f(A)}{\partial X} = \frac{\partial A}{\partial X} \frac{\partial f(A)}{\partial A} = (\frac{\partial A}{\partial X})^{\intercal} $ and the reverse derivative propagation rule $ \frac{\partial Y}{\partial A} = \frac{\partial Y}{\partial f(A)} \frac{\partial f(A)}{\partial A} = (\frac{\partial Y}{\partial f(A)})^{\intercal} \;$.

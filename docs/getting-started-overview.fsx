@@ -16,9 +16,9 @@ Formatter.Register(fun (x:obj) (writer: TextWriter) -> fprintfn writer "%120A" x
 #endif // IPYNB
 
 (**
-[![Binder](img/badge-binder.svg)](https://mybinder.org/v2/gh/diffsharp/diffsharp.github.io/master?filepath=getting-started-overview.ipynb)&emsp;
-[![Script](img/badge-script.svg)](getting-started-overview.fsx)&emsp;
-[![Script](img/badge-notebook.svg)](getting-started-overview.ipynb)
+[![Binder](img/badge-binder.svg)](https://mybinder.org/v2/gh/diffsharp/diffsharp.github.io/master?filepath={{fsdocs-source-basename}}.ipynb)&emsp;
+[![Script](img/badge-script.svg)]({{fsdocs-source-basename}}.fsx)&emsp;
+[![Script](img/badge-notebook.svg)]({{fsdocs-source-basename}}.ipynb)
 
 API Overview
 ============
@@ -43,3 +43,6 @@ There are some improvements and DiffSharp supports a richer gradient/differentia
 
 *)
 
+open DiffSharp
+
+let t = dsharp.tensor [ 0 .. 10 ]
