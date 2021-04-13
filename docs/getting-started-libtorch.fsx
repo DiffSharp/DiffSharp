@@ -1,4 +1,5 @@
-﻿(*** condition: prepare ***)
+﻿printfn $"starting {__SOURCE_FILE__}"
+(*** condition: prepare ***)
 #I "../tests/DiffSharp.Tests/bin/Debug/net5.0"
 #r "DiffSharp.Core.dll"
 #r "DiffSharp.Data.dll"
@@ -74,3 +75,4 @@ To move a tensor to the GPU use the following:
 
     let t2 = t.move(Device.GPU)
 *)
+printfn $"done {__SOURCE_FILE__}"

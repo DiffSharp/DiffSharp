@@ -26,5 +26,7 @@ jobs:
       run: dotnet test /p:CollectCoverage=true /p:CoverletOutputFormat=opencover --configuration Debug --no-restore --verbosity normal
     - name: Codecov
       uses: codecov/codecov-action@v1
+    - name: Check if script runs
+      run: dotnet fsi docs\getting-started-libtorch.fsx
     - name: Run fsdocs
       run: dotnet fsdocs build --eval --strict
