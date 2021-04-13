@@ -3,7 +3,7 @@
   "isRoot": true,
   "tools": {
     "fsharp.formatting.commandtool": {
-      "version": "10.0.11",
+      "version": "10.0.17",
       "commands": [
         "fsdocs"
       ]
