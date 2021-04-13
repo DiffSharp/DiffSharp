@@ -30,3 +30,4 @@ For now, [see the examples folder](https://github.com/DiffSharp/DiffSharp/blob/d
 
 *)
 
+printfn $"exiting {__SOURCE_FILE__}"
