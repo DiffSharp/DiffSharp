@@ -43,3 +43,6 @@ There are some improvements and DiffSharp supports a richer gradient/differentia
 
 *)
 
+open DiffSharp
+
+let t = dsharp.tensor [ 0 .. 10 ]
