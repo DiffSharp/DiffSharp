@@ -25,6 +25,7 @@
     <Compile Include="DiffSharp.ShapeChecking.fs" />
     <Compile Include="DiffSharp.ShapeChecking.Slicing.fs" />
     <Compile Include="DiffSharp.AvgPool.fs" />
+    <Compile Include="DiffSharp.Activations.fs" />
     <Compile Include="Distributions.fs" />
     <Compile Include="Data.fs" />
     <Compile Include="Model.fs" />
