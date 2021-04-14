@@ -317,7 +317,7 @@ type TestTensorAvgPool () =
             printfn $"tk3        = {tk3}"
             Assert.True(tk3Correct.allclose(tk3,0.01))
 
-            let tk3r = tk3.avgpoolReverse1d(t, 3)
+            let tk3r = tk3.avgpoolReverse1d(t, 3I)
             let tk3rCorrect = combo.full([2;2;6], 1.0/3.0)
             printfn $"tk3r        = {tk3r}"
             printfn $"tk3rCorrect        = {tk3rCorrect}"
@@ -334,7 +334,7 @@ type TestTensorAvgPool () =
             printfn $"tk3        = {tk3}"
             Assert.True(tk3Correct.allclose(tk3,0.01))
 
-            let tk3r = tk3.avgpoolReverse2d(t, 3)
+            let tk3r = tk3.avgpoolReverse2d(t, 3I)
             let tk3rCorrect = combo.full([2;2;6;6], 1.0/9.0)
             printfn $"tk3r        = {tk3r}"
             printfn $"tk3rCorrect        = {tk3rCorrect}"
@@ -351,7 +351,7 @@ type TestTensorAvgPool () =
             printfn $"tk3        = {tk3}"
             Assert.True(tk3Correct.allclose(tk3,0.01))
 
-            let tk3r = tk3.avgpoolReverse3d(t, 3)
+            let tk3r = tk3.avgpoolReverse3d(t, 3I)
             let tk3rCorrect = combo.full([2;2;6;6;6], 1.0/27.0)
             printfn $"tk3r        = {tk3r}"
             printfn $"tk3rCorrect        = {tk3rCorrect}"
