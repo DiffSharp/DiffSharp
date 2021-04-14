@@ -39,11 +39,6 @@ type SymbolicAttribute() = inherit System.Attribute()
 [<AutoOpen>]
 module SymbolExtensions =
 
-    //// This is the handle for embedding integer symbols via integers
-    //let mutable IntegerSyms =
-    //    { new IIntegerSyms with
-    //        member _.GetOrCreateIntegerSym(n:int) = failwith "no integer sym handler installed" }
-
     type ISym with   
 
         static member unop nm (arg: ISym) : ISym =
@@ -58,10 +53,6 @@ module SymbolExtensions =
         /// Assert the two symbols to be equal
         member sym1.AssertEqualityConstraint(sym2) =
             sym1.SymScope.AssertConstraint("eq", [|sym1; sym2|])
-
-    //// "249421277 should be enough for anyone"
-    //let [<Literal>] INTSYM_MIN = 0x71111111 
-    //let [<Literal>] INTSYM_MAX = 0x7FEEEEEE 
 
 type SymbolParser(env: Map<string, ISym>, syms: ISymScope, loc: obj) =
     let (|Integer|_|) toks = 

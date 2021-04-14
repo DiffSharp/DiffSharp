@@ -17,13 +17,9 @@ open DiffSharp.Util
 ///
 /// <summary>Represents an optimizer.</summary>
 [<AbstractClass>]
-type Optimizer() =
+type Optimizer(model:Model) =
     /// <summary>TBD</summary>
-    abstract member updateRule: string -> Tensor -> Tensor
-
-[<AbstractClass>]
-type ModelOptimizer(model:Model) =
-    inherit Optimizer()
+    member val model = model
 
     /// <summary>TBD</summary>
     member val stateStep = 0 with get, set
@@ -33,12 +29,11 @@ type ModelOptimizer(model:Model) =
         o.stateStep <- o.stateStep + 1  // This order is crucial, we need first step to have o.stateStep = 1 before calling update rules
         model.parameters.iter(fun (n, p) -> let t = o.updateRule n p.value in p.value <- t)
 
-    /// <summary>TBD</summary>
-    member val model = model
+    abstract member updateRule: string -> Tensor -> Tensor
 
 /// <summary>TBD</summary>
 type SGD(model, ?lr:Tensor, ?momentum:Tensor, ?nesterov:bool, ?weightDecay:Tensor, ?reversible:bool) =
-    inherit ModelOptimizer(model)
+    inherit Optimizer(model)
     let lr = defaultArg lr (dsharp.tensor(1e-3))
     let nesterov = defaultArg nesterov true
     let reversible = defaultArg reversible false
@@ -68,7 +63,7 @@ type SGD(model, ?lr:Tensor, ?momentum:Tensor, ?nesterov:bool, ?weightDecay:Tenso
 
 /// <summary>TBD</summary>
 type Adam(model, ?lr:Tensor, ?beta1:Tensor, ?beta2:Tensor, ?eps:Tensor, ?weightDecay:Tensor, ?reversible:bool) =
-    inherit ModelOptimizer(model)
+    inherit Optimizer(model)
     let lr = defaultArg lr (dsharp.tensor(1e-3))
     let beta1 = defaultArg beta1 (dsharp.tensor(0.9))
     let beta2 = defaultArg beta2 (dsharp.tensor(0.999))
@@ -157,7 +152,7 @@ type optim =
         fx, x
 
     /// <summary>TBD</summary>
-    static member internal optimizeModel(model:Model, optimizer:ModelOptimizer, dataloader:DataLoader, loss:Tensor->Tensor->Tensor, ?iters:int, ?epochs:int, ?threshold:double, ?print:bool, ?printEvery:int, ?printPrefix:string, ?printPostfix:string) =
+    static member internal optimizeModel(model:Model, optimizer:Optimizer, dataloader:DataLoader, loss:Tensor->Tensor->Tensor, ?iters:int, ?epochs:int, ?threshold:double, ?print:bool, ?printEvery:int, ?printPrefix:string, ?printPostfix:string) =
         let iters, epochs =
             match iters, epochs with
             | Some _, Some _ -> failwithf "Expecting only one of iters, epochs"

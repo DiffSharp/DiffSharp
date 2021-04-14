@@ -7,7 +7,7 @@ namespace DiffSharp.Model
 
 open DiffSharp
 
-/// <summary>A model which during training, randomly zeroes some of the elements of the input tensor with probability p using samples from a Bernoulli distribution. Each channel will be zeroed out independently on every forward call.</summary>
+/// <summary>A model which during training, randomly zeroes some of the elements of the input tensor with probability p using samples from a Bernoulli distribution.</summary>
 type Dropout(?p:double) =
     inherit Model()
 
@@ -41,4 +41,3 @@ type Dropout3d(?p:double) =
     /// <summary>TBD</summary>
     override m.forward(value) =
         if m.mode = Mode.Train then value.dropout3d(?p=p) else value
-

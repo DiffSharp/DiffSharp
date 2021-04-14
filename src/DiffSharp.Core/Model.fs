@@ -49,7 +49,7 @@ type Parameter =
     member p.move(?dtype, ?device, ?backend) = p.value <- p.value.move(?dtype=dtype, ?device=device, ?backend=backend)
 
     /// <summary>TBD</summary>
-    override p.ToString() = sprintf "Parameter(%A)" p.value
+    override p.ToString() = sprintf "Parameter(shape:%A, value:%A)" p.value.shapex p.value
 
 
 /// <summary>Represents a collection of named parameters in a model.</summary>
@@ -346,6 +346,7 @@ type Model<'In, 'Out>() =
     static member compose (m1:Model<'In, 'Out>) (m2:Model<'Out, 'Out2>) : Model<'In, 'Out2> =
         Model<'In, 'Out2>.create [box m1; box m2] (m1.forward >> m2.forward)
 
+    /// <summary>TBD</summary>
     member m.forwardParameters (input:'In) (parameters:Tensor) =
         m.parametersVector <- parameters
         let f = m.forward(input) in m.noDiff(); f
@@ -411,8 +412,3 @@ type Weight =
     
     /// <summary>TBD</summary>
     static member uniform(shape:seq<Int>, k:float) = Weight.uniform (Shape shape, k)
-
-
-
-
-
