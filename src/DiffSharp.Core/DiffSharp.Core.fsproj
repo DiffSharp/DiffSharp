@@ -37,4 +37,5 @@
     <Compile Include="Optim.fs" />
 	  <PackageReference Update="FSharp.Core" Version="$(FSharpCoreVersion)" />
   </ItemGroup>
+
 </Project>

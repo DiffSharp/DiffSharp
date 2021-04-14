@@ -3,7 +3,8 @@
 #I "../tests/DiffSharp.Tests/bin/Debug/net5.0"
 #r "Microsoft.Z3.dll"
 #r "DiffSharp.Core.dll"
-#r "DiffSharp.Data.dll"
+#r "DiffSharp.Backends.Reference.dll"
+#r "DiffSharp.Backends.ShapeChecking.dll"
 #r "DiffSharp.Backends.Torch.dll"
 
 // Libtorch binaries
@@ -13,7 +14,9 @@
 // Option B: you can use a local libtorch installation
 // System.Runtime.InteropServices.NativeLibrary.Load("/home/gunes/anaconda3/lib/python3.8/site-packages/torch/lib/libtorch.so")
 
+#compilertool @"e:\GitHub\dsyme\FSharp.Compiler.PortaCode\FSharp.Tools.LiveChecks.Analyzer\bin\Debug\netstandard2.0\publish"
 
+open System
 open DiffSharp
 open DiffSharp.Model
 open DiffSharp.Optim
@@ -22,7 +25,18 @@ open DiffSharp.ShapeChecking
 
 let Assert b = if not b then failwith "assertion constraint failed"
 
-type VAE(xDim:int, zDim:int, ?hDims:seq<int>, ?nonlinearity:Tensor->Tensor, ?nonlinearityLast:Tensor->Tensor) =
+[<ShapeCheck("N,M")>]
+let f (x: Tensor) = 
+   //let res = dsharp.cat[x; x.transpose(0,1)]
+   let res = dsharp.cat[x;x;x;x;x] 
+   res
+
+
+(*
+
+/// Variational auto-encoder example in DiffSharp (shape-aware)
+//
+type VAE(xDim:Int, yDim: Int, zDim:Int, ?hDims:seq<Int>, ?nonlinearity:Tensor->Tensor, ?nonlinearityLast:Tensor->Tensor) =
     inherit Model()
     let xyDim = xDim * yDim 
     let hDims = defaultArg hDims (let d = (xyDim+zDim)/2 in seq [d; d]) |> Array.ofSeq
@@ -33,7 +47,7 @@ type VAE(xDim:int, zDim:int, ?hDims:seq<int>, ?nonlinearity:Tensor->Tensor, ?non
     let ndims = dims.Length
     let enc = [| for i in 0..ndims-2 do
                     Linear(dims.[i], dims.[i+1])
-                 Linear(dims.[ndims-2], dims.[ndims-1])|]
+                 Linear(dims.[ndims-2], dims.[ndims-1]) |]
     let dec = [|for i in 0..ndims-2 -> Linear(dims.[i+1], dims.[i])|] |> Array.rev
     do 
         base.add([for m in enc -> box m])
@@ -63,27 +77,28 @@ type VAE(xDim:int, zDim:int, ?hDims:seq<int>, ?nonlinearity:Tensor->Tensor, ?non
         let z = sampleLatent mu logVar
         decode z, mu, logVar
 
+    [<ShapeCheck( [| "𝐵"; "𝑋"; "𝑌" |] , ReturnShape=[| "𝐵"; "𝑋*𝑌" |] )>]
     override m.forward(x) =
         let x, _, _ = m.encodeDecode(x) in x
 
     override _.ToString() = sprintf "VAE(%A, %A, %A)" xDim hDims zDim
 
+    //[<ShapeCheck( "𝑁" , ReturnShape=[| "𝑁"; "𝑋*𝑌" |] )>]
     static member loss(xRecon:Tensor, x:Tensor, mu:Tensor, logVar:Tensor) =
         let bce = dsharp.bceLoss(xRecon, x.viewAs(xRecon), reduction="sum")
         let kl = -0.5 * dsharp.sum(1. + logVar - mu.pow(2.) - logVar.exp())
         bce + kl
 
-    member m.loss(x, ?normalize:bool) =
-        let normalize = defaultArg normalize true
-        let xRecon, mu, logVar = m.encodeDecode x
-        let loss = VAE.loss(xRecon, x, mu, logVar)
-        if normalize then loss / x.shape.[0] else loss
-
-    member _.sample(?numSamples:int) = 
-        let numSamples = defaultArg numSamples 1
+    member _.sample(?numSamples:Int) = 
+        let numSamples = defaultArg numSamples (Int 1)
         dsharp.randn(Shape [|numSamples; zDim|]) |> decode
 
     override _.ToString() = sprintf "VAE(%A, %A, %A)" xyDim hDims zDim
+
+    new (xDim:int, yDim:int, zDim:int, ?hDims:seq<int>, ?activation:Tensor->Tensor, ?activationLast:Tensor->Tensor) =
+        VAE(Int xDim, Int yDim, Int zDim, ?hDims = Option.map (Seq.map Int) hDims, ?activation=activation, ?activationLast=activationLast)
+
+
 
 dsharp.config(backend=Backend.Torch, device=Device.CPU)
 dsharp.seed(0)
@@ -106,7 +121,7 @@ let validLoader = validSet.loader(batchSize=batchSize, shuffle=false)
 let model = VAE(28*28, 20, [400])
 printfn "Model: %A" model
 
-let optimizer = Adam(model, lr=dsharp.tensor(0.001))
+let optimizer = Adam(model, learningRate=dsharp.tensor(0.001))
 
 for epoch = 1 to epochs do
     for i, x, _ in trainLoader.epoch() do
@@ -128,3 +143,4 @@ for epoch = 1 to epochs do
             let samples = model.sample(numSamples).view([-1; 1; 28; 28])
             samples.saveImage(fileName)
 
+*)

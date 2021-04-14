@@ -6,6 +6,7 @@
     <IsPackable>false</IsPackable>
     <GenerateProgramFile>false</GenerateProgramFile>
     <PlatformTarget>x64</PlatformTarget>
+    <IsPublishable>false</IsPublishable>
   </PropertyGroup>
 
   <ItemGroup>
@@ -13,7 +14,7 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
-    <PackageReference Include="Microsoft.Z3.x64" Version="4.8.9" />
+    <PackageReference Include="Microsoft.Z3.x64" Version="4.8.10" />
     <PackageReference Include="nunit" Version="3.12.0" />
     <PackageReference Include="NUnit3TestAdapter" Version="3.13.0" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.2.0" />
@@ -29,6 +30,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\src\DiffSharp.Backends.Reference\DiffSharp.Backends.Reference.fsproj" />
     <ProjectReference Include="..\..\tools\DiffSharp.Backends.ShapeChecking\DiffSharp.Backends.ShapeChecking.fsproj" />
     <ProjectReference Include="..\..\src\DiffSharp.Core\DiffSharp.Core.fsproj" />
 	<PackageReference Update="FSharp.Core" Version="$(FSharpCoreVersion)" />

@@ -5,6 +5,7 @@
     <IsPackable>false</IsPackable>
     <GenerateProgramFile>false</GenerateProgramFile>
     <PlatformTarget>x64</PlatformTarget>
+    <IsPublishable>false</IsPublishable>
   </PropertyGroup>
 
   <ItemGroup>
@@ -19,7 +20,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Content Include="Properties\launchSettings.json" />
     <Compile Include="TestUtil.fs" />
     <Compile Include="TestCombo.fs" />
     <Compile Include="TestCombos.fs" />

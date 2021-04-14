@@ -143,6 +143,10 @@ type Shape internal (values: int[], dims: Int[]) =
             | _ -> failwithf "%O: invalid shape %s" location text
         | specObj -> failwithf "%O: invalid type for shape specification %s" location (specObj.GetType().ToString())
 
+    member this.ConstrainSymbolic(other: Shape) : unit =
+        if not (this =~= other) then
+            failwithf "Shape mismatch. Expected '%O' but got '%O'" other this
+
 #else
 
 /// Represents the shape of a tensor.
