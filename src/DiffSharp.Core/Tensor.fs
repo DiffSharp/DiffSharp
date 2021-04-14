@@ -778,6 +778,7 @@ type Tensor =
         sb.ToString()
 
     member internal t.GetSlice(bounds:int[,]) =
+        // printfn "t.GetSlice bounds\n %A" bounds
         if t.dim = 0 then failwith "Cannot slice a scalar Tensor"
         let fullBounds = t.shapeFullBounds |> Array2D.copy
         bounds |> Array2D.iteri (fun i j v -> 

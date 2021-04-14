@@ -514,8 +514,29 @@ type RawTensor() =
     /// Returns the element-wise absolute value of the tensor
     abstract AbsT: unit -> RawTensor
 
-    /// Returns the element-wise ReLU of the tensor
+    /// Returns the element-wise relu of the tensor
     abstract ReluT: unit -> RawTensor
+
+    /// Returns the element-wise leaky relu of the tensor
+    abstract LeakyReluT: negativeSlope: double -> RawTensor
+
+    /// Returns the element-wise elu of the tensor
+    abstract EluT: alpha: double * scale: double * input_scale: double -> RawTensor
+
+    /// Returns the element-wise gelu of the tensor
+    abstract GeluT: unit -> RawTensor
+
+    /// Returns the element-wise silu of the tensor
+    abstract SiluT: unit -> RawTensor
+
+    /// Returns the element-wise hardswish of the tensor
+    abstract HardswishT: unit -> RawTensor
+
+    /// Returns the element-wise relu6 of the tensor
+    abstract Relu6T: unit -> RawTensor
+
+    /// Returns the element-wise hardsigmoid of the tensor
+    abstract HardsigmoidT: unit -> RawTensor
 
     /// Returns the element-wise softplus of the tensor
     abstract SoftplusT: unit -> RawTensor
@@ -746,6 +767,27 @@ type RawTensor() =
 
     /// Modifies the tensor by the element-wise ReLU of the tensor
     abstract ReluInPlace: unit -> unit
+
+    /// Returns the element-wise leaky relu of the tensor
+    abstract LeakyReluInPlace: negativeSlope: double -> unit
+
+    /// Returns the element-wise elu of the tensor
+    abstract EluInPlace: alpha: double * scale: double * inputScale: double -> unit
+
+    /// Returns the element-wise gelu of the tensor
+    abstract GeluInPlace: unit -> unit
+
+    /// Returns the element-wise silu of the tensor
+    abstract SiluInPlace: unit -> unit
+
+    /// Returns the element-wise hardswish of the tensor
+    abstract HardswishInPlace: unit -> unit
+
+    /// Returns the element-wise relu6 of the tensor
+    abstract Relu6InPlace: unit -> unit
+
+    /// Returns the element-wise hardsigmoid of the tensor
+    abstract HardsigmoidInPlace: unit -> unit
 
     /// Modifies the tensor by the element-wise softplus of the tensor
     abstract SoftplusInPlace: unit -> unit

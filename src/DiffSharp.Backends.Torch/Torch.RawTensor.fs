@@ -790,6 +790,41 @@ type TorchRawTensor(tt: TorchTensor, shape: Shape, dtype: Dtype, device: Device)
         | Dtype.Int8 -> t.Cast(Dtype.Int32).ReluT().Cast(Dtype.Int8) // TODO: there is odd behaviour from torch for relu on int8, may have been fixed in later version?
         | _ ->   t.MakeLike(tt.relu())
 
+    override t.LeakyReluT(negativeSlope) =
+        match dtype with 
+        | Dtype.Bool -> opNotSupported "LeakyReluT" dtype
+        | _ ->   t.MakeLike(tt.leaky_relu_(toTorchScalar negativeSlope))
+
+    override t.EluT(alpha, scale, inputScale) =
+        match dtype with 
+        | Dtype.Bool -> opNotSupported "EluT" dtype
+        | _ ->   t.MakeLike(tt.elu(toTorchScalar alpha, toTorchScalar scale, toTorchScalar inputScale))
+
+    override t.GeluT() =
+        match dtype with 
+        | Dtype.Bool -> opNotSupported "GeluT" dtype
+        | _ ->   t.MakeLike(tt.gelu())
+
+    override t.HardsigmoidT() =
+        match dtype with 
+        | Dtype.Bool -> opNotSupported "HardsigmoidT" dtype
+        | _ ->   t.MakeLike(tt.hardsigmoid())
+
+    override t.Relu6T() =
+        match dtype with 
+        | Dtype.Bool -> opNotSupported "Relu6T" dtype
+        | _ ->   t.MakeLike(tt.relu6())
+
+    override t.HardswishT() =
+        match dtype with 
+        | Dtype.Bool -> opNotSupported "HardswishT" dtype
+        | _ ->   t.MakeLike(tt.hardswish())
+
+    override t.SiluT() =
+        match dtype with 
+        | Dtype.Bool -> opNotSupported "SiluT" dtype
+        | _ ->   t.MakeLike(tt.silu())
+
     override t.SigmoidT() =
         match dtype with 
         | Dtype.IntegralOrBool -> opNotSupported "SigmoidT" dtype
@@ -1036,6 +1071,24 @@ type TorchRawTensor(tt: TorchTensor, shape: Shape, dtype: Dtype, device: Device)
     override _.AbsInPlace() = checkMutable(); tt.abs_() |> ignore
 
     override _.ReluInPlace() = checkMutable(); tt.relu_() |> ignore
+
+    override _.Relu6InPlace() = checkMutable(); tt.relu6_() |> ignore
+
+    override _.LeakyReluInPlace(negativeSlope) = 
+        checkMutable();
+        tt.leaky_relu_(toTorchScalar negativeSlope) |> ignore
+
+    override _.EluInPlace(alpha, scale, inputScale) =
+        checkMutable()
+        tt.elu_(toTorchScalar alpha, toTorchScalar scale, toTorchScalar inputScale) |> ignore
+
+    override _.GeluInPlace() = checkMutable(); tt <- tt.gelu() 
+
+    override _.SiluInPlace() = checkMutable(); tt.silu_() |> ignore
+
+    override _.HardsigmoidInPlace() = checkMutable(); tt.hardsigmoid_() |> ignore
+
+    override _.HardswishInPlace() = checkMutable(); tt.hardswish_() |> ignore
 
     override _.SoftplusInPlace() = checkMutable(); tt <- tt.softplus() 
 
