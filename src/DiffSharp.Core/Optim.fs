@@ -18,7 +18,6 @@ open DiffSharp.Util
 /// <summary>Represents an optimizer.</summary>
 [<AbstractClass>]
 type Optimizer() =
-
     /// <summary>TBD</summary>
     abstract member updateRule: string -> Tensor -> Tensor
 
@@ -27,7 +26,12 @@ type ModelOptimizer(model:Model) =
     inherit Optimizer()
 
     /// <summary>TBD</summary>
-    member o.step() = model.parameters.iter(fun (n, p) -> let t = o.updateRule n p.value in p.value <- t)
+    member val stateStep = 0 with get, set
+
+    /// <summary>TBD</summary>
+    member o.step() = 
+        o.stateStep <- o.stateStep + 1  // This order is crucial, we need first step to have o.stateStep = 1 before calling update rules
+        model.parameters.iter(fun (n, p) -> let t = o.updateRule n p.value in p.value <- t)
 
     /// <summary>TBD</summary>
     member val model = model
@@ -70,9 +74,8 @@ type Adam(model, ?lr:Tensor, ?beta1:Tensor, ?beta2:Tensor, ?eps:Tensor, ?weightD
     let beta2 = defaultArg beta2 (dsharp.tensor(0.999))
     let eps = defaultArg eps (dsharp.tensor(1e-8))
     let reversible = defaultArg reversible false
-    let mutable stateStep = 0
-    let mutable stateExpAvg = ParameterDict()
-    let mutable stateExpAvgSq = ParameterDict()
+    let stateExpAvg = model.parameters.map(fun (t:Tensor) -> t.zerosLike())
+    let stateExpAvgSq = model.parameters.map(fun (t:Tensor) -> t.zerosLike())
 
     /// <summary>TBD</summary>
     override o.updateRule name t =
@@ -81,16 +84,12 @@ type Adam(model, ?lr:Tensor, ?beta1:Tensor, ?beta2:Tensor, ?eps:Tensor, ?weightD
         match weightDecay with
         | Some wd -> d <- d.add(t.primal * wd)
         | None -> ()
-        if stateStep = 0 then
-            stateExpAvg <- model.parameters.map(fun (t:Tensor) -> t.zerosLike())
-            stateExpAvgSq <- model.parameters.map(fun (t:Tensor) -> t.zerosLike())
-        stateStep <- stateStep + 1
         let expAvg = stateExpAvg.[name].mul(beta1).add(d*(1.-beta1))
         let expAvgSq = stateExpAvgSq.[name].mul(beta2).add(d*d*(1.-beta2))
         stateExpAvg.[name] <- expAvg
         stateExpAvgSq.[name] <- expAvgSq
-        let biasCorrection1 = 1. - beta1 ** stateStep
-        let biasCorrection2 = 1. - beta2 ** stateStep
+        let biasCorrection1 = 1. - beta1 ** o.stateStep
+        let biasCorrection2 = 1. - beta2 ** o.stateStep
         let denom = (expAvgSq.sqrt() / biasCorrection2.sqrt()).add(eps)
         let stepSize = lr / biasCorrection1
         t - stepSize * (expAvg/denom)

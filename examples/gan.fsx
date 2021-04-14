@@ -4,8 +4,13 @@
 #r "DiffSharp.Core.dll"
 #r "DiffSharp.Data.dll"
 #r "DiffSharp.Backends.Torch.dll"
-// #r "nuget: libtorch-cuda-11.1-linux-x64, 1.8.0.7"
-//System.Runtime.InteropServices.NativeLibrary.Load("/home/gunes/anaconda3/lib/python3.8/site-packages/torch/lib/libtorch.so")
+
+// Libtorch binaries
+// Option A: you can use a platform-specific nuget package
+// #r "nuget: libtorch-cuda-11.1-win-x64, 1.8.0.7"
+#r "nuget: libtorch-cuda-11.1-linux-x64, 1.8.0.7"
+// Option B: you can use a local libtorch installation
+// System.Runtime.InteropServices.NativeLibrary.Load("/home/gunes/anaconda3/lib/python3.8/site-packages/torch/lib/libtorch.so")
 
 
 open DiffSharp
@@ -55,7 +60,12 @@ let epochs = 10
 let batchSize = 16
 let validInterval = 100
 
-let mnist = MNIST("../data", train=true, transform=fun t -> (t - 0.5) / 0.5)
+let urls = ["https://ossci-datasets.s3.amazonaws.com/mnist/train-images-idx3-ubyte.gz";
+            "https://ossci-datasets.s3.amazonaws.com/mnist/train-labels-idx1-ubyte.gz";
+            "https://ossci-datasets.s3.amazonaws.com/mnist/t10k-images-idx3-ubyte.gz";
+            "https://ossci-datasets.s3.amazonaws.com/mnist/t10k-labels-idx1-ubyte.gz"]
+
+let mnist = MNIST("../data", urls=urls, train=true, transform=fun t -> (t - 0.5) / 0.5)
 let loader = mnist.loader(batchSize=batchSize, shuffle=true)
 
 let gopt = Adam(generator, lr=dsharp.tensor(0.0002), beta1=dsharp.tensor(0.5))

@@ -8,13 +8,13 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="coverlet.msbuild" Version="2.9.0">
+    <PackageReference Include="coverlet.msbuild" Version="3.0.3">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
-    <PackageReference Include="nunit" Version="3.12.0" />
-    <PackageReference Include="NUnit3TestAdapter" Version="3.16.1" />
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.5.0" />
+    <PackageReference Include="nunit" Version="3.13.1" />
+    <PackageReference Include="NUnit3TestAdapter" Version="3.17.0" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.9.1" />
     <PackageReference Update="FSharp.Core" Version="$(FSharpCoreVersion)" />
   </ItemGroup>
 
@@ -30,7 +30,9 @@
     <Compile Include="TestDerivatives.fs" />
     <Compile Include="TestDerivatives.Conv.fs" />
     <Compile Include="TestDerivatives.MaxPool.fs" />
+    <Compile Include="TestDerivatives.Nested.fs" />
     <Compile Include="TestDistributions.fs" />
+    <Compile Include="TestExtensions.fs" />
     <Compile Include="TestData.fs" />
     <Compile Include="TestModel.fs" />
     <Compile Include="TestOptim.fs" />
