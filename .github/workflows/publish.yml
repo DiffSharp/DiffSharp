@@ -36,7 +36,7 @@ jobs:
     - name: Codecov
       uses: codecov/codecov-action@v1
     - name: Run fsdocs
-      run: dotnet fsdocs build --strict --properties Configuration=Release
+      run: dotnet fsdocs build --eval --strict --properties Configuration=Release
     - name: Deploy docs
       uses: peaceiris/actions-gh-pages@v3
       with:
