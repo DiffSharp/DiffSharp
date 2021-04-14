@@ -222,3 +222,6 @@ output/
 .fsdocs/
 tmp/
 docs/.ipynb_checkpoints/
+examples/*.pdf
+examples/*.params
+examples/*.txt

@@ -12,9 +12,9 @@ open System.Diagnostics
 
 [<AutoOpen>]
 module helpers =
-    let tensorToPython (t:Tensor) =
-        let printVal (x:scalar) = 
-            match x.GetTypeCode() with 
+    let printVal (x:scalar) = 
+        let s = 
+            match x.GetTypeCode() with
             | System.TypeCode.Single -> sprintf "%f" (x.toSingle())
             | System.TypeCode.Double -> sprintf "%f" (x.toDouble())
             | System.TypeCode.Int32 -> sprintf "%d" (x.toInt32())
@@ -24,31 +24,38 @@ module helpers =
             | System.TypeCode.Int16 -> sprintf "%d" (x.toInt16())
             | System.TypeCode.Boolean -> if (x.toBool()) then "True" else "False"
             | _ -> x.ToString()
-        let sb = System.Text.StringBuilder()
-        match t.dim with
-        | 0 -> 
-            sb.Append(printVal (t.toScalar())) |> ignore
-        | _ ->
-            let rec print (shape:Shape) externalCoords = 
-                if shape.Length = 1 then
-                    sb.Append("[") |> ignore
-                    let mutable prefix = ""
-                    for i=0 to shape.[0].Value-1 do
-                        let globalCoords = Array.append externalCoords [|i|]
-                        sb.Append(prefix) |> ignore
-                        sb.Append(printVal (t.Item(globalCoords))) |> ignore
-                        prefix <- ", "
-                    sb.Append("]") |> ignore
-                else
-                    sb.Append("[") |> ignore
-                    let mutable prefix = ""
-                    for i=0 to shape.[0].Value-1 do
-                        sb.Append(prefix) |> ignore
-                        print shape.[1..] (Array.append externalCoords [|i|])
-                        prefix <- ", "
-                    sb.Append("]") |> ignore
-            print t.shapex [||]
-        sb.ToString()
+        s.Replace("NaN", "float('nan')").Replace("Infinity", "float('inf')")
+
+    let toPython (v:obj) =
+        match v with
+        | :? bool as b -> printVal b
+        | :? Tensor as t ->
+            let sb = System.Text.StringBuilder()
+            match t.dim with
+            | 0 -> 
+                sb.Append(printVal (t.toScalar())) |> ignore
+            | _ ->
+                let rec print (shape:Shape) externalCoords = 
+                    if shape.Length = 1 then
+                        sb.Append("[") |> ignore
+                        let mutable prefix = ""
+                        for i=0 to shape.[0].Value-1 do
+                            let globalCoords = Array.append externalCoords [|i|]
+                            sb.Append(prefix) |> ignore
+                            sb.Append(printVal (t.Item(globalCoords))) |> ignore
+                            prefix <- ", "
+                        sb.Append("]") |> ignore
+                    else
+                        sb.Append("[") |> ignore
+                        let mutable prefix = ""
+                        for i=0 to shape.[0].Value-1 do
+                            sb.Append(prefix) |> ignore
+                            print shape.[1..] (Array.append externalCoords [|i|])
+                            prefix <- ", "
+                        sb.Append("]") |> ignore
+                print t.shapex [||]
+            sb.ToString()
+        | _ -> v.ToString()
 
     let runScript executable lines timeoutMilliseconds =
         let fileName = Path.GetTempFileName()
@@ -99,16 +106,19 @@ type Pyplot(?pythonExecutable, ?timeoutMilliseconds) =
         if x.dim <> 1 || y.dim <> 1 then failwithf "Expecting tensors x (%A) and y (%A) to be 1d" x.shape y.shape
         let alpha = defaultArg alpha 1.
         let label = defaultArg label ""
-        add(sprintf "plt.plot(%s, %s, alpha=%A, label='%s')" (tensorToPython x) (tensorToPython y) alpha label)
+        add(sprintf "plt.plot(%s, %s, alpha=%A, label='%s')" (toPython x) (toPython y) alpha label)
     member p.plot(y:Tensor, ?alpha, ?label) =
+        if y.dim <> 1 then failwithf "Expecting tensor y (%A) to be 1d" y.shape
         let x = dsharp.arangeLike(y, y.nelement)
         p.plot(x, y, ?alpha=alpha, ?label=label)
     member p.hist(x:Tensor, ?weights, ?bins, ?density, ?label) =
+        if x.dim <> 1 then failwithf "Expecting tensor x (%A) to be 1d" x.shape
         let weights = defaultArg weights (dsharp.onesLike(x))
+        if weights.dim <> 1 then failwithf "Expecting tensor weights (%A) to be 1d" weights.shape
         let bins = defaultArg bins 10
         let density = defaultArg density false
         let label = defaultArg label ""
-        add(sprintf "plt.hist(%s, weights=%s, bins=%A, density=%s, label='%s')" (tensorToPython x) (tensorToPython weights) bins (if density then "True" else "False") label)
+        add(sprintf "plt.hist(%s, weights=%s, bins=%A, density=%s, label='%s')" (toPython x) (toPython weights) bins (toPython density) label)
     member _.figure(?figSize) = 
         let figSize = defaultArg figSize (6.4, 4.8)
         add(sprintf "plt.figure(figsize=(%A,%A))" (fst figSize) (snd figSize))
@@ -116,6 +126,8 @@ type Pyplot(?pythonExecutable, ?timeoutMilliseconds) =
     member _.tightLayout() = add("plt.tight_layout()")
     member _.xlabel(label) = add(sprintf "plt.xlabel('%s')" label)
     member _.ylabel(label) = add(sprintf "plt.ylabel('%s')" label)
+    member _.xscale(value) = add(sprintf "plt.xscale('%s')" value)
+    member _.yscale(value) = add(sprintf "plt.yscale('%s')" value)
     member _.savefig(fileName) =
         add(sprintf "plt.savefig('%s')" fileName)
         runScript pythonExecutable lines timeoutMilliseconds

@@ -4560,6 +4560,18 @@ type TestTensor () =
             Assert.CheckEqual(t3DepthCorrect, t3Depth)
 
     [<Test>]
+    member _.TestTensorParents () =
+        let a = dsharp.randn(5).reverseDiff()
+        let b = a.sin().exp() + a
+        let _, s = b.parents()
+        let sCorrect = """TensorR [|5|] AddTT
+ TensorR [|5|] ExpT
+  TensorR [|5|] SinT
+   TensorR [|5|] NewT
+ TensorR [|5|] NewT"""
+        Assert.AreEqual(sCorrect, s)
+
+    [<Test>]
     member _.TestTensorIEnumerable () =
         for combo in Combos.All do 
             let t1 = combo.tensor([1,2,3])

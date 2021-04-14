@@ -20,10 +20,14 @@ open System.Net
 module DataUtil =
     /// Synchronously downloads the given URL to the given local file.
     let download (url:string) (localFileName:string) =
-        let wc = new WebClient()
-        printfn "Downloading %A to %A" url localFileName
-        wc.DownloadFile(url, localFileName)
-        wc.Dispose()
+        Directory.CreateDirectory(Path.GetDirectoryName(localFileName)) |> ignore
+        if File.Exists(localFileName) then
+            printfn "File exists, skipping download: %A" localFileName
+        else
+            let wc = new WebClient()
+            printfn "Downloading %A to %A" url localFileName
+            wc.DownloadFile(url, localFileName)
+            wc.Dispose()
 
     let extractTarStream (stream:Stream) (outputDir:string) =
         let buffer:byte[] = Array.zeroCreate 100
@@ -113,7 +117,6 @@ type CIFAR10(path:string, ?url:string, ?train:bool, ?transform:Tensor->Tensor, ?
         |] |> Array.unzip |> fun (i, l) -> dsharp.stack(i), dsharp.stack(l)
 
     let data, target =
-        Directory.CreateDirectory(path) |> ignore
         if not (File.Exists(file)) then download url file
         if not (Directory.Exists(pathExtracted)) then extractTarGz file path
         let files = [|"data_batch_1.bin"; "data_batch_2.bin"; "data_batch_3.bin"; "data_batch_4.bin"; "data_batch_5.bin"; "test_batch.bin"|] |> Array.map (fun f -> Path.Combine(pathExtracted, f))
@@ -151,7 +154,6 @@ type CIFAR100(path:string, ?url:string, ?train:bool, ?transform:Tensor->Tensor, 
         |] |> Array.unzip3 |> fun (i, lc, lf) -> dsharp.stack(i), dsharp.stack(lc), dsharp.stack(lf)
 
     let data, _, targetFine =
-        Directory.CreateDirectory(path) |> ignore
         if not (File.Exists(file)) then download url file
         if not (Directory.Exists(pathExtracted)) then extractTarGz file path
         if train then loadCIFAR100 (Path.Combine(pathExtracted, "train.bin")) 50000
@@ -176,6 +178,12 @@ type MNIST(path:string, ?urls:seq<string>, ?train:bool, ?transform:Tensor->Tenso
                     "http://yann.lecun.com/exdb/mnist/train-labels-idx1-ubyte.gz";
                     "http://yann.lecun.com/exdb/mnist/t10k-images-idx3-ubyte.gz";
                     "http://yann.lecun.com/exdb/mnist/t10k-labels-idx1-ubyte.gz"])
+    // Alternative URLs that work when LeCun's site is not responding
+    // let urls = List.ofSeq <| defaultArg urls (Seq.ofList
+    //                ["https://ossci-datasets.s3.amazonaws.com/mnist/train-images-idx3-ubyte.gz";
+    //                 "https://ossci-datasets.s3.amazonaws.com/mnist/train-labels-idx1-ubyte.gz";
+    //                 "https://ossci-datasets.s3.amazonaws.com/mnist/t10k-images-idx3-ubyte.gz";
+    //                 "https://ossci-datasets.s3.amazonaws.com/mnist/t10k-labels-idx1-ubyte.gz"])                    
     let files = [for url in urls do Path.Combine(path, Path.GetFileName(url))]
 
     let loadMNISTImages(filename:string) (n:option<int>) =
@@ -207,7 +215,6 @@ type MNIST(path:string, ?urls:seq<string>, ?train:bool, ?transform:Tensor->Tenso
         | _ -> failwith "Given file is not in the MNIST format."
 
     let data, target = 
-        Directory.CreateDirectory(path) |> ignore
         if train then
             if not (File.Exists(files.[0])) then download urls.[0] files.[0]
             if not (File.Exists(files.[1])) then download urls.[1] files.[1]

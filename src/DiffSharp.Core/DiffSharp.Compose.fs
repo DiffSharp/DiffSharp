@@ -149,7 +149,7 @@ type dsharp with
     static member transpose(dim0:int, dim1:int) = fun (a:Tensor) -> a.transpose(dim0, dim1)
 
     /// <summary>TBD</summary>
-    static member squeeze(dim:int) = fun (a:Tensor) -> a.squeeze(dim=dim)
+    static member squeeze(?dim:int) = fun (a:Tensor) -> a.squeeze(?dim=dim)
 
     /// <summary>TBD</summary>
     static member unsqueeze(dim:int) = fun (a:Tensor) -> a.unsqueeze(dim)
@@ -165,6 +165,9 @@ type dsharp with
 
     /// <summary>TBD</summary>
     static member repeat(dim:int, times:int) = fun (a:Tensor) -> a.repeat(dim, times)
+
+    /// <summary>TBD</summary>
+    static member slice(index:seq<int>) = fun (a:Tensor) -> a.[index |> Seq.toArray]
 
     /// <summary>TBD</summary>
     static member view(shape:seq<int>) = fun (a:Tensor) -> a.view(shape)

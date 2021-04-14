@@ -32,19 +32,27 @@ Formatter.Register(fun x writer -> fprintfn writer "%120A" x )
 #endif // IPYNB
 
 (**
-[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/diffsharp/diffsharp.github.io/master?filepath=getting-started-torch.ipynb) [Script](getting-started-torch.fsx)
+[![Binder](img/badge-binder.svg)](https://mybinder.org/v2/gh/diffsharp/diffsharp.github.io/master?filepath={{fsdocs-source-basename}}.ipynb)&emsp;
+[![Script](img/badge-script.svg)]({{fsdocs-source-basename}}.fsx)&emsp;
+[![Script](img/badge-notebook.svg)]({{fsdocs-source-basename}}.ipynb)
 
 Getting Started with DiffSharp and Torch
 =========
 
 To use the Torch backend for DiffSharp, reference one of
 
+* [`DiffSharp-lite`](https://www.nuget.org/packages/DiffSharp-lite) - This includes the DiffSharp Torch backend but no LibTorch
+  binaries.  You will have to add an explicit load of the relevant native library, e.g.
+
+      open System.Runtime.InteropServices
+      NativeLibrary.Load("/home/gunes/anaconda3/lib/python3.8/site-packages/torch/lib/libtorch.so")
+
 * [`DiffSharp-cpu`](https://www.nuget.org/packages/DiffSharp-cpu) - This includes the Torch backend using CPU only.
 
 * [`DiffSharp-cuda-linux`](https://www.nuget.org/packages/DiffSharp-cuda-linux), [`DiffSharp-cuda-windows`](https://www.nuget.org/packages/DiffSharp-cuda-windows) - These include the Torch CPU/GPU backend for Linux and Windows respectively. Large download.
 
-Then use:
 *)
+open DiffSharp
 
 open DiffSharp
 
@@ -59,9 +67,10 @@ Now examine the device and backend:
 let device = t.device
 let backend = t.backend
 
-(** 
 
+(**
 To move a tensor to the GPU use the following:
 
     let t2 = t.move(Device.GPU)
+
 *)
