@@ -818,7 +818,7 @@ type Tensor =
     member internal t.GetSlice(bounds:int[,]) =
         t.GetSlice(bounds |> Array2D.map Int)
 
-    member internal t.GetSlice(bounds:Int[,]) =
+    member t.GetSlice(bounds:Int[,]) =
         // printfn "t.GetSlice bounds\n %A" bounds
         if t.dim = 0 then failwith "Cannot slice a scalar Tensor"
         let fullBounds = Array2D.init t.dim 3 (fun i j -> if j=0 then 0I elif j=1 then t.shapex.[i]-1 else 0I)

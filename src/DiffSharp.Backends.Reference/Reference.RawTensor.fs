@@ -353,6 +353,13 @@ type RawTensorCPU<'T when 'T : equality and 'T :> scalar>(values: 'T[], shape: S
     override t.RoundInPlace() = t.SetValues <| t.RoundT()
     override t.AbsInPlace() = t.SetValues <| t.AbsT()
     override t.ReluInPlace() = t.SetValues <| t.ReluT()
+    override t.LeakyReluInPlace(negativeSlope) = t.SetValues <| t.LeakyReluT(negativeSlope)
+    override t.EluInPlace(alpha, scale, inputScale) = t.SetValues <| t.EluT(alpha, scale, inputScale)
+    override t.GeluInPlace() = t.SetValues <| t.GeluT()
+    override t.HardsigmoidInPlace() = t.SetValues <| t.HardsigmoidT()
+    override t.HardswishInPlace() = t.SetValues <| t.HardswishT()
+    override t.Relu6InPlace() = t.SetValues <| t.Relu6T()
+    override t.SiluInPlace() = t.SetValues <| t.SiluT()
     override t.SoftplusInPlace() = t.SetValues <| t.SoftplusT()
     override t.SigmoidInPlace() = t.SetValues <| t.SigmoidT()
     override t.ExpInPlace() = t.SetValues <| t.ExpT()
@@ -841,6 +848,135 @@ module internal RawTensorCPU =
                             result.[[|n; k; v0; v1; v2|]] <- value
         result
 
+    let inline AvgPool1D ofInt (t1: RawTensorCPU< ^T >, kernelSize: Int, stride: Int, padding: Int) : RawTensorCPU< ^T >=
+        let batchSize, channels, inputSize, outputSize, outputShape =
+            Shape.checkCanAvgpool1d t1.Dtype t1.Shape kernelSize stride padding
+        let batchSize, channels, inputSize, outputSize, kernelSize, stride, padding =
+            batchSize.Value, channels.Value, inputSize.Value, outputSize.Value, kernelSize.Value, stride.Value, padding.Value
+        let result = t1.ZerosLike(outputShape) :?> RawTensorCPU<'T>
+        for n=0 to batchSize-1 do
+            for c=0 to channels-1 do
+                for v=0 to outputSize-1 do
+                    let mutable avg = zero
+                    for u=0 to kernelSize-1 do
+                        let i = (v*stride) + u - padding
+                        if i >= 0 && i < inputSize then
+                            let value = t1.[n, c, i]
+                            avg <- avg + value / ofInt kernelSize
+                    result.[[|n; c; v|]] <- avg
+        result
+
+    let inline AvgPool2D ofInt (t1: RawTensorCPU< ^T >, kernelSize: Int[], stride: Int[], padding: Int[]) : RawTensorCPU< ^T > =
+        let batchSize, channels, (inputHeight, inputWidth), (kernelHeight, kernelWidth), (outputHeight, outputWidth), outputShape =
+            Shape.checkCanAvgpool2d t1.Dtype t1.Shape kernelSize stride padding
+        let batchSize, channels, inputHeight, inputWidth, kernelHeight, kernelWidth, outputHeight, outputWidth =
+            batchSize.Value, channels.Value, inputHeight.Value, inputWidth.Value, kernelHeight.Value, kernelWidth.Value, outputHeight.Value, outputWidth.Value
+        let stride = stride |> Int.values
+        let padding = padding |> Int.values
+        let result = t1.ZerosLike(outputShape) :?> RawTensorCPU<'T>
+        let kernelSize = kernelHeight * kernelWidth
+        for n=0 to batchSize-1 do
+            for c=0 to channels-1 do
+                for v0=0 to outputHeight-1 do
+                    for v1=0 to outputWidth-1 do
+                        let mutable avg = zero
+                        for u0=0 to kernelHeight-1 do
+                            for u1=0 to kernelWidth-1 do
+                                let i0 = (v0*stride.[0]) + u0 - padding.[0]
+                                let i1 = (v1*stride.[1]) + u1 - padding.[1]
+                                if i0 >= 0 && i0 < inputHeight && i1 >= 0 && i1 < inputWidth then
+                                    let value = t1.[n, c, i0, i1]
+                                    avg <- avg + value / ofInt kernelSize
+                        result.[[|n; c; v0; v1|]] <- avg
+        result
+
+    let inline AvgPool3D ofInt (t1: RawTensorCPU< ^T >, kernelSize: Int[], stride: Int[], padding: Int[]) : RawTensorCPU< ^T > =
+        let (batchSize, channels, (inputDepth, inputHeight, inputWidth), (kernelDepth, kernelHeight, kernelWidth), (outputDepth, outputHeight, outputWidth), outputShape) =
+            Shape.checkCanAvgpool3d t1.Dtype t1.Shape kernelSize stride padding
+        let batchSize, channels, inputDepth, inputHeight, inputWidth, kernelDepth, kernelHeight, kernelWidth, outputDepth, outputHeight, outputWidth =
+            batchSize.Value, channels.Value, inputDepth.Value, inputHeight.Value, inputWidth.Value, kernelDepth.Value, kernelHeight.Value, kernelWidth.Value, outputDepth.Value, outputHeight.Value, outputWidth.Value
+        let stride = stride |> Int.values
+        let padding = padding |> Int.values
+        let result = t1.ZerosLike(outputShape) :?> RawTensorCPU<'T>
+        let kernelSize = kernelDepth * kernelHeight * kernelWidth
+        for n=0 to batchSize-1 do
+            for c=0 to channels-1 do
+                for v0=0 to outputDepth-1 do
+                    for v1=0 to outputHeight-1 do
+                        for v2=0 to outputWidth-1 do
+                            let mutable avg = zero
+                            for u0=0 to kernelDepth-1 do
+                                for u1=0 to kernelHeight-1 do
+                                    for u2=0 to kernelWidth-1 do
+                                        let i0 = (v0*stride.[0]) + u0 - padding.[0]
+                                        let i1 = (v1*stride.[1]) + u1 - padding.[1]
+                                        let i2 = (v2*stride.[2]) + u2 - padding.[2]
+                                        if i0 >= 0 && i0 < inputDepth && i1 >= 0 && i1 < inputHeight && i2 >= 0 && i2 < inputWidth then
+                                            let value = t1.[n, c, i0, i1, i2]
+                                            avg <- avg + value / ofInt kernelSize
+                            result.[[|n; c; v0; v1; v2|]] <- avg
+        result
+
+    let inline AvgPoolReverse1D ofInt (t1: RawTensorCPU< ^T >, originalInput: RawTensor, kernelSize, stride, padding) : RawTensorCPU< ^T > =
+        let batchSize, channels, inputSize, outputSize, _outputShape =
+            Shape.checkCanAvgpool1d t1.Dtype originalInput.Shape kernelSize stride padding
+        let batchSize, channels, inputSize, outputSize, kernelSize, stride, padding =
+            batchSize.Value, channels.Value, inputSize.Value, outputSize.Value, kernelSize.Value, stride.Value, padding.Value
+        let result = t1.ZerosLike(originalInput.Shape) :?> RawTensorCPU<'T>
+        for n=0 to batchSize-1 do
+            for c=0 to channels-1 do
+                for v=0 to outputSize-1 do
+                    for u=0 to kernelSize-1 do
+                        let i = (v*stride) + u - padding
+                        if i >= 0 && i < inputSize then
+                            result.[[|n; c; i|]] <- t1.[[|n; c; v|]] / ofInt kernelSize
+        result
+
+    let inline AvgPoolReverse2D ofInt (t1: RawTensorCPU< ^T >, originalInput: RawTensor, kernelSize, stride, padding) : RawTensorCPU< ^T > =
+        let batchSize, channels, (inputHeight, inputWidth), (kernelHeight, kernelWidth), (outputHeight, outputWidth), _outputShape =
+            Shape.checkCanAvgpool2d t1.Dtype originalInput.Shape kernelSize stride padding
+        let batchSize, channels, inputHeight, inputWidth, kernelHeight, kernelWidth, outputHeight, outputWidth =
+            batchSize.Value, channels.Value, inputHeight.Value, inputWidth.Value, kernelHeight.Value, kernelWidth.Value, outputHeight.Value, outputWidth.Value
+        let stride = stride |> Int.values
+        let padding = padding |> Int.values
+        let kernelSize = kernelHeight * kernelWidth
+        let result = t1.ZerosLike(originalInput.Shape) :?> RawTensorCPU<'T>
+        for n=0 to batchSize-1 do
+            for c=0 to channels-1 do
+                for v0=0 to outputHeight-1 do
+                    for v1=0 to outputWidth-1 do
+                        for u0=0 to kernelHeight-1 do
+                            for u1=0 to kernelWidth-1 do
+                                let i0 = (v0*stride.[0]) + u0 - padding.[0]
+                                let i1 = (v1*stride.[1]) + u1 - padding.[1]
+                                if i0 >= 0 && i0 < inputHeight && i1 >= 0 && i1 < inputWidth then
+                                    result.[[|n; c; i0; i1|]] <- t1.[[|n; c; v0; v1|]] / ofInt kernelSize
+        result
+
+    let inline AvgPoolReverse3D ofInt (t1: RawTensorCPU< ^T >, originalInput: RawTensor, kernelSize, stride, padding) : RawTensorCPU< ^T > =
+        let batchSize, channels, (inputDepth, inputHeight, inputWidth), (kernelDepth, kernelHeight, kernelWidth), (outputDepth, outputHeight, outputWidth), _outputShape =
+            Shape.checkCanAvgpool3d t1.Dtype originalInput.Shape kernelSize stride padding
+        let batchSize, channels, inputDepth, inputHeight, inputWidth, kernelDepth, kernelHeight, kernelWidth, outputDepth, outputHeight, outputWidth =
+            batchSize.Value, channels.Value, inputDepth.Value, inputHeight.Value, inputWidth.Value, kernelDepth.Value, kernelHeight.Value, kernelWidth.Value, outputDepth.Value, outputHeight.Value, outputWidth.Value
+        let stride = stride |> Int.values
+        let padding = padding |> Int.values
+        let kernelSize = kernelDepth * kernelHeight * kernelWidth
+        let result = t1.ZerosLike(originalInput.Shape) :?> RawTensorCPU<'T>
+        for n=0 to batchSize-1 do
+            for c=0 to channels-1 do
+                for v0=0 to outputDepth-1 do
+                    for v1=0 to outputHeight-1 do
+                        for v2=0 to outputWidth-1 do
+                            for u0=0 to kernelDepth-1 do
+                                for u1=0 to kernelHeight-1 do
+                                    for u2=0 to kernelWidth-1 do
+                                        let i0 = (v0*stride.[0]) + u0 - padding.[0]
+                                        let i1 = (v1*stride.[1]) + u1 - padding.[1]
+                                        let i2 = (v2*stride.[2]) + u2 - padding.[2]
+                                        if i0 >= 0 && i0 < inputDepth && i1 >= 0 && i1 < inputHeight && i2 >= 0 && i2 < inputWidth then
+                                            result.[[|n; c; i0; i1; i2|]] <- t1.[[|n; c; v0; v1; v2|]] / ofInt kernelSize
+        result
+
     let inline NegT op (t: RawTensorCPU< ^T >) : (^T[] * Shape) =
         let result = Array.map op t.Values
         (result, t.Shape)
@@ -880,6 +1016,44 @@ module internal RawTensorCPU =
     let inline ReluT(t: RawTensorCPU< ^T >) : (^T[] * Shape) =
         let result = t.Values |> Array.map (max zero< ^T >) 
         (result, t.Shape)
+
+    let inline LeakyReluT fromDouble (t: RawTensorCPU< ^T >, negativeSlope: double) : (^T[] * Shape) =
+        let result = t.Values |> Array.map (fun x -> if x < zero< ^T > then fromDouble (negativeSlope * double x) else x) 
+        (result, t.Shape)
+
+    let inline EluT(t: RawTensorCPU< ^T >, alpha: double, scale: double, inputScale: double) : (^T[] * Shape) =
+        failwith "tbd"
+        //let result = t.Values |> Array.map (max zero< ^T >) 
+        //(result, t.Shape)
+
+    // Taken from https://mlfromscratch.com/activation-functions-explained/#/
+    let inline GeluT ofDouble (t: RawTensorCPU< ^T >) : (^T[] * Shape) =
+        let result =
+            t.Values |> Array.map (fun x -> 
+                let x = double x
+                let res = 0.5 * x * (1.0 + tanh(0.7978845608 * (x+0.044715*x*x*x)))
+                ofDouble res)
+        (result, t.Shape)
+
+    let inline HardsigmoidT(t: RawTensorCPU< ^T >) : (^T[] * Shape) =
+        failwith "tbd"
+        //let result = t.Values |> Array.map (max zero< ^T >) 
+        //(result, t.Shape)
+
+    let inline HardswishT(t: RawTensorCPU< ^T >) : (^T[] * Shape) =
+        failwith "tbd"
+        //let result = t.Values |> Array.map (max zero< ^T >) 
+        //(result, t.Shape)
+
+    let inline Relu6T(t: RawTensorCPU< ^T >) : (^T[] * Shape) =
+        failwith "tbd"
+        //let result = t.Values |> Array.map (max zero< ^T >) 
+        //(result, t.Shape)
+
+    let inline SiluT(t: RawTensorCPU< ^T >) : (^T[] * Shape) =
+        failwith "tbd"
+        //let result = t.Values |> Array.map (max zero< ^T >) 
+        //(result, t.Shape)
 
     let inline SoftplusT(t: RawTensorCPU< ^T >) : (^T[] * Shape) =
         let result = t.Values |> Array.map (fun x -> (max zero< ^T > x) + log(one< ^T > + exp(-abs(x))))
@@ -1000,6 +1174,12 @@ type RawTensorFloat32(values: float32[], shape:Shape, device) =
     override t1.MaxUnpool1D(indices, outputSize) = RawTensorCPU.MaxUnpool1D(t1, indices :?> RawTensorCPU<int>, outputSize) :> _
     override t1.MaxUnpool2D(indices, outputSize) = RawTensorCPU.MaxUnpool2D(t1, indices :?> RawTensorCPU<int>, outputSize) :> _
     override t1.MaxUnpool3D(indices, outputSize) = RawTensorCPU.MaxUnpool3D(t1, indices :?> RawTensorCPU<int>, outputSize) :> _
+    override t1.AvgPool1D(kernelSize, stride, padding) = RawTensorCPU.AvgPool1D float32 (t1, kernelSize, stride, padding) :> _
+    override t1.AvgPool2D(kernelSize, stride, padding) = RawTensorCPU.AvgPool2D float32 (t1, kernelSize, stride, padding) :> _
+    override t1.AvgPool3D(kernelSize, stride, padding) = RawTensorCPU.AvgPool3D float32 (t1, kernelSize, stride, padding) :> _
+    override t1.AvgPoolReverse1D(originalInput, kernelSize, stride, padding) = RawTensorCPU.AvgPoolReverse1D float32 (t1, originalInput, kernelSize, stride, padding) :> _
+    override t1.AvgPoolReverse2D(originalInput, kernelSize, stride, padding) = RawTensorCPU.AvgPoolReverse2D float32 (t1, originalInput, kernelSize, stride, padding) :> _
+    override t1.AvgPoolReverse3D(originalInput, kernelSize, stride, padding) = RawTensorCPU.AvgPoolReverse3D float32 (t1, originalInput, kernelSize, stride, padding) :> _
     override t1.Conv1D(t2, stride, padding) = RawTensorCPU.Conv1D (t1, t2, stride, padding) :> _
     override t1.Conv2D(t2, stride, padding) = RawTensorCPU.Conv2D (t1, t2, stride, padding) :> _
     override t1.Conv3D(t2, stride, padding) = RawTensorCPU.Conv3D (t1, t2, stride, padding) :> _
@@ -1016,6 +1196,13 @@ type RawTensorFloat32(values: float32[], shape:Shape, device) =
     override t.RoundT() = RawTensorCPU.RoundT(t) |> create
     override t.AbsT() = RawTensorCPU.AbsT abs t |> create
     override t.ReluT() = RawTensorCPU.ReluT(t) |> create
+    override t.LeakyReluT(negativeSlope) = RawTensorCPU.LeakyReluT float32 (t, negativeSlope) |> create
+    override t.EluT(alpha, scale, inputScale) = RawTensorCPU.EluT(t, alpha, scale, inputScale) |> create
+    override t.GeluT() = RawTensorCPU.GeluT float32 (t) |> create
+    override t.HardsigmoidT() = RawTensorCPU.HardsigmoidT(t) |> create
+    override t.HardswishT() = RawTensorCPU.HardswishT(t) |> create
+    override t.Relu6T() = RawTensorCPU.Relu6T(t) |> create
+    override t.SiluT() = RawTensorCPU.SiluT(t) |> create
     override t.SigmoidT() = RawTensorCPU.SigmoidT(t) |> create
     override t.ExpT() = RawTensorCPU.ExpT(t) |> create
     override t.LogT() = RawTensorCPU.LogT(t) |> create
@@ -1090,6 +1277,12 @@ type RawTensorFloat64(values: double[], shape:Shape, device) =
     override t1.MaxUnpool1D(indices, outputSize) = RawTensorCPU.MaxUnpool1D(t1, indices :?> RawTensorCPU<int>, outputSize) :> _
     override t1.MaxUnpool2D(indices, outputSize) = RawTensorCPU.MaxUnpool2D(t1, indices :?> RawTensorCPU<int>, outputSize) :> _
     override t1.MaxUnpool3D(indices, outputSize) = RawTensorCPU.MaxUnpool3D(t1, indices :?> RawTensorCPU<int>, outputSize) :> _
+    override t1.AvgPool1D(kernelSize, stride, padding) = RawTensorCPU.AvgPool1D double (t1, kernelSize, stride, padding) :> _
+    override t1.AvgPool2D(kernelSize, stride, padding) = RawTensorCPU.AvgPool2D double (t1, kernelSize, stride, padding) :> _
+    override t1.AvgPool3D(kernelSize, stride, padding) = RawTensorCPU.AvgPool3D double (t1, kernelSize, stride, padding) :> _
+    override t1.AvgPoolReverse1D(originalInput, kernelSize, stride, padding) = RawTensorCPU.AvgPoolReverse1D double (t1, originalInput, kernelSize, stride, padding) :> _
+    override t1.AvgPoolReverse2D(originalInput, kernelSize, stride, padding) = RawTensorCPU.AvgPoolReverse2D double (t1, originalInput, kernelSize, stride, padding) :> _
+    override t1.AvgPoolReverse3D(originalInput, kernelSize, stride, padding) = RawTensorCPU.AvgPoolReverse3D double (t1, originalInput, kernelSize, stride, padding) :> _
     override t1.Conv1D(t2, stride, padding) = RawTensorCPU.Conv1D (t1, t2, stride, padding) :> _
     override t1.Conv2D(t2, stride, padding) = RawTensorCPU.Conv2D (t1, t2, stride, padding) :> _
     override t1.Conv3D(t2, stride, padding) = RawTensorCPU.Conv3D (t1, t2, stride, padding) :> _
@@ -1106,6 +1299,13 @@ type RawTensorFloat64(values: double[], shape:Shape, device) =
     override t.RoundT() = RawTensorCPU.RoundT(t) |> create
     override t.AbsT() = RawTensorCPU.AbsT abs t |> create
     override t.ReluT() = RawTensorCPU.ReluT(t) |> create
+    override t.LeakyReluT(negativeSlope) = RawTensorCPU.LeakyReluT double (t, negativeSlope) |> create
+    override t.EluT(alpha, scale, inputScale) = RawTensorCPU.EluT(t, alpha, scale, inputScale) |> create
+    override t.GeluT() = RawTensorCPU.GeluT double (t) |> create
+    override t.HardsigmoidT() = RawTensorCPU.HardsigmoidT(t) |> create
+    override t.HardswishT() = RawTensorCPU.HardswishT(t) |> create
+    override t.Relu6T() = RawTensorCPU.Relu6T(t) |> create
+    override t.SiluT() = RawTensorCPU.SiluT(t) |> create
     override t.SigmoidT() = RawTensorCPU.SigmoidT(t) |> create
     override t.ExpT() = RawTensorCPU.ExpT(t) |> create
     override t.LogT() = RawTensorCPU.LogT(t) |> create
@@ -1176,6 +1376,12 @@ type RawTensorInt8(values: int8[], shape:Shape, device) =
     override t1.MaxUnpool1D(indices, outputSize) = RawTensorCPU.MaxUnpool1D(t1, indices :?> RawTensorCPU<int>, outputSize) :> _
     override t1.MaxUnpool2D(indices, outputSize) = RawTensorCPU.MaxUnpool2D(t1, indices :?> RawTensorCPU<int>, outputSize) :> _
     override t1.MaxUnpool3D(indices, outputSize) = RawTensorCPU.MaxUnpool3D(t1, indices :?> RawTensorCPU<int>, outputSize) :> _
+    override t1.AvgPool1D(kernelSize, stride, padding) = RawTensorCPU.AvgPool1D int8 (t1, kernelSize, stride, padding) :> _
+    override t1.AvgPool2D(kernelSize, stride, padding) = RawTensorCPU.AvgPool2D int8 (t1, kernelSize, stride, padding) :> _
+    override t1.AvgPool3D(kernelSize, stride, padding) = RawTensorCPU.AvgPool3D int8 (t1, kernelSize, stride, padding) :> _
+    override t1.AvgPoolReverse1D(originalInput, kernelSize, stride, padding) = RawTensorCPU.AvgPoolReverse1D int8 (t1, originalInput, kernelSize, stride, padding) :> _
+    override t1.AvgPoolReverse2D(originalInput, kernelSize, stride, padding) = RawTensorCPU.AvgPoolReverse2D int8 (t1, originalInput, kernelSize, stride, padding) :> _
+    override t1.AvgPoolReverse3D(originalInput, kernelSize, stride, padding) = RawTensorCPU.AvgPoolReverse3D int8 (t1, originalInput, kernelSize, stride, padding) :> _
     override t1.Conv1D(t2, stride, padding) = RawTensorCPU.Conv1D(t1, t2, stride, padding) :> _
     override t1.Conv2D(t2, stride, padding) = RawTensorCPU.Conv2D (t1, t2, stride, padding) :> _
     override t1.Conv3D(t2, stride, padding) = RawTensorCPU.Conv3D (t1, t2, stride, padding) :> _
@@ -1185,6 +1391,13 @@ type RawTensorInt8(values: int8[], shape:Shape, device) =
     override t.SignT() = RawTensorCPU.SignT (sign >> int8) t |> create
     override t.AbsT() = RawTensorCPU.AbsT abs t |> create
     override t.ReluT() = RawTensorCPU.ReluT(t) |> create
+    override t.LeakyReluT(negativeSlope) = RawTensorCPU.LeakyReluT int8 (t, negativeSlope) |> create
+    override t.EluT(alpha, scale, inputScale) = RawTensorCPU.EluT(t, alpha, scale, inputScale) |> create
+    override t.GeluT() = RawTensorCPU.GeluT int8 (t) |> create
+    override t.HardsigmoidT() = RawTensorCPU.HardsigmoidT(t) |> create
+    override t.HardswishT() = RawTensorCPU.HardswishT(t) |> create
+    override t.Relu6T() = RawTensorCPU.Relu6T(t) |> create
+    override t.SiluT() = RawTensorCPU.SiluT(t) |> create
 
     override t.SoftplusT() = opNotSupported "SoftplusT" t.Dtype
     override t1.PowTT(t2) = opNotSupported2 "PowTT" t1.Dtype t2.Dtype
@@ -1263,6 +1476,12 @@ type RawTensorByte(values: byte[], shape:Shape, device) =
     override t1.MaxUnpool1D(indices, outputSize) = RawTensorCPU.MaxUnpool1D(t1, indices :?> RawTensorCPU<int>, outputSize) :> _
     override t1.MaxUnpool2D(indices, outputSize) = RawTensorCPU.MaxUnpool2D(t1, indices :?> RawTensorCPU<int>, outputSize) :> _
     override t1.MaxUnpool3D(indices, outputSize) = RawTensorCPU.MaxUnpool3D(t1, indices :?> RawTensorCPU<int>, outputSize) :> _
+    override t1.AvgPool1D(kernelSize, stride, padding) = RawTensorCPU.AvgPool1D byte (t1, kernelSize, stride, padding) :> _
+    override t1.AvgPool2D(kernelSize, stride, padding) = RawTensorCPU.AvgPool2D byte (t1, kernelSize, stride, padding) :> _
+    override t1.AvgPool3D(kernelSize, stride, padding) = RawTensorCPU.AvgPool3D byte (t1, kernelSize, stride, padding) :> _
+    override t1.AvgPoolReverse1D(originalInput, kernelSize, stride, padding) = RawTensorCPU.AvgPoolReverse1D byte (t1, originalInput, kernelSize, stride, padding) :> _
+    override t1.AvgPoolReverse2D(originalInput, kernelSize, stride, padding) = RawTensorCPU.AvgPoolReverse2D byte (t1, originalInput, kernelSize, stride, padding) :> _
+    override t1.AvgPoolReverse3D(originalInput, kernelSize, stride, padding) = RawTensorCPU.AvgPoolReverse3D byte (t1, originalInput, kernelSize, stride, padding) :> _
     override t1.Conv1D(t2, stride, padding) = RawTensorCPU.Conv1D(t1, t2, stride, padding) :> _
     override t1.Conv2D(t2, stride, padding) = RawTensorCPU.Conv2D (t1, t2, stride, padding) :> _
     override t1.Conv3D(t2, stride, padding) = RawTensorCPU.Conv3D (t1, t2, stride, padding) :> _
@@ -1272,6 +1491,13 @@ type RawTensorByte(values: byte[], shape:Shape, device) =
     override t.SignT() = RawTensorCPU.SignT (min 1uy) t |> create
     override t.AbsT() = RawTensorCPU.AbsT id t |> create
     override t.ReluT() = RawTensorCPU.ReluT(t) |> create
+    override t.LeakyReluT(negativeSlope) = RawTensorCPU.LeakyReluT byte (t, negativeSlope) |> create
+    override t.EluT(alpha, scale, inputScale) = RawTensorCPU.EluT(t, alpha, scale, inputScale) |> create
+    override t.GeluT() = RawTensorCPU.GeluT byte (t) |> create
+    override t.HardsigmoidT() = RawTensorCPU.HardsigmoidT(t) |> create
+    override t.HardswishT() = RawTensorCPU.HardswishT(t) |> create
+    override t.Relu6T() = RawTensorCPU.Relu6T(t) |> create
+    override t.SiluT() = RawTensorCPU.SiluT(t) |> create
 
     override t.SoftplusT() = opNotSupported "SoftplusT" t.Dtype
     override t1.PowTT(t2) = opNotSupported2 "PowTT" t1.Dtype t2.Dtype
@@ -1350,6 +1576,12 @@ type RawTensorInt16(values: int16[], shape:Shape, device) =
     override t1.MaxUnpool1D(indices, outputSize) = RawTensorCPU.MaxUnpool1D(t1, indices :?> RawTensorCPU<int>, outputSize) :> _
     override t1.MaxUnpool2D(indices, outputSize) = RawTensorCPU.MaxUnpool2D(t1, indices :?> RawTensorCPU<int>, outputSize) :> _
     override t1.MaxUnpool3D(indices, outputSize) = RawTensorCPU.MaxUnpool3D(t1, indices :?> RawTensorCPU<int>, outputSize) :> _
+    override t1.AvgPool1D(kernelSize, stride, padding) = RawTensorCPU.AvgPool1D int16 (t1, kernelSize, stride, padding) :> _
+    override t1.AvgPool2D(kernelSize, stride, padding) = RawTensorCPU.AvgPool2D int16 (t1, kernelSize, stride, padding) :> _
+    override t1.AvgPool3D(kernelSize, stride, padding) = RawTensorCPU.AvgPool3D int16 (t1, kernelSize, stride, padding) :> _
+    override t1.AvgPoolReverse1D(originalInput, kernelSize, stride, padding) = RawTensorCPU.AvgPoolReverse1D int16 (t1, originalInput, kernelSize, stride, padding) :> _
+    override t1.AvgPoolReverse2D(originalInput, kernelSize, stride, padding) = RawTensorCPU.AvgPoolReverse2D int16 (t1, originalInput, kernelSize, stride, padding) :> _
+    override t1.AvgPoolReverse3D(originalInput, kernelSize, stride, padding) = RawTensorCPU.AvgPoolReverse3D int16 (t1, originalInput, kernelSize, stride, padding) :> _
     override t1.Conv1D(t2, stride, padding) = RawTensorCPU.Conv1D(t1, t2, stride, padding) :> _
     override t1.Conv2D(t2, stride, padding) = RawTensorCPU.Conv2D (t1, t2, stride, padding) :> _
     override t1.Conv3D(t2, stride, padding) = RawTensorCPU.Conv3D (t1, t2, stride, padding) :> _
@@ -1359,6 +1591,13 @@ type RawTensorInt16(values: int16[], shape:Shape, device) =
     override t.SignT() = RawTensorCPU.SignT (sign >> int16) t |> create
     override t.AbsT() = RawTensorCPU.AbsT abs t |> create
     override t.ReluT() = RawTensorCPU.ReluT(t) |> create
+    override t.LeakyReluT(negativeSlope) = RawTensorCPU.LeakyReluT int16 (t, negativeSlope) |> create
+    override t.EluT(alpha, scale, inputScale) = RawTensorCPU.EluT(t, alpha, scale, inputScale) |> create
+    override t.GeluT() = RawTensorCPU.GeluT int16 (t) |> create
+    override t.HardsigmoidT() = RawTensorCPU.HardsigmoidT(t) |> create
+    override t.HardswishT() = RawTensorCPU.HardswishT(t) |> create
+    override t.Relu6T() = RawTensorCPU.Relu6T(t) |> create
+    override t.SiluT() = RawTensorCPU.SiluT(t) |> create
 
     override t.SoftplusT() = opNotSupported "SoftplusT" t.Dtype
     override t1.PowTT(t2) = opNotSupported2 "PowTT" t1.Dtype t2.Dtype
@@ -1437,6 +1676,12 @@ type RawTensorInt32(values: int32[], shape:Shape, device) =
     override t1.MaxUnpool1D(indices, outputSize) = RawTensorCPU.MaxUnpool1D(t1, indices :?> RawTensorCPU<int>, outputSize) :> _
     override t1.MaxUnpool2D(indices, outputSize) = RawTensorCPU.MaxUnpool2D(t1, indices :?> RawTensorCPU<int>, outputSize) :> _
     override t1.MaxUnpool3D(indices, outputSize) = RawTensorCPU.MaxUnpool3D(t1, indices :?> RawTensorCPU<int>, outputSize) :> _
+    override t1.AvgPool1D(kernelSize, stride, padding) = RawTensorCPU.AvgPool1D int32 (t1, kernelSize, stride, padding) :> _
+    override t1.AvgPool2D(kernelSize, stride, padding) = RawTensorCPU.AvgPool2D int32 (t1, kernelSize, stride, padding) :> _
+    override t1.AvgPool3D(kernelSize, stride, padding) = RawTensorCPU.AvgPool3D int32 (t1, kernelSize, stride, padding) :> _
+    override t1.AvgPoolReverse1D(originalInput, kernelSize, stride, padding) = RawTensorCPU.AvgPoolReverse1D int32 (t1, originalInput, kernelSize, stride, padding) :> _
+    override t1.AvgPoolReverse2D(originalInput, kernelSize, stride, padding) = RawTensorCPU.AvgPoolReverse2D int32 (t1, originalInput, kernelSize, stride, padding) :> _
+    override t1.AvgPoolReverse3D(originalInput, kernelSize, stride, padding) = RawTensorCPU.AvgPoolReverse3D int32 (t1, originalInput, kernelSize, stride, padding) :> _
     override t1.Conv1D(t2, stride, padding) = RawTensorCPU.Conv1D(t1, t2, stride, padding) :> _
     override t1.Conv2D(t2, stride, padding) = RawTensorCPU.Conv2D (t1, t2, stride, padding) :> _
     override t1.Conv3D(t2, stride, padding) = RawTensorCPU.Conv3D (t1, t2, stride, padding) :> _
@@ -1446,6 +1691,13 @@ type RawTensorInt32(values: int32[], shape:Shape, device) =
     override t.SignT() = RawTensorCPU.SignT (sign >> int32) t |> create
     override t.AbsT() = RawTensorCPU.AbsT abs t |> create
     override t.ReluT() = RawTensorCPU.ReluT(t) |> create
+    override t.LeakyReluT(negativeSlope) = RawTensorCPU.LeakyReluT int32 (t, negativeSlope) |> create
+    override t.EluT(alpha, scale, inputScale) = RawTensorCPU.EluT(t, alpha, scale, inputScale) |> create
+    override t.GeluT() = RawTensorCPU.GeluT int32 (t) |> create
+    override t.HardsigmoidT() = RawTensorCPU.HardsigmoidT(t) |> create
+    override t.HardswishT() = RawTensorCPU.HardswishT(t) |> create
+    override t.Relu6T() = RawTensorCPU.Relu6T(t) |> create
+    override t.SiluT() = RawTensorCPU.SiluT(t) |> create
 
     override t.SoftplusT() = opNotSupported "SoftplusT" t.Dtype
     override t1.PowTT(t2) = opNotSupported2 "PowTT" t1.Dtype t2.Dtype
@@ -1524,6 +1776,12 @@ type RawTensorInt64(values: int64[], shape:Shape, device) =
     override t1.MaxUnpool1D(indices, outputSize) = RawTensorCPU.MaxUnpool1D(t1, indices :?> RawTensorCPU<int>, outputSize) :> _
     override t1.MaxUnpool2D(indices, outputSize) = RawTensorCPU.MaxUnpool2D(t1, indices :?> RawTensorCPU<int>, outputSize) :> _
     override t1.MaxUnpool3D(indices, outputSize) = RawTensorCPU.MaxUnpool3D(t1, indices :?> RawTensorCPU<int>, outputSize) :> _
+    override t1.AvgPool1D(kernelSize, stride, padding) = RawTensorCPU.AvgPool1D int64 (t1, kernelSize, stride, padding) :> _
+    override t1.AvgPool2D(kernelSize, stride, padding) = RawTensorCPU.AvgPool2D int64 (t1, kernelSize, stride, padding) :> _
+    override t1.AvgPool3D(kernelSize, stride, padding) = RawTensorCPU.AvgPool3D int64 (t1, kernelSize, stride, padding) :> _
+    override t1.AvgPoolReverse1D(originalInput, kernelSize, stride, padding) = RawTensorCPU.AvgPoolReverse1D int64 (t1, originalInput, kernelSize, stride, padding) :> _
+    override t1.AvgPoolReverse2D(originalInput, kernelSize, stride, padding) = RawTensorCPU.AvgPoolReverse2D int64 (t1, originalInput, kernelSize, stride, padding) :> _
+    override t1.AvgPoolReverse3D(originalInput, kernelSize, stride, padding) = RawTensorCPU.AvgPoolReverse3D int64 (t1, originalInput, kernelSize, stride, padding) :> _
     override t1.Conv1D(t2, stride, padding) = RawTensorCPU.Conv1D(t1, t2, stride, padding) :> _
     override t1.Conv2D(t2, stride, padding) = RawTensorCPU.Conv2D (t1, t2, stride, padding) :> _
     override t1.Conv3D(t2, stride, padding) = RawTensorCPU.Conv3D (t1, t2, stride, padding) :> _
@@ -1537,6 +1795,13 @@ type RawTensorInt64(values: int64[], shape:Shape, device) =
     override t.SignT() = RawTensorCPU.SignT (sign >> int64) t |> create
     override t.AbsT() = RawTensorCPU.AbsT abs t |> create
     override t.ReluT() = RawTensorCPU.ReluT(t) |> create
+    override t.LeakyReluT(negativeSlope) = RawTensorCPU.LeakyReluT int64 (t, negativeSlope) |> create
+    override t.EluT(alpha, scale, inputScale) = RawTensorCPU.EluT(t, alpha, scale, inputScale) |> create
+    override t.GeluT() = RawTensorCPU.GeluT int64 (t) |> create
+    override t.HardsigmoidT() = RawTensorCPU.HardsigmoidT(t) |> create
+    override t.HardswishT() = RawTensorCPU.HardswishT(t) |> create
+    override t.Relu6T() = RawTensorCPU.Relu6T(t) |> create
+    override t.SiluT() = RawTensorCPU.SiluT(t) |> create
 
     override t.SoftplusT() = opNotSupported "SoftplusT" t.Dtype
     override t1.PowTT(t2) = opNotSupported2 "PowTT" t1.Dtype t2.Dtype
@@ -1625,9 +1890,16 @@ type RawTensorBool(values: bool[], shape:Shape, device) =
     override t1.Conv1D(t2, _stride, _padding) = opNotSupported2 "Conv1D" t1.Dtype t2.Dtype
     override t1.Conv2D(t2, _stride, _padding) = opNotSupported2 "Conv2D" t1.Dtype t2.Dtype
     override t1.Conv3D(t2, _stride, _padding) = opNotSupported2 "Conv3D" t1.Dtype t2.Dtype
+    override t1.AvgPool1D(_kernelSize, _stride, _padding) = opNotSupported "AvgPool1D" t1.Dtype
+    override t1.AvgPool2D(_kernelSize, _stride, _padding) = opNotSupported "AvgPool2D" t1.Dtype
+    override t1.AvgPool3D(_kernelSize, _stride, _padding) = opNotSupported "AvgPool3D" t1.Dtype
+    override t1.AvgPoolReverse1D(_originalInput, _kernelSize, _stride, _padding) = opNotSupported "AvgPoolReverse1D" t1.Dtype
+    override t1.AvgPoolReverse2D(_originalInput, _kernelSize, _stride, _padding) = opNotSupported "AvgPoolReverse2D" t1.Dtype
+    override t1.AvgPoolReverse3D(_originalInput, _kernelSize, _stride, _padding) = opNotSupported "AvgPoolReverse3D" t1.Dtype
     override t.NegT() = opNotSupported "NegT" t.Dtype
     override t.AbsT() = opNotSupported "AbsT" t.Dtype
     override t.ReluT() = opNotSupported "ReluT" t.Dtype
+    override t.LeakyReluT(_negativeSlope) = opNotSupported "LeakyReluT" t.Dtype
     override t.SoftplusT() = opNotSupported "SoftplusT" t.Dtype
     override t1.PowTT(t2) = opNotSupported2 "PowTT" t1.Dtype t2.Dtype
     override t2.PowFromT0T(_t1) = opNotSupported "PowT0T" t2.Dtype
@@ -1635,6 +1907,12 @@ type RawTensorBool(values: bool[], shape:Shape, device) =
     override t.FloorT() = opNotSupported "FloorT" t.Dtype
     override t.CeilT() = opNotSupported "CeilT" t.Dtype
     override t.RoundT() = opNotSupported "RoundT" t.Dtype
+    override t.EluT(_, _, _) = opNotSupported "EluT" t.Dtype
+    override t.GeluT() = opNotSupported "GeluT" t.Dtype
+    override t.HardsigmoidT() = opNotSupported "HardsigmoidT" t.Dtype
+    override t.HardswishT() = opNotSupported "HardswishT" t.Dtype
+    override t.Relu6T() = opNotSupported "Relu6T" t.Dtype
+    override t.SiluT() = opNotSupported "SiluT" t.Dtype
     override t.SigmoidT() = opNotSupported "SigmoidT" t.Dtype
     override t.ExpT() = opNotSupported "ExpT" t.Dtype
     override t.LogT() = opNotSupported "LogT" t.Dtype
@@ -1709,6 +1987,12 @@ type RawTensorFloat16(values: float32[], shape:Shape, device) =
     override t1.MaxUnpool1D(indices, outputSize) = RawTensorCPU.MaxUnpool1D(t1, indices :?> RawTensorCPU<int>, outputSize) :> _
     override t1.MaxUnpool2D(indices, outputSize) = RawTensorCPU.MaxUnpool2D(t1, indices :?> RawTensorCPU<int>, outputSize) :> _
     override t1.MaxUnpool3D(indices, outputSize) = RawTensorCPU.MaxUnpool3D(t1, indices :?> RawTensorCPU<int>, outputSize) :> _
+    override t1.AvgPool1D(kernelSize, stride, padding) = RawTensorCPU.AvgPool1D float32 (t1, kernelSize, stride, padding) :> _
+    override t1.AvgPool2D(kernelSize, stride, padding) = RawTensorCPU.AvgPool2D float32 (t1, kernelSize, stride, padding) :> _
+    override t1.AvgPool3D(kernelSize, stride, padding) = RawTensorCPU.AvgPool3D float32 (t1, kernelSize, stride, padding) :> _
+    override t1.AvgPoolReverse1D(originalInput, kernelSize, stride, padding) = RawTensorCPU.AvgPoolReverse1D float32 (t1, originalInput, kernelSize, stride, padding) :> _
+    override t1.AvgPoolReverse2D(originalInput, kernelSize, stride, padding) = RawTensorCPU.AvgPoolReverse2D float32 (t1, originalInput, kernelSize, stride, padding) :> _
+    override t1.AvgPoolReverse3D(originalInput, kernelSize, stride, padding) = RawTensorCPU.AvgPoolReverse3D float32 (t1, originalInput, kernelSize, stride, padding) :> _
     override t1.Conv1D(t2, stride, padding) = RawTensorCPU.Conv1D (t1, t2, stride, padding) :> _
     override t1.Conv2D(t2, stride, padding) = RawTensorCPU.Conv2D (t1, t2, stride, padding) :> _
     override t1.Conv3D(t2, stride, padding) = RawTensorCPU.Conv3D (t1, t2, stride, padding) :> _
@@ -1725,6 +2009,13 @@ type RawTensorFloat16(values: float32[], shape:Shape, device) =
     override t.RoundT() = RawTensorCPU.RoundT(t) |> create
     override t.AbsT() = RawTensorCPU.AbsT abs t |> create
     override t.ReluT() = RawTensorCPU.ReluT(t) |> create
+    override t.LeakyReluT(negativeSlope) = RawTensorCPU.LeakyReluT float32 (t, negativeSlope) |> create
+    override t.EluT(alpha, scale, inputScale) = RawTensorCPU.EluT(t, alpha, scale, inputScale) |> create
+    override t.GeluT() = RawTensorCPU.GeluT float32 (t) |> create
+    override t.HardsigmoidT() = RawTensorCPU.HardsigmoidT(t) |> create
+    override t.HardswishT() = RawTensorCPU.HardswishT(t) |> create
+    override t.Relu6T() = RawTensorCPU.Relu6T(t) |> create
+    override t.SiluT() = RawTensorCPU.SiluT(t) |> create
     override t.SigmoidT() = RawTensorCPU.SigmoidT(t) |> create
     override t.ExpT() = RawTensorCPU.ExpT(t) |> create
     override t.LogT() = RawTensorCPU.LogT(t) |> create
@@ -1802,6 +2093,12 @@ type RawTensorBFloat16(values: float32[], shape:Shape, device) =
     override t1.Conv1D(t2, stride, padding) = RawTensorCPU.Conv1D (t1, t2, stride, padding) :> _
     override t1.Conv2D(t2, stride, padding) = RawTensorCPU.Conv2D (t1, t2, stride, padding) :> _
     override t1.Conv3D(t2, stride, padding) = RawTensorCPU.Conv3D (t1, t2, stride, padding) :> _
+    override t1.AvgPool1D(kernelSize, stride, padding) = RawTensorCPU.AvgPool1D float32 (t1, kernelSize, stride, padding) :> _
+    override t1.AvgPool2D(kernelSize, stride, padding) = RawTensorCPU.AvgPool2D float32 (t1, kernelSize, stride, padding) :> _
+    override t1.AvgPool3D(kernelSize, stride, padding) = RawTensorCPU.AvgPool3D float32 (t1, kernelSize, stride, padding) :> _
+    override t1.AvgPoolReverse1D(originalInput, kernelSize, stride, padding) = RawTensorCPU.AvgPoolReverse1D float32 (t1, originalInput, kernelSize, stride, padding) :> _
+    override t1.AvgPoolReverse2D(originalInput, kernelSize, stride, padding) = RawTensorCPU.AvgPoolReverse2D float32 (t1, originalInput, kernelSize, stride, padding) :> _
+    override t1.AvgPoolReverse3D(originalInput, kernelSize, stride, padding) = RawTensorCPU.AvgPoolReverse3D float32 (t1, originalInput, kernelSize, stride, padding) :> _
     override t.NegT() = RawTensorCPU.NegT (~-) (t) |> create
     override t.SumT(resultType) =
         let res = RawTensorCPU.SumT(t) |> create
@@ -1815,6 +2112,13 @@ type RawTensorBFloat16(values: float32[], shape:Shape, device) =
     override t.RoundT() = RawTensorCPU.RoundT(t) |> create
     override t.AbsT() = RawTensorCPU.AbsT abs t |> create
     override t.ReluT() = RawTensorCPU.ReluT(t) |> create
+    override t.LeakyReluT(negativeSlope) = RawTensorCPU.LeakyReluT float32 (t, negativeSlope) |> create
+    override t.EluT(alpha, scale, inputScale) = RawTensorCPU.EluT(t, alpha, scale, inputScale) |> create
+    override t.GeluT() = RawTensorCPU.GeluT float32 (t) |> create
+    override t.HardsigmoidT() = RawTensorCPU.HardsigmoidT(t) |> create
+    override t.HardswishT() = RawTensorCPU.HardswishT(t) |> create
+    override t.Relu6T() = RawTensorCPU.Relu6T(t) |> create
+    override t.SiluT() = RawTensorCPU.SiluT(t) |> create
     override t.SigmoidT() = RawTensorCPU.SigmoidT(t) |> create
     override t.ExpT() = RawTensorCPU.ExpT(t) |> create
     override t.LogT() = RawTensorCPU.LogT(t) |> create

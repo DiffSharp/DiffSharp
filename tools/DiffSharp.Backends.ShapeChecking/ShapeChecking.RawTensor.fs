@@ -216,6 +216,13 @@ type ShapeCheckingTensor(shape: Shape, dtype: Dtype, device: Device) =
     override _.RoundInPlace() = checkMutable()
     override _.AbsInPlace() = checkMutable()
     override _.ReluInPlace() = checkMutable()
+    override _.Relu6InPlace() = checkMutable()
+    override _.LeakyReluInPlace(_negativeSlope) = checkMutable()
+    override _.EluInPlace(alpha, scale, inputScale) = checkMutable()
+    override _.GeluInPlace() = checkMutable()
+    override _.SiluInPlace() = checkMutable()
+    override _.HardsigmoidInPlace() = checkMutable()
+    override _.HardswishInPlace() = checkMutable()
     override _.SoftplusInPlace() = checkMutable()
     override _.SigmoidInPlace() = checkMutable()
     override _.ExpInPlace() = checkMutable()
@@ -288,6 +295,30 @@ type ShapeCheckingTensor(shape: Shape, dtype: Dtype, device: Device) =
         let _, _, _, _, outputShape = Shape.checkCanConv3d t1.DeviceType t2.DeviceType t1.Dtype t2.Dtype t1.Shape t2.Shape stride padding [|1I;1I;1I|]  
         t1.MakeLike(outputShape) 
 
+    override t1.AvgPool1D(kernelSize, stride, padding) =
+        let _, _, _, _, outputShape = Shape.checkCanAvgpool1d dtype t1.Shape kernelSize stride padding
+        t1.MakeLike(outputShape) 
+
+    override t1.AvgPool2D(kernelSize, stride, padding) = 
+        let _, _, _, _, _, outputShape = Shape.checkCanAvgpool2d dtype t1.Shape kernelSize stride padding
+        t1.MakeLike(outputShape) 
+
+    override t1.AvgPool3D(kernelSize, stride, padding) =
+        let _, _, _, _, _, outputShape = Shape.checkCanAvgpool3d dtype t1.Shape kernelSize stride padding
+        t1.MakeLike(outputShape) 
+
+    override t1.AvgPoolReverse1D(originalInput, kernelSize, stride, padding) =
+        let _, _, _, _, outputShape = Shape.checkCanAvgpool1d t1.Dtype originalInput.Shape kernelSize stride padding
+        t1.MakeLike(outputShape) 
+
+    override t1.AvgPoolReverse2D(originalInput, kernelSize, stride, padding) = 
+        let _, _, _, _, _, outputShape = Shape.checkCanAvgpool2d t1.Dtype originalInput.Shape kernelSize stride padding
+        t1.MakeLike(outputShape) 
+
+    override t1.AvgPoolReverse3D(originalInput, kernelSize, stride, padding) =
+        let _, _, _, _, _, outputShape = Shape.checkCanAvgpool3d t1.Dtype originalInput.Shape kernelSize stride padding
+        t1.MakeLike(outputShape) 
+
     override t.NegT() = t :> _
 
     override t.SumT(resultType) =
@@ -301,6 +332,13 @@ type ShapeCheckingTensor(shape: Shape, dtype: Dtype, device: Device) =
     override t.RoundT() = t.MakeLike()
     override t.AbsT() = t.MakeLike()
     override t.ReluT() = t.MakeLike()
+    override t.LeakyReluT(_negativeSlope) = t.MakeLike()
+    override t.EluT(_alpha, _scale, _inputScale) = t.MakeLike()
+    override t.GeluT() = t.MakeLike()
+    override t.HardsigmoidT() = t.MakeLike()
+    override t.Relu6T() = t.MakeLike()
+    override t.HardswishT() = t.MakeLike()
+    override t.SiluT() = t.MakeLike()
     override t.SigmoidT() = t.MakeLike()
     override t.ExpT() = t.MakeLike()
     override t.LogT() = t.MakeLike()
