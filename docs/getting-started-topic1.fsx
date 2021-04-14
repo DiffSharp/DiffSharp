@@ -1,15 +1,14 @@
 ﻿(*** condition: prepare ***)
 #I "../tests/DiffSharp.Tests/bin/Debug/net5.0"
 #r "DiffSharp.Core.dll"
+#r "DiffSharp.Data.dll"
 #r "DiffSharp.Backends.Reference.dll"
 (*** condition: fsx ***)
 #if FSX
-#r "nuget:RestoreSources=https://ci.appveyor.com/nuget/diffsharp"
 #r "nuget: DiffSharp-lite,{{fsdocs-package-version}}"
 #endif // FSX
 (*** condition: ipynb ***)
 #if IPYNB
-#i "nuget: https://ci.appveyor.com/nuget/diffsharp"
 #r "nuget: DiffSharp-lite,{{fsdocs-package-version}}"
 
 Formatter.SetPreferredMimeTypeFor(typeof<obj>, "text/plain")
@@ -17,7 +16,9 @@ Formatter.Register(fun (x:obj) (writer: TextWriter) -> fprintfn writer "%120A" x
 #endif // IPYNB
 
 (**
-[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/diffsharp/diffsharp.github.io/master?filepath=getting-started-topic1.ipynb) [Script](getting-started-topic1.fsx)
+[![Binder](img/badge-binder.svg)](https://mybinder.org/v2/gh/diffsharp/diffsharp.github.io/master?filepath={{fsdocs-source-basename}}.ipynb)&emsp;
+[![Script](img/badge-script.svg)]({{fsdocs-source-basename}}.fsx)&emsp;
+[![Script](img/badge-notebook.svg)]({{fsdocs-source-basename}}.ipynb)
 
 Nested AD
 =========
