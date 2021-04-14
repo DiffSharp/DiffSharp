@@ -8,18 +8,10 @@ The `Dockerfile` and `NuGet.config` allow us to run generated notebooks in [MyBi
 
 # Generating docs
 
-This published version of the docs can be refreshed by these commands:
 
-1. Prepare one off
-
-    dotnet tool restore
-    git clone https://github.com/diffsharp/diffsharp.github.io ../DiffSharp-docs -b gh-pages --depth 1
-
-2. To Iterate on Literate Docs and API Docs (requires evaluation off since DLLs get locked)
+To iterate on docs (requires evaluation off since DLLs get locked)
 
     dotnet fsdocs watch 
-
-## Generating docs using  a local build of FSharp.Formatting
 
 To use a local build of FSharp.Formatting:
 
@@ -30,8 +22,8 @@ To use a local build of FSharp.Formatting:
 
 Then:
 
-       ..\FSharp.Formatting\src\FSharp.Formatting.CommandTool\bin\Debug\net5.0\fsdocs.exe watch 
-       ..\FSharp.Formatting\src\FSharp.Formatting.CommandTool\bin\Debug\net5.0\fsdocs.exe build --clean --output ../DiffSharp-docs
+       ..\FSharp.Formatting\src\FSharp.Formatting.CommandTool\bin\Debug\net5.0\fsdocs.exe watch
+       ..\FSharp.Formatting\src\FSharp.Formatting.CommandTool\bin\Debug\net5.0\fsdocs.exe build --clean --eval
 
 ## Generated Notebooks
 
