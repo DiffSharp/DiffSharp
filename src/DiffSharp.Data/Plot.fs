@@ -48,7 +48,7 @@ module helpers =
                     else
                         sb.Append("[") |> ignore
                         let mutable prefix = ""
-                        for i=0 to shape.[0]-1 do
+                        for i=0 to shape.[0].Value-1 do
                             sb.Append(prefix) |> ignore
                             print shape.[1..] (Array.append externalCoords [|i|])
                             prefix <- ", "
