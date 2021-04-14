@@ -136,7 +136,7 @@ type BasicTensorOps() =
     [<Benchmark; BenchmarkCategory("fromCpuData")>]
     member perf.fromCpuData_RawTensor_Torch() = 
         let n = perf.configure(Backend.Torch, 2)
-        for _ in 1 .. n do res3 <- RawTensor.CreateFromFlatArray(rawData,  [| rawData.Length |])
+        for _ in 1 .. n do res3 <- RawTensor.CreateFromFlatArray(rawData,  Shape [| rawData.Length |])
 
     [<Benchmark; BenchmarkCategory("fromCpuData")>]
     member perf.fromCpuData_Tensor_Torch() = 
@@ -146,7 +146,7 @@ type BasicTensorOps() =
     [<Benchmark; BenchmarkCategory("fromCpuData")>]
     member perf.fromCpuData_RawTensor_Reference() = 
         let n = perf.configure(Backend.Reference, 2)
-        for _ in 1 .. n do res3 <- RawTensor.CreateFromFlatArray(rawData,  [| rawData.Length |])
+        for _ in 1 .. n do res3 <- RawTensor.CreateFromFlatArray(rawData,  Shape [| rawData.Length |])
 
     [<Benchmark; BenchmarkCategory("fromCpuData")>]
     member perf.fromCpuData_Tensor_Reference() = 
@@ -175,7 +175,7 @@ type BasicTensorOps() =
     [<Benchmark; BenchmarkCategory("zeros")>]
     member perf.zeros_RawTensor_Torch() = 
         let n = perf.configure(Backend.Torch, 10)
-        for _ in 1 .. n do res3 <- RawTensor.Zeros(Shape.create [| perf.tensorSize |])
+        for _ in 1 .. n do res3 <- RawTensor.Zeros(Shape [| perf.tensorSize |])
 
     [<Benchmark; BenchmarkCategory("zeros")>]
     member perf.zeros_Tensor_Torch() = 
@@ -185,7 +185,7 @@ type BasicTensorOps() =
     [<Benchmark; BenchmarkCategory("zeros")>]
     member perf.zeros_RawTensor_Reference() = 
         let n = perf.configure(Backend.Reference, 10)
-        for _ in 1 .. n do res3 <- RawTensor.Zeros(Shape.create [| perf.tensorSize |])
+        for _ in 1 .. n do res3 <- RawTensor.Zeros(Shape [| perf.tensorSize |])
 
     [<Benchmark; BenchmarkCategory("zeros")>]
     member perf.zeros_Tensor_Reference() = 
@@ -213,7 +213,7 @@ type BasicTensorOps() =
     [<Benchmark; BenchmarkCategory("ones")>]
     member perf.ones_RawTensor_Torch() = 
         let n = perf.configure(Backend.Torch, 10)
-        for _ in 1 .. n do res3 <- RawTensor.Ones(Shape.create [| perf.tensorSize |])
+        for _ in 1 .. n do res3 <- RawTensor.Ones(Shape [| perf.tensorSize |])
 
     [<Benchmark; BenchmarkCategory("ones")>]
     member perf.ones_Tensor_Torch() = 
@@ -223,7 +223,7 @@ type BasicTensorOps() =
     [<Benchmark; BenchmarkCategory("ones")>]
     member perf.ones_RawTensor_Reference() = 
         let n = perf.configure(Backend.Reference, 10)
-        for _ in 1 .. n do res3 <- RawTensor.Ones(Shape.create [| perf.tensorSize |])
+        for _ in 1 .. n do res3 <- RawTensor.Ones(Shape [| perf.tensorSize |])
 
     [<Benchmark; BenchmarkCategory("ones")>]
     member perf.ones_Tensor_Reference() = 
@@ -251,7 +251,7 @@ type BasicTensorOps() =
     [<Benchmark; BenchmarkCategory("rand")>]
     member perf.rand_RawTensor_Torch() = 
         let n = perf.configure(Backend.Torch, 10) 
-        for _ in 1 .. n do res3 <- RawTensor.Random(Shape.create [| perf.tensorSize |])
+        for _ in 1 .. n do res3 <- RawTensor.Random(Shape [| perf.tensorSize |])
 
     [<Benchmark; BenchmarkCategory("rand")>]
     member perf.rand_Tensor_Torch() = 
@@ -261,7 +261,7 @@ type BasicTensorOps() =
     [<Benchmark; BenchmarkCategory("rand")>]
     member perf.rand_RawTensor_Reference() = 
         let n = perf.configure(Backend.Reference, 10) 
-        for _ in 1 .. n do res3 <- RawTensor.Random(Shape.create [| perf.tensorSize |])
+        for _ in 1 .. n do res3 <- RawTensor.Random(Shape [| perf.tensorSize |])
 
     [<Benchmark; BenchmarkCategory("rand")>]
     member perf.rand_Tensor_Reference() = 

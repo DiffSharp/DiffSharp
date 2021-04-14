@@ -5,6 +5,8 @@
 
 namespace DiffSharp
 
+open DiffSharp.ShapeChecking
+
 /// <summary>
 ///   Represents the type of a device. 
 /// </summary>
@@ -36,8 +38,10 @@ type Device =
     member x.DeviceIndex = (let (Device(_,b)) = x in b)
     static member CPU = Device(DeviceType.CPU, -1)
     static member GPU = Device(DeviceType.CUDA, 0)
-
-    member internal x.Code = (int x.DeviceType <<< 4) + x.DeviceIndex
+    override device.ToString() =
+        match device with
+        | Device(_, -1) -> device.Name
+        | Device(_, n) -> device.Name + ":" + string n
 
     member internal x.Name =
        (match x.DeviceType with
@@ -53,11 +57,8 @@ type Device =
         | DeviceType.XLA -> "xla"
         | _ -> failwith "unknown device type") + string x.DeviceIndex
 
-    override x.ToString() = x.Name
-
 /// Contains functions and settings related to device specifications.
 module Device = 
 
     /// Get or set the default device used when creating tensors. Note, use <c>dsharp.config(...)</c> instead.
     let mutable Default : Device = Device.CPU
-

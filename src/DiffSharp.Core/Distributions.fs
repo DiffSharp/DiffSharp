@@ -6,6 +6,7 @@
 namespace rec DiffSharp.Distributions
 open DiffSharp
 open DiffSharp.Compose
+open DiffSharp.ShapeChecking
 open DiffSharp.Util
 open System.Collections.Generic
 
@@ -45,10 +46,17 @@ type TensorDistribution() =
     /// <summary>Samples the distribution mutliple times</summary>
     member d.sample(numSamples:int) = Array.init numSamples (fun _ -> d.sample()) |> dsharp.stack
 
-    abstract batchShape: Shape
+    /// <summary>TBD</summary>
+    abstract member batchShapex: Shape
 
     /// <summary>TBD</summary>
-    abstract eventShape: Shape
+    member dist.batchShape = dist.batchShapex.Values
+
+    /// <summary>TBD</summary>
+    abstract member eventShapex: Shape
+
+    /// <summary>TBD</summary>
+    member dist.eventShape = dist.eventShapex.Values
 
     /// <summary>TBD</summary>
     abstract mean: Tensor
@@ -73,10 +81,10 @@ type Normal(mean:Tensor, stddev:Tensor) =
     do if mean.dim > 1 then failwithf "Expecting scalar parameters (0-dimensional mean and stddev) or a batch of scalar parameters (1-dimensional mean and stddev)"
 
     /// <summary>TBD</summary>
-    override d.batchShape = d.mean.shape
+    override d.batchShapex = d.mean.shapex
 
     /// <summary>TBD</summary>
-    override d.eventShape = Shape.scalar
+    override d.eventShapex = Shape.scalar
 
     /// <summary>TBD</summary>
     override d.mean = mean
@@ -89,7 +97,7 @@ type Normal(mean:Tensor, stddev:Tensor) =
 
     /// <summary>TBD</summary>
     override d.logprob(value) = 
-        if value.shape <> d.batchShape then failwithf "Expecting a value with shape %A, received %A" d.batchShape value.shape
+        if value.shapex <> d.batchShapex then failwithf "Expecting a value with shape %A, received %A" d.batchShapex value.shape
         let v = value - d.mean in -(v * v) / (2. * d.variance) - (log d.stddev) - logSqrt2Pi
 
     /// <summary>TBD</summary>
@@ -112,10 +120,10 @@ type Uniform(low:Tensor, high:Tensor) =
     member d.range = high - low
 
     /// <summary>TBD</summary>
-    override d.batchShape = low.shape
+    override d.batchShapex = low.shapex
 
     /// <summary>TBD</summary>
-    override d.eventShape = Shape.scalar
+    override d.eventShapex = Shape.scalar
 
     /// <summary>TBD</summary>
     override d.mean = (low + high) / 2.
@@ -128,7 +136,7 @@ type Uniform(low:Tensor, high:Tensor) =
 
     /// <summary>TBD</summary>
     override d.logprob(value) = 
-        if value.shape <> d.batchShape then failwithf "Expecting a value with shape %A, received %A" d.batchShape value.shape
+        if value.shapex <> d.batchShapex then failwithf "Expecting a value with shape %A, received %A" d.batchShapex value.shape
         let lb = low.le(value).cast(low.dtype)
         let ub = high.gt(value).cast(high.dtype)
         log (lb * ub) - log d.range
@@ -154,10 +162,10 @@ type Bernoulli(?probs:Tensor, ?logits:Tensor) =
     member d.logits = _logits.cast(_dtype)
 
     /// <summary>TBD</summary>
-    override d.batchShape = d.probs.shape
+    override d.batchShapex = d.probs.shapex
 
     /// <summary>TBD</summary>
-    override d.eventShape = Shape.scalar
+    override d.eventShapex = Shape.scalar
 
     /// <summary>TBD</summary>
     override d.mean = d.probs
@@ -170,7 +178,7 @@ type Bernoulli(?probs:Tensor, ?logits:Tensor) =
 
     /// <summary>TBD</summary>
     override d.logprob(value) =
-        if value.shape <> d.batchShape then failwithf "Expecting a value with shape %A, received %A" d.batchShape value.shape
+        if value.shapex <> d.batchShapex then failwithf "Expecting a value with shape %A, received %A" d.batchShapex value.shape
         let lp = (_probs ** value) * ((1. - _probs) ** (1. - value))  // Correct but numerical stability can be improved
         lp.log().cast(_dtype)
 
@@ -196,10 +204,10 @@ type Categorical(?probs:Tensor, ?logits:Tensor) =
     member d.logits = _logits.cast(_dtype)
 
     /// <summary>TBD</summary>
-    override d.batchShape = if d.probs.dim = 1 then Shape.scalar else [|d.probs.shape.[0]|]
+    override d.batchShapex = if d.probs.dim = 1 then Shape.scalar else Shape [|d.probs.shape.[0]|]
 
     /// <summary>TBD</summary>
-    override d.eventShape = Shape.scalar
+    override d.eventShapex = Shape.scalar
 
     /// <summary>TBD</summary>
     override d.mean = dsharp.onesLike(d.probs) * System.Double.NaN
@@ -212,8 +220,8 @@ type Categorical(?probs:Tensor, ?logits:Tensor) =
 
     /// <summary>TBD</summary>
     override d.logprob(value) =
-        if value.shape <> d.batchShape then failwithf "Expecting a value with shape %A, received %A" d.batchShape value.shape
-        if d.batchShape.Length = 0 then
+        if value.shapex <> d.batchShapex then failwithf "Expecting a value with shape %A, received %A" d.batchShapex value.shape
+        if d.batchShapex.Length = 0 then
             let i = int value
             _logits.[i].cast(_dtype)
         else

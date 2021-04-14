@@ -31,6 +31,7 @@
     <OtherFlags>--warnon:3390 $(OtherFlags)</OtherFlags>
     <!-- turn off 'experimental' warnings within this codebase, used for Float16/BFloat16 etc  -->
     <OtherFlags>--nowarn:57 $(OtherFlags)</OtherFlags>
+    <DefineConstants>SYMBOLIC_SHAPES</DefineConstants>
   </PropertyGroup>
 
   <PropertyGroup>

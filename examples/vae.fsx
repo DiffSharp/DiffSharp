@@ -1,6 +1,7 @@
 #!/usr/bin/env -S dotnet fsi
 
 #I "../tests/DiffSharp.Tests/bin/Debug/net5.0"
+#r "Microsoft.Z3.dll"
 #r "DiffSharp.Core.dll"
 #r "DiffSharp.Data.dll"
 #r "DiffSharp.Backends.Torch.dll"
@@ -17,26 +18,28 @@ open DiffSharp
 open DiffSharp.Model
 open DiffSharp.Optim
 open DiffSharp.Data
+open DiffSharp.ShapeChecking
 
+let Assert b = if not b then failwith "assertion constraint failed"
 
 type VAE(xDim:int, zDim:int, ?hDims:seq<int>, ?nonlinearity:Tensor->Tensor, ?nonlinearityLast:Tensor->Tensor) =
     inherit Model()
-    let hDims = defaultArg hDims (let d = (xDim+zDim)/2 in seq [d; d]) |> Array.ofSeq
+    let xyDim = xDim * yDim 
+    let hDims = defaultArg hDims (let d = (xyDim+zDim)/2 in seq [d; d]) |> Array.ofSeq
     let nonlinearity = defaultArg nonlinearity dsharp.relu
     let nonlinearityLast = defaultArg nonlinearityLast dsharp.sigmoid
-    let dims =
-        if hDims.Length = 0 then
-            [|xDim; zDim|]
-        else
-            Array.append (Array.append [|xDim|] hDims) [|zDim|]
+    let dims = [| yield xyDim; yield! hDims; yield zDim |]
             
-    let enc = Array.append [|for i in 0..dims.Length-2 -> Linear(dims.[i], dims.[i+1])|] [|Linear(dims.[dims.Length-2], dims.[dims.Length-1])|]
-    let dec = [|for i in 0..dims.Length-2 -> Linear(dims.[i+1], dims.[i])|] |> Array.rev
+    let ndims = dims.Length
+    let enc = [| for i in 0..ndims-2 do
+                    Linear(dims.[i], dims.[i+1])
+                 Linear(dims.[ndims-2], dims.[ndims-1])|]
+    let dec = [|for i in 0..ndims-2 -> Linear(dims.[i+1], dims.[i])|] |> Array.rev
     do 
         base.add([for m in enc -> box m])
         base.add([for m in dec -> box m])
 
-    let encode x =
+    let encode (x: Tensor) =
         let mutable x = x
         for i in 0..enc.Length-3 do
             x <- nonlinearity <| enc.[i].forward(x)
@@ -49,7 +52,7 @@ type VAE(xDim:int, zDim:int, ?hDims:seq<int>, ?nonlinearity:Tensor->Tensor, ?non
         let eps = dsharp.randnLike(std)
         eps.mul(std).add(mu)
 
-    let decode z =
+    let decode (z: Tensor) =
         let mutable h = z
         for i in 0..dec.Length-2 do
             h <- nonlinearity <| dec.[i].forward(h)
@@ -78,8 +81,9 @@ type VAE(xDim:int, zDim:int, ?hDims:seq<int>, ?nonlinearity:Tensor->Tensor, ?non
 
     member _.sample(?numSamples:int) = 
         let numSamples = defaultArg numSamples 1
-        dsharp.randn([|numSamples; zDim|]) |> decode
+        dsharp.randn(Shape [|numSamples; zDim|]) |> decode
 
+    override _.ToString() = sprintf "VAE(%A, %A, %A)" xyDim hDims zDim
 
 dsharp.config(backend=Backend.Torch, device=Device.CPU)
 dsharp.seed(0)
@@ -106,6 +110,7 @@ let optimizer = Adam(model, lr=dsharp.tensor(0.001))
 
 for epoch = 1 to epochs do
     for i, x, _ in trainLoader.epoch() do
+        printfn "loader: x.shapex = %A" x.shapex
         model.reverseDiff()
         let l = model.loss(x)
         l.reverse()

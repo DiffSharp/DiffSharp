@@ -29,9 +29,7 @@ type Optimizer(model:Model) =
         o.stateStep <- o.stateStep + 1  // This order is crucial, we need first step to have o.stateStep = 1 before calling update rules
         model.parameters.iter(fun (n, p) -> let t = o.updateRule n p.value in p.value <- t)
 
-    /// <summary>TBD</summary>
     abstract member updateRule: string -> Tensor -> Tensor
-
 
 /// <summary>TBD</summary>
 type SGD(model, ?lr:Tensor, ?momentum:Tensor, ?nesterov:bool, ?weightDecay:Tensor, ?reversible:bool) =

@@ -8,13 +8,19 @@ namespace DiffSharp.Model
 open DiffSharp
 
 /// <summary>A model that applies a linear transformation to the incoming data: \(y = xA^T + b\)</summary>
-type Linear(inFeatures, outFeatures, ?bias:bool) =
+type Linear(inFeatures:Int, outFeatures:Int, ?bias:bool) =
     inherit Model()
-    let bias = defaultArg bias true
+    let hasBias = defaultArg bias true
     let w = Parameter(Weight.kaiming(inFeatures, outFeatures))
-    let k = 1./sqrt (float outFeatures)
-    let b = Parameter(if bias then Weight.uniform([|outFeatures|], k) else dsharp.tensor([]))
+    let k = 1./sqrt (float outFeatures.ValueOrOne)
+    let b = Parameter(if hasBias then Weight.uniform([|outFeatures|], k) else dsharp.tensor([]))
     do base.add([w;b],["Linear-weight";"Linear-bias"])
+    
+    /// <summary>TBD</summary>
+    member _.weight = w
+
+    /// <summary>TBD</summary>
+    member _.bias = b
 
     /// <summary>TBD</summary>
     override _.getString() = sprintf "Linear(%A, %A)" inFeatures outFeatures
@@ -22,4 +28,8 @@ type Linear(inFeatures, outFeatures, ?bias:bool) =
     /// <summary>TBD</summary>
     override _.forward(value) =
         let f = dsharp.matmul(value, w.value)
-        if bias then f + b.value else f
+        if hasBias then f + b.value else f
+        
+    /// <summary>TBD</summary>
+    new (inFeatures: int, outFeatures: int, ?bias:bool) =
+       Linear(Int inFeatures, Int outFeatures, ?bias=bias)

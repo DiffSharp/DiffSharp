@@ -7,6 +7,7 @@ namespace rec DiffSharp.Model
 
 open DiffSharp
 open DiffSharp.Util
+open DiffSharp.ShapeChecking
 open System.Collections.Generic
 
 
@@ -48,7 +49,7 @@ type Parameter =
     member p.move(?dtype, ?device, ?backend) = p.value <- p.value.move(?dtype=dtype, ?device=device, ?backend=backend)
 
     /// <summary>TBD</summary>
-    override p.ToString() = sprintf "Parameter(shape:%A, value:%A)" p.value.shape p.value
+    override p.ToString() = sprintf "Parameter(shape:%A, value:%A)" p.value.shapex p.value
 
 
 /// <summary>Represents a collection of named parameters in a model.</summary>
@@ -142,6 +143,9 @@ type ParameterDict() =
     member d.nelement with get() = [|for t in d.values.Values do t.value.nelement|] |> Array.sum
 
     /// <summary>TBD</summary>
+    member d.nelementx with get() = [|for t in d.values.Values do t.value.nelementx|] |> Array.sum
+
+    /// <summary>TBD</summary>
     member d.flatten() =
         let ts = [| for t in d.values.Values do t.value.view(-1) |]
         if ts.Length = 0 then dummy else
@@ -149,11 +153,11 @@ type ParameterDict() =
 
     /// <summary>TBD</summary>
     member d.unflatten(tensors:Tensor) =
-        if tensors.dim <> 1 then failwithf "Expecting 1d tensors but received tensors with shape %A" tensors.shape
-        if tensors.nelement <> d.nelement then failwithf "Expecting tensors.nelement (%A) and ParameterDict.nelement (%A) to be the same" tensors.nelement d.nelement
-        let shapes = [|for t in d.values.Values do t.value.shape|]
-        let sizes = [|for s in shapes do shapeLength s|]
-        let ts = Array.map2 (fun (t:Tensor) (s:int[]) -> t.view(s)) (tensors.split(sizes)) shapes
+        if tensors.dim <> 1 then failwithf "Expecting 1d tensors but received tensors with shape %A" tensors.shapex
+        if not (tensors.nelementx =~= d.nelementx) then failwithf "Expecting tensors.nelementx (%A) and ParameterDict.nelementx (%A) to be the same" tensors.nelementx d.nelementx
+        let shapes = [|for t in d.values.Values do t.value.shapex|]
+        let sizes = [|for s in shapes do Shape.nelementx s|]
+        let ts = Array.map2 (fun (t:Tensor) (s:Shape) -> t.view(s)) (tensors.split(sizes)) shapes
         let mutable i = 0
         let keys = Dictionary.copyKeys d.values
         for n in keys do
@@ -218,10 +222,12 @@ type BaseModel() =
         and set parameters = m.parameters.unflatten(parameters)
 
     /// <summary>TBD</summary>
-    member m.allModels
-        with get () =
-            if m.subModels .Count = 0 then [m]
-            else [for sm in m.subModels .Values do yield! sm.allModels]
+    member m.allModels =
+        if m.subModels.Count = 0 then [m]
+        else m.subModelsList()
+
+    /// <summary>TBD</summary>
+    member m.subModelsList() = [for sm in m.subModels.Values do yield! sm.allModels]
 
     /// <summary>TBD</summary>
     member m.init(f:string*Tensor->Tensor) = for KeyValue(n, p) in m.parameters.values do p.value <- f(n, p.value)
@@ -238,6 +244,13 @@ type BaseModel() =
             let i = parameterPrefixes.GetValueOrDefault name
             parameterPrefixes.[name] <- i+1
             sprintf "%s__%A" name (i+1)
+        let (|Pair|_|) (x: obj) =
+            if Reflection.FSharpType.IsTuple (x.GetType()) then  
+                match Reflection.FSharpValue.GetTupleFields(x) with
+                | [| t1; t2 |] -> Some (t1,t2)
+                | _ -> None
+            else
+                None
         for i in 0..parameters.Length-1 do
             let p = parameters.[i]
             match (box p) with
@@ -247,8 +260,13 @@ type BaseModel() =
             | :? Model as mm ->
                 let n = if names.Length > 0 then names.[i] else sprintf "model-%s" (Random.UUID())
                 m.subModels.Add(n, mm)
-                m.parameters.add(mm.parameters.map(fun (nn, pp:Parameter) -> (nextName nn, pp)))
-            | _ -> failwithf "Unsupported type. Expecting a Parameter or Model"
+                parameterDict.add(mm.parameters.map(fun (nn, pp:Parameter) -> (nextName nn, pp)))
+            | Pair ((:? Parameter as p), (:? string as n))  -> 
+                parameterDict.add(n, p)
+            | Pair ((:? BaseModel as mm), (:? string as n))  -> 
+                m.subModels.Add(n, mm)
+                parameterDict.add(parameterDict.map(fun (nn, pp:Parameter) -> (n + "__" + nn, pp)))
+            | t -> failwithf "Unsupported type %A. Expecting a Parameter or Model" (t.GetType())
 
     /// <summary>
     ///  Adjust the parameters of the model to include support for forward-mode automatic differentiation.
@@ -276,6 +294,9 @@ type BaseModel() =
     /// <summary>Moves the parameters of the model to the given configuration</summary>
     member m.move(?dtype, ?device, ?backend) = m.parameters.move(?dtype=dtype, ?device=device, ?backend=backend)
 
+    /// <summary>TBD</summary>
+    member m.nparametersx = m.parameters.nelementx
+
     /// <summary>Gets the number of parameters of the model</summary>
     member m.nparameters = m.parameters.nelement
 
@@ -285,7 +306,7 @@ type BaseModel() =
         else
         let sb = System.Text.StringBuilder()
         sb.Append("Model(\n") |> ignore
-        for model in m.allModels do sb.Append(sprintf "%A\n" model) |> ignore
+        for model in m.subModels do sb.Append(sprintf "%A\n" model) |> ignore
         sb.Append(")") |> ignore
         sb.ToString()
 
@@ -293,7 +314,7 @@ type BaseModel() =
     member m.save(fileName) = saveBinary m fileName
 
     /// <summary>TBD</summary>
-    override m.ToString() = sprintf "%s--nparameters:%A" (m.getString()) m.nparameters
+    override m.ToString() = sprintf "%s--nparameters:%A" (m.getString()) m.nparametersx
 
 [<AbstractClass>]
 type Model<'In, 'Out>() =
@@ -371,13 +392,23 @@ type Model = Model<Tensor, Tensor>
 type Weight =
 
     /// <summary>TBD</summary>
-    static member kaiming(fanIn, fanOut, ?a:float) = 
+    static member kaiming(fanIn:Int, fanOut:Int, ?a:float) = 
         // He et al. 2015. https://arxiv.org/abs/1502.01852
         let a = defaultArg a (sqrt 5.)
         let w = dsharp.randn([fanIn; fanOut])
-        let s = sqrt (2. / ((1. + a*a) * (float fanIn)))
+        let s = sqrt (2. / ((1. + a*a) * (float fanIn.ValueOrOne)))
         w * s
+
+    /// <summary>TBD</summary>
+    static member kaiming(fanIn:int, fanOut:int, ?a:float) =
+        Weight.kaiming(Int fanIn, Int fanOut, ?a=a)
 
     /// <summary>TBD</summary>
     static member uniform(shape:Shape, k:float) =
         -k + dsharp.rand(shape) * 2*k
+    
+    /// <summary>TBD</summary>
+    static member uniform(shape:seq<int>, k:float) = Weight.uniform (Shape shape, k)
+    
+    /// <summary>TBD</summary>
+    static member uniform(shape:seq<Int>, k:float) = Weight.uniform (Shape shape, k)

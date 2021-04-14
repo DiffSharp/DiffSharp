@@ -2,6 +2,7 @@
 
   <PropertyGroup>
     <TargetFramework>net5.0</TargetFramework>
+    <IsPublishable>false</IsPublishable>
     <PlatformTarget>x64</PlatformTarget>
   </PropertyGroup>
 

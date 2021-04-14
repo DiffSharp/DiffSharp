@@ -6,6 +6,7 @@
 namespace DiffSharp.Model
 
 open DiffSharp
+open DiffSharp.ShapeChecking
 
 /// <summary>Applies Batch Normalization over a 2D or 3D input (a mini-batch of 1D inputs with optional additional channel dimension)</summary>
 /// <remarks>
@@ -26,7 +27,7 @@ open DiffSharp
 ///       and batch statistics are instead used during evaluation time as well.
 ///    </para>
 /// </remarks>
-type BatchNorm1d(numFeatures:int, ?eps:double, ?momentum:Tensor, ?affine:bool, ?trackRunningStats:bool, ?reversible:bool) =
+type BatchNorm1d(numFeatures:Int, ?eps:double, ?momentum:Tensor, ?affine:bool, ?trackRunningStats:bool, ?reversible:bool) =
     inherit Model()
     let eps = defaultArg eps 1e-5
     let momentum = defaultArg momentum (dsharp.tensor(0.1))
@@ -71,32 +72,34 @@ type BatchNorm1d(numFeatures:int, ?eps:double, ?momentum:Tensor, ?affine:bool, ?
     /// <summary>TBD</summary>
     override m.forward(value) =
         if value.dim = 2 then
-            if value.shape.[1] <> numFeatures then failwithf "Expecting value to have shape NxL (batchSize x numFeatures) where numFeatures=%A, received value with shape %A" numFeatures value.shape
+            if not (value.shapex.[1] =~= numFeatures) then failwithf "Expecting value to have shape NxL (batchSize x numFeatures) where numFeatures=%A, received value with shape %A" numFeatures value.shapex
             let mean, var =
                 if m.mode = Mode.Train || (m.mode = Mode.Eval && not trackRunningStats) then
                     value.mean(0), value.variance(0, unbiased=false)
                 else
                     _mean.value, _variance.value
-            if m.mode = Mode.Train && trackRunningStats then 
+            if not value.symbolic && m.mode = Mode.Train && trackRunningStats then 
                 let batchSize = value.shape.[0]
                 m.updateStats mean var batchSize
             let res = (value - mean) / (var + eps).sqrt()
             if affine then res * w.value + b.value else res
         elif value.dim = 3 then
-            if value.shape.[1] <> numFeatures then failwithf "Expecting value to have shape NxCxL (batchSize x numFeatures x length) where numFeatures=%A, received value with shape %A" numFeatures value.shape
-            let vt = value.transpose(0,1).view([numFeatures;-1])
+            if not (value.shapex.[1] =~= numFeatures) then failwithf "Expecting value to have shape NxCxL (batchSize x numFeatures x length) where numFeatures=%A, received value with shape %A" numFeatures value.shapex
+            let vt = value.transpose(0,1).view([numFeatures; Int -1])
             let mean, var =
                 if m.mode = Mode.Train || (m.mode = Mode.Eval && not trackRunningStats) then
                     vt.mean(1), vt.variance(1, unbiased=false)
                 else
                     _mean.value, _variance.value
-            if m.mode = Mode.Train && trackRunningStats then
+            if not value.symbolic && m.mode = Mode.Train && trackRunningStats then
                 let n = vt.shape.[1]
                 m.updateStats mean var n
-            let res = (value - mean.view([1;numFeatures;1])) / (var.view([1;numFeatures;1]) + eps).sqrt()
-            if affine then res * w.value.view([1;numFeatures;1]) + b.value.view([1;numFeatures;1]) else res
-        else failwithf "Expecting value to have shape NxL (batchSize x Length) or NxCxL (batchSize x numChannels x Length), received value with shape %A" value.shape
+            let res = (value - mean.view([1I;numFeatures;1I ])) / (var.view([1I;numFeatures;1I]) + eps).sqrt()
+            if affine then res * w.value.view([1I;numFeatures;1I]) + b.value.view([1I;numFeatures;1I]) else res
+        else failwithf "Expecting value to have shape NxL (batchSize x Length) or NxCxL (batchSize x numChannels x Length), received value with shape %A" value.shapex
 
+    new (numFeatures:int, ?eps:double, ?momentum:Tensor, ?affine:bool, ?trackRunningStats:bool, ?reversible:bool) =
+        BatchNorm1d(Int numFeatures, ?eps=eps, ?momentum=momentum, ?affine=affine, ?trackRunningStats=trackRunningStats, ?reversible=reversible)
 
 /// <summary>Applies Batch Normalization over a 4D input (a mini-batch of 2D inputs with optional additional channel dimension)</summary>
 /// <remarks>
@@ -117,7 +120,7 @@ type BatchNorm1d(numFeatures:int, ?eps:double, ?momentum:Tensor, ?affine:bool, ?
 ///       and batch statistics are instead used during evaluation time as well.
 ///    </para>
 /// </remarks>
-type BatchNorm2d(numFeatures:int, ?eps:double, ?momentum:Tensor, ?affine:bool, ?trackRunningStats:bool, ?reversible:bool) =
+type BatchNorm2d(numFeatures:Int, ?eps:double, ?momentum:Tensor, ?affine:bool, ?trackRunningStats:bool, ?reversible:bool) =
     inherit Model()
     let eps = defaultArg eps 1e-5
     let momentum = defaultArg momentum (dsharp.tensor(0.1))
@@ -161,19 +164,22 @@ type BatchNorm2d(numFeatures:int, ?eps:double, ?momentum:Tensor, ?affine:bool, ?
 
     /// <summary>TBD</summary>
     override m.forward(value) =
-        if value.dim <> 4 || value.shape.[1] <> numFeatures then failwithf "Expecting value to have shape NxCxHxW (batchSize x numFeatures x height x width) where numFeatures=%A, received value with shape %A" numFeatures value.shape
-        let vt = value.transpose(0,1).view([numFeatures;-1])
+        if value.dim <> 4 || not (value.shapex.[1] =~= numFeatures) then failwithf "Expecting value to have shape NxCxHxW (batchSize x numFeatures x height x width) where numFeatures=%A, received value with shape %A" numFeatures value.shapex
+        let vt = value.transpose(0,1).view([numFeatures;Int -1])
         let mean, var =
             if m.mode = Mode.Train || (m.mode = Mode.Eval && not trackRunningStats) then
                 vt.mean(1), vt.variance(1, unbiased=false)
             else
                 _mean.value, _variance.value
-        if m.mode = Mode.Train && trackRunningStats then
+        if not value.symbolic && m.mode = Mode.Train && trackRunningStats then
             let n = vt.shape.[1]
             m.updateStats mean var n
-        let res = (value - mean.view([1;numFeatures;1;1])) / (var.view([1;numFeatures;1;1]) + eps).sqrt()
-        if affine then res * w.value.view([1;numFeatures;1;1]) + b.value.view([1;numFeatures;1;1]) else res
+        let res = (value - mean.view([1I;numFeatures;1I;1I ])) / (var.view([1I;numFeatures;1I;1I]) + eps).sqrt()
+        if affine then res * w.value.view([1I;numFeatures;1I;1I]) + b.value.view([1I;numFeatures;1I;1I]) else res
 
+    /// <summary>TBD</summary>
+    new (numFeatures:int, ?eps:double, ?momentum:Tensor, ?affine:bool, ?trackRunningStats:bool, ?reversible:bool) =
+        BatchNorm2d(Int numFeatures, ?eps=eps, ?momentum=momentum, ?affine=affine, ?trackRunningStats=trackRunningStats, ?reversible=reversible)
 
 /// <summary>Applies Batch Normalization over a 5D input (a mini-batch of 3D inputs with optional additional channel dimension)</summary>
 /// <remarks>
@@ -194,7 +200,7 @@ type BatchNorm2d(numFeatures:int, ?eps:double, ?momentum:Tensor, ?affine:bool, ?
 ///       and batch statistics are instead used during evaluation time as well.
 ///    </para>
 /// </remarks>
-type BatchNorm3d(numFeatures:int, ?eps:double, ?momentum:Tensor, ?affine:bool, ?trackRunningStats:bool, ?reversible:bool) =
+type BatchNorm3d(numFeatures:Int, ?eps:double, ?momentum:Tensor, ?affine:bool, ?trackRunningStats:bool, ?reversible:bool) =
     inherit Model()
     let eps = defaultArg eps 1e-5
     let momentum = defaultArg momentum (dsharp.tensor(0.1))
@@ -238,15 +244,19 @@ type BatchNorm3d(numFeatures:int, ?eps:double, ?momentum:Tensor, ?affine:bool, ?
 
     /// <summary>TBD</summary>
     override m.forward(value) =
-        if value.dim <> 5 || value.shape.[1] <> numFeatures then failwithf "Expecting value to have shape NxCxDxHxW (batchSize x numFeatures x depth x height x width) where numFeatures=%A, received value with shape %A" numFeatures value.shape
-        let vt = value.transpose(0,1).view([numFeatures;-1])
+        if value.dim <> 5 || not (value.shapex.[1] =~= numFeatures) then failwithf "Expecting value to have shape NxCxDxHxW (batchSize x numFeatures x depth x height x width) where numFeatures=%A, received value with shape %A" numFeatures value.shapex
+        let vt = value.transpose(0,1).view([numFeatures; Int -1])
         let mean, var =
             if m.mode = Mode.Train || (m.mode = Mode.Eval && not trackRunningStats) then
                 vt.mean(1), vt.variance(1, unbiased=false)
             else
                 _mean.value, _variance.value
-        if m.mode = Mode.Train && trackRunningStats then
+        if not value.symbolic && m.mode = Mode.Train && trackRunningStats then
             let n = vt.shape.[1]
             m.updateStats mean var n
-        let res = (value - mean.view([1;numFeatures;1;1;1])) / (var.view([1;numFeatures;1;1;1]) + eps).sqrt()
-        if affine then res * w.value.view([1;numFeatures;1;1;1]) + b.value.view([1;numFeatures;1;1;1]) else res
+        let res = (value - mean.view([1I;numFeatures;1I;1I;1I])) / (var.view([1I;numFeatures;1I;1I;1I]) + eps).sqrt()
+        if affine then res * w.value.view([1I;numFeatures;1I;1I;1I]) + b.value.view([1I;numFeatures;1I;1I; 1I]) else res        
+
+    /// <summary>TBD</summary>
+    new (numFeatures:int, ?eps:double, ?momentum:Tensor, ?affine:bool, ?trackRunningStats:bool, ?reversible:bool) =
+        BatchNorm3d(Int numFeatures, ?eps=eps, ?momentum=momentum, ?affine=affine, ?trackRunningStats=trackRunningStats, ?reversible=reversible)

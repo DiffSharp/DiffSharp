@@ -1,8 +1,8 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net5.0</TargetFramework>
-    <DefineConstants>TEST_DUPLICATE_BACKEND</DefineConstants>
+    <TargetFramework>netstandard2.1</TargetFramework>
+    <DefineConstants>$(DefineConstants);TEST_DUPLICATE_BACKEND</DefineConstants>
     <IsPackable>false</IsPackable>
   </PropertyGroup>
 
