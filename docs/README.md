@@ -9,7 +9,7 @@ The `Dockerfile` and `NuGet.config` allow us to run generated notebooks in [MyBi
 # Generating docs
 
 
-To Iterate on Literate Docs and API Docs (requires evaluation off since DLLs get locked)
+To iterate on docs (requires evaluation off since DLLs get locked)
 
     dotnet fsdocs watch 
 
@@ -22,7 +22,7 @@ To use a local build of FSharp.Formatting:
 
 Then:
 
-       ..\FSharp.Formatting\src\FSharp.Formatting.CommandTool\bin\Debug\net5.0\fsdocs.exe watch --eval
+       ..\FSharp.Formatting\src\FSharp.Formatting.CommandTool\bin\Debug\net5.0\fsdocs.exe watch
        ..\FSharp.Formatting\src\FSharp.Formatting.CommandTool\bin\Debug\net5.0\fsdocs.exe build --clean --eval
 
 ## Generated Notebooks
