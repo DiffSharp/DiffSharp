@@ -41,7 +41,7 @@ jobs:
     - name: Deploy docs
       uses: peaceiris/actions-gh-pages@v3
       with:
-        personal_token: ${{ secrets.PERSONAL_TOKEN }}
+        deploy_key: ${{ secrets.DIFFSHARP_GITHUB_IO_DEPLOY_DOCS_PRIVATE_KEY }}
         external_repository: DiffSharp/diffsharp.github.io
         publish_dir: ./output
         publish_branch: master
