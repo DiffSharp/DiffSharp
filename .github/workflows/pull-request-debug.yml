@@ -24,7 +24,8 @@ jobs:
       run: dotnet build --configuration Debug --no-restore --verbosity normal
     - name: Test
       run: dotnet test /p:CollectCoverage=true /p:CoverletOutputFormat=opencover --configuration Debug --no-restore --verbosity normal
-    - name: Codecov
-      uses: codecov/codecov-action@v1
+    # 16 Apr 2021: disabling codecov due to bash uploader security concern
+    # - name: Codecov
+      # uses: codecov/codecov-action@v1
     - name: Run fsdocs
       run: dotnet fsdocs build --eval --strict
