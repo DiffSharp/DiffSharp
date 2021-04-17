@@ -33,6 +33,8 @@ jobs:
       run: dotnet build --configuration Debug --no-restore --verbosity normal
     - name: Test
       run: dotnet test /p:CollectCoverage=true /p:CoverletOutputFormat=opencover --configuration Release --no-build --verbosity normal
+    - name: Coveralls
+      run: dotnet csmacnz.Coveralls --opencover -i tests/DiffSharp.Tests/coverage.opencover.xml --useRelativePaths --repoToken ${{ secrets.COVERALLS_REPO_TOKEN }} --commitId ${{ github.sha }} --commitBranch ${{ github.ref	}} --commitAuthor ${{ github.actor }} --jobId ${{ github.job }}
     # 16 Apr 2021: disabling codecov due to bash uploader security concern
     # - name: Codecov
       # uses: codecov/codecov-action@v1
