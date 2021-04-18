@@ -33,11 +33,12 @@ jobs:
       run: dotnet build --configuration Debug --no-restore --verbosity normal
     - name: Test
       run: dotnet test /p:CollectCoverage=true /p:CoverletOutputFormat=opencover --configuration Release --no-build --verbosity normal
+    - name: Get git commit info
+      run: |
+        echo "GIT_COMMIT_AUTHOR=$(git show -s --pretty=format:%cn)" >> $GITHUB_ENV
+        echo "GIT_COMMIT_AUTHOR_EMAIL=$(git show -s --pretty=format:%ce)" >> $GITHUB_ENV
+        echo "GIT_COMMIT_MESSAGE=$(git show -s --pretty=format:%s)" >> $GITHUB_ENV
     - name: Run coveralls
-      env:
-        REPO_COMMIT_AUTHOR=$(git show -s --pretty=format:"%cn")
-        REPO_COMMIT_AUTHOR_EMAIL=$(git show -s --pretty=format:"%ce")
-        REPO_COMMIT_MESSAGE=$(git show -s --pretty=format:"%s")
       run: >
         dotnet csmacnz.Coveralls
         --opencover -i tests/DiffSharp.Tests/coverage.opencover.xml
@@ -45,9 +46,9 @@ jobs:
         --repoToken ${{ secrets.COVERALLS_REPO_TOKEN }}
         --commitId ${{ github.sha }}
         --commitBranch ${{ github.ref }}
-        --commitAuthor ${{ REPO_COMMIT_AUTHOR }}
-        --commitEmail ${{ REPO_COMMIT_AUTHOR_EMAIL }}
-        --commitMessage ${{ REPO_COMMIT_MESSAGE }}
+        --commitAuthor ${{ env.GIT_COMMIT_AUTHOR }}
+        --commitEmail ${{ env.GIT_COMMIT_AUTHOR_EMAIL }}
+        --commitMessage ${{ env.GIT_COMMIT_MESSAGE }}
         --jobId ${{ github.run_id }}
     # 16 Apr 2021: disabling codecov due to bash uploader security concern
     # - name: Codecov
