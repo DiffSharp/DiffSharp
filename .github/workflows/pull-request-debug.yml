@@ -37,9 +37,9 @@ jobs:
         --repoToken ${{ secrets.COVERALLS_REPO_TOKEN }}
         --commitId ${{ github.sha }}
         --commitBranch ${{ github.ref }}
-        --commitAuthor ${{ env.GIT_COMMIT_AUTHOR }}
+        --commitAuthor "${{ env.GIT_COMMIT_AUTHOR }}"
         --commitEmail ${{ env.GIT_COMMIT_AUTHOR_EMAIL }}
-        --commitMessage ${{ env.GIT_COMMIT_MESSAGE }}
+        --commitMessage "${{ env.GIT_COMMIT_MESSAGE }}"
         --jobId ${{ github.run_id }}
     # 16 Apr 2021: disabling codecov due to bash uploader security concern
     # - name: Codecov
