@@ -3,80 +3,6 @@
 #r "DiffSharp.Core.dll"
 #r "DiffSharp.Data.dll"
 #r "DiffSharp.Backends.Reference.dll"
-
-(**
-DiffSharp: Differentiable Tensor Programming Made Simple
-============================================
-
-DiffSharp is a tensor library with support for [differentiable programming](https://en.wikipedia.org/wiki/Automatic_differentiation).
-It is designed for use in machine learning, probabilistic programming, optimization and other domains.
-
-
-✅ Nested and Mixed-Mode Differentiation
-
-✅ PyTorch Familiar Naming and Idioms
-
-✅ F# for Robust Functional AI Programming 
-
-✅ LibTorch Efficient PyTorch C++ Tensors
-
-✅ Linux, Windows and CUDA supported
-
-✅ Use Notebooks in Jupyter and Visual Studio Code
-
-✅ 100% Open Source 
-
-
-Differentiable Programming
-----------------------------
-
-DiffSharp provides world-leading automatic differentiation capabilities for tensor code,
-including gradients, Hessians, Jacobians, directional derivatives, and matrix-free Hessian- and Jacobian-vector
-products over arbitrary user code.  This goes far beyond traditional tensor libraries such as TensorFlow and PyTorch, allowing the use of nested
-forward and reverse differentiation up to any level. With DiffSharp, you can compute higher-order derivatives efficiently and differentiate functions
-that are internally making use of differentiation and optimization. 
-
-Differentiation can be applied to any functions accepting and producing DiffSharp Tensor values.
-Please see [API Overview](api-overview.html) for a list of available operations.
-
-
-Practical, Familiar and Efficient
-----------------------------
-
-DiffSharp uses PyTorch C++ tensors (minus the gradient computation) as the default
-raw-tensor backend. It is tested on Linux and Windows and includes support for CUDA 11.1.
-
-DiffSharp uses [the incredible F# programming language](https://fsharp.org) for tensor programming.
-F# code is generally faster and more robust than equivalent Python code, while
-still being succinct and compact like Python, making it an ideal modern AI and machine
-learning implementation language. This allows fluent and productive tensor programming while
-focusing on the tensor programming domain.
-To learn more about "F# as a Better Python" see this video:
-
-<iframe width="280" height="157" src="https://www.youtube.com/embed/_QnbV6CAWXc" title="F# as a Better Python" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
-
-The DiffSharp API is designed to be similar to [the PyTorch Python API](https://pytorch.org/docs/stable/index.html) through very similar
-naming and idioms, and where elements have similar names the PyTorch documentation can generally be used as a guide.
-There are some improvements and DiffSharp supports a richer gradient/differentiation API.
-
-
-Quick usage examples
--------------------
-
-Below is a  series of simple samples using DiffSharp. You can access this sample as a [script](index.fsx) or a [.NET Interactive Jupyter Notebook](index.ipynb)
-(open in [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/diffsharp/diffsharp.github.io/master?filepath=index.ipynb)).
-If using Visual Studio Code you can download, edit and execute these notebooks
-using [the .NET Interactive Notebooks for VS Code](https://marketplace.visualstudio.com/items?itemName=ms-dotnettools.dotnet-interactive-vscode).
-
-First reference the package:
-
-    #r "nuget: DiffSharp-lite,{{fsdocs-package-version}}"
-
-or for Torch support:
-
-    #r "nuget: DiffSharp-cpu,{{fsdocs-package-version}}"
-*)
-
 (*** condition: fsx ***)
 #if FSX
 #r "nuget: DiffSharp-lite,{{fsdocs-package-version}}"
@@ -86,8 +12,66 @@ or for Torch support:
 #r "nuget: DiffSharp-lite,{{fsdocs-package-version}}"
 
 Formatter.SetPreferredMimeTypeFor(typeof<obj>, "text/plain")
-Formatter.Register(fun x writer -> fprintfn writer "%120A" x )
+Formatter.Register(fun (x:obj) (writer: TextWriter) -> fprintfn writer "%120A" x )
 #endif // IPYNB
+
+(**
+[![Binder](img/badge-binder.svg)](https://mybinder.org/v2/gh/diffsharp/diffsharp.github.io/master?filepath={{fsdocs-source-basename}}.ipynb)&emsp;
+[![Script](img/badge-script.svg)]({{fsdocs-source-basename}}.fsx)&emsp;
+[![Script](img/badge-notebook.svg)]({{fsdocs-source-basename}}.ipynb)
+
+# DiffSharp: Differentiable Tensor Programming Made Simple
+
+DiffSharp is a tensor library with support for [differentiable programming](https://en.wikipedia.org/wiki/Automatic_differentiation).
+It is designed for use in machine learning, probabilistic programming, optimization and other domains.
+
+
+🗹 Nested and Mixed-Mode Differentiation
+
+🗹 PyTorch Familiar Naming and Idioms
+
+🗹 F# for Robust Functional Programming 
+
+🗹 LibTorch Efficient C++ Tensors
+
+🗹 Linux, Windows and CUDA supported
+
+🗹 Use Notebooks in Jupyter and Visual Studio Code
+
+🗹 100% Open Source 
+
+
+## Differentiable programming
+
+DiffSharp provides world-leading automatic differentiation capabilities for tensor code, including composable gradients, Hessians, Jacobians, directional derivatives, and matrix-free Hessian- and Jacobian-vector products over arbitrary user code. This goes beyond conventional tensor libraries such as PyTorch and TensorFlow, allowing the use of nested forward and reverse differentiation up to any level. With DiffSharp, you can compute higher-order derivatives efficiently and differentiate functions that are internally making use of differentiation and gradient-based optimization. 
+
+## Practical, familiar and efficient
+
+DiffSharp comes with a [libtorch](https://pytorch.org/cppdocs/) backend, using the same C++ and CUDA implementations for tensor computations that power [PyTorch](https://pytorch.org/). On top of these raw tensors (libtorch's ATen, excluding autograd), DiffSharp implements its own computation graph and differentiation capabilities. It is tested on Linux and Windows and includes support for CUDA 11.
+
+The DiffSharp API is designed to be similar to [the PyTorch Python API](https://pytorch.org/docs/stable/index.html) through very similar
+naming and idioms, and where elements have similar names the PyTorch documentation can generally be used as a guide. There are some improvements and DiffSharp supports a richer gradient/differentiation API.
+
+DiffSharp uses [the incredible F# programming language](https://fsharp.org) for tensor programming. F# code is generally faster and more robust than equivalent Python code, while still being succinct and compact like Python, making it an ideal modern AI and machine learning implementation language. This allows fluent and productive code while focusing on the tensor programming domain.
+
+<iframe width="50%" src="https://www.youtube.com/embed/_QnbV6CAWXc" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+
+## Quick usage examples
+
+[![Binder](img/badge-binder.svg)](https://mybinder.org/v2/gh/diffsharp/diffsharp.github.io/master?filepath={{fsdocs-source-basename}}.ipynb)&emsp;
+[![Script](img/badge-script.svg)]({{fsdocs-source-basename}}.fsx)&emsp;
+[![Script](img/badge-notebook.svg)]({{fsdocs-source-basename}}.ipynb)
+
+You can execute this page as an interactive notebook running in your browser, or download it as a script or .NET Interactive Jupyter notebook, using the buttons on the top of each documentation page. If using Visual Studio Code you can download, edit and execute these notebooks using [the .NET Interactive Notebooks for VS Code](https://marketplace.visualstudio.com/items?itemName=ms-dotnettools.dotnet-interactive-vscode).
+
+First reference the package:
+
+    #r "nuget: DiffSharp-lite,{{fsdocs-package-version}}"
+
+or for libtorch support:
+
+    #r "nuget: DiffSharp-cpu,{{fsdocs-package-version}}"
+*)
 
 open DiffSharp
 
@@ -162,40 +146,31 @@ print $"Validation loss: {validLoss/validSet.length}"
 
 (**
 
-Numerous other model definition and gradient/training patterns are supported, see
-the [examples](https://github.com/DiffSharp/DiffSharp/tree/dev/examples) directory.
+Numerous other model definition and gradient/training patterns are supported, see [examples](https://github.com/DiffSharp/DiffSharp/tree/dev/examples).
 
-Current features and roadmap
-----------------------------
+## Current features and roadmap
 
 **The library and documentation are undergoing development.**
 
 The primary features of DiffSharp 1.0 are:
 
-- A tensor programming model for F#.
+- A tensor programming model for F#
 
-- A reference backend for correctness testing.
+- A reference backend for correctness testing
 
-- [PyTorch](https://pytorch.org/) backend for CUDA support and highly optimized native tensor operations.
+- [PyTorch](https://pytorch.org/) backend for CUDA support and highly optimized native tensor operations
 
-- Nested differentiation for tensors, supporting forward and reverse AD, or any combination thereof, up to any level.
+- Nested differentiation for tensors, supporting forward and reverse modes, or any combination thereof, up to any level
 
-- Matrix-free Jacobian- and Hessian-vector products.
+- Common optimizers and model elements including convolutions
 
-- Common optimizers and model elements including convolutions.
+- Probability distributions
 
-- Probability distributions.
-
-More information
--------------------------
+## More information
 
 DiffSharp is developed by [Atılım Güneş Baydin](http://www.robots.ox.ac.uk/~gunes/), [Don Syme](https://www.microsoft.com/en-us/research/people/dsyme/)
-and other contributors, having started as a project supervised by [Barak Pearlmutter](https://scholar.google.com/citations?user=AxFrw0sAAAAJ&hl=en) and [Jeffrey Siskind](https://scholar.google.com/citations?user=CgSBtPYAAAAJ&hl=en). Please join us!
+and other contributors, having started as a project supervised by the automatic differentiation wizards [Barak Pearlmutter](https://scholar.google.com/citations?user=AxFrw0sAAAAJ&hl=en) and [Jeffrey Siskind](https://scholar.google.com/citations?user=CgSBtPYAAAAJ&hl=en). 
 
-If you are using DiffSharp, please raise any issues you might have [on GitHub](https://github.com/DiffSharp/DiffSharp).
-We also have a [Gitter chat room](https://gitter.im/DiffSharp/DiffSharp).
-If you would like to cite this library, please use the following information:
-
-_Baydin, A.G., Pearlmutter, B.A., Radul, A.A. and Siskind, J.M., 2017. Automatic differentiation in machine learning: a survey. The Journal of Machine Learning Research, 18(1), pp.5595-5637._ ([link](https://arxiv.org/abs/1502.05767))
+Please join us [on GitHub](https://github.com/DiffSharp/DiffSharp)!
 
 *)
