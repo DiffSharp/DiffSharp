@@ -123,7 +123,7 @@ dsharp.grad f (dsharp.tensor(1.83))
 (**
 Define a model and optimize it:
 *)
-
+(*** do-not-eval-file ***)
 open DiffSharp.Data
 open DiffSharp.Model
 open DiffSharp.Util

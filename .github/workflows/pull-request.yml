@@ -1,4 +1,4 @@
-name: Build/test/codecov Release
+name: Build/test Release
 
 on:
   pull_request:
@@ -20,7 +20,9 @@ jobs:
       run: dotnet restore
     - name: Install tool dependencies
       run: dotnet tool restore
-    - name: Build
+    - name: Build (Debug, for doc scripts)
+      run: dotnet build --configuration Debug --no-restore --verbosity normal
+    - name: Build (Release)
       run: dotnet build --configuration Release --no-restore --verbosity normal
     - name: Test
       run: dotnet test --configuration Release --no-restore --verbosity normal

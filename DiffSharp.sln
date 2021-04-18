@@ -25,10 +25,17 @@ Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "DiffSharp-lite", "bundles\D
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "docs", "docs", "{841AB16F-508E-4CEB-846C-0CCA056842B1}"
 	ProjectSection(SolutionItems) = preProject
+		docs\_template.fsx = docs\_template.fsx
 		docs\_template.html = docs\_template.html
+		docs\_template.ipynb = docs\_template.ipynb
 		docs\api-overview.fsx = docs\api-overview.fsx
-		docs\getting-started-torch.fsx = docs\getting-started-torch.fsx
+		docs\documentation-extensions.fsx = docs\documentation-extensions.fsx
+		docs\favicon.ico = docs\favicon.ico
+		docs\getting-started-libtorch.fsx = docs\getting-started-libtorch.fsx
+		docs\getting-started-overview.fsx = docs\getting-started-overview.fsx
+		docs\getting-started-topic1.fsx = docs\getting-started-topic1.fsx
 		docs\index.fsx = docs\index.fsx
+		docs\README.md = docs\README.md
 	EndProjectSection
 EndProject
 Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "DiffSharp.Benchmarks", "tests\DiffSharp.Benchmarks\DiffSharp.Benchmarks.fsproj", "{0F8FF92F-4934-46D3-A1D0-D6FD2E49B705}"
