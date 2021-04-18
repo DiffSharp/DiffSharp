@@ -30,7 +30,7 @@ jobs:
         REPO_COMMIT_AUTHOR_EMAIL=$(git show -s --pretty=format:"%ce")
         REPO_COMMIT_MESSAGE=$(git show -s --pretty=format:"%s")
       run: >
-        dotnet coveralls
+        dotnet csmacnz.Coveralls
         --opencover -i tests/DiffSharp.Tests/coverage.opencover.xml
         --useRelativePaths
         --repoToken ${{ secrets.COVERALLS_REPO_TOKEN }}
