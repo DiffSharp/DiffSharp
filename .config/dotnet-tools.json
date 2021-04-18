@@ -11,7 +11,7 @@
     "coveralls.net": {
       "version": "3.0.0",
       "commands": [
-        "csmacnz.Coveralls"
+        "coveralls"
       ]
     }
 
