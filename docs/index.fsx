@@ -58,11 +58,11 @@ DiffSharp uses [the incredible F# programming language](https://fsharp.org) for 
 
 ## Quick usage examples
 
-[![Binder](img/badge-binder.svg)](https://mybinder.org/v2/gh/diffsharp/diffsharp.github.io/master?filepath={{fsdocs-source-basename}}.ipynb)&emsp;
-[![Script](img/badge-script.svg)]({{fsdocs-source-basename}}.fsx)&emsp;
-[![Script](img/badge-notebook.svg)]({{fsdocs-source-basename}}.ipynb)
+You can execute this page as an interactive notebook running in your browser, or download it as a script or .NET Interactive Jupyter notebook, using the buttons [![Binder](img/badge-binder.svg)](https://mybinder.org/v2/gh/diffsharp/diffsharp.github.io/master?filepath={{fsdocs-source-basename}}.ipynb) 
+[![Script](img/badge-script.svg)]({{fsdocs-source-basename}}.fsx) 
+[![Script](img/badge-notebook.svg)]({{fsdocs-source-basename}}.ipynb) on the top of each documentation page. 
 
-You can execute this page as an interactive notebook running in your browser, or download it as a script or .NET Interactive Jupyter notebook, using the buttons on the top of each documentation page. If using Visual Studio Code you can download, edit and execute these notebooks using [the .NET Interactive Notebooks for VS Code](https://marketplace.visualstudio.com/items?itemName=ms-dotnettools.dotnet-interactive-vscode).
+If using Visual Studio Code you can download, edit and execute these notebooks using [the .NET Interactive Notebooks for VS Code](https://marketplace.visualstudio.com/items?itemName=ms-dotnettools.dotnet-interactive-vscode).
 
 First reference the package:
 
@@ -100,9 +100,9 @@ t3.conv2d(t4)
 Take the gradient of a vector-to-scalar function:
 *)
 
-let f (x: Tensor) = sin x.[0] + cos x.[1]
+let f (x: Tensor) = x.exp().sum()
 
-dsharp.grad f (dsharp.tensor(1.83))
+dsharp.grad f (dsharp.tensor [1.2, 1.3])
 
 (**
 Define a model and optimize it:
