@@ -129,7 +129,7 @@ let lr = dsharp.tensor(0.001)
 let optimizer = Adam(model, lr=lr)
 
 for epoch = 1 to epochs do
-    let batches = trainLoader.epoch() |> Seq.truncate numBatches
+    let batches = trainLoader.epoch(numBatches)
     for i, x, _ in batches do
         model.reverseDiff()
         let l = model.loss(x)
