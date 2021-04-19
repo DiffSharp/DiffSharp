@@ -57,12 +57,15 @@ type DataLoader(dataset:Dataset, batchSize:int, ?shuffle:bool, ?dropLast:bool, ?
     let targetBackend = defaultArg targetBackend backend
     let datalength = if dropLast then batchSize*(dataset.length/batchSize) else dataset.length
     member d.length = ((float datalength)/(float batchSize)) |> ceil |> int
-    member d.epoch() =
+    member d.epoch(?numBatches:int) =
+        let numBatches = defaultArg numBatches d.length
+        if numBatches < 1 || numBatches > d.length then failwithf "Expecting 1 <= numBatches (%A) <= %A" numBatches d.length
         let indexer = if shuffle then Random.shuffledIndices datalength else id
         let indices = Seq.init datalength id |> Seq.map indexer
         let batchIndices = indices |> Seq.chunkBySize batchSize
         let batches = batchIndices |> Seq.map (Array.map dataset.item >> Array.unzip)
         batches |> Seq.mapi (fun i (data, target) -> i, data |> dsharp.stack |> dsharp.move(dtype, device, backend), target |> dsharp.stack |> dsharp.move(targetDtype, targetDevice, targetBackend))
+        |> Seq.truncate numBatches
     member d.batch() = let _, data, target = d.epoch() |> Seq.head in data, target
 
 
