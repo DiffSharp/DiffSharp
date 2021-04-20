@@ -55,6 +55,17 @@ type Random() =
     /// Samples a random value from the normal distribution with the given mean and standard deviation.
     static member Normal(mean, stddev) = mean + Random.Normal() * stddev
 
+    /// Samples a double value in the range [0, 1)
+    static member Double() = rnd.NextDouble()
+
+    /// Samples a double value in the given range [low, high)
+    static member Double(low, high) = 
+        if high <= low then failwithf "Expecting high > low"
+        low + rnd.NextDouble() * (high-low)
+
+    /// Samples a non-negative random integer
+    static member Integer() = rnd.Next()
+
     /// Samples a random integer in the given range [low, high).
     static member Integer(low, high) = rnd.Next(low, high)
 
@@ -88,7 +99,13 @@ type Random() =
     static member Bernoulli() = Random.Bernoulli(0.5)
 
     /// Returns a universally unique identifier (UUID) string
-    static member UUID() = System.Guid.NewGuid().ToString()
+    // https://en.wikipedia.org/wiki/Universally_unique_identifier
+    static member UUID() = 
+        // We don't use System.Guid.NewGuid().ToString() because it relies on a separate randomness source whose seed we cannot control through System.Random(seed)
+        let bytes = Array.zeroCreate (sizeof<Guid>)
+        rnd.NextBytes(bytes)
+        let guid = new Guid(bytes)
+        guid.ToString()
 
     /// Returns an array that is a randomly-shuffled version of the given array, using the Durstenfeld/Knuth shuffle.
     static member Shuffle(array:_[]) =
