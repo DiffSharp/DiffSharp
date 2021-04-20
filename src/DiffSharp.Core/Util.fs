@@ -60,7 +60,7 @@ type Random() =
 
     /// Samples a double value in the given range [low, high)
     static member Double(low, high) = 
-        if high <= low then failwithf "Expecting high > low"
+        if high < low then failwithf "Expecting high >= low"
         low + rnd.NextDouble() * (high-low)
 
     /// Samples a non-negative random integer
