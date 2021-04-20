@@ -34,6 +34,7 @@ RUN apt-get update \
         libstdc++6 \
         zlib1g \
         curl \
+        git \
     && rm -rf /var/lib/apt/lists/*
 
 # When updating the SDK version, the sha512 value a few lines down must also be updated.
@@ -42,31 +43,37 @@ RUN curl -SL --output dotnet.tar.gz https://dotnetcli.azureedge.net/dotnet/Sdk/$
     && dotnet_sha512='01ed59f236184987405673d24940d55ce29d830e7dbbc19556fdc03893039e6046712de6f901dc9911047a0dee4fd15319b7e94f8a31df6b981fa35bd93d9838' \
     && echo "$dotnet_sha512 dotnet.tar.gz" | sha512sum -c - \
     && mkdir -p /usr/share/dotnet \
-    && tar -C /usr/share/dotnet -oxzf dotnet.tar.gz ./packs ./sdk ./templates ./LICENSE.txt ./ThirdPartyNotices.txt \
+    && tar -ozxf dotnet.tar.gz -C /usr/share/dotnet \
     && rm dotnet.tar.gz \
+    && ln -s /usr/share/dotnet/dotnet /usr/bin/dotnet \
     # Trigger first run experience by running arbitrary cmd
     && dotnet help
 
-# Copy notebooks
-COPY ./ ${HOME}/notebooks/
-
-# Copy package sources
-COPY ./NuGet.config ${HOME}/nuget.config
-
-RUN chown -R ${NB_UID} ${HOME}
-USER ${USER}
-
-#Install nteract 
-RUN pip install nteract_on_jupyter
+# Clone and build DiffSharp-cpu bundle to get the latest TorchSharp and libtorch-cpu packages downloaded and cached by nuget within the Docker image
+# This the makes user experience faster when running #r "nuget: DiffSharp-cpu
+RUN git clone --depth 1 https://github.com/DiffSharp/DiffSharp.git \
+    && dotnet build DiffSharp/bundles/DiffSharp-cpu
 
 # Install lastest build from master branch of Microsoft.DotNet.Interactive
-RUN dotnet tool install -g Microsoft.dotnet-interactive --add-source "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-tools/nuget/v3/index.json"
+RUN dotnet tool install -g --add-source "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-tools/nuget/v3/index.json" Microsoft.dotnet-interactive
 
 #latest stable from nuget.org
 #RUN dotnet tool install -g Microsoft.dotnet-interactive --add-source "https://api.nuget.org/v3/index.json"
 
 ENV PATH="${PATH}:${HOME}/.dotnet/tools"
 RUN echo "$PATH"
+
+# Copy notebooks
+COPY ./ ${HOME}/notebooks/
+
+# Copy package sources
+# COPY ./NuGet.config ${HOME}/nuget.config
+
+RUN chown -R ${NB_UID} ${HOME}
+USER ${USER}
+
+#Install nteract 
+RUN pip install nteract_on_jupyter
 
 # Install kernel specs
 RUN dotnet interactive jupyter install
