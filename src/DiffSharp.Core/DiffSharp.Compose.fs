@@ -245,10 +245,10 @@ type dsharp with
     static member pad(paddings:seq<int>) = fun (a:Tensor) -> a.pad(paddings)
 
     /// <summary>TBD</summary>
-    static member toImage(?pixelMin:double, ?pixelMax:double, ?normalize:bool) = fun (a:Tensor) -> a.toImage(?pixelMin=pixelMin, ?pixelMax=pixelMax, ?normalize=normalize)
+    static member toImage(?pixelMin:double, ?pixelMax:double, ?normalize:bool, ?gridCols:int) = fun (a:Tensor) -> a.toImage(?pixelMin=pixelMin, ?pixelMax=pixelMax, ?normalize=normalize, ?gridCols=gridCols)
 
     /// <summary>TBD</summary>
-    static member toImageString(?pixelMin:double, ?pixelMax:double, ?normalize:bool, ?asciiPalette:string) = fun (a:Tensor) -> a.toImageString(?pixelMin=pixelMin, ?pixelMax=pixelMax, ?normalize=normalize, ?asciiPalette=asciiPalette)
+    static member toImageString(?pixelMin:double, ?pixelMax:double, ?normalize:bool, ?gridCols:int, ?asciiPalette:string) = fun (a:Tensor) -> a.toImageString(?pixelMin=pixelMin, ?pixelMax=pixelMax, ?normalize=normalize, ?gridCols=gridCols, ?asciiPalette=asciiPalette)
 
     /// <summary>TBD</summary>
     static member cast(dtype:Dtype) = fun (a:Tensor) -> a.cast(dtype)
