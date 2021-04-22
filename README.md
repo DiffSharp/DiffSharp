@@ -19,7 +19,7 @@ DiffSharp is normally used from an F# Jupyter notebook.  You can simply open exa
 
 * [index.ipynb](https://mybinder.org/v2/gh/diffsharp/diffsharp.github.io/master?filepath=index.ipynb)
 
-* [getting-started-torch.ipynb](https://mybinder.org/v2/gh/diffsharp/diffsharp.github.io/master?filepath=getting-started-torch.ipynb)
+* [getting-started-libtorch.ipynb](https://mybinder.org/v2/gh/diffsharp/diffsharp.github.io/master?filepath=getting-started-libtorch.ipynb)
 
 To use locally in [Visual Studio Code](https://code.visualstudio.com/):
 
@@ -43,7 +43,7 @@ You can also use DiffSharp from a script or an application.  Here are some examp
 
 * [docs/index.fsx](http://diffsharp.github.io/index.fsx)
 
-* [docs/getting-started-torch.fsx](http://diffsharp.github.io/getting-started-torch.fsx)
+* [docs/getting-started-libtorch.fsx](http://diffsharp.github.io/getting-started-libtorch.fsx)
 
 ## Available packages and backends
 
