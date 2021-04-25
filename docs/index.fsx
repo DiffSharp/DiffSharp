@@ -31,7 +31,7 @@ It is designed for use in machine learning, probabilistic programming, optimizat
 
 🗹 F# for robust functional programming 
 
-🗹 PyTorch familiar naming and idioms, efficient libtorch C++ tensors
+🗹 PyTorch familiar naming and idioms, efficient LibTorch C++ tensors
 
 🗹 Linux, Windows and CUDA supported
 
@@ -50,7 +50,7 @@ With DiffSharp, you can compute higher-order derivatives efficiently and differe
 
 ## Practical, Familiar and Efficient
 
-DiffSharp comes with a [libtorch](https://pytorch.org/cppdocs/) backend, using the same C++ and CUDA implementations for tensor computations that power [PyTorch](https://pytorch.org/). On top of these raw tensors (libtorch's ATen, excluding autograd), DiffSharp implements its own computation graph and differentiation capabilities. It is tested on Linux and Windows and includes support for CUDA 11.
+DiffSharp comes with a [LibTorch](https://pytorch.org/cppdocs/) backend, using the same C++ and CUDA implementations for tensor computations that power [PyTorch](https://pytorch.org/). On top of these raw tensors (LibTorch's ATen, excluding autograd), DiffSharp implements its own computation graph and differentiation capabilities. It is tested on Linux and Windows and includes support for CUDA 11.
 
 The DiffSharp API is designed to be similar to [the PyTorch Python API](https://pytorch.org/docs/stable/index.html) through very similar
 naming and idioms, and where elements have similar names the PyTorch documentation can generally be used as a guide. There are some improvements and DiffSharp supports a richer gradient/differentiation API.
@@ -69,11 +69,11 @@ If using Visual Studio Code you can download, edit and execute these notebooks u
 
 First reference the package:
 
-    #r "nuget: DiffSharp-lite,{{fsdocs-package-version}}"
+    #r "nuget: DiffSharp-lite, {{fsdocs-package-version}}"
 
-or for libtorch support:
+or for LibTorch support:
 
-    #r "nuget: DiffSharp-cpu,{{fsdocs-package-version}}"
+    #r "nuget: DiffSharp-cpu, {{fsdocs-package-version}}"
 *)
 
 open DiffSharp
@@ -105,7 +105,7 @@ Take the gradient of a vector-to-scalar function:
 
 let f (x: Tensor) = x.exp().sum()
 
-dsharp.grad f (dsharp.tensor [1.2, 1.3])
+dsharp.grad f (dsharp.tensor([1.8, 2.5]))
 
 (**
 Define a model and optimize it:

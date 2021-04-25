@@ -10,25 +10,9 @@
 (*** condition: ipynb ***)
 #if IPYNB
 #r "nuget: DiffSharp-cpu,{{fsdocs-package-version}}"
-#endif // IPYNB
 
-(*** condition: fsx ***)
-#if FSX
-// This is a workaround for https://github.com/dotnet/fsharp/issues/10136, necessary in F# scripts and .NET Interactive
-// Make sure to update the parts of the native load path related to version number ([cpu](https://www.nuget.org/packages/libtorch-cpu/),[gpu](https://www.nuget.org/packages/libtorch-cuda-11.1-win-x64/) and cpu/gpu depending on your backend choice.
-System.Runtime.InteropServices.NativeLibrary.Load(let path1 = System.IO.Path.GetDirectoryName(typeof<DiffSharp.dsharp>.Assembly.Location) in if System.Runtime.InteropServices.RuntimeInformation.IsOSPlatform(System.Runtime.InteropServices.OSPlatform.Linux) then path1 + "/../../../../libtorch-cpu/1.8.0.7/runtimes/linux-x64/native/libtorch.so" else path1 + "/../../../../libtorch-cpu/1.8.0.7/runtimes/win-x64/native/torch_cpu.dll")
-#r "nuget: DiffSharp-cpu,{{fsdocs-package-version}}"
-#endif // FSX
-
-(*** condition: ipynb ***)
-#if IPYNB
-// This is a workaround for https://github.com/dotnet/fsharp/issues/10136, necessary in F# scripts and .NET Interactive
-// Make sure to update the parts of the native load path related to version number ([cpu](https://www.nuget.org/packages/libtorch-cpu/),[gpu](https://www.nuget.org/packages/libtorch-cuda-11.1-win-x64/) and cpu/gpu depending on your backend choice.
-System.Runtime.InteropServices.NativeLibrary.Load(let path1 = System.IO.Path.GetDirectoryName(typeof<DiffSharp.dsharp>.Assembly.Location) in if System.Runtime.InteropServices.RuntimeInformation.IsOSPlatform(System.Runtime.InteropServices.OSPlatform.Linux) then path1 + "/../../../../libtorch-cpu/1.8.0.7/runtimes/linux-x64/native/libtorch.so" else path1 + "/../../../../libtorch-cpu/1.8.0.7/runtimes/win-x64/native/torch_cpu.dll")
-
-// Set up formatting for notebooks
 Formatter.SetPreferredMimeTypeFor(typeof<obj>, "text/plain")
-Formatter.Register(fun x writer -> fprintfn writer "%120A" x )
+Formatter.Register(fun (x:obj) (writer: TextWriter) -> fprintfn writer "%120A" x )
 #endif // IPYNB
 
 (**
@@ -36,41 +20,78 @@ Formatter.Register(fun x writer -> fprintfn writer "%120A" x )
 [![Script](img/badge-script.svg)]({{fsdocs-source-basename}}.fsx)&emsp;
 [![Script](img/badge-notebook.svg)]({{fsdocs-source-basename}}.ipynb)
 
-Getting Started with DiffSharp and Torch
-=========
+# Installing
 
-To use the Torch backend for DiffSharp, reference one of
+DiffSharp runs on [dotnet](https://dotnet.microsoft.com/), a cross-platform, open source platform supported on Linux, macOS, and Windows.
 
-* [`DiffSharp-lite`](https://www.nuget.org/packages/DiffSharp-lite) - This includes the DiffSharp Torch backend but no LibTorch
-  binaries.  You will have to add an explicit load of the relevant native library, e.g.
 
-      open System.Runtime.InteropServices
-      NativeLibrary.Load("/home/gunes/anaconda3/lib/python3.8/site-packages/torch/lib/libtorch.so")
+## Packages
 
-* [`DiffSharp-cpu`](https://www.nuget.org/packages/DiffSharp-cpu) - This includes the Torch backend using CPU only.
+We provide several package bundles for a variety of use cases.
 
-* [`DiffSharp-cuda-linux`](https://www.nuget.org/packages/DiffSharp-cuda-linux), [`DiffSharp-cuda-windows`](https://www.nuget.org/packages/DiffSharp-cuda-windows) - These include the Torch CPU/GPU backend for Linux and Windows respectively. Large download.
+* [`DiffSharp-cpu`](https://www.nuget.org/packages/DiffSharp-cpu) - Includes LibTorch CPU binaries for Linux and Windows.
+* [`DiffSharp-cuda-linux`](https://www.nuget.org/packages/DiffSharp-cuda-linux) and [`DiffSharp-cuda-windows`](https://www.nuget.org/packages/DiffSharp-cuda-windows) - Include LibTorch CPU and CUDA binaries for Linux and Windows. Large download.
+* [`DiffSharp-lite`](https://www.nuget.org/packages/DiffSharp-lite) - Includes the LibTorch backend but not the LibTorch binaries. You can combine this with existing local native binaries of LibTorch installed through other means (for example, by installing [PyTorch](https://pytorch.org/) using a Python package manager). You will have to add an explicit load of the relevant native library, for example:
+
+        open System.Runtime.InteropServices
+        NativeLibrary.Load("/home/gunes/anaconda3/lib/python3.8/site-packages/torch/lib/libtorch.so")
+
+## Backends and Devices
+
+DiffSharp currently provides two computation backends.
+
+* The `Torch` backend is the default, recommended, backend based on [LibTorch](https://pytorch.org/cppdocs/), using the same C++ and CUDA implementations for tensor computations that power [PyTorch](https://pytorch.org/). On top of these raw tensors (LibTorch's ATen, excluding autograd), DiffSharp implements its own computation graph and differentiation capabilities. This backend requires platform-specific binaries of LibTorch, which we provide and test on Linux and Windows.
+
+* The `Reference` backend is implemented purely in F# and can run on any hardware platform where dotnet can run. This backend has reasonable performance for use cases dominated by scalar operations, and is not recommended for use cases involving large tensor operations (such as machine learning). This backend is always available.
+
+### Configuration
+
+Selection of the backend is done using `cref:M:DiffSharp.dsharp.config`.
+
+For example, the following selects the `Torch` backend with single precision tensors as the default tensor type and GPU (CUDA) execution.
 
 *)
-open DiffSharp
 
 open DiffSharp
 
-dsharp.config(backend=Backend.Torch)
-
-let t = dsharp.tensor [ 0 .. 10 ]
+dsharp.config(dtype=Dtype.Float32, device=Device.GPU, backend=Backend.Torch)
 
 (**
-Now examine the device and backend:
+The following selects the `Reference` backend.
 *)
+
+dsharp.config(backend=Backend.Reference)
+
+(**
+A tensor's backend and device can be inspected as follows.
+
+*)
+let t = dsharp.tensor [ 0 .. 10 ]
 
 let device = t.device
 let backend = t.backend
 
+(**
+Tensors can be moved between devices (for example from CPU to GPU) using `cref:M:DiffSharp.Tensor.move(DiffSharp.Device)`. For example:
+*)
+let t2 = t.move(Device.GPU)
 
 (**
-To move a tensor to the GPU use the following:
+## Using the DiffSharp Package
 
-    let t2 = t.move(Device.GPU)
+### Interactive Notebooks and Scripts
 
+You can use DiffSharp in [dotnet interactive](https://github.com/dotnet/interactive) notebooks in [Visual Studio Code](https://code.visualstudio.com/) or [Jupyter](https://jupyter.org/), or in F# scripts (`.fsx` files), by referencing the package as follows:
+
+    #r "nuget: DiffSharp-cpu, {{fsdocs-package-version}}"
+    open DiffSharp
+
+### Dotnet Applications
+
+You can add DiffSharp to your dotnet application using the dotnet command-line interface (CLI).
+
+    dotnet new console -lang "F#" -o src/app
+    cd src/app
+    dotnet add package --prerelease DiffSharp-cpu
+    dotnet run
 *)
