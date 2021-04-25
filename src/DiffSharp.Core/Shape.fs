@@ -27,12 +27,12 @@ module rec Shape =
 
     /// Checks if the given shapes are appropriate for a stack operation and returns information related to the resulting shape.
     let checkCanStack (shapes:Shape[]) (dim: int) =
-        if not (Seq.allEqual shapes) then failwith "Cannot stack Tensors with different shapes"
+        if not (Seq.allEqual shapes) then failwithf "Cannot stack tensors with different shapes: %A" shapes
         let n = shapes.Length
-        if n = 0 then failwithf "Expecting a non-empty sequence of Tensors"
+        if n = 0 then failwithf "Expecting a non-empty sequence of tensors"
         let shape = shapes.[0]
-        if dim < 0 || dim > shape.Length then invalidArg "dim" "invalid dimension"
-        if dim < 0 || dim > n then invalidArg "dim" "invalid dimension"
+        if dim < 0 || dim > shape.Length then failwithf "Expecting 0 <= dim (%A) <= %A" dim shape.Length
+        if dim < 0 || dim > n then failwithf "Expecting 0 <= dim (%A) <= %A" dim n
         let shape1 = shape.[0..dim-1]
         let shape2 = shape.[dim..]
         let outputShape = [| yield! shape1; yield n; yield! shape2 |]

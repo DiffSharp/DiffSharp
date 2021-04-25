@@ -511,6 +511,33 @@ type TestDiffSharp () =
         Assert.True(hCorrect.allclose(nh4, 0.1))
 
     [<Test>]
+    member this.TestHessianNotTwiceDifferentiable () =
+        let x = dsharp.tensor([1.5, 2.5])
+        let f (x:Tensor) = x.sum() // Not twice differentiable
+        let fx1, h1 = dsharp.fhessian f x
+        let fx2, h2 = dsharp.fh f x
+        let h3 = dsharp.hessian f x
+        let h4 = dsharp.h f x
+        let nfx1, nh1 = dsharp.numfhessian 1e-3 f x
+        let nfx2, nh2 = dsharp.numfh 1e-3 f x
+        let nh3 = dsharp.numhessian 1e-3 f x
+        let nh4 = dsharp.numh 1e-3 f x
+        let fxCorrect = f x
+        let hCorrect = dsharp.zeros([2;2]) // Mathematically correct result for a function that is not twice differentiable, not achievable via autodiff
+        Assert.CheckEqual(fxCorrect, fx1)
+        Assert.CheckEqual(fxCorrect, nfx1)
+        Assert.CheckEqual(fxCorrect, fx2)
+        Assert.CheckEqual(fxCorrect, nfx2)
+        Assert.CheckEqual(hCorrect, h1)
+        Assert.CheckEqual(hCorrect, h2)
+        Assert.CheckEqual(hCorrect, h3)
+        Assert.CheckEqual(hCorrect, h4)
+        Assert.True(hCorrect.allclose(nh1, 0.1))
+        Assert.True(hCorrect.allclose(nh2, 0.1))
+        Assert.True(hCorrect.allclose(nh3, 0.1))
+        Assert.True(hCorrect.allclose(nh4, 0.1))
+
+    [<Test>]
     member this.TestLaplacian () =
         let x = dsharp.tensor([1.5, 2.5])
         let fx, l = dsharp.flaplacian rosenbrock x
@@ -657,3 +684,14 @@ type TestDiffSharp () =
 
         Assert.CheckEqual(y1, y2)
         Assert.CheckEqual(y1, y3)
+
+    [<Test>]
+    member _.TestReverseDiffInit () =
+        // Reverse derivative is initialized to an empty tensor (data: [], shape: [|0|], dim: 1)
+        let x = dsharp.tensor(1.).reverseDiff()
+        Assert.AreEqual(x.derivative.shape, [|0|])
+
+        // After propagation reverse derivative is a scalar tensor (shape: [||], dim: 0])
+        let y = x.exp()
+        y.reverse()
+        Assert.AreEqual(x.derivative.shape, [||])
