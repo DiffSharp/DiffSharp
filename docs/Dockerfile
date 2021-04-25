@@ -49,15 +49,6 @@ RUN curl -SL --output dotnet.tar.gz https://dotnetcli.azureedge.net/dotnet/Sdk/$
     # Trigger first run experience by running arbitrary cmd
     && dotnet help
 
-# Install lastest build from master branch of Microsoft.DotNet.Interactive
-RUN dotnet tool install -g --add-source "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-tools/nuget/v3/index.json" Microsoft.dotnet-interactive
-
-#latest stable from nuget.org
-#RUN dotnet tool install -g Microsoft.dotnet-interactive --add-source "https://api.nuget.org/v3/index.json"
-
-ENV PATH="${PATH}:${HOME}/.dotnet/tools"
-RUN echo "$PATH"
-
 # Copy notebooks
 COPY ./ ${HOME}/notebooks/
 
@@ -74,6 +65,15 @@ RUN git clone --depth 1 https://github.com/DiffSharp/DiffSharp.git \
 
 #Install nteract 
 RUN pip install nteract_on_jupyter
+
+# Install lastest build from master branch of Microsoft.DotNet.Interactive
+RUN dotnet tool install -g --add-source "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-tools/nuget/v3/index.json" Microsoft.dotnet-interactive
+
+#latest stable from nuget.org
+#RUN dotnet tool install -g Microsoft.dotnet-interactive --add-source "https://api.nuget.org/v3/index.json"
+
+ENV PATH="${PATH}:${HOME}/.dotnet/tools"
+RUN echo "$PATH"
 
 # Install kernel specs
 RUN dotnet interactive jupyter install
