@@ -2,14 +2,15 @@
 #I "../tests/DiffSharp.Tests/bin/Debug/net5.0"
 #r "DiffSharp.Core.dll"
 #r "DiffSharp.Data.dll"
+#r "DiffSharp.Backends.Reference.dll"
 #r "DiffSharp.Backends.Torch.dll"
 (*** condition: fsx ***)
 #if FSX
-#r "nuget: DiffSharp-cpu,{{fsdocs-package-version}}"
+#r "nuget: DiffSharp-lite,{{fsdocs-package-version}}"
 #endif // FSX
 (*** condition: ipynb ***)
 #if IPYNB
-#r "nuget: DiffSharp-cpu,{{fsdocs-package-version}}"
+#r "nuget: DiffSharp-lite,{{fsdocs-package-version}}"
 
 Formatter.SetPreferredMimeTypeFor(typeof<obj>, "text/plain")
 Formatter.Register(fun (x:obj) (writer: TextWriter) -> fprintfn writer "%120A" x )

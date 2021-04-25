@@ -3,6 +3,7 @@
 #r "DiffSharp.Core.dll"
 #r "DiffSharp.Data.dll"
 #r "DiffSharp.Backends.Reference.dll"
+#r "DiffSharp.Backends.Torch.dll"
 (*** condition: fsx ***)
 #if FSX
 #r "nuget: DiffSharp-lite,{{fsdocs-package-version}}"
