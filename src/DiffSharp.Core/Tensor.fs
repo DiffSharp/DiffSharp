@@ -234,7 +234,7 @@ type Tensor =
     /// </remarks>
     member t.reverseDiff(?tag:uint32) = 
         let tag = defaultArg tag GlobalNestingLevel.Current
-        TensorR(t, ref (t.zeroLike()), NewT, ref 0u, tag)
+        TensorR(t, ref (t.zerosLike([0])), NewT, ref 0u, tag)
 
     ///  Returns the input tensor but with any support for automatic differentiation removed.
     member t.noDiff() = t.primalDeep
@@ -324,7 +324,7 @@ type Tensor =
 
     /// Returns the tensor after standardization (z-score normalization)
     member t.standardize() =
-        let stddev = t.stddev()
+        let stddev:Tensor = t.stddev()
         if stddev = t.zeroLike() || stddev.hasnan() then
             t.zerosLike()
         else
@@ -341,7 +341,6 @@ type Tensor =
             sprintf "TensorR %A %s" t.shape c.Name
 
     /// A debugging routine to compute the parents of a tensor involved in reverse-mode automatic differentiation
-
     member t.parents() =
         let mutable p = []
         let rec parents (t:obj) d =
@@ -703,7 +702,7 @@ type Tensor =
                 TensorF(fp,fd,at)
             | TensorR(ap,_,_,_,at) ->
                 let fp = ap.expand(newShape)
-                TensorR(fp, ref (a.zeroLike()), ExpandT(a), ref 0u, at)
+                TensorR(fp, ref (a.zerosLike([0])), ExpandT(a), ref 0u, at)
 
     /// <summary>Expand this tensor to the same size as the other.</summary>
     member a.expandAs(b:Tensor) = a.expand(b.shape)
@@ -788,7 +787,7 @@ type Tensor =
         match t with
         | TensorC(ap) -> TensorC(ap.GetSlice(fullBounds))
         | TensorF(ap,ad,at) -> TensorF(ap.GetSlice(fullBounds), ad.GetSlice(fullBounds), at)
-        | TensorR(ap,_,_,_,at) -> TensorR(ap.GetSlice(fullBounds), ref (ap.zeroLike()), SliceT(t, fullBounds), ref 0u, at)
+        | TensorR(ap,_,_,_,at) -> TensorR(ap.GetSlice(fullBounds), ref (ap.zerosLike([0])), SliceT(t, fullBounds), ref 0u, at)
 
     /// <summary>Get the item at the given index as a scalar tensor.</summary>
     member t.Item
@@ -857,7 +856,7 @@ type Tensor =
         | TensorR(_,_,_,_,at) ->
             let ap = tensors |> Seq.map (fun t -> t.primal)
             let fp = Tensor.stack(ap,dim=dim)
-            TensorR(fp, ref (fp.zeroLike()), StackTs(tensors, dim), ref 0u, at)
+            TensorR(fp, ref (fp.zerosLike([0])), StackTs(tensors, dim), ref 0u, at)
 
     /// <summary>Removes a tensor dimension.</summary>
     /// <param name="dim">The dimension to remove, defaults to 0.</param>
@@ -868,7 +867,7 @@ type Tensor =
         match a with
         | TensorC(ap) -> ap.UnstackT(dim) |> Array.map TensorC
         | TensorF(ap,ad,at) -> Array.map2 (fun p d -> TensorF(p,d,at)) (ap.unstack(dim)) (ad.unstack(dim))
-        | TensorR(ap,_,_,_,at) -> Array.mapi (fun i p -> TensorR(p, ref (p.zeroLike()), UnstackT(a, dim, i), ref 0u, at)) (ap.unstack(dim))
+        | TensorR(ap,_,_,_,at) -> Array.mapi (fun i p -> TensorR(p, ref (p.zerosLike([0])), UnstackT(a, dim, i), ref 0u, at)) (ap.unstack(dim))
 
     /// <summary>Concatenates the given sequence of seq tensors in the given dimension.</summary>
     /// <remarks>All tensors must either have the same shape (except in the concatenating dimension) or be empty.</remarks>
@@ -893,7 +892,7 @@ type Tensor =
         | TensorR(_,_,_,_,at) ->
             let ap = tensors |> Seq.map (fun t -> t.primal)
             let fp = Tensor.cat(ap, dim=dim)
-            TensorR(fp, ref (fp.zeroLike()), CatTs(tensors, dim), ref 0u, at)
+            TensorR(fp, ref (fp.zerosLike([0])), CatTs(tensors, dim), ref 0u, at)
 
     /// <summary>Splits the tensor into chunks. Each chunk is a view of the original tensor.</summary>
     /// <param name="sizes">List of sizes for each chunk</param>
@@ -904,7 +903,7 @@ type Tensor =
         match a with
         | TensorC(ap) -> ap.SplitT(sizes, dim=dim) |> Array.map TensorC
         | TensorF(ap,ad,at) -> Array.map2 (fun p d -> TensorF(p,d,at)) (ap.split(sizes)) (ad.split(sizes, dim=dim))
-        | TensorR(ap,_,_,_,at) -> Array.mapi (fun i p -> TensorR(p, ref (p.zeroLike()), SplitT(a, sizes, dim, i), ref 0u, at)) (ap.split(sizes, dim=dim))
+        | TensorR(ap,_,_,_,at) -> Array.mapi (fun i p -> TensorR(p, ref (p.zerosLike([0])), SplitT(a, sizes, dim, i), ref 0u, at)) (ap.split(sizes, dim=dim))
 
     /// <summary>Pipeline the tensor into a function.</summary>
     static member inline (-->) (t:Tensor, f:Tensor -> ^a) = f t
@@ -913,27 +912,27 @@ type Tensor =
         match a with
         | TensorC(ap)           -> TensorC(fRaw(ap))
         | TensorF(ap,ad,at)    -> let fp = fTensor(ap) in TensorF(fp, dfFwd(ap,ad,fp), at)
-        | TensorR(ap,_,_,_,at) -> let fp = fTensor(ap) in TensorR(fp, ref (a.zeroLike()), dfRev(a), ref 0u, at)
+        | TensorR(ap,_,_,_,at) -> let fp = fTensor(ap) in TensorR(fp, ref (a.zerosLike([0])), dfRev(a), ref 0u, at)
 
     static member inline internal OpBinary(a, b, fRaw: RawTensor * RawTensor -> RawTensor, fTensor, dfFwdTT, dfFwdTC, dfFwdCT, dfRevTT, dfRevTC, dfRevCT) =
         match a, b with
         | TensorC(ap),          TensorC(bp)                     -> TensorC(fRaw(ap, bp))
         | TensorC(_),           TensorF(bp,bd,bt)               -> let fp = fTensor(a,bp)  in TensorF(fp, dfFwdCT(bp,bd,fp), bt)
-        | TensorC(_),           TensorR(bp,_,_,_,bt)            -> let fp = fTensor(a,bp)  in TensorR(fp, ref (a.zeroLike()), dfRevCT(a,b), ref 0u, bt)
+        | TensorC(_),           TensorR(bp,_,_,_,bt)            -> let fp = fTensor(a,bp)  in TensorR(fp, ref (a.zerosLike([0])), dfRevCT(a,b), ref 0u, bt)
         | TensorF(ap,ad,at),    TensorC(_)                      -> let fp = fTensor(ap,b)  in TensorF(fp, dfFwdTC(ap,ad,fp), at)
         | TensorF(ap,ad,at),    TensorF(bp,bd,bt)    when at=bt -> let fp = fTensor(ap,bp) in TensorF(fp, dfFwdTT(ap,ad,bp,bd,fp), at)
         | TensorF(ap,ad,at),    TensorF(_,_,bt)      when at>bt -> let fp = fTensor(ap,b)  in TensorF(fp, dfFwdTC(ap,ad,fp), at)
         | TensorF(_,_,at),      TensorF(bp,bd,bt)    when at<bt -> let fp = fTensor(a,bp)  in TensorF(fp, dfFwdCT(bp,bd,fp), bt)
         | TensorF(_,_,at),      TensorR(_,_,_,_,bt)  when at=bt -> failwith "Cannot have TensorF and TensorR in the same nesting level"
         | TensorF(ap,ad,at),    TensorR(_,_,_,_,bt)  when at>bt -> let fp = fTensor(ap,b)  in TensorF(fp, dfFwdTC(ap,ad,fp), at)
-        | TensorF(_,_,at),      TensorR(bp,_,_,_,bt) when at<bt -> let fp = fTensor(a,bp)  in TensorR(fp, ref (a.zeroLike()), dfRevCT(a,b), ref 0u, bt)
-        | TensorR(ap,_,_,_,at), TensorC(_)                      -> let fp = fTensor(ap,b)  in TensorR(fp, ref (a.zeroLike()), dfRevTC(a,b), ref 0u, at)
+        | TensorF(_,_,at),      TensorR(bp,_,_,_,bt) when at<bt -> let fp = fTensor(a,bp)  in TensorR(fp, ref (a.zerosLike([0])), dfRevCT(a,b), ref 0u, bt)
+        | TensorR(ap,_,_,_,at), TensorC(_)                      -> let fp = fTensor(ap,b)  in TensorR(fp, ref (a.zerosLike([0])), dfRevTC(a,b), ref 0u, at)
         | TensorR(_,_,_,_,at),  TensorF(_,_,bt)      when at=bt -> failwith "Cannot have TensorR and TensorF in the same nesting level"
-        | TensorR(ap,_,_,_,at), TensorF(_,_,bt)      when at>bt -> let fp = fTensor(ap,b) in TensorR(fp, ref (a.zeroLike()), dfRevTC(a,b), ref 0u, at)
+        | TensorR(ap,_,_,_,at), TensorF(_,_,bt)      when at>bt -> let fp = fTensor(ap,b) in TensorR(fp, ref (a.zerosLike([0])), dfRevTC(a,b), ref 0u, at)
         | TensorR(_,_,_,_,at),  TensorF(bp,bd,bt)    when at<bt -> let fp = fTensor(a,bp)  in TensorF(fp, dfFwdCT(bp,bd,fp), bt)
-        | TensorR(ap,_,_,_,at), TensorR(bp,_,_,_,bt) when at=bt -> let fp = fTensor(ap,bp) in TensorR(fp, ref (a.zeroLike()), dfRevTT(a,b), ref 0u, at)
-        | TensorR(ap,_,_,_,at), TensorR(_,_,_,_,bt)  when at>bt -> let fp = fTensor(ap,b)  in TensorR(fp, ref (a.zeroLike()), dfRevTC(a,b), ref 0u, at)
-        | TensorR(_,_,_,_,at),  TensorR(bp,_,_,_,bt) when at<bt -> let fp = fTensor(a,bp)  in TensorR(fp, ref (a.zeroLike()), dfRevCT(a,b), ref 0u, bt)
+        | TensorR(ap,_,_,_,at), TensorR(bp,_,_,_,bt) when at=bt -> let fp = fTensor(ap,bp) in TensorR(fp, ref (a.zerosLike([0])), dfRevTT(a,b), ref 0u, at)
+        | TensorR(ap,_,_,_,at), TensorR(_,_,_,_,bt)  when at>bt -> let fp = fTensor(ap,b)  in TensorR(fp, ref (a.zerosLike([0])), dfRevTC(a,b), ref 0u, at)
+        | TensorR(_,_,_,_,at),  TensorR(bp,_,_,_,bt) when at<bt -> let fp = fTensor(a,bp)  in TensorR(fp, ref (a.zerosLike([0])), dfRevCT(a,b), ref 0u, bt)
         | _ -> failwith "Unexpected combination of Tensors" // Won't happen, added for suppressing "incomplete matches" warning
 
     /// <summary>Each element of the tensor <paramref name="a" /> is added to each corresponding element of the tensor <paramref name="b" />. The resulting tensor is returned.</summary>
@@ -1723,7 +1722,7 @@ type Tensor =
         match a with
         | TensorC(ap)          -> let result, mask = ap.ClampT(lowTensor.primalRaw, highTensor.primalRaw), mask() in TensorC(result), mask
         | TensorF(ap,ad,at)    -> let result, mask = ap.clampWithMask(?low=low, ?high=high) in TensorF(result, ad * mask, at), mask
-        | TensorR(ap,_,_,_,at) -> let result, mask = ap.clampWithMask(?low=low, ?high=high) in TensorR(result, ref (a.zeroLike()), ClampT(a, mask), ref 0u, at), mask
+        | TensorR(ap,_,_,_,at) -> let result, mask = ap.clampWithMask(?low=low, ?high=high) in TensorR(result, ref (a.zerosLike([0])), ClampT(a, mask), ref 0u, at), mask
 
     /// <summary>Clamp all elements in input into the range [ low..high] and return a resulting tensor</summary>
     /// <param name="low">The lower-bound of the range to be clamped to.</param>
@@ -2141,7 +2140,7 @@ type Tensor =
         match a with
         | TensorC(ap)          -> let result, indices = ap.MaxPool1D(kernelSize, stride, padding) in TensorC(result), TensorC(indices)
         | TensorF(ap,ad,at)    -> let result, indices = ap.maxpool1di(kernelSize, stride, padding) in TensorF(result, ad.gather(dim=2, indices=indices), at), indices
-        | TensorR(ap,_,_,_,at) -> let result, indices = ap.maxpool1di(kernelSize, stride, padding) in TensorR(result, ref (a.zeroLike()), MaxPool1DT(a, indices, kernelSize), ref 0u, at), indices
+        | TensorR(ap,_,_,_,at) -> let result, indices = ap.maxpool1di(kernelSize, stride, padding) in TensorR(result, ref (a.zerosLike([0])), MaxPool1DT(a, indices, kernelSize), ref 0u, at), indices
 
     /// <summary>Applies a 1D max pooling over an input signal composed of several input planes.</summary>
     /// <param name="kernelSize">The size of the window to take a max over.</param>
@@ -2184,7 +2183,7 @@ type Tensor =
         match a with
         | TensorC(ap)          -> let result, indices = ap.MaxPool2D(kernelSizes, strides, paddings) in TensorC(result), TensorC(indices)
         | TensorF(ap,ad,at)    -> let result, indices = ap.maxpool2di(kernelSizes=kernelSizes, strides=strides, paddings=paddings) in TensorF(result, ad.flatten(startDim=2).gather(dim=2, indices=indices.flatten(startDim=2)).viewAs(indices), at), indices
-        | TensorR(ap,_,_,_,at) -> let result, indices = ap.maxpool2di(kernelSizes=kernelSizes, strides=strides, paddings=paddings) in TensorR(result, ref (a.zeroLike()), MaxPool2DT(a, indices, kernelSizes), ref 0u, at), indices
+        | TensorR(ap,_,_,_,at) -> let result, indices = ap.maxpool2di(kernelSizes=kernelSizes, strides=strides, paddings=paddings) in TensorR(result, ref (a.zerosLike([0])), MaxPool2DT(a, indices, kernelSizes), ref 0u, at), indices
 
     /// <summary>Applies a 2D max pooling over an input signal composed of several input planes.</summary>
     /// <param name="kernelSize">The size of the window to take a max over.</param>
@@ -2233,7 +2232,7 @@ type Tensor =
         match a with
         | TensorC(ap)          -> let result, indices = ap.MaxPool3D(kernelSizes, strides, paddings) in TensorC(result), TensorC(indices)
         | TensorF(ap,ad,at)    -> let result, indices = ap.maxpool3di(kernelSizes=kernelSizes, strides=strides, paddings=paddings) in TensorF(result, ad.flatten(startDim=2).gather(dim=2, indices=indices.flatten(startDim=2)).viewAs(indices), at), indices
-        | TensorR(ap,_,_,_,at) -> let result, indices = ap.maxpool3di(kernelSizes=kernelSizes, strides=strides, paddings=paddings) in TensorR(result, ref (a.zeroLike()), MaxPool3DT(a, indices, kernelSizes), ref 0u, at), indices
+        | TensorR(ap,_,_,_,at) -> let result, indices = ap.maxpool3di(kernelSizes=kernelSizes, strides=strides, paddings=paddings) in TensorR(result, ref (a.zerosLike([0])), MaxPool3DT(a, indices, kernelSizes), ref 0u, at), indices
 
     /// <summary>Applies a 3D max pooling over an input signal composed of several input planes.</summary>
     /// <param name="kernelSize">The size of the window to take a max over.</param>
@@ -2553,6 +2552,7 @@ type Tensor =
     member inline t.backward(value) = t.reverse(value)
 
     /// <summary>Reset the reverse mode computation associated with the given output tensor.</summary>
+    // TODO: other designs without this reverseReset function are possible, but they introduce more complications in the handling of fanout counters and multiple reverse passes of the same graph
     member t.reverseReset(zeroDerivatives:bool) =
         let rec reset (ts: Tensor list) =
             match ts with
@@ -2561,6 +2561,7 @@ type Tensor =
                 match t with
                 | TensorR(_,_,o,_,_) ->
                     if zeroDerivatives then t.derivative <- t.zeroLike()
+                    elif t.derivative.shape = [|0|] then t.derivative <- t.zeroLike()
                     t.fanout <- t.fanout + 1u
                     if t.fanout = 1u then
                         match o with
