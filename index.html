@@ -2,9 +2,9 @@
 <html lang="en">
   <head>
     <meta charset="utf-8">
-    <!-- 
+    <!--
       The DiffSharp: Differentiable Functional Programming
- parameters will be replaced with the 
+ parameters will be replaced with the
       document title extracted from the <h1> element or
       file name, if there is no <h1> heading
     -->
@@ -20,7 +20,7 @@
     <script src="https://netdna.bootstrapcdn.com/twitter-bootstrap/2.2.1/js/bootstrap.min.js"></script>
     <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <link href="https://netdna.bootstrapcdn.com/twitter-bootstrap/2.2.1/css/bootstrap-combined.min.css" rel="stylesheet">
-    
+
     <link type="text/css" rel="stylesheet" href="misc/style.css" />
     <script src="misc/tips.js" type="text/javascript"></script>
     <script>
@@ -46,7 +46,8 @@
         <div class="span9" id="main">
           <h1>DiffSharp: Differentiable Functional Programming  (v0.8)</h1>
 
-<p><b>For DiffSharp 1.0 see <a href="https://diffsharp.github.io/">https://diffsharp.github.io/</a></b>.</p>
+<p><b>NOTE: This page is about an old and deprecated version of DiffSharp.</b></br>
+  <b>For DiffSharp 1.0 see <a href="https://diffsharp.github.io/">https://diffsharp.github.io/</a></b>.</p>
 
 <p>DiffSharp is a functional <a href="https://en.wikipedia.org/wiki/Automatic_differentiation">automatic differentiation</a> (AD) library.</p>
 
@@ -60,7 +61,8 @@
 
 <h2>Features</h2>
 
-<p><b>For DiffSharp 1.0 see <a href="https://diffsharp.github.io/">https://diffsharp.github.io/</a></b>.</p>
+<p><b>NOTE: This page is about an old and deprecated version of DiffSharp.</b></br>
+  <b>For DiffSharp 1.0 see <a href="https://diffsharp.github.io/">https://diffsharp.github.io/</a></b>.</p>
 
 <p>The following features are in DiffSharp 0.8:</p>
 
@@ -74,7 +76,8 @@
 
 <h2>How to Get</h2>
 
-<p><b>For DiffSharp 1.0 see <a href="https://diffsharp.github.io/">https://diffsharp.github.io/</a></b>.</p>
+<p><b>NOTE: This page is about an old and deprecated version of DiffSharp.</b></br>
+  <b>For DiffSharp 1.0 see <a href="https://diffsharp.github.io/">https://diffsharp.github.io/</a></b>.</p>
 
 <p>Please see the <a href="download.html">download page</a> for installation instructions for Linux and Windows.</p>
 
@@ -111,7 +114,7 @@
 <span class="k">let</span> <span onmouseout="hideTip(event, 'fs10', 12)" onmouseover="showTip(event, 'fs10', 12)" class="f">g</span> (<span onmouseout="hideTip(event, 'fs11', 13)" onmouseover="showTip(event, 'fs11', 13)" class="i">x</span><span class="o">:</span><span onmouseout="hideTip(event, 'fs12', 14)" onmouseover="showTip(event, 'fs12', 14)" class="t">DV</span>) <span class="o">=</span> <span onmouseout="hideTip(event, 'fs13', 15)" onmouseover="showTip(event, 'fs13', 15)" class="f">exp</span> (<span onmouseout="hideTip(event, 'fs11', 16)" onmouseover="showTip(event, 'fs11', 16)" class="i">x</span><span class="o">.</span>[<span class="n">0</span>] <span class="o">*</span> <span onmouseout="hideTip(event, 'fs11', 17)" onmouseover="showTip(event, 'fs11', 17)" class="i">x</span><span class="o">.</span>[<span class="n">1</span>]) <span class="o">+</span> <span onmouseout="hideTip(event, 'fs11', 18)" onmouseover="showTip(event, 'fs11', 18)" class="i">x</span><span class="o">.</span>[<span class="n">2</span>]
 
 <span class="c">// Gradient of g</span>
-<span class="k">let</span> <span onmouseout="hideTip(event, 'fs14', 19)" onmouseover="showTip(event, 'fs14', 19)" class="f">gg</span> <span class="o">=</span> <span onmouseout="hideTip(event, 'fs15', 20)" onmouseover="showTip(event, 'fs15', 20)" class="f">grad</span> <span onmouseout="hideTip(event, 'fs10', 21)" onmouseover="showTip(event, 'fs10', 21)" class="f">g</span> 
+<span class="k">let</span> <span onmouseout="hideTip(event, 'fs14', 19)" onmouseover="showTip(event, 'fs14', 19)" class="f">gg</span> <span class="o">=</span> <span onmouseout="hideTip(event, 'fs15', 20)" onmouseover="showTip(event, 'fs15', 20)" class="f">grad</span> <span onmouseout="hideTip(event, 'fs10', 21)" onmouseover="showTip(event, 'fs10', 21)" class="f">g</span>
 
 <span class="c">// Hessian of g</span>
 <span class="k">let</span> <span onmouseout="hideTip(event, 'fs16', 22)" onmouseover="showTip(event, 'fs16', 22)" class="f">hg</span> <span class="o">=</span> <span onmouseout="hideTip(event, 'fs17', 23)" onmouseover="showTip(event, 'fs17', 23)" class="f">hessian</span> <span onmouseout="hideTip(event, 'fs10', 24)" onmouseover="showTip(event, 'fs10', 24)" class="f">g</span>
@@ -155,7 +158,7 @@
 <div class="tip" id="fs15">val grad : f:(&#39;c -&gt; D) -&gt; x:&#39;c -&gt; &#39;c (requires member GetReverse and member get_A)<br /><br />Full name: DiffSharp.AD.Float32.DiffOps.grad</div>
 <div class="tip" id="fs16">val hg : (DV -&gt; DM)<br /><br />Full name: Index.hg</div>
 <div class="tip" id="fs17">val hessian : f:(DV -&gt; D) -&gt; x:DV -&gt; DM<br /><br />Full name: DiffSharp.AD.Float32.DiffOps.hessian</div>
-          
+
         </div>
         <div class="span3">
           <a href="index.html"><img src="img/diffsharp-logo.png" style="width:140px;height:140px;margin:10px 0px 0px 20px;border-style:none;"/></a>
@@ -176,7 +179,7 @@
             <li><a href="gettingstarted-symbolicdifferentiation.html">Symbolic Differentiation</a></li>
             <li><a href="gettingstarted-typeinference.html">Type Inference</a></li>
             <li><a href="benchmarks.html">Benchmarks</a></li>
-            <li><a href="csharp.html">C# and Other Languages</a></li>            
+            <li><a href="csharp.html">C# and Other Languages</a></li>
             <li><a href="reference/index.html">API Reference</a></li>
 
             <li class="nav-header">Examples</li>
@@ -218,9 +221,9 @@
     </div>
     <!-- Start of StatCounter Code for Default Guide -->
     <script type="text/javascript">
-    var sc_project=10059115; 
-    var sc_invisible=1; 
-    var sc_security="92275ee1"; 
+    var sc_project=10059115;
+    var sc_invisible=1;
+    var sc_security="92275ee1";
     var scJsHost = (("https:" == document.location.protocol) ?
     "https://secure." : "http://www.");
     document.write("<sc"+"ript type='text/javascript' src='" +

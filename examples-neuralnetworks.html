@@ -2,9 +2,9 @@
 <html lang="en">
   <head>
     <meta charset="utf-8">
-    <!-- 
+    <!--
       The Neural Networks
- parameters will be replaced with the 
+ parameters will be replaced with the
       document title extracted from the <h1> element or
       file name, if there is no <h1> heading
     -->
@@ -20,7 +20,7 @@
     <script src="https://netdna.bootstrapcdn.com/twitter-bootstrap/2.2.1/js/bootstrap.min.js"></script>
     <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <link href="https://netdna.bootstrapcdn.com/twitter-bootstrap/2.2.1/css/bootstrap-combined.min.css" rel="stylesheet">
-    
+
     <link type="text/css" rel="stylesheet" href="misc/style.css" />
     <script src="misc/tips.js" type="text/javascript"></script>
     <script>
@@ -53,6 +53,8 @@
 </div>
 
 <h1>Neural Networks</h1>
+<p><b>NOTE: This page is about an old and deprecated version of DiffSharp.</b></br>
+  <b>For DiffSharp 1.0 see <a href="https://diffsharp.github.io/">https://diffsharp.github.io/</a></b>.</p>
 
 <p><a href="https://en.wikipedia.org/wiki/Artificial_neural_network">Artificial neural networks</a> are computational models inspired by biological nervous systems, capable of approximating functions that depend on a large number of inputs. A network is defined by a connectivity structure and a set of weights between interconnected processing units ("neurons"). Neural networks "learn" a given task by tuning the set of weights under an optimization procedure.</p>
 
@@ -597,7 +599,7 @@
 <span class="l">5: </span>
 </pre></td>
 <td class="snippet"><pre class="fssnip highlighted"><code lang="fsharp"><span class="k">let</span> <span onmouseout="hideTip(event, 'fs138', 451)" onmouseover="showTip(event, 'fs138', 451)" class="f">crossEntropy</span> (<span onmouseout="hideTip(event, 'fs79', 452)" onmouseover="showTip(event, 'fs79', 452)" class="i">x</span><span class="o">:</span><span onmouseout="hideTip(event, 'fs7', 453)" onmouseover="showTip(event, 'fs7', 453)" class="t">DM</span>) (<span onmouseout="hideTip(event, 'fs88', 454)" onmouseover="showTip(event, 'fs88', 454)" class="i">y</span><span class="o">:</span><span onmouseout="hideTip(event, 'fs7', 455)" onmouseover="showTip(event, 'fs7', 455)" class="t">DM</span>) <span class="o">=</span>
-    <span class="o">-</span>(<span onmouseout="hideTip(event, 'fs79', 456)" onmouseover="showTip(event, 'fs79', 456)" class="i">x</span> <span class="o">|&gt;</span> <span onmouseout="hideTip(event, 'fs7', 457)" onmouseover="showTip(event, 'fs7', 457)" class="t">DM</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs139', 458)" onmouseover="showTip(event, 'fs139', 458)" class="f">toCols</span> <span class="o">|&gt;</span> <span onmouseout="hideTip(event, 'fs140', 459)" onmouseover="showTip(event, 'fs140', 459)" class="t">Seq</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs141', 460)" onmouseover="showTip(event, 'fs141', 460)" class="f">mapi</span> (<span class="k">fun</span> <span onmouseout="hideTip(event, 'fs28', 461)" onmouseover="showTip(event, 'fs28', 461)" class="i">i</span> <span onmouseout="hideTip(event, 'fs142', 462)" onmouseover="showTip(event, 'fs142', 462)" class="i">v</span> <span class="k">-&gt;</span> 
+    <span class="o">-</span>(<span onmouseout="hideTip(event, 'fs79', 456)" onmouseover="showTip(event, 'fs79', 456)" class="i">x</span> <span class="o">|&gt;</span> <span onmouseout="hideTip(event, 'fs7', 457)" onmouseover="showTip(event, 'fs7', 457)" class="t">DM</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs139', 458)" onmouseover="showTip(event, 'fs139', 458)" class="f">toCols</span> <span class="o">|&gt;</span> <span onmouseout="hideTip(event, 'fs140', 459)" onmouseover="showTip(event, 'fs140', 459)" class="t">Seq</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs141', 460)" onmouseover="showTip(event, 'fs141', 460)" class="f">mapi</span> (<span class="k">fun</span> <span onmouseout="hideTip(event, 'fs28', 461)" onmouseover="showTip(event, 'fs28', 461)" class="i">i</span> <span onmouseout="hideTip(event, 'fs142', 462)" onmouseover="showTip(event, 'fs142', 462)" class="i">v</span> <span class="k">-&gt;</span>
         (<span onmouseout="hideTip(event, 'fs9', 463)" onmouseover="showTip(event, 'fs9', 463)" class="t">DV</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs143', 464)" onmouseover="showTip(event, 'fs143', 464)" class="f">standardBasis</span> <span onmouseout="hideTip(event, 'fs142', 465)" onmouseover="showTip(event, 'fs142', 465)" class="i">v</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs144', 466)" onmouseover="showTip(event, 'fs144', 466)" class="i">Length</span> (<span onmouseout="hideTip(event, 'fs25', 467)" onmouseover="showTip(event, 'fs25', 467)" class="f">int</span> (<span onmouseout="hideTip(event, 'fs58', 468)" onmouseover="showTip(event, 'fs58', 468)" class="f">float</span> <span onmouseout="hideTip(event, 'fs88', 469)" onmouseover="showTip(event, 'fs88', 469)" class="i">y</span><span class="o">.</span>[<span class="n">0</span>, <span onmouseout="hideTip(event, 'fs28', 470)" onmouseover="showTip(event, 'fs28', 470)" class="i">i</span>]))) <span class="o">*</span> <span onmouseout="hideTip(event, 'fs145', 471)" onmouseover="showTip(event, 'fs145', 471)" class="f">log</span> <span onmouseout="hideTip(event, 'fs142', 472)" onmouseover="showTip(event, 'fs142', 472)" class="i">v</span>) <span class="o">|&gt;</span> <span onmouseout="hideTip(event, 'fs140', 473)" onmouseover="showTip(event, 'fs140', 473)" class="t">Seq</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs146', 474)" onmouseover="showTip(event, 'fs146', 474)" class="f">sum</span>) <span class="o">/</span> <span onmouseout="hideTip(event, 'fs79', 475)" onmouseover="showTip(event, 'fs79', 475)" class="i">x</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs82', 476)" onmouseover="showTip(event, 'fs82', 476)" class="i">Cols</span>
 
 <span onmouseout="hideTip(event, 'fs85', 477)" onmouseover="showTip(event, 'fs85', 477)" class="f">backprop&#39;</span> <span onmouseout="hideTip(event, 'fs137', 478)" onmouseover="showTip(event, 'fs137', 478)" class="i">nn</span> <span class="n">0.01</span> <span class="n">10</span> <span class="n">500</span> <span onmouseout="hideTip(event, 'fs138', 479)" onmouseover="showTip(event, 'fs138', 479)" class="f">crossEntropy</span> <span onmouseout="hideTip(event, 'fs129', 480)" onmouseover="showTip(event, 'fs129', 480)" class="i">mnistTrainX</span> <span onmouseout="hideTip(event, 'fs130', 481)" onmouseover="showTip(event, 'fs130', 481)" class="i">mnistTrainY</span>
@@ -839,26 +841,26 @@ Image:
 
 
 
-      ■■■■■■                
-      ■■■■■■■■■■■■■■■■      
-      ■■■■■■■■■■■■■■■■      
-            ■ ■■■■ ■■■      
-                  ■■■       
-                  ■■■       
-                 ■■■■       
-                ■■■■        
-                ■■■         
-                ■■■         
-               ■■■          
-              ■■■■          
-              ■■■           
-             ■■■■           
-            ■■■■            
-           ■■■■             
-           ■■■■             
-          ■■■■■             
-          ■■■■■             
-          ■■■               
+      ■■■■■■
+      ■■■■■■■■■■■■■■■■
+      ■■■■■■■■■■■■■■■■
+            ■ ■■■■ ■■■
+                  ■■■
+                  ■■■
+                 ■■■■
+                ■■■■
+                ■■■
+                ■■■
+               ■■■
+              ■■■■
+              ■■■
+             ■■■■
+            ■■■■
+           ■■■■
+           ■■■■
+          ■■■■■
+          ■■■■■
+          ■■■
 
 
 Predicted label: 2
@@ -867,26 +869,26 @@ Image:
 
 
 
-          ■■■■■■■           
-         ■■■■■■■■           
-        ■■■■■■■■■■          
-       ■■■■    ■■■          
-       ■■■    ■■■■          
-              ■■■■          
-             ■■■■           
-            ■■■■■           
-            ■■■■            
-           ■■■■             
-           ■■■              
-          ■■■■              
-         ■■■■               
-         ■■■■               
-        ■■■■                
-        ■■■                 
-        ■■■■         ■■■■■  
-        ■■■■■■■■■■■■■■■■■■■ 
-        ■■■■■■■■■■■■■■■■■■■ 
-         ■■■■■■■■■■■■       
+          ■■■■■■■
+         ■■■■■■■■
+        ■■■■■■■■■■
+       ■■■■    ■■■
+       ■■■    ■■■■
+              ■■■■
+             ■■■■
+            ■■■■■
+            ■■■■
+           ■■■■
+           ■■■
+          ■■■■
+         ■■■■
+         ■■■■
+        ■■■■
+        ■■■
+        ■■■■         ■■■■■
+        ■■■■■■■■■■■■■■■■■■■
+        ■■■■■■■■■■■■■■■■■■■
+         ■■■■■■■■■■■■
 
 
 
@@ -900,26 +902,26 @@ Image:
 
 
 
-                ■■■         
-                ■■■         
-                ■■          
-               ■■■          
-               ■■■          
-               ■■           
-              ■■■           
-              ■■■           
-              ■■■           
-             ■■■            
-             ■■■            
-             ■■■            
-            ■■■             
-            ■■■             
-            ■■■             
-            ■■■             
-           ■■■■             
-           ■■■              
-           ■■■              
-           ■■               
+                ■■■
+                ■■■
+                ■■
+               ■■■
+               ■■■
+               ■■
+              ■■■
+              ■■■
+              ■■■
+             ■■■
+             ■■■
+             ■■■
+            ■■■
+            ■■■
+            ■■■
+            ■■■
+           ■■■■
+           ■■■
+           ■■■
+           ■■
 
 
 
@@ -932,26 +934,26 @@ Image:
 
 
 
-             ■■■            
-             ■■■■           
-            ■■■■■           
-          ■■■■■■■■■         
-          ■■■■■■■■■■        
-         ■■■■■■■■■■■        
-        ■■■■■■■■■■■■■       
-        ■■■■■■    ■■■■      
-        ■■■■      ■■■■      
-        ■■■        ■■■      
-        ■■         ■■■■     
-       ■■■        ■■■■      
-       ■■■       ■■■■■      
-       ■■■      ■■■■■■      
-       ■■■     ■■■■■■       
-       ■■■■■■■■■■■■■        
-       ■■■■■■■■■■■■■        
-        ■■■■■■■■■■          
-        ■■■■■■■■■           
-          ■■■■■■            
+             ■■■
+             ■■■■
+            ■■■■■
+          ■■■■■■■■■
+          ■■■■■■■■■■
+         ■■■■■■■■■■■
+        ■■■■■■■■■■■■■
+        ■■■■■■    ■■■■
+        ■■■■      ■■■■
+        ■■■        ■■■
+        ■■         ■■■■
+       ■■■        ■■■■
+       ■■■       ■■■■■
+       ■■■      ■■■■■■
+       ■■■     ■■■■■■
+       ■■■■■■■■■■■■■
+       ■■■■■■■■■■■■■
+        ■■■■■■■■■■
+        ■■■■■■■■■
+          ■■■■■■
 
 
 
@@ -965,25 +967,25 @@ Image:
 
 
 
-          ■■       ■■       
-          ■■       ■■       
-          ■■       ■■       
-         ■■■       ■■       
-        ■■■        ■■       
-        ■■■        ■■       
-       ■■■        ■■■       
-       ■■■       ■■■■       
-       ■■        ■■■        
-       ■■        ■■■        
-       ■■        ■■■        
-       ■■■■■■■■■■■■■        
-       ■■■■■■■■■■■■         
-         ■■■■■  ■■■         
-                ■■■■        
-                ■■■         
-                ■■■         
-                ■■■         
-                ■■■         
+          ■■       ■■
+          ■■       ■■
+          ■■       ■■
+         ■■■       ■■
+        ■■■        ■■
+        ■■■        ■■
+       ■■■        ■■■
+       ■■■       ■■■■
+       ■■        ■■■
+       ■■        ■■■
+       ■■        ■■■
+       ■■■■■■■■■■■■■
+       ■■■■■■■■■■■■
+         ■■■■■  ■■■
+                ■■■■
+                ■■■
+                ■■■
+                ■■■
+                ■■■
                 ■■          </code></pre></td></tr></table>
 
           <div class="tip" id="fs1">namespace DiffSharp</div>
@@ -1141,7 +1143,7 @@ Image:
 <div class="tip" id="fs153">val maxIndex : v:DV -&gt; int<br /><br />Full name: DiffSharp.AD.Float64.DV.maxIndex</div>
 <div class="tip" id="fs154">val toArray : source:seq&lt;&#39;T&gt; -&gt; &#39;T []<br /><br />Full name: Microsoft.FSharp.Collections.Seq.toArray</div>
 <div class="tip" id="fs155">val testTrue : DM<br /><br />Full name: Examples-neuralnetworks.testTrue</div>
-          
+
         </div>
         <div class="span3">
           <a href="index.html"><img src="img/diffsharp-logo.png" style="width:140px;height:140px;margin:10px 0px 0px 20px;border-style:none;"/></a>
@@ -1162,7 +1164,7 @@ Image:
             <li><a href="gettingstarted-symbolicdifferentiation.html">Symbolic Differentiation</a></li>
             <li><a href="gettingstarted-typeinference.html">Type Inference</a></li>
             <li><a href="benchmarks.html">Benchmarks</a></li>
-            <li><a href="csharp.html">C# and Other Languages</a></li>            
+            <li><a href="csharp.html">C# and Other Languages</a></li>
             <li><a href="reference/index.html">API Reference</a></li>
 
             <li class="nav-header">Examples</li>
@@ -1204,9 +1206,9 @@ Image:
     </div>
     <!-- Start of StatCounter Code for Default Guide -->
     <script type="text/javascript">
-    var sc_project=10059115; 
-    var sc_invisible=1; 
-    var sc_security="92275ee1"; 
+    var sc_project=10059115;
+    var sc_invisible=1;
+    var sc_security="92275ee1";
     var scJsHost = (("https:" == document.location.protocol) ?
     "https://secure." : "http://www.");
     document.write("<sc"+"ript type='text/javascript' src='" +

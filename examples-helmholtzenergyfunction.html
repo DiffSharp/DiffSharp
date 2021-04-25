@@ -2,9 +2,9 @@
 <html lang="en">
   <head>
     <meta charset="utf-8">
-    <!-- 
+    <!--
       The Helmholtz Energy Function
- parameters will be replaced with the 
+ parameters will be replaced with the
       document title extracted from the <h1> element or
       file name, if there is no <h1> heading
     -->
@@ -20,7 +20,7 @@
     <script src="https://netdna.bootstrapcdn.com/twitter-bootstrap/2.2.1/js/bootstrap.min.js"></script>
     <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <link href="https://netdna.bootstrapcdn.com/twitter-bootstrap/2.2.1/css/bootstrap-combined.min.css" rel="stylesheet">
-    
+
     <link type="text/css" rel="stylesheet" href="misc/style.css" />
     <script src="misc/tips.js" type="text/javascript"></script>
     <script>
@@ -45,6 +45,8 @@
       <div class="row">
         <div class="span9" id="main">
           <h1>Helmholtz Energy Function</h1>
+          <p><b>NOTE: This page is about an old and deprecated version of DiffSharp.</b></br>
+            <b>For DiffSharp 1.0 see <a href="https://diffsharp.github.io/">https://diffsharp.github.io/</a></b>.</p>
 
 <p>The following formula, giving the <a href="https://en.wikipedia.org/wiki/Helmholtz_free_energy">Helmholtz free energy</a> of a mixed fluid based on the <a href="https://en.wikipedia.org/wiki/Equation_of_state#Peng-Robinson_equation_of_state">Peng-Robinson equation of state</a>, has been used in automatic differentiation literature for benchmarking gradient calculations:</p>
 
@@ -99,7 +101,7 @@
     <span class="k">let</span> <span onmouseout="hideTip(event, 'fs15', 16)" onmouseover="showTip(event, 'fs15', 16)" class="i">bx</span> <span class="o">=</span> <span onmouseout="hideTip(event, 'fs10', 17)" onmouseover="showTip(event, 'fs10', 17)" class="i">b</span> <span class="o">*</span> <span onmouseout="hideTip(event, 'fs14', 18)" onmouseover="showTip(event, 'fs14', 18)" class="i">x</span>
     <span class="k">let</span> <span onmouseout="hideTip(event, 'fs16', 19)" onmouseover="showTip(event, 'fs16', 19)" class="i">oneminbx</span> <span class="o">=</span> <span class="n">1.</span> <span class="o">-</span> <span onmouseout="hideTip(event, 'fs15', 20)" onmouseover="showTip(event, 'fs15', 20)" class="i">bx</span>
     <span onmouseout="hideTip(event, 'fs8', 21)" onmouseover="showTip(event, 'fs8', 21)" class="i">R</span> <span class="o">*</span> <span onmouseout="hideTip(event, 'fs9', 22)" onmouseover="showTip(event, 'fs9', 22)" class="i">T</span> <span class="o">*</span> <span onmouseout="hideTip(event, 'fs11', 23)" onmouseover="showTip(event, 'fs11', 23)" class="t">DV</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs17', 24)" onmouseover="showTip(event, 'fs17', 24)" class="f">sum</span>(<span onmouseout="hideTip(event, 'fs14', 25)" onmouseover="showTip(event, 'fs14', 25)" class="i">x</span> <span class="o">.</span><span class="o">*</span> <span onmouseout="hideTip(event, 'fs18', 26)" onmouseover="showTip(event, 'fs18', 26)" class="f">log</span> (<span onmouseout="hideTip(event, 'fs14', 27)" onmouseover="showTip(event, 'fs14', 27)" class="i">x</span> <span class="o">/</span> <span onmouseout="hideTip(event, 'fs16', 28)" onmouseover="showTip(event, 'fs16', 28)" class="i">oneminbx</span>))
-    <span class="o">-</span> ((<span onmouseout="hideTip(event, 'fs14', 29)" onmouseover="showTip(event, 'fs14', 29)" class="i">x</span> <span class="o">*</span> <span onmouseout="hideTip(event, 'fs12', 30)" onmouseover="showTip(event, 'fs12', 30)" class="i">A</span> <span class="o">*</span> <span onmouseout="hideTip(event, 'fs14', 31)" onmouseover="showTip(event, 'fs14', 31)" class="i">x</span>) <span class="o">/</span> (<span onmouseout="hideTip(event, 'fs15', 32)" onmouseover="showTip(event, 'fs15', 32)" class="i">bx</span> <span class="o">*</span> <span onmouseout="hideTip(event, 'fs19', 33)" onmouseover="showTip(event, 'fs19', 33)" class="f">sqrt</span> <span class="n">8.</span>)) 
+    <span class="o">-</span> ((<span onmouseout="hideTip(event, 'fs14', 29)" onmouseover="showTip(event, 'fs14', 29)" class="i">x</span> <span class="o">*</span> <span onmouseout="hideTip(event, 'fs12', 30)" onmouseover="showTip(event, 'fs12', 30)" class="i">A</span> <span class="o">*</span> <span onmouseout="hideTip(event, 'fs14', 31)" onmouseover="showTip(event, 'fs14', 31)" class="i">x</span>) <span class="o">/</span> (<span onmouseout="hideTip(event, 'fs15', 32)" onmouseover="showTip(event, 'fs15', 32)" class="i">bx</span> <span class="o">*</span> <span onmouseout="hideTip(event, 'fs19', 33)" onmouseover="showTip(event, 'fs19', 33)" class="f">sqrt</span> <span class="n">8.</span>))
     <span class="o">*</span> <span onmouseout="hideTip(event, 'fs18', 34)" onmouseover="showTip(event, 'fs18', 34)" class="f">log</span> ((<span class="n">1.</span> <span class="o">+</span> (<span class="n">1.</span> <span class="o">+</span> <span onmouseout="hideTip(event, 'fs19', 35)" onmouseover="showTip(event, 'fs19', 35)" class="f">sqrt</span> <span class="n">2.</span>) <span class="o">*</span> <span onmouseout="hideTip(event, 'fs15', 36)" onmouseover="showTip(event, 'fs15', 36)" class="i">bx</span>) <span class="o">/</span> (<span class="n">1.</span> <span class="o">+</span> (<span class="n">1.</span> <span class="o">-</span> <span onmouseout="hideTip(event, 'fs19', 37)" onmouseover="showTip(event, 'fs19', 37)" class="f">sqrt</span> <span class="n">2.</span>) <span class="o">*</span> <span onmouseout="hideTip(event, 'fs15', 38)" onmouseover="showTip(event, 'fs15', 38)" class="i">bx</span>))
 
 <span class="c">// Compute the Helmholtz function, n dimensions</span>
@@ -194,7 +196,7 @@ val hg : DV =
 </pre></td>
 <td class="snippet"><pre class="fssnip highlighted"><code lang="fsharp"><span class="k">open</span> <span onmouseout="hideTip(event, 'fs41', 126)" onmouseover="showTip(event, 'fs41', 126)" class="i">FSharp</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs42', 127)" onmouseover="showTip(event, 'fs42', 127)" class="i">Charting</span>
 
-<span onmouseout="hideTip(event, 'fs43', 128)" onmouseover="showTip(event, 'fs43', 128)" class="t">Chart</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs44', 129)" onmouseover="showTip(event, 'fs44', 129)" class="f">Line</span>([<span class="k">for</span> <span onmouseout="hideTip(event, 'fs21', 130)" onmouseover="showTip(event, 'fs21', 130)" class="i">n</span> <span class="k">in</span> <span class="n">1..</span><span class="n">25..</span><span class="n">500</span> <span class="k">-&gt;</span> <span onmouseout="hideTip(event, 'fs21', 131)" onmouseover="showTip(event, 'fs21', 131)" class="i">n</span>, (<span onmouseout="hideTip(event, 'fs29', 132)" onmouseover="showTip(event, 'fs29', 132)" class="f">duration</span> <span class="n">1000</span> (<span class="k">fun</span> _ <span class="k">-&gt;</span> <span onmouseout="hideTip(event, 'fs25', 133)" onmouseover="showTip(event, 'fs25', 133)" class="f">testHelmholtzGrad</span> <span onmouseout="hideTip(event, 'fs21', 134)" onmouseover="showTip(event, 'fs21', 134)" class="i">n</span>)) 
+<span onmouseout="hideTip(event, 'fs43', 128)" onmouseover="showTip(event, 'fs43', 128)" class="t">Chart</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs44', 129)" onmouseover="showTip(event, 'fs44', 129)" class="f">Line</span>([<span class="k">for</span> <span onmouseout="hideTip(event, 'fs21', 130)" onmouseover="showTip(event, 'fs21', 130)" class="i">n</span> <span class="k">in</span> <span class="n">1..</span><span class="n">25..</span><span class="n">500</span> <span class="k">-&gt;</span> <span onmouseout="hideTip(event, 'fs21', 131)" onmouseover="showTip(event, 'fs21', 131)" class="i">n</span>, (<span onmouseout="hideTip(event, 'fs29', 132)" onmouseover="showTip(event, 'fs29', 132)" class="f">duration</span> <span class="n">1000</span> (<span class="k">fun</span> _ <span class="k">-&gt;</span> <span onmouseout="hideTip(event, 'fs25', 133)" onmouseover="showTip(event, 'fs25', 133)" class="f">testHelmholtzGrad</span> <span onmouseout="hideTip(event, 'fs21', 134)" onmouseover="showTip(event, 'fs21', 134)" class="i">n</span>))
                                         <span class="o">/</span> (<span onmouseout="hideTip(event, 'fs29', 135)" onmouseover="showTip(event, 'fs29', 135)" class="f">duration</span> <span class="n">1000</span> (<span class="k">fun</span> _ <span class="k">-&gt;</span> <span onmouseout="hideTip(event, 'fs20', 136)" onmouseover="showTip(event, 'fs20', 136)" class="f">testHelmholtz</span> <span onmouseout="hideTip(event, 'fs21', 137)" onmouseover="showTip(event, 'fs21', 137)" class="i">n</span>))])
           <span class="o">.</span><span class="f">WithXAxis</span>(<span class="i">Title</span> <span class="o">=</span> <span class="s">&quot;n (num. variables)&quot;</span>, <span class="i">Min</span> <span class="o">=</span> <span class="n">0.</span>)
           <span class="o">.</span><span class="f">WithYAxis</span>(<span class="i">Title</span> <span class="o">=</span> <span class="s">&quot;Time factor&quot;</span>)
@@ -256,7 +258,7 @@ val hg : DV =
 <div class="tip" id="fs42">namespace FSharp.Charting</div>
 <div class="tip" id="fs43">type Chart =<br />&#160;&#160;static member Area : data:seq&lt;#value&gt; * ?Name:string * ?Title:string * ?Labels:#seq&lt;string&gt; * ?Color:Color * ?XTitle:string * ?YTitle:string -&gt; GenericChart<br />&#160;&#160;static member Area : data:seq&lt;#key * #value&gt; * ?Name:string * ?Title:string * ?Labels:#seq&lt;string&gt; * ?Color:Color * ?XTitle:string * ?YTitle:string -&gt; GenericChart<br />&#160;&#160;static member Bar : data:seq&lt;#value&gt; * ?Name:string * ?Title:string * ?Labels:#seq&lt;string&gt; * ?Color:Color * ?XTitle:string * ?YTitle:string -&gt; GenericChart<br />&#160;&#160;static member Bar : data:seq&lt;#key * #value&gt; * ?Name:string * ?Title:string * ?Labels:#seq&lt;string&gt; * ?Color:Color * ?XTitle:string * ?YTitle:string -&gt; GenericChart<br />&#160;&#160;static member BoxPlotFromData : data:seq&lt;#key * #seq&lt;&#39;a2&gt;&gt; * ?Name:string * ?Title:string * ?Color:Color * ?XTitle:string * ?YTitle:string * ?Percentile:int * ?ShowAverage:bool * ?ShowMedian:bool * ?ShowUnusualValues:bool * ?WhiskerPercentile:int -&gt; GenericChart (requires &#39;a2 :&gt; value)<br />&#160;&#160;static member BoxPlotFromStatistics : data:seq&lt;#key * #value * #value * #value * #value * #value * #value&gt; * ?Name:string * ?Title:string * ?Labels:#seq&lt;string&gt; * ?Color:Color * ?XTitle:string * ?YTitle:string * ?Percentile:int * ?ShowAverage:bool * ?ShowMedian:bool * ?ShowUnusualValues:bool * ?WhiskerPercentile:int -&gt; GenericChart<br />&#160;&#160;static member Bubble : data:seq&lt;#value * #value&gt; * ?Name:string * ?Title:string * ?Labels:#seq&lt;string&gt; * ?Color:Color * ?XTitle:string * ?YTitle:string * ?BubbleMaxSize:int * ?BubbleMinSize:int * ?BubbleScaleMax:float * ?BubbleScaleMin:float * ?UseSizeForLabel:bool -&gt; GenericChart<br />&#160;&#160;static member Bubble : data:seq&lt;#key * #value * #value&gt; * ?Name:string * ?Title:string * ?Labels:#seq&lt;string&gt; * ?Color:Color * ?XTitle:string * ?YTitle:string * ?BubbleMaxSize:int * ?BubbleMinSize:int * ?BubbleScaleMax:float * ?BubbleScaleMin:float * ?UseSizeForLabel:bool -&gt; GenericChart<br />&#160;&#160;static member Candlestick : data:seq&lt;#value * #value * #value * #value&gt; * ?Name:string * ?Title:string * ?Labels:#seq&lt;string&gt; * ?Color:Color * ?XTitle:string * ?YTitle:string -&gt; CandlestickChart<br />&#160;&#160;static member Candlestick : data:seq&lt;#key * #value * #value * #value * #value&gt; * ?Name:string * ?Title:string * ?Labels:#seq&lt;string&gt; * ?Color:Color * ?XTitle:string * ?YTitle:string -&gt; CandlestickChart<br />&#160;&#160;...<br /><br />Full name: FSharp.Charting.Chart</div>
 <div class="tip" id="fs44">static member Chart.Line : data:seq&lt;#value&gt; * ?Name:string * ?Title:string * ?Labels:#seq&lt;string&gt; * ?Color:System.Drawing.Color * ?XTitle:string * ?YTitle:string -&gt; ChartTypes.GenericChart<br />static member Chart.Line : data:seq&lt;#key * #value&gt; * ?Name:string * ?Title:string * ?Labels:#seq&lt;string&gt; * ?Color:System.Drawing.Color * ?XTitle:string * ?YTitle:string -&gt; ChartTypes.GenericChart</div>
-          
+
         </div>
         <div class="span3">
           <a href="index.html"><img src="img/diffsharp-logo.png" style="width:140px;height:140px;margin:10px 0px 0px 20px;border-style:none;"/></a>
@@ -277,7 +279,7 @@ val hg : DV =
             <li><a href="gettingstarted-symbolicdifferentiation.html">Symbolic Differentiation</a></li>
             <li><a href="gettingstarted-typeinference.html">Type Inference</a></li>
             <li><a href="benchmarks.html">Benchmarks</a></li>
-            <li><a href="csharp.html">C# and Other Languages</a></li>            
+            <li><a href="csharp.html">C# and Other Languages</a></li>
             <li><a href="reference/index.html">API Reference</a></li>
 
             <li class="nav-header">Examples</li>
@@ -319,9 +321,9 @@ val hg : DV =
     </div>
     <!-- Start of StatCounter Code for Default Guide -->
     <script type="text/javascript">
-    var sc_project=10059115; 
-    var sc_invisible=1; 
-    var sc_security="92275ee1"; 
+    var sc_project=10059115;
+    var sc_invisible=1;
+    var sc_security="92275ee1";
     var scJsHost = (("https:" == document.location.protocol) ?
     "https://secure." : "http://www.");
     document.write("<sc"+"ript type='text/javascript' src='" +

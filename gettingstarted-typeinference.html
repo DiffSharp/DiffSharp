@@ -2,9 +2,9 @@
 <html lang="en">
   <head>
     <meta charset="utf-8">
-    <!-- 
+    <!--
       The Type Inference
- parameters will be replaced with the 
+ parameters will be replaced with the
       document title extracted from the <h1> element or
       file name, if there is no <h1> heading
     -->
@@ -20,7 +20,7 @@
     <script src="https://netdna.bootstrapcdn.com/twitter-bootstrap/2.2.1/js/bootstrap.min.js"></script>
     <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <link href="https://netdna.bootstrapcdn.com/twitter-bootstrap/2.2.1/css/bootstrap-combined.min.css" rel="stylesheet">
-    
+
     <link type="text/css" rel="stylesheet" href="misc/style.css" />
     <script src="misc/tips.js" type="text/javascript"></script>
     <script>
@@ -45,6 +45,8 @@
       <div class="row">
         <div class="span9" id="main">
           <h1>Type Inference</h1>
+          <p><b>NOTE: This page is about an old and deprecated version of DiffSharp.</b></br>
+            <b>For DiffSharp 1.0 see <a href="https://diffsharp.github.io/">https://diffsharp.github.io/</a></b>.</p>
 
 <p>Differentiation can be applied to functions using the <strong>D</strong>, <strong>DV</strong>, and <strong>DM</strong> types respectively for scalar, vector, and matrix values. 32- and 64-bit floating point varieties of these types are provided by the <strong>DiffSharp.AD.Float32</strong> and <strong>DiffSharp.AD.Float64</strong> modules. On many current systems, 32-bit (single) precision floating point operations run significantly faster than 64-bit (double) precision. It is therefore recommended to use the 32-bit module if this precision is sufficient for your usage case.</p>
 
@@ -281,7 +283,7 @@
 <div class="tip" id="fs42">val f7 : x:D -&gt; D<br /><br />Full name: Gettingstarted-typeinference.f7</div>
 <div class="tip" id="fs43">type D =<br />&#160;&#160;| D of float<br />&#160;&#160;| DF of D * D * uint32<br />&#160;&#160;| DR of D * D ref * TraceOp * uint32 ref * uint32<br />&#160;&#160;interface IComparable<br />&#160;&#160;member Copy : unit -&gt; D<br />&#160;&#160;override Equals : other:obj -&gt; bool<br />&#160;&#160;member GetForward : t:D * i:uint32 -&gt; D<br />&#160;&#160;override GetHashCode : unit -&gt; int<br />&#160;&#160;member GetReverse : i:uint32 -&gt; D<br />&#160;&#160;override ToString : unit -&gt; string<br />&#160;&#160;member A : D<br />&#160;&#160;member F : uint32<br />&#160;&#160;member P : D<br />&#160;&#160;member PD : D<br />&#160;&#160;member T : D<br />&#160;&#160;member A : D with set<br />&#160;&#160;member F : uint32 with set<br />&#160;&#160;static member Abs : a:D -&gt; D<br />&#160;&#160;static member Acos : a:D -&gt; D<br />&#160;&#160;static member Asin : a:D -&gt; D<br />&#160;&#160;static member Atan : a:D -&gt; D<br />&#160;&#160;static member Atan2 : a:int * b:D -&gt; D<br />&#160;&#160;static member Atan2 : a:D * b:int -&gt; D<br />&#160;&#160;static member Atan2 : a:float * b:D -&gt; D<br />&#160;&#160;static member Atan2 : a:D * b:float -&gt; D<br />&#160;&#160;static member Atan2 : a:D * b:D -&gt; D<br />&#160;&#160;static member Ceiling : a:D -&gt; D<br />&#160;&#160;static member Cos : a:D -&gt; D<br />&#160;&#160;static member Cosh : a:D -&gt; D<br />&#160;&#160;static member Exp : a:D -&gt; D<br />&#160;&#160;static member Floor : a:D -&gt; D<br />&#160;&#160;static member Log : a:D -&gt; D<br />&#160;&#160;static member Log10 : a:D -&gt; D<br />&#160;&#160;static member LogSumExp : a:D -&gt; D<br />&#160;&#160;static member Max : a:D * b:D -&gt; D<br />&#160;&#160;static member Min : a:D * b:D -&gt; D<br />&#160;&#160;static member Op_D_D : a:D * ff:(float -&gt; float) * fd:(D -&gt; D) * df:(D * D * D -&gt; D) * r:(D -&gt; TraceOp) -&gt; D<br />&#160;&#160;static member Op_D_D_D : a:D * b:D * ff:(float * float -&gt; float) * fd:(D * D -&gt; D) * df_da:(D * D * D -&gt; D) * df_db:(D * D * D -&gt; D) * df_dab:(D * D * D * D * D -&gt; D) * r_d_d:(D * D -&gt; TraceOp) * r_d_c:(D * D -&gt; TraceOp) * r_c_d:(D * D -&gt; TraceOp) -&gt; D<br />&#160;&#160;static member Pow : a:int * b:D -&gt; D<br />&#160;&#160;static member Pow : a:D * b:int -&gt; D<br />&#160;&#160;static member Pow : a:float * b:D -&gt; D<br />&#160;&#160;static member Pow : a:D * b:float -&gt; D<br />&#160;&#160;static member Pow : a:D * b:D -&gt; D<br />&#160;&#160;static member ReLU : a:D -&gt; D<br />&#160;&#160;static member Round : a:D -&gt; D<br />&#160;&#160;static member Sigmoid : a:D -&gt; D<br />&#160;&#160;static member Sign : a:D -&gt; D<br />&#160;&#160;static member Sin : a:D -&gt; D<br />&#160;&#160;static member Sinh : a:D -&gt; D<br />&#160;&#160;static member SoftPlus : a:D -&gt; D<br />&#160;&#160;static member SoftSign : a:D -&gt; D<br />&#160;&#160;static member Sqrt : a:D -&gt; D<br />&#160;&#160;static member Tan : a:D -&gt; D<br />&#160;&#160;static member Tanh : a:D -&gt; D<br />&#160;&#160;static member One : D<br />&#160;&#160;static member Zero : D<br />&#160;&#160;static member ( + ) : a:int * b:D -&gt; D<br />&#160;&#160;static member ( + ) : a:D * b:int -&gt; D<br />&#160;&#160;static member ( + ) : a:float * b:D -&gt; D<br />&#160;&#160;static member ( + ) : a:D * b:float -&gt; D<br />&#160;&#160;static member ( + ) : a:D * b:D -&gt; D<br />&#160;&#160;static member ( / ) : a:int * b:D -&gt; D<br />&#160;&#160;static member ( / ) : a:D * b:int -&gt; D<br />&#160;&#160;static member ( / ) : a:float * b:D -&gt; D<br />&#160;&#160;static member ( / ) : a:D * b:float -&gt; D<br />&#160;&#160;static member ( / ) : a:D * b:D -&gt; D<br />&#160;&#160;static member op_Explicit : d:D -&gt; float<br />&#160;&#160;static member ( * ) : a:int * b:D -&gt; D<br />&#160;&#160;static member ( * ) : a:D * b:int -&gt; D<br />&#160;&#160;static member ( * ) : a:float * b:D -&gt; D<br />&#160;&#160;static member ( * ) : a:D * b:float -&gt; D<br />&#160;&#160;static member ( * ) : a:D * b:D -&gt; D<br />&#160;&#160;static member ( - ) : a:int * b:D -&gt; D<br />&#160;&#160;static member ( - ) : a:D * b:int -&gt; D<br />&#160;&#160;static member ( - ) : a:float * b:D -&gt; D<br />&#160;&#160;static member ( - ) : a:D * b:float -&gt; D<br />&#160;&#160;static member ( - ) : a:D * b:D -&gt; D<br />&#160;&#160;static member ( ~- ) : a:D -&gt; D<br /><br />Full name: DiffSharp.AD.Float64.D</div>
 <div class="tip" id="fs44">val f8 : x:D -&gt; D<br /><br />Full name: Gettingstarted-typeinference.f8</div>
-          
+
         </div>
         <div class="span3">
           <a href="index.html"><img src="img/diffsharp-logo.png" style="width:140px;height:140px;margin:10px 0px 0px 20px;border-style:none;"/></a>
@@ -302,7 +304,7 @@
             <li><a href="gettingstarted-symbolicdifferentiation.html">Symbolic Differentiation</a></li>
             <li><a href="gettingstarted-typeinference.html">Type Inference</a></li>
             <li><a href="benchmarks.html">Benchmarks</a></li>
-            <li><a href="csharp.html">C# and Other Languages</a></li>            
+            <li><a href="csharp.html">C# and Other Languages</a></li>
             <li><a href="reference/index.html">API Reference</a></li>
 
             <li class="nav-header">Examples</li>
@@ -344,9 +346,9 @@
     </div>
     <!-- Start of StatCounter Code for Default Guide -->
     <script type="text/javascript">
-    var sc_project=10059115; 
-    var sc_invisible=1; 
-    var sc_security="92275ee1"; 
+    var sc_project=10059115;
+    var sc_invisible=1;
+    var sc_security="92275ee1";
     var scJsHost = (("https:" == document.location.protocol) ?
     "https://secure." : "http://www.");
     document.write("<sc"+"ript type='text/javascript' src='" +
