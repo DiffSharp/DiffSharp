@@ -657,3 +657,14 @@ type TestDiffSharp () =
 
         Assert.CheckEqual(y1, y2)
         Assert.CheckEqual(y1, y3)
+
+    [<Test>]
+    member _.TestReverseDiffInit () =
+        // Reverse derivative is initialized to an empty tensor (data: [], shape: [|0|], dim: 1)
+        let x = dsharp.tensor(1.).reverseDiff()
+        Assert.AreEqual(x.derivative.shape, [|0|])
+
+        // After propagation reverse derivative is a scalar tensor (shape: [||], dim: 0])
+        let y = x.exp()
+        y.reverse()
+        Assert.AreEqual(x.derivative.shape, [||])
