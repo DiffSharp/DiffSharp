@@ -49,11 +49,6 @@ RUN curl -SL --output dotnet.tar.gz https://dotnetcli.azureedge.net/dotnet/Sdk/$
     # Trigger first run experience by running arbitrary cmd
     && dotnet help
 
-# Clone and build DiffSharp-cpu bundle to get the latest TorchSharp and libtorch-cpu packages downloaded and cached by nuget within the Docker image
-# This the makes user experience faster when running #r "nuget: DiffSharp-cpu
-RUN git clone --depth 1 https://github.com/DiffSharp/DiffSharp.git \
-    && dotnet build DiffSharp/bundles/DiffSharp-cpu
-
 # Install lastest build from master branch of Microsoft.DotNet.Interactive
 RUN dotnet tool install -g --add-source "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-tools/nuget/v3/index.json" Microsoft.dotnet-interactive
 
@@ -71,6 +66,11 @@ COPY ./ ${HOME}/notebooks/
 
 RUN chown -R ${NB_UID} ${HOME}
 USER ${USER}
+
+# Clone and build DiffSharp-cpu bundle to get the latest TorchSharp and libtorch-cpu packages downloaded and cached by nuget within the Docker image
+# This the makes user experience faster when running #r "nuget: DiffSharp-cpu
+RUN git clone --depth 1 https://github.com/DiffSharp/DiffSharp.git \
+    && dotnet build DiffSharp/bundles/DiffSharp-cpu
 
 #Install nteract 
 RUN pip install nteract_on_jupyter
