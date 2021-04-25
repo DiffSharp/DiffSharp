@@ -87,6 +87,8 @@ You can use DiffSharp in [dotnet interactive](https://github.com/dotnet/interact
     #r "nuget: DiffSharp-cpu, {{fsdocs-package-version}}"
     open DiffSharp
 
+<img src="img/anim-intro-1.gif" width="75%" />
+
 ### Dotnet Applications
 
 You can add DiffSharp to your dotnet application using the dotnet command-line interface (CLI).
