@@ -23,7 +23,7 @@ Formatter.Register(fun (x:obj) (writer: TextWriter) -> fprintfn writer "%120A" x
 
 # Installing
 
-DiffSharp runs on [dotnet](https://dotnet.microsoft.com/), a cross-platform, open source platform supported on Linux, macOS, and Windows.
+DiffSharp runs on [dotnet](https://dotnet.microsoft.com/), a cross-platform, open-source platform supported on Linux, macOS, and Windows.
 
 
 ## Packages
