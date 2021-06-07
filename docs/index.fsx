@@ -26,6 +26,10 @@ Formatter.Register(fun (x:obj) (writer: TextWriter) -> fprintfn writer "%120A" x
 DiffSharp is a tensor library with support for [differentiable programming](https://en.wikipedia.org/wiki/Automatic_differentiation).
 It is designed for use in machine learning, probabilistic programming, optimization and other domains.
 
+<button class="button" style="vertical-align:middle" onclick="window.location.href='{{root}}install.html'"><span>Install »</span></button>
+
+## Key Features
+
 🗹 Nested and mixed-mode differentiation
 
 🗹 Common optimizers, model elements, differentiable probability distributions
@@ -41,13 +45,13 @@ It is designed for use in machine learning, probabilistic programming, optimizat
 🗹 100% open source 
 
 
-## Differentiable Programming
+### Differentiable Programming
 
 DiffSharp provides world-leading automatic differentiation capabilities for tensor code, including composable gradients, Hessians, Jacobians, directional derivatives, and matrix-free Hessian- and Jacobian-vector products over arbitrary user code. This goes beyond conventional tensor libraries such as PyTorch and TensorFlow, allowing the use of nested forward and reverse differentiation up to any level. With DiffSharp, you can compute higher-order derivatives efficiently and differentiate functions that are internally making use of differentiation and gradient-based optimization. 
 
 <img src="img/anim-intro-2.gif" width="85%" />
 
-## Practical, Familiar and Efficient
+### Practical, Familiar and Efficient
 
 DiffSharp comes with a [LibTorch](https://pytorch.org/cppdocs/) backend, using the same C++ and CUDA implementations for tensor computations that power [PyTorch](https://pytorch.org/). On top of these raw tensors (LibTorch's ATen, excluding autograd), DiffSharp implements its own computation graph and differentiation capabilities. It is tested on Linux and Windows and includes support for CUDA.
 
@@ -57,7 +61,7 @@ DiffSharp uses [the incredible F# programming language](https://fsharp.org) for 
 
 <iframe width="85%" src="https://www.youtube.com/embed/_QnbV6CAWXc" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 
-## Quick Usage Examples
+## Usage Examples
 
 Using the buttons [![Binder](img/badge-binder.svg)](https://mybinder.org/v2/gh/diffsharp/diffsharp.github.io/master?filepath={{fsdocs-source-basename}}.ipynb) 
 [![Script](img/badge-script.svg)]({{fsdocs-source-basename}}.fsx) 
@@ -82,7 +86,7 @@ dsharp.config(dtype=Dtype.Float32, device=Device.CPU, backend=Backend.Reference)
 Defining and adding two tensors:
 *)
 let t1 = dsharp.tensor [ 0.0 .. 0.2 .. 1.0 ]
-let t2 = dsharp.tensor [ 0, 1, 2, 4, 7, 2 ]
+let t2 = dsharp.tensor [ 0, 1, 2, 7, 8, 9 ]
 
 t1 + t2
 
@@ -144,7 +148,7 @@ print $"Validation loss: {validLoss/validSet.length}"
 
 (**
 
-Numerous other model definition and gradient/training patterns are supported, see [examples](https://github.com/DiffSharp/DiffSharp/tree/dev/examples).
+Numerous other model definition and gradient/training patterns are supported. See the tutorials in the left-hand menu and [examples](https://github.com/DiffSharp/DiffSharp/tree/dev/examples) on GitHub.
 
 ## More Information
 
