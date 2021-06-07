@@ -30,12 +30,22 @@ DiffSharp runs on [dotnet](https://dotnet.microsoft.com/), a cross-platform, ope
 
 We provide several package bundles for a variety of use cases.
 
-* [`DiffSharp-cpu`](https://www.nuget.org/packages/DiffSharp-cpu) - Includes LibTorch CPU binaries for Linux and Windows.
-* [`DiffSharp-cuda-linux`](https://www.nuget.org/packages/DiffSharp-cuda-linux) and [`DiffSharp-cuda-windows`](https://www.nuget.org/packages/DiffSharp-cuda-windows) - Include LibTorch CPU and CUDA binaries for Linux and Windows. Large download.
-* [`DiffSharp-lite`](https://www.nuget.org/packages/DiffSharp-lite) - Includes the LibTorch backend but not the LibTorch binaries. You can combine this with existing local native binaries of LibTorch installed through other means (for example, by installing [PyTorch](https://pytorch.org/) using a Python package manager). You will have to add an explicit load of the relevant native library, for example:
+* [`DiffSharp-cpu`](https://www.nuget.org/packages/DiffSharp-cpu)</br>
+  Includes LibTorch CPU binaries for Linux and Windows.
+* [`DiffSharp-cuda-linux`](https://www.nuget.org/packages/DiffSharp-cuda-linux) / [`DiffSharp-cuda-windows`](https://www.nuget.org/packages/DiffSharp-cuda-windows)</br>
+  Include LibTorch CPU and CUDA GPU binaries for Linux and Windows. Large download.
+* [`DiffSharp-lite`](https://www.nuget.org/packages/DiffSharp-lite)</br>
+  Includes the LibTorch backend but not the LibTorch binaries. 
 
-        open System.Runtime.InteropServices
-        NativeLibrary.Load("/home/gunes/anaconda3/lib/python3.8/site-packages/torch/lib/libtorch.so")
+### Using local LibTorch binaries
+
+You can combine the `DiffSharp-lite` package bundle with existing local native binaries of LibTorch installed through other means (for example, by installing [PyTorch](https://pytorch.org/) using a Python package manager). If your GPU works in this PyTorch installation without any issues, it will also work in DiffSharp.
+
+Before using the `Torch` backend in DiffSharp, you will have to add an explicit load of the LibTorch native library, which you can do as follows. In order to find the location of LibTorch binaries, searching for `libtorch.so` in your system might be helpful.
+
+    open System.Runtime.InteropServices
+    NativeLibrary.Load("/home/user/anaconda3/lib/python3.8/site-packages/torch/lib/libtorch.so")
+
 
 ## Backends and Devices
 
@@ -84,7 +94,11 @@ let t2 = t.move(Device.GPU)
 
 You can use DiffSharp in [dotnet interactive](https://github.com/dotnet/interactive) notebooks in [Visual Studio Code](https://code.visualstudio.com/) or [Jupyter](https://jupyter.org/), or in F# scripts (`.fsx` files), by referencing the package as follows:
 
-    #r "nuget: DiffSharp-cpu, {{fsdocs-package-version}}"
+    // Use one of the following three lines
+    #r "nuget: DiffSharp-cpu" // Use the latest version
+    #r "nuget: DiffSharp-cpu,*-*" // Use the latest pre-release version
+    #r "nuget: DiffSharp-cpu,{{fsdocs-package-version}}" // Use a specific version
+
     open DiffSharp
 
 <img src="img/anim-intro-1.gif" width="85%" />

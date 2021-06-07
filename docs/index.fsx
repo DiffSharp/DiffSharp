@@ -6,11 +6,11 @@
 #r "DiffSharp.Backends.Torch.dll"
 (*** condition: fsx ***)
 #if FSX
-#r "nuget: DiffSharp-lite, {{fsdocs-package-version}}"
+#r "nuget: DiffSharp-lite,{{fsdocs-package-version}}"
 #endif // FSX
 (*** condition: ipynb ***)
 #if IPYNB
-#r "nuget: DiffSharp-lite, {{fsdocs-package-version}}"
+#r "nuget: DiffSharp-lite,{{fsdocs-package-version}}"
 
 Formatter.SetPreferredMimeTypeFor(typeof<obj>, "text/plain")
 Formatter.Register(fun (x:obj) (writer: TextWriter) -> fprintfn writer "%120A" x )
@@ -63,13 +63,12 @@ Using the buttons [![Binder](img/badge-binder.svg)](https://mybinder.org/v2/gh/d
 [![Script](img/badge-script.svg)]({{fsdocs-source-basename}}.fsx) 
 [![Script](img/badge-notebook.svg)]({{fsdocs-source-basename}}.ipynb) on the top of the page, you can execute this page as an interactive notebook running in your browser, or download it as a script or a .NET Interactive Jupyter notebook. This applies to all documentation pages. If using Visual Studio Code, you can download, edit, and execute these notebooks using [the .NET Interactive Notebooks for VS Code](https://marketplace.visualstudio.com/items?itemName=ms-dotnettools.dotnet-interactive-vscode).
 
-First reference the package, for example:
+First reference the package, by using one of the following three lines. For LibTorch support use [`DiffSharp-cpu`](https://www.nuget.org/packages/DiffSharp-cpu) instead of [`DiffSharp-lite`](https://www.nuget.org/packages/DiffSharp-lite).
 
-    #r "nuget: DiffSharp-lite, {{fsdocs-package-version}}"
+    #r "nuget: DiffSharp-lite" // Use the latest version
+    #r "nuget: DiffSharp-lite,*-*" // Use the latest pre-release version
+    #r "nuget: DiffSharp-lite,1.0.0-local-210421" // Use a specific version
 
-or for LibTorch support:
-
-    #r "nuget: DiffSharp-cpu, {{fsdocs-package-version}}"
 *)
 
 open DiffSharp
