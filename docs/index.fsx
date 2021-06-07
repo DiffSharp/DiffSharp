@@ -45,7 +45,7 @@ It is designed for use in machine learning, probabilistic programming, optimizat
 
 DiffSharp provides world-leading automatic differentiation capabilities for tensor code, including composable gradients, Hessians, Jacobians, directional derivatives, and matrix-free Hessian- and Jacobian-vector products over arbitrary user code. This goes beyond conventional tensor libraries such as PyTorch and TensorFlow, allowing the use of nested forward and reverse differentiation up to any level. With DiffSharp, you can compute higher-order derivatives efficiently and differentiate functions that are internally making use of differentiation and gradient-based optimization. 
 
-<img src="img/anim-intro-2.gif" width="75%" />
+<img src="img/anim-intro-2.gif" width="85%" />
 
 ## Practical, Familiar and Efficient
 
@@ -55,15 +55,15 @@ The DiffSharp API is designed to be similar to [the PyTorch Python API](https://
 
 DiffSharp uses [the incredible F# programming language](https://fsharp.org) for tensor programming. F# code is generally faster and more robust than equivalent Python code, while still being succinct and compact like Python, making it an ideal modern AI and machine learning implementation language. This allows fluent and productive code while focusing on the tensor programming domain.
 
-<iframe width="75%" src="https://www.youtube.com/embed/_QnbV6CAWXc" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+<iframe width="85%" src="https://www.youtube.com/embed/_QnbV6CAWXc" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 
 ## Quick Usage Examples
 
 Using the buttons [![Binder](img/badge-binder.svg)](https://mybinder.org/v2/gh/diffsharp/diffsharp.github.io/master?filepath={{fsdocs-source-basename}}.ipynb) 
 [![Script](img/badge-script.svg)]({{fsdocs-source-basename}}.fsx) 
-[![Script](img/badge-notebook.svg)]({{fsdocs-source-basename}}.ipynb) on the top of the page, you can execute this page as an interactive notebook running in your browser, or download it as a script or .NET Interactive Jupyter notebook. This applies to all documentation pages. If using Visual Studio Code, you can download, edit, and execute these notebooks using [the .NET Interactive Notebooks for VS Code](https://marketplace.visualstudio.com/items?itemName=ms-dotnettools.dotnet-interactive-vscode).
+[![Script](img/badge-notebook.svg)]({{fsdocs-source-basename}}.ipynb) on the top of the page, you can execute this page as an interactive notebook running in your browser, or download it as a script or a .NET Interactive Jupyter notebook. This applies to all documentation pages. If using Visual Studio Code, you can download, edit, and execute these notebooks using [the .NET Interactive Notebooks for VS Code](https://marketplace.visualstudio.com/items?itemName=ms-dotnettools.dotnet-interactive-vscode).
 
-First reference the package:
+First reference the package, for example:
 
     #r "nuget: DiffSharp-lite, {{fsdocs-package-version}}"
 

@@ -87,7 +87,7 @@ You can use DiffSharp in [dotnet interactive](https://github.com/dotnet/interact
     #r "nuget: DiffSharp-cpu, {{fsdocs-package-version}}"
     open DiffSharp
 
-<img src="img/anim-intro-1.gif" width="75%" />
+<img src="img/anim-intro-1.gif" width="85%" />
 
 ### Dotnet Applications
 
