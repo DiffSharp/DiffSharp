@@ -292,8 +292,7 @@ type BaseModel() =
     /// <summary>TBD</summary>
     member m.save(fileName) = saveBinary m fileName
 
-    /// <summary>TBD</summary>
-    override m.ToString() = sprintf "%s--nparameters:%A" (m.getString()) m.nparameters
+    override m.ToString() = sprintf "%s, nparameters:%A" (m.getString()) m.nparameters
 
 [<AbstractClass>]
 type Model<'In, 'Out>() =
