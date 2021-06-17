@@ -335,13 +335,13 @@ type Model<'In, 'Out>() =
     static member (-->) (f:'In->'Out, m:Model<'Out, 'Out2>) = Model<'In, 'Out2>.create [m] (f >> m.forward)
 
     /// <summary>TBD</summary>
+    static member (-->) (t:'In, m:Model<'In, 'Out>) = m.forward t
+
+    /// <summary>TBD</summary>
     member m.saveParameters(fileName) = m.parametersVector.save(fileName)
 
     /// <summary>TBD</summary>
     member m.loadParameters(fileName) = m.parametersVector <- Tensor.load(fileName)
-
-    /// <summary>TBD</summary>
-    static member (-->) (t:'In, m:Model<'In, 'Out>) = m.forward t
 
     /// <summary>TBD</summary>
     static member load(fileName):Model<'In, 'Out> = loadBinary fileName
