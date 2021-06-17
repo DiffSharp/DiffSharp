@@ -3,19 +3,28 @@
 #r "DiffSharp.Core.dll"
 #r "DiffSharp.Data.dll"
 #r "DiffSharp.Backends.Reference.dll"
+#r "DiffSharp.Backends.Torch.dll"
 (*** condition: fsx ***)
 #if FSX
 #r "nuget: DiffSharp-lite,{{fsdocs-package-version}}"
 #endif // FSX
 (*** condition: ipynb ***)
 #if IPYNB
+// Google Colab only: uncomment and run the following to install dotnet and the F# kernel
+// !bash <(curl -Ls https://raw.githubusercontent.com/gbaydin/scripts/main/colab_dotnet5.sh)
+#endif // IPYNB
+(*** condition: ipynb ***)
+#if IPYNB
+// Import DiffSharp package
 #r "nuget: DiffSharp-lite,{{fsdocs-package-version}}"
 
+// Set dotnet interactive formatter to plaintext
 Formatter.SetPreferredMimeTypeFor(typeof<obj>, "text/plain")
 Formatter.Register(fun (x:obj) (writer: TextWriter) -> fprintfn writer "%120A" x )
 #endif // IPYNB
 
 (**
+[![Binder](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/DiffSharp/diffsharp.github.io/blob/master/{{fsdocs-source-basename}}.ipynb)&emsp;
 [![Binder](img/badge-binder.svg)](https://mybinder.org/v2/gh/diffsharp/diffsharp.github.io/master?filepath={{fsdocs-source-basename}}.ipynb)&emsp;
 [![Script](img/badge-script.svg)]({{fsdocs-source-basename}}.fsx)&emsp;
 [![Script](img/badge-notebook.svg)]({{fsdocs-source-basename}}.ipynb)
