@@ -326,19 +326,6 @@ type Model<'In, 'Out>() =
         Model<'In, 'Out2>.create [box m1; box m2] (m1.forward >> m2.forward)
 
     /// <summary>TBD</summary>
-    member m.forwardParameters (input:'In) (parameters:Tensor) =
-        m.parametersVector <- parameters
-        let f = m.forward(input) in m.noDiff(); f
-
-    /// <summary>TBD</summary>
-    member m.forwardCompose (f:'Out->'Out2) (input:'In) (parameters:Tensor) =
-        m.forwardParameters input parameters |> f
-
-    /// <summary>TBD</summary>
-    member m.forwardLoss (f:'In2->'Out->Tensor) (input:'In) (target:'In2) (parameters:Tensor) =
-        m.forwardCompose (f target) input parameters
-
-    /// <summary>TBD</summary>
     static member (-->) (m1:Model<'In, 'Out>, m2:Model<'Out, 'Out2>) = Model<'In, 'Out>.compose m1 m2
     
     /// <summary>TBD</summary>
