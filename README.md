@@ -53,7 +53,9 @@ Now reference an appropriate nuget package from https://nuget.org:
 
 * [`DiffSharp-cpu`](https://www.nuget.org/packages/DiffSharp-cpu) - This includes the Torch backend using CPU only.
 
-* [`DiffSharp-cuda-linux`](https://www.nuget.org/packages/DiffSharp-cuda-linux), [`DiffSharp-cuda-windows`](https://www.nuget.org/packages/DiffSharp-cuda-windows) - These include the Torch CPU/GPU backend for Linux and Windows respectively. Large download.
+* [`DiffSharp-cuda-linux`](https://www.nuget.org/packages/DiffSharp-cuda-linux) - This includes the Torch CPU/CUDA 11.1 backend for Windows. Large download. Requires .NET 6 SDK, version `6.0.100-preview.5.21302.13` or greater.
+
+* [`DiffSharp-cuda-windows`](https://www.nuget.org/packages/DiffSharp-cuda-windows) - This includes the Torch CPU/CUDA 11.1 backend for Windows. Large download.
 
 For all but `DiffSharp-lite` add the following to your code:
 
