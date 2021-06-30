@@ -31,7 +31,7 @@ To use locally in [Visual Studio Code](https://code.visualstudio.com/):
 
 To use locally in Jupyter, first install Jupyter and then:
 
-    dotnet tool install -g --add-source "https://dotnet.myget.org/F/dotnet-try/api/v3/index.json" microsoft.dotnet-interactive
+    dotnet tool install -g microsoft.dotnet-interactive
     dotnet interactive jupyter install
 
 When using .NET Interactive it is best to completely turn off automatic HTML displays of outputs:
