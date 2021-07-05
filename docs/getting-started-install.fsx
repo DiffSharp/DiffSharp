@@ -30,7 +30,7 @@ DiffSharp runs on [dotnet](https://dotnet.microsoft.com/), a cross-platform, ope
 
 We provide several package bundles for a variety of use cases.
 
-* [`DiffSharp-cpu`](https://www.nuget.org/packages/DiffSharp-cpu) - Includes LibTorch CPU binaries for Linux and Windows.
+* [`DiffSharp-cpu`](https://www.nuget.org/packages/DiffSharp-cpu) - Includes LibTorch CPU binaries for Linux, Windows and macOS.
 * [`DiffSharp-cuda-linux`](https://www.nuget.org/packages/DiffSharp-cuda-linux) and [`DiffSharp-cuda-windows`](https://www.nuget.org/packages/DiffSharp-cuda-windows) - Include LibTorch CPU and CUDA binaries for Linux and Windows. Large download.
 * [`DiffSharp-lite`](https://www.nuget.org/packages/DiffSharp-lite) - Includes the LibTorch backend but not the LibTorch binaries. You can combine this with existing local native binaries of LibTorch installed through other means (for example, by installing [PyTorch](https://pytorch.org/) using a Python package manager). You will have to add an explicit load of the relevant native library, for example:
 
