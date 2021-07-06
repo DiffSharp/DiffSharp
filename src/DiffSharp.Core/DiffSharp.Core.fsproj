@@ -18,6 +18,7 @@
     <Compile Include="DiffSharp.Compose.fs" />
     <Compile Include="DiffSharp.Shorten.fs" />
     <Compile Include="DiffSharp.Numerical.fs" />
+    <Compile Include="DiffSharp.AvgPool.fs" />
     <Compile Include="Distributions.fs" />
     <Compile Include="Data.fs" />
     <Compile Include="Model.fs" />

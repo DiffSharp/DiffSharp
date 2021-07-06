@@ -454,6 +454,27 @@ type RawTensor() =
     /// Returns the 3D maxunpool of a tensor using the given indices for locations of maximums
     abstract MaxUnpool3D: indices: RawTensor * outputSize: int[] -> RawTensor
 
+    /// Returns the 1D avgpool of a tensor 
+    abstract AvgPool1D: kernelSize: int * stride: int * padding: int (* * ceil_mode: bool * count_include_pad: bool *) -> RawTensor
+
+    /// Returns the 2D avgpool of a tensor 
+    abstract AvgPool2D: kernelSize: int[] * stride: int[] * padding: int[] (* * ceil_mode: bool * count_include_pad: bool *) -> RawTensor
+
+    /// Returns the 2D avgpool of a tensor 
+    abstract AvgPool3D: kernelSize: int[] * stride: int[] * padding: int[] (* * ceil_mode: bool * count_include_pad: bool *) -> RawTensor
+
+    /// <summary>Returns the reverse mode of a 1D avgpool of a tensor, apportioning each part of the adjoint equally to each corresponding input</summary>
+    /// <remarks>The originalInput parameter is only used for shape information</remarks>
+    abstract AvgPoolReverse1D: originalInput: RawTensor * kernelSize: int * stride: int * padding: int (* * ceil_mode: bool * count_include_pad: bool *) -> RawTensor
+
+    /// <summary>Returns the reverse mode of a 2D avgpool of a tensor, apportioning each part of the adjoint equally to each corresponding input</summary>
+    /// <remarks>The originalInput parameter is only used for shape information</remarks>
+    abstract AvgPoolReverse2D: originalInput: RawTensor * kernelSize: int[] * stride: int[] * padding: int[] (* * ceil_mode: bool * count_include_pad: bool *) -> RawTensor
+
+    /// <summary>Returns the reverse mode of a 3D avgpool of a tensor, apportioning each part of the adjoint equally to each corresponding input</summary>
+    /// <remarks>The originalInput parameter is only used for shape information</remarks>
+    abstract AvgPoolReverse3D: originalInput: RawTensor * kernelSize: int[] * stride: int[] * padding: int[] (* * ceil_mode: bool * count_include_pad: bool *) -> RawTensor
+
     /// Returns the 1D convolution of the tensor
     abstract Conv1D: kernel: RawTensor * stride: int * padding: int -> RawTensor
 
