@@ -39,13 +39,13 @@ DiffSharp runs on [dotnet](https://dotnet.microsoft.com/), a cross-platform, ope
 We provide several package bundles for a variety of use cases.
 
 * [`DiffSharp-cpu`](https://www.nuget.org/packages/DiffSharp-cpu)</br>
-  Includes LibTorch CPU binaries for Linux and Windows.
+  Includes LibTorch CPU binaries for Linux, macOS, and Windows.
 * [`DiffSharp-cuda-linux`](https://www.nuget.org/packages/DiffSharp-cuda-linux) / [`DiffSharp-cuda-windows`](https://www.nuget.org/packages/DiffSharp-cuda-windows)</br>
   Include LibTorch CPU and CUDA GPU binaries for Linux and Windows. Large download.
 * [`DiffSharp-lite`](https://www.nuget.org/packages/DiffSharp-lite)</br>
-  Includes the LibTorch backend but not the LibTorch binaries. 
+  Includes the Torch backend but not the LibTorch binaries. 
 
-### Using local LibTorch binaries
+### Using local LibTorch binaries (optional)
 
 You can combine the `DiffSharp-lite` package bundle with existing local native binaries of LibTorch installed through other means (for example, by installing [PyTorch](https://pytorch.org/) using a Python package manager). If your GPU works in this PyTorch installation without any issues, it will also work in DiffSharp.
 
@@ -59,13 +59,19 @@ Before using the `Torch` backend in DiffSharp, you will have to add an explicit 
 
 DiffSharp currently provides two computation backends.
 
-* The `Torch` backend is the default, recommended, backend based on [LibTorch](https://pytorch.org/cppdocs/), using the same C++ and CUDA implementations for tensor computations that power [PyTorch](https://pytorch.org/). On top of these raw tensors (LibTorch's ATen, excluding autograd), DiffSharp implements its own computation graph and differentiation capabilities. This backend requires platform-specific binaries of LibTorch, which we provide and test on Linux and Windows.
+* The `Torch` backend is the default and recommended backend based on [LibTorch](https://pytorch.org/cppdocs/), using the same C++ and CUDA implementations for tensor computations that power [PyTorch](https://pytorch.org/). On top of these raw tensors (LibTorch's ATen, excluding autograd), DiffSharp implements its own computation graph and differentiation capabilities. This backend requires platform-specific binaries of LibTorch, which we provide and test on Linux, macOS, and Windows.
 
-* The `Reference` backend is implemented purely in F# and can run on any hardware platform where dotnet can run. This backend has reasonable performance for use cases dominated by scalar operations, and is not recommended for use cases involving large tensor operations (such as machine learning). This backend is always available.
+* The `Reference` backend is implemented purely in F# and can run on any hardware platform where [dotnet](https://dotnet.microsoft.com/) can run (for example iOS, Android, Raspberry Pi). This backend has reasonable performance for use cases dominated by scalar and small tensor operations, and is not recommended for use cases involving large tensor operations (such as machine learning). This backend is always available.
 
-### Configuration
+### Configuration of Default Backend, Device, and Tensor Type
 
-Selection of the backend is done using `cref:M:DiffSharp.dsharp.config`.
+Selection of the default backend, device, and tensor type is done using `cref:M:DiffSharp.dsharp.config`.
+
+* `cref:T:DiffSharp.Dtype` choices available: `BFloat16`, `Bool`, `Byte`, `Float16`, `Float32`, `Float64`, `Int16`, `Int32`, `Int64`, `Int8`
+
+* `cref:T:DiffSharp.Device` choices available: `CPU`, `GPU`
+
+* `cref:T:DiffSharp.Backend` choices available: `Reference`, `Torch`
 
 For example, the following selects the `Torch` backend with single precision tensors as the default tensor type and GPU (CUDA) execution.
 
@@ -109,11 +115,14 @@ You can use DiffSharp in [dotnet interactive](https://github.com/dotnet/interact
 
     open DiffSharp
 
+</br>
 <img src="img/anim-intro-1.gif" width="85%" />
 
 ### Dotnet Applications
 
-You can add DiffSharp to your dotnet application using the dotnet command-line interface (CLI).
+You can add DiffSharp to your dotnet application using the [dotnet](https://dotnet.microsoft.com/) command-line interface (CLI).
+
+For example, the following creates a new F# console application and adds the latest pre-release version of the `DiffSharp-cpu` package as a dependency.
 
     dotnet new console -lang "F#" -o src/app
     cd src/app
