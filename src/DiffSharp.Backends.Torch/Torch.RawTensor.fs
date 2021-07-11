@@ -280,7 +280,7 @@ type TorchRawTensor(tt: TorchTensor, shape: Shape, dtype: Dtype, device: Device)
     override t.SplitT(sizes, dim) =
         let shape = t.Shape
         let outShapes = Shape.checkCanSplit shape sizes dim
-        let results = tt.split_with_sizes(int64s sizes, dim)
+        let results = tt.split(int64s sizes, dim)
         (results, outShapes) ||> Array.map2 (fun rvalues outShape -> 
             t.MakeLike(rvalues, shape=outShape))
 
@@ -833,7 +833,7 @@ type TorchRawTensor(tt: TorchTensor, shape: Shape, dtype: Dtype, device: Device)
     override t.SinhT() =
         match dtype with 
         | Dtype.IntegralOrBool -> opNotSupported "SinhT" dtype
-        | _ ->  t.MakeLike(tt.Sinh())
+        | _ ->  t.MakeLike(tt.sinh())
 
     override t.CoshT() =
         match dtype with 
@@ -1055,7 +1055,7 @@ type TorchRawTensor(tt: TorchTensor, shape: Shape, dtype: Dtype, device: Device)
 
     override _.TanInPlace() = checkMutable(); tt.tan_() |> ignore
 
-    override _.SinhInPlace() = checkMutable(); tt.Sinh_() |> ignore
+    override _.SinhInPlace() = checkMutable(); tt.sinh_() |> ignore
 
     override _.CoshInPlace() = checkMutable(); tt.cosh_() |> ignore
 

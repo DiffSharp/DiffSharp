@@ -46,7 +46,7 @@ It is designed for use in machine learning, probabilistic programming, optimizat
 
 🗹 PyTorch familiar naming and idioms, efficient LibTorch C++ tensors
 
-🗹 Linux, Windows and CUDA supported
+🗹 Linux, Windows, OSX and CUDA supported
 
 🗹 Use notebooks in Jupyter and Visual Studio Code
 
