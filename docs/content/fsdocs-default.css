@@ -323,11 +323,11 @@ body {
     border-collapse: separate;
     white-space: pre;
     font: 0.85rem 'Roboto Mono', monospace;
-    width: 90%;
-    /* margin: 10px 20px 20px 20px; */
+    width: 100%;
+    margin: 10px 0px 20px 0px;
     background-color: #f3f4f7;
     padding: 10px;
-    /* border-radius: 5px; */
+    border-radius: 5px;
     color: #8e0e2b;
     max-width: none;
 }
@@ -347,6 +347,7 @@ body {
     padding: 0px;
     white-space: normal;
     margin: 0px;
+    width: 100%;
 }
 
 #fsdocs-content table.pre td.lines {

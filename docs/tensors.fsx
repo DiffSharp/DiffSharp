@@ -33,4 +33,5 @@ Formatter.Register(fun (x:obj) (writer: TextWriter) -> fprintfn writer "%120A" x
 
 * The `cref:T:DiffSharp.Tensor` type
 
+Saving tensors as image and loading images as tensors
 *)
