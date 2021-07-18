@@ -10,33 +10,45 @@
 #endif // FSX
 (*** condition: ipynb ***)
 #if IPYNB
+// Google Colab only: uncomment and run the following to install dotnet and the F# kernel
+// !bash <(curl -Ls https://raw.githubusercontent.com/gbaydin/scripts/main/colab_dotnet5.sh)
+#endif // IPYNB
+(*** condition: ipynb ***)
+#if IPYNB
+// Import DiffSharp package
 #r "nuget: DiffSharp-lite,{{fsdocs-package-version}}"
 
+// Set dotnet interactive formatter to plaintext
 Formatter.SetPreferredMimeTypeFor(typeof<obj>, "text/plain")
 Formatter.Register(fun (x:obj) (writer: TextWriter) -> fprintfn writer "%120A" x )
 #endif // IPYNB
 
 (**
+[![Binder](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/DiffSharp/diffsharp.github.io/blob/master/{{fsdocs-source-basename}}.ipynb)&emsp;
 [![Binder](img/badge-binder.svg)](https://mybinder.org/v2/gh/diffsharp/diffsharp.github.io/master?filepath={{fsdocs-source-basename}}.ipynb)&emsp;
 [![Script](img/badge-script.svg)]({{fsdocs-source-basename}}.fsx)&emsp;
 [![Script](img/badge-notebook.svg)]({{fsdocs-source-basename}}.ipynb)
 
 # DiffSharp: Differentiable Tensor Programming Made Simple
 
-DiffSharp is a tensor library with support for [differentiable programming](https://en.wikipedia.org/wiki/Automatic_differentiation).
+DiffSharp is a tensor library with support for [differentiable programming](https://en.wikipedia.org/wiki/Differentiable_programming).
 It is designed for use in machine learning, probabilistic programming, optimization and other domains.
+
+<button class="button" style="vertical-align:middle" onclick="window.location.href='{{root}}install.html'"><span>Install »</span></button>
+
+## Key Features
 
 🗹 Nested and mixed-mode differentiation
 
 🗹 Common optimizers, model elements, differentiable probability distributions
 
-🗹 F# for robust functional programming 
+🗹 F# programming language for robust functional programming 
 
-🗹 PyTorch familiar naming and idioms, efficient LibTorch C++ tensors
+🗹 PyTorch familiar naming and idioms, efficient LibTorch CUDA/C++ tensors with GPU support
 
-🗹 Linux, Windows, OSX and CUDA supported
+🗹 Linux, macOS, Windows supported
 
-🗹 Use notebooks in Jupyter and Visual Studio Code
+🗹 Use interactive notebooks in Jupyter and Visual Studio Code
 
 🗹 100% open source 
 
@@ -47,66 +59,69 @@ DiffSharp provides world-leading automatic differentiation capabilities for tens
 
 With DiffSharp, you can compute higher-order derivatives efficiently and differentiate functions that are internally making use of differentiation and gradient-based optimization. 
 
-<img src="img/anim-intro-2.gif" width="75%" />
+</br>
+<img src="img/anim-intro-2.gif" width="85%" />
 
 ## Practical, Familiar and Efficient
 
-DiffSharp comes with a [LibTorch](https://pytorch.org/cppdocs/) backend, using the same C++ and CUDA implementations for tensor computations that power [PyTorch](https://pytorch.org/). On top of these raw tensors (LibTorch's ATen, excluding autograd), DiffSharp implements its own computation graph and differentiation capabilities. It is tested on Linux and Windows and includes support for CUDA 11.
+DiffSharp comes with a [LibTorch](https://pytorch.org/cppdocs/) backend, using the same C++ and CUDA implementations for tensor computations that power [PyTorch](https://pytorch.org/). On top of these raw tensors (LibTorch's ATen, excluding autograd), DiffSharp implements its own computation graph and differentiation capabilities. It is tested on Linux, macOS, and Windows, and it supports CUDA and GPUs.
 
-The DiffSharp API is designed to be similar to [the PyTorch Python API](https://pytorch.org/docs/stable/index.html) through very similar
-naming and idioms, and where elements have similar names the PyTorch documentation can generally be used as a guide. There are some improvements and DiffSharp supports a richer gradient/differentiation API.
+The DiffSharp API is designed to be similar to [the PyTorch Python API](https://pytorch.org/docs/stable/index.html) through very similar naming and idioms, and where elements have similar names the PyTorch documentation can generally be used as a guide.
 
-DiffSharp uses [the incredible F# programming language](https://fsharp.org) for tensor programming. F# code is generally faster and more robust than equivalent Python code, while still being succinct and compact like Python, making it an ideal modern AI and machine learning implementation language. This allows fluent and productive code while focusing on the tensor programming domain.
+DiffSharp uses [the incredible F# programming language](https://fsharp.org) for tensor programming. F# code is generally faster and more robust than equivalent Python code, while still being succinct and compact like Python, making it an ideal modern AI and machine learning implementation language. This allows fluent and productive code for tensor programming.
 
-<iframe width="75%" src="https://www.youtube.com/embed/_QnbV6CAWXc" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+</br>
+<iframe width="85%" src="https://www.youtube.com/embed/_QnbV6CAWXc" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 
-## Quick Usage Examples
+## Interactive Notebooks
 
-You can execute this page as an interactive notebook running in your browser, or download it as a script or .NET Interactive Jupyter notebook, using the buttons [![Binder](img/badge-binder.svg)](https://mybinder.org/v2/gh/diffsharp/diffsharp.github.io/master?filepath={{fsdocs-source-basename}}.ipynb) 
-[![Script](img/badge-script.svg)]({{fsdocs-source-basename}}.fsx) 
-[![Script](img/badge-notebook.svg)]({{fsdocs-source-basename}}.ipynb) on the top of the page. This applies to all documentation pages.
+All documentation pages in this website are interactive notebooks which you can execute directly in your browser without installing anything in your local machine.
 
-If using Visual Studio Code you can download, edit and execute these notebooks using [the .NET Interactive Notebooks for VS Code](https://marketplace.visualstudio.com/items?itemName=ms-dotnettools.dotnet-interactive-vscode).
+Using the buttons [![Binder](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/DiffSharp/diffsharp.github.io/blob/master/{{fsdocs-source-basename}}.ipynb) [![Binder](img/badge-binder.svg)](https://mybinder.org/v2/gh/diffsharp/diffsharp.github.io/master?filepath={{fsdocs-source-basename}}.ipynb) on the top of each page, you can execute the page as an interactive notebook running on cloud servers provided by [Google Colab](https://colab.research.google.com/) and [Binder](https://mybinder.org/).
 
-First reference the package:
+Using the buttons [![Script](img/badge-script.svg)]({{fsdocs-source-basename}}.fsx) 
+[![Script](img/badge-notebook.svg)]({{fsdocs-source-basename}}.ipynb) you can also download a page as a script or an interactive notebook, which you can execute locally in [Jupyter](https://jupyter.org/) or [Visual Studio Code](https://code.visualstudio.com/) using [dotnet interactive](https://github.com/dotnet/interactive).
 
-    #r "nuget: DiffSharp-lite, {{fsdocs-package-version}}"
+## Example
 
-or for LibTorch support:
-
-    #r "nuget: DiffSharp-cpu, {{fsdocs-package-version}}"
+Define and add two tensors:
 *)
 
 open DiffSharp
 
-(** 
-Configure:
-*)
-dsharp.config(dtype=Dtype.Float32, device=Device.CPU, backend=Backend.Reference)
-
-(** 
-Defining and adding two tensors:
-*)
-let t1 = dsharp.tensor [ 0.0 .. 0.2 .. 1.0 ]
-let t2 = dsharp.tensor [ 0, 1, 2, 4, 7, 2 ]
+let t1 = dsharp.tensor [ 0.0 .. 0.2 .. 1.0 ] // Gives [0., 0.2, 0.4, 0.6, 0.8, 1.]
+let t2 = dsharp.tensor [ 1, 2, 3, 4, 5, 6 ]
 
 t1 + t2
+(*** include-it ***)
 
 (** 
-Computing a convolution:
+Compute a 2d convolution:
 *)
 let t3 = dsharp.tensor [[[[0.0 .. 10.0]]]]
 let t4 = dsharp.tensor [[[[0.0 ..0.1 .. 1.0]]]]
 
 t3.conv2d(t4)
+(*** include-it ***)
 
 (** 
 Take the gradient of a vector-to-scalar function:
 *)
 
-let f (x: Tensor) = x.exp().sum()
+let f (x:Tensor) = x.exp().sum()
 
 dsharp.grad f (dsharp.tensor([1.8, 2.5]))
+(*** include-it ***)
+
+(**
+Compute a nested derivative (checking for [perturbation confusion](https://doi.org/10.1007/s10990-008-9037-1)):
+*)
+
+let x0 = dsharp.tensor(1)
+let y0 = dsharp.tensor(2)
+dsharp.diff (fun x -> x * dsharp.diff (fun y -> x * y) y0) x0
+(*** include-it ***)
+
 
 (**
 Define a model and optimize it:
@@ -147,10 +162,9 @@ let validLoss =
 
 print $"Validation loss: {validLoss/validSet.length}"
 
-
 (**
 
-Numerous other model definition and gradient/training patterns are supported, see [examples](https://github.com/DiffSharp/DiffSharp/tree/dev/examples).
+Numerous other model definition, differentiation, and training patterns are supported. See the tutorials in the left-hand menu and [examples](https://github.com/DiffSharp/DiffSharp/tree/dev/examples) on GitHub.
 
 ## More Information
 
