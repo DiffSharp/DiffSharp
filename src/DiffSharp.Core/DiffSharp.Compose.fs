@@ -86,6 +86,9 @@ type dsharp with
     static member ge(b:Tensor) = fun (a:Tensor) -> a.ge(b)
 
     /// <summary>TBD</summary>
+    static member eq(b:Tensor) = fun (a:Tensor) -> a.eq(b)
+
+    /// <summary>TBD</summary>
     static member clamp(?low:scalar, ?high:scalar) = fun (a:Tensor) -> a.clamp(?low=low, ?high=high)
 
     /// <summary>TBD</summary>
