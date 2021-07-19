@@ -40,16 +40,16 @@ let classifier =
 
 let epochs = 20
 let batchSize = 64
-let numSamples = 32
+let numSamples = 4
 
 let urls = ["https://ossci-datasets.s3.amazonaws.com/mnist/train-images-idx3-ubyte.gz";
             "https://ossci-datasets.s3.amazonaws.com/mnist/train-labels-idx1-ubyte.gz";
             "https://ossci-datasets.s3.amazonaws.com/mnist/t10k-images-idx3-ubyte.gz";
             "https://ossci-datasets.s3.amazonaws.com/mnist/t10k-labels-idx1-ubyte.gz"]
 
-let trainSet = MNIST("../data", urls=urls, train=true, n=1000)
+let trainSet = MNIST("../data", urls=urls, train=true)
 let trainLoader = trainSet.loader(batchSize=batchSize, shuffle=true)
-let validSet = MNIST("../data", urls=urls, train=false, n=10)
+let validSet = MNIST("../data", urls=urls, train=false)
 let validLoader = validSet.loader(batchSize=batchSize, shuffle=false)
 
 
@@ -64,8 +64,10 @@ for epoch = 1 to epochs do
         let l = dsharp.nllLoss(output, target)
         l.reverse()
         optimizer.step()
-        printfn "Epoch: %A/%A minibatch: %A/%A loss: %A" epoch epochs i trainLoader.length (float(l))
+        printfn "Epoch: %A/%A, minibatch: %A/%A, loss: %A" epoch epochs i trainLoader.length (float(l))
 
+
+    printfn "Computing validation loss"
     classifier.noDiff()
     let mutable validLoss = dsharp.zero()
     let mutable correct = 0
@@ -76,9 +78,11 @@ for epoch = 1 to epochs do
         correct <- correct + int (pred.eq(target).sum())
     validLoss <- validLoss / validSet.length
     let accuracy = 100.*(float correct) / (float validSet.length)
-    printfn "Validation loss: %A, accuracy: %.2f%%" (float validLoss) accuracy
+    printfn "\nValidation loss: %A, accuracy: %.2f%%" (float validLoss) accuracy
 
-    // let samples, sampleLabels = validLoader.batch()
-    let samples, sampleLabels = validLoader.batch(4)
-    print (samples.toImageString(gridCols=4))
-    print sampleLabels
+    let samples, sampleLabels = validLoader.batch(numSamples)
+    printfn "Sample predictions:\n%s" (samples.toImageString(gridCols=4))
+    printfn "True labels     : %A " (sampleLabels.int())
+    let predictedLabels = (samples --> classifier).argmax(dim=1)
+    printfn "Predicted labels: %A\n" predictedLabels
+
