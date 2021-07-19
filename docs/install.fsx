@@ -1,9 +1,16 @@
 ﻿(*** condition: prepare ***)
-#I "../tests/DiffSharp.Tests/bin/Debug/net5.0"
+#I "../src/DiffSharp.Core/bin/Debug/netstandard2.1"
+#I "../src/DiffSharp.Data/bin/Debug/netstandard2.1"
+#I "../src/DiffSharp.Backends.Reference/bin/Debug/netstandard2.1"
+#I "../src/DiffSharp.Backends.Torch/bin/Debug/net5.0"
 #r "DiffSharp.Core.dll"
 #r "DiffSharp.Data.dll"
 #r "DiffSharp.Backends.Reference.dll"
 #r "DiffSharp.Backends.Torch.dll"
+// These are needed to make fsdocs --eval work. If we don't select a backend like this in the beginning, we get erratic behavior.
+DiffSharp.dsharp.config(backend=DiffSharp.Backend.Reference)
+DiffSharp.dsharp.seed(123)
+
 (*** condition: fsx ***)
 #if FSX
 #r "nuget: DiffSharp-lite,{{fsdocs-package-version}}"
