@@ -306,7 +306,7 @@ type Model() =
             m.parametersVector <- old
 
     /// <summary>TBD</summary>
-    override m.ToString() = sprintf "%s, nparameters:%A" (m.getString()) m.nparameters
+    override m.ToString() = sprintf "%s, nparameters:%s" (m.getString()) (thousands m.nparameters)
 
     /// <summary>TBD</summary>
     static member create ps f =

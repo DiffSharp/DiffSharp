@@ -410,3 +410,5 @@ module UtilAutoOpens =
 
     /// Left-pads a string to match the length of another string.
     let stringPadAs (s1:string) (s2:string) = stringPad s1 s2.Length
+
+    let thousands(x:int) = String.Format("{0:#,0}", x)
