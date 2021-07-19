@@ -436,6 +436,12 @@ type dsharp =
     /// <param name="b">The second tensor.</param>
     static member ge(a:Tensor, b:Tensor) = a.ge(b)
 
+    /// <summary>Returns a boolean tensor for the element-wise equality comparison of the elements in the two tensors.</summary>
+    /// <remarks>The shapes of input and other don’t need to match, but they must be broadcastable.</remarks>
+    /// <param name="a">The first tensor.</param>
+    /// <param name="b">The second tensor.</param>
+    static member eq(a:Tensor, b:Tensor) = a.eq(b)    
+
     /// <summary>Returns a boolean tensor where each element indicates if the corresponding element in the input tensor is an infinity value.</summary>
     /// <param name="input">The input tensor.</param>
     static member isinf(input:Tensor) = input.isinf()
