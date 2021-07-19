@@ -7,6 +7,7 @@
 #r "DiffSharp.Data.dll"
 #r "DiffSharp.Backends.Reference.dll"
 #r "DiffSharp.Backends.Torch.dll"
+#r "nuget: SixLabors.ImageSharp,1.0.1"
 // These are needed to make fsdocs --eval work. If we don't select a backend like this in the beginning, we get erratic behavior.
 DiffSharp.dsharp.config(backend=DiffSharp.Backend.Reference)
 DiffSharp.dsharp.seed(123)
@@ -15,6 +16,7 @@ open DiffSharp.Util
 (*** condition: fsx ***)
 #if FSX
 #r "nuget: DiffSharp-lite,{{fsdocs-package-version}}"
+#r "nuget: SixLabors.ImageSharp,1.0.1"
 #endif // FSX
 (*** condition: ipynb ***)
 #if IPYNB
@@ -25,6 +27,7 @@ open DiffSharp.Util
 #if IPYNB
 // Import DiffSharp package
 #r "nuget: DiffSharp-lite,{{fsdocs-package-version}}"
+#r "nuget: SixLabors.ImageSharp,1.0.1"
 
 // Set dotnet interactive formatter to plaintext
 Formatter.SetPreferredMimeTypeFor(typeof<obj>, "text/plain")
@@ -63,10 +66,14 @@ let dataset = MNIST("../data", train=true, transform=id, n=10)
 // Inspect a single image and label
 let data, label = dataset.[7]
 
-(*** do-not-eval ***)
 // Save image to file
 data.saveImage("test.png")
+
 (** *)
+
+(*** hide ***)
+fileToBase64String "test.png" |> sprintf """<img src="data:image/png;base64,%s"/>"""
+(*** include-it-raw ***)
 
 // Inspect data as ASCII and show label
 printfn "Data: %A\nLabel: %A" (data.toImageString()) label

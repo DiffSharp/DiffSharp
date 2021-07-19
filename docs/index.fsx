@@ -96,7 +96,7 @@ Define and add two tensors:
 
 open DiffSharp
 
-let t1 = dsharp.tensor [ 0.0 .. 0.2 .. 1.0 ] // Gives [0., 0.2, 0.4, 0.6, 0.8, 1.]
+let t1 = dsharp.tensor [ 0.0 ..0.2.. 1.0 ] // Gives [0., 0.2, 0.4, 0.6, 0.8, 1.]
 let t2 = dsharp.tensor [ 1, 2, 3, 4, 5, 6 ]
 
 t1 + t2
@@ -106,7 +106,7 @@ t1 + t2
 Compute a convolution:
 *)
 let t3 = dsharp.tensor [[[[0.0 .. 10.0]]]]
-let t4 = dsharp.tensor [[[[0.0 ..0.1 .. 1.0]]]]
+let t4 = dsharp.tensor [[[[0.0 ..0.1.. 1.0]]]]
 
 t3.conv2d(t4)
 (*** include-it ***)
