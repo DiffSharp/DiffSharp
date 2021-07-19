@@ -72,7 +72,7 @@ data.saveImage("test.png")
 (** *)
 
 (*** hide ***)
-fileToBase64String "test.png" |> sprintf """<img src="data:image/png;base64,%s"/>"""
+pngFileToHTML "test.png"
 (*** include-it-raw ***)
 
 // Inspect data as ASCII and show label

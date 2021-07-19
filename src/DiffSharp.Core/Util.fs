@@ -416,5 +416,10 @@ module UtilAutoOpens =
 
     /// Returns the file contents as Base64 encoded string
     let fileToBase64String fileName =
-        let bytes = System.IO.File.ReadAllBytes(fileName);
-        System.Convert.ToBase64String(bytes);
+        let bytes = System.IO.File.ReadAllBytes(fileName)
+        System.Convert.ToBase64String(bytes)
+
+    /// Returns a PNG image file as an HTML image element with the image content included as a Base64 encoded string
+    let pngFileToHTML fileName =
+        fileName |> fileToBase64String
+        |> sprintf """<img src="data:image/png;base64,%s"/>"""
