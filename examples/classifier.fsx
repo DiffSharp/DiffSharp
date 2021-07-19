@@ -64,7 +64,8 @@ for epoch = 1 to epochs do
         let l = dsharp.nllLoss(output, target)
         l.reverse()
         optimizer.step()
-        printfn "Epoch: %A/%A, minibatch: %A/%A, loss: %A" epoch epochs i trainLoader.length (float(l))
+        if i % 10 = 0 then
+            printfn "Epoch: %A/%A, minibatch: %A/%A, loss: %A" epoch epochs i trainLoader.length (float(l))
 
 
     printfn "Computing validation loss"
