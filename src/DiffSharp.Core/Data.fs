@@ -66,7 +66,12 @@ type DataLoader(dataset:Dataset, batchSize:int, ?shuffle:bool, ?dropLast:bool, ?
         let batches = batchIndices |> Seq.map (Array.map dataset.item >> Array.unzip)
         batches |> Seq.mapi (fun i (data, target) -> i, data |> dsharp.stack |> dsharp.move(dtype, device, backend), target |> dsharp.stack |> dsharp.move(targetDtype, targetDevice, targetBackend))
         |> Seq.truncate numBatches
-    member d.batch() = let _, data, target = d.epoch() |> Seq.head in data, target
+    member d.batch(?batchSize:int) = 
+        let _, data, target = d.epoch() |> Seq.head
+        match batchSize with
+        | Some(b) when b <= 0 -> failwithf "Expecting batchSize > 0"
+        | Some(b) when b < data.shape.[0]-> data.[..b-1], target.[..b-1]
+        | _ -> data, target
 
 
 type TensorDataset(data:Tensor, target:Tensor) =
