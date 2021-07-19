@@ -584,6 +584,9 @@ type Tensor =
     /// <summary>Computes element-wise (\a &gt;= b\), returning a boolean tensor containing a <c>true</c> at each location where the comparison is true</summary>
     member a.ge(b:Tensor) = TensorC(a.primalRaw.GeTT(b.primalRaw))
 
+    /// <summary>Computes element-wise (\a &gt;= b\), returning a boolean tensor containing a <c>true</c> at each location where the comparison is true</summary>
+    member a.eq(b:Tensor) = TensorC(a.primalRaw.EqTT(b.primalRaw))
+
     /// <summary>Returns a new tensor with boolean elements representing if each element is +/-INF or not.</summary>
     member a.isinf() = TensorC(a.primalRaw.IsInfT())
 

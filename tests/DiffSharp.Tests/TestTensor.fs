@@ -1168,6 +1168,28 @@ type TestTensor () =
             Assert.CheckEqual(t1Boolt2BoolGeCorrect, t1Boolt2BoolGe)
 
     [<Test>]
+    member _.TestTensorEqTT () =
+        // Test all non-bool types
+        for combo in Combos.IntegralAndFloatingPoint do 
+            let t1 = combo.tensor([1.; 2.; 3.; 5.])
+            let t2 = combo.tensor([1.; 2.; 5.; 4.])
+            let t1t2Eq = t1.eq(t2)
+            let t1t2EqCorrect = combo.tensor([1.; 1.; 0.; 0.], dtype=Dtype.Bool)
+
+            Assert.CheckEqual(t1t2EqCorrect, t1t2Eq)
+            Assert.CheckEqual(Dtype.Bool, t1t2Eq.dtype)
+
+        // Test bool type separately
+        for combo in Combos.Bool do 
+            // Test bool type separately
+            let t1Bool = combo.tensor([true; true; false; false ])
+            let t2Bool = combo.tensor([true; false; true; false ])
+            let t1Boolt2BoolEq = t1Bool.eq(t2Bool)
+            let t1Boolt2BoolEqCorrect = combo.tensor([true; false; false; true ], dtype=Dtype.Bool)
+
+            Assert.CheckEqual(t1Boolt2BoolEqCorrect, t1Boolt2BoolEq)
+
+    [<Test>]
     member _.TestTensorIsinf () =
         // isinf always returns bool tensor
         for combo in Combos.FloatingPoint do 
