@@ -411,4 +411,10 @@ module UtilAutoOpens =
     /// Left-pads a string to match the length of another string.
     let stringPadAs (s1:string) (s2:string) = stringPad s1 s2.Length
 
+    /// Formats an integer as a string with comma as thousands separator
     let thousands(x:int) = String.Format("{0:#,0}", x)
+
+    /// Returns the file contents as Base64 encoded string
+    let fileToString fileName =
+        let bytes = System.IO.File.ReadAllBytes(fileName);
+        System.Convert.ToBase64String(bytes);
