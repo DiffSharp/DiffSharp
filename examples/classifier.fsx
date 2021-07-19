@@ -38,7 +38,7 @@ let classifier =
     --> Linear(128, 10)
     --> dsharp.logsoftmax(dim=1)
 
-let epochs = 2
+let epochs = 20
 let batchSize = 64
 let numSamples = 32
 
@@ -47,9 +47,9 @@ let urls = ["https://ossci-datasets.s3.amazonaws.com/mnist/train-images-idx3-uby
             "https://ossci-datasets.s3.amazonaws.com/mnist/t10k-images-idx3-ubyte.gz";
             "https://ossci-datasets.s3.amazonaws.com/mnist/t10k-labels-idx1-ubyte.gz"]
 
-let trainSet = MNIST("../data", urls=urls, train=true, transform=id, n=200)
+let trainSet = MNIST("../data", urls=urls, train=true, n=1000)
 let trainLoader = trainSet.loader(batchSize=batchSize, shuffle=true)
-let validSet = MNIST("../data", urls=urls, train=false, transform=id, n=10)
+let validSet = MNIST("../data", urls=urls, train=false, n=10)
 let validLoader = validSet.loader(batchSize=batchSize, shuffle=false)
 
 
@@ -70,11 +70,15 @@ for epoch = 1 to epochs do
     let mutable validLoss = dsharp.zero()
     let mutable correct = 0
     for j, data, target in validLoader.epoch() do
-        print j
         let output = data --> classifier
         validLoss <- validLoss + dsharp.nllLoss(output, target, reduction="sum")
         let pred = output.argmax(1)
-        correct <- correct + int (output.eq(target).sum())
-        print correct
+        correct <- correct + int (pred.eq(target).sum())
     validLoss <- validLoss / validSet.length
-    printfn "Validation loss: %A" (float validLoss)
+    let accuracy = 100.*(float correct) / (float validSet.length)
+    printfn "Validation loss: %A, accuracy: %.2f%%" (float validLoss) accuracy
+
+    // let samples, sampleLabels = validLoader.batch()
+    let samples, sampleLabels = validLoader.batch(4)
+    print (samples.toImageString(gridCols=4))
+    print sampleLabels
