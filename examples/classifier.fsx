@@ -68,9 +68,13 @@ for epoch = 1 to epochs do
 
     classifier.noDiff()
     let mutable validLoss = dsharp.zero()
+    let mutable correct = 0
     for j, data, target in validLoader.epoch() do
         print j
         let output = data --> classifier
         validLoss <- validLoss + dsharp.nllLoss(output, target, reduction="sum")
+        let pred = output.argmax(1)
+        correct <- correct + int (output.eq(target).sum())
+        print correct
     validLoss <- validLoss / validSet.length
     printfn "Validation loss: %A" (float validLoss)
