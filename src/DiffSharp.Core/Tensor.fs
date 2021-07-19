@@ -572,19 +572,19 @@ type Tensor =
         if hot < 0 || hot >= length then failwithf "Expecting 0 <= hot < length"
         a.zerosLike([|length|], ?dtype=dtype, ?device=device, ?backend=backend).addSlice([|hot|], a.onesLike([|1|], ?dtype=dtype, ?device=device, ?backend=backend))
 
-    /// <summary>Computes element-wise (\a &lt; b\), returning a boolean tensor containing a <c>true</c> at each location where the comparison is true</summary>
+    /// <summary>Computes element-wise \(a &lt; b\), returning a boolean tensor containing a <c>true</c> at each location where the comparison is true</summary>
     member a.lt(b:Tensor) = TensorC(a.primalRaw.LtTT(b.primalRaw))
 
-    /// <summary>Computes element-wise (\a &gt; b\), returning a boolean tensor containing a <c>true</c> at each location where the comparison is true</summary>
+    /// <summary>Computes element-wise \(a &gt; b\), returning a boolean tensor containing a <c>true</c> at each location where the comparison is true</summary>
     member a.gt(b:Tensor) = TensorC(a.primalRaw.GtTT(b.primalRaw))
 
-    /// <summary>Computes element-wise (\a &lt;= b\), returning a boolean tensor containing a <c>true</c> at each location where the comparison is true</summary>
+    /// <summary>Computes element-wise \(a \leq b\), returning a boolean tensor containing a <c>true</c> at each location where the comparison is true</summary>
     member a.le(b:Tensor) =TensorC(a.primalRaw.LeTT(b.primalRaw))
 
-    /// <summary>Computes element-wise (\a &gt;= b\), returning a boolean tensor containing a <c>true</c> at each location where the comparison is true</summary>
+    /// <summary>Computes element-wise \(a \geq b\), returning a boolean tensor containing a <c>true</c> at each location where the comparison is true</summary>
     member a.ge(b:Tensor) = TensorC(a.primalRaw.GeTT(b.primalRaw))
 
-    /// <summary>Computes element-wise (\a &gt;= b\), returning a boolean tensor containing a <c>true</c> at each location where the comparison is true</summary>
+    /// <summary>Computes element-wise \(a = b\), returning a boolean tensor containing a <c>true</c> at each location where the comparison is true</summary>
     member a.eq(b:Tensor) = TensorC(a.primalRaw.EqTT(b.primalRaw))
 
     /// <summary>Returns a new tensor with boolean elements representing if each element is +/-INF or not.</summary>
@@ -1798,14 +1798,14 @@ type Tensor =
         Tensor.OpUnary(a, fRaw, fTensor, dfFwd, dfRev)
 
     /// <summary>Applies the leaky rectified linear unit function element-wise</summary>
-    /// <remarks>\[\text{LeakyReLU}(x) = \max(0, x) + \text{negative\_slope} * \min(0, x)\]</remarks>
+    /// <remarks>\[\text{leakyRelu}(x) = \max(0, x) + \text{negativeSlope} * \min(0, x)\]</remarks>
     /// <param name="negativeSlope">Controls the angle of the negative slope. Default: 0.01.</param>
     member a.leakyRelu(?negativeSlope:float) =
         let negativeSlope = defaultArg negativeSlope 0.01
         let zeros = a.zerosLike() in zeros.max(a) + negativeSlope * zeros.min(a)
 
     /// <summary>Applies the sigmoid element-wise function</summary>
-    /// <remarks>\[\text{Sigmoid}(x) = \frac{1}{1 + \exp(-x)}\]</remarks>
+    /// <remarks>\[\text{sigmoid}(x) = \frac{1}{1 + \exp(-x)}\]</remarks>
     member a.sigmoid() =
         let inline fRaw(a:RawTensor) = a.SigmoidT()
         let inline fTensor(a:Tensor) = a.sigmoid()
@@ -1842,7 +1842,7 @@ type Tensor =
         a.clamp(low=epsilon).log()
 
     /// <summary>Applies the softplus function element-wise.</summary>
-    /// <remarks>\[\text{Softplus}(x) = \frac{1}{\beta} * \log(1 + \exp(\beta * x))\]</remarks>
+    /// <remarks>\[\text{softplus}(x) = \frac{1}{\beta} * \log(1 + \exp(\beta * x))\]</remarks>
     member a.softplus() =
         let inline fRaw(a:RawTensor) = a.SoftplusT()
         let inline fTensor(a:Tensor) = a.softplus()
@@ -1989,7 +1989,7 @@ type Tensor =
         Tensor.OpBinary(a, b, fRaw, fTensor, dfFwdTT, dfFwdTC, dfFwdCT, dfRevTT, dfRevTC, dfRevCT)
 
     /// <summary>Applies a softmax function.</summary>
-    /// <remarks>Softmax is defined as: \text{Softmax}(x_{i}) = \frac{\exp(x_i)}{\sum_j \exp(x_j)}.</remarks>
+    /// <remarks>Softmax is defined as: \text{softmax}(x_{i}) = \frac{\exp(x_i)}{\sum_j \exp(x_j)}.</remarks>
     /// <param name="dim">A dimension along which softmax will be computed.</param>
     member a.softmax(dim:int) =
         let dim = Shape.completeDim a.dim dim  // Handles -1 semantics
