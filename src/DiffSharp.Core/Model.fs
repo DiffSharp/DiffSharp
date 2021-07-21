@@ -220,8 +220,8 @@ type BaseModel() =
     /// <summary>TBD</summary>
     member m.allModels
         with get () =
-            if m.subModels .Count = 0 then [m]
-            else [for sm in m.subModels .Values do yield! sm.allModels]
+            if m.subModels.Count = 0 then [m]
+            else [for sm in m.subModels.Values do yield! sm.allModels]
 
     /// <summary>TBD</summary>
     member m.init(f:string*Tensor->Tensor) = for KeyValue(n, p) in m.parameters.values do p.value <- f(n, p.value)
@@ -290,9 +290,16 @@ type BaseModel() =
         sb.ToString()
 
     /// <summary>TBD</summary>
+    member m.saveParameters(fileName) = m.parametersVector.save(fileName)
+
+    /// <summary>TBD</summary>
+    member m.loadParameters(fileName) = m.parametersVector <- Tensor.load(fileName)
+
+    /// <summary>TBD</summary>
     member m.save(fileName) = saveBinary m fileName
 
     override m.ToString() = sprintf "%s, nparameters:%A" (m.getString()) m.nparameters
+
 
 [<AbstractClass>]
 type Model<'In, 'Out>() =
@@ -337,12 +344,6 @@ type Model<'In, 'Out>() =
     static member (-->) (t:'In, m:Model<'In, 'Out>) = m.forward t
 
     /// <summary>TBD</summary>
-    member m.saveParameters(fileName) = m.parametersVector.save(fileName)
-
-    /// <summary>TBD</summary>
-    member m.loadParameters(fileName) = m.parametersVector <- Tensor.load(fileName)
-
-    /// <summary>TBD</summary>
     static member load(fileName):Model<'In, 'Out> = loadBinary fileName
 
     /// <summary>TBD</summary>
@@ -353,7 +354,7 @@ type Model<'In, 'Out>() =
 
 type Model = Model<Tensor, Tensor>
 
-/// <summary>Contains functionality related to generating initial paramerter weights.</summary>
+/// <summary>Contains functionality related to generating initial parameter weights.</summary>
 type Weight =
 
     /// <summary>TBD</summary>
