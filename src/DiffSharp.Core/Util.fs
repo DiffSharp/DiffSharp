@@ -420,6 +420,5 @@ module UtilAutoOpens =
         System.Convert.ToBase64String(bytes)
 
     /// Given a PNG image file name, returns an HTML image element with the image content included as a Base64 encoded string
-    let pngToHtml fileName =
-        fileName |> fileToBase64String
-        |> sprintf """<img src="data:image/png;base64,%s"/>"""
+    let pngToHtml fileName cssStyle =
+        sprintf """<img src="data:image/png;base64,%s" style="%s"/>""" (fileName |> fileToBase64String) cssStyle
