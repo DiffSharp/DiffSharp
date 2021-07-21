@@ -247,6 +247,21 @@ type TestData () =
                     Assert.AreEqual(ybackendCorrect, ybackend)
 
     [<Test>]
+    member _.TestDataloaderNumBatches () =
+        let ndata = 100
+        let batchSize = 10
+        let x = dsharp.zeros([ndata; 10])
+        let y = dsharp.zeros([ndata; 1])
+        let dataset = TensorDataset(x, y)
+
+        let loader = dataset.loader(batchSize=batchSize)
+        let numBatchesCorrect = 3
+        let mutable numBatches = 0
+        for _ in loader.epoch(numBatchesCorrect) do
+            numBatches <- numBatches + 1
+        Assert.AreEqual(numBatchesCorrect, numBatches)
+
+    [<Test>]
     member _.TestDataloaderDroplast () =
         let ndata = 1000
         let batchSize = 16

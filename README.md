@@ -7,7 +7,7 @@
 [Documentation](https://diffsharp.github.io/)
 
 [![Build Status](https://github.com/DiffSharp/DiffSharp/workflows/Build/test/docs/publish/badge.svg)](https://github.com/DiffSharp/DiffSharp/actions)
-[![codecov](https://codecov.io/gh/DiffSharp/DiffSharp/branch/dev/graph/badge.svg)](https://codecov.io/gh/DiffSharp/DiffSharp)
+[![Coverage Status](https://coveralls.io/repos/github/DiffSharp/DiffSharp/badge.svg?branch=)](https://coveralls.io/github/DiffSharp/DiffSharp?branch=)
 
 This is the development branch of DiffSharp 1.0.
 
@@ -19,7 +19,7 @@ DiffSharp is normally used from an F# Jupyter notebook.  You can simply open exa
 
 * [index.ipynb](https://mybinder.org/v2/gh/diffsharp/diffsharp.github.io/master?filepath=index.ipynb)
 
-* [getting-started-torch.ipynb](https://mybinder.org/v2/gh/diffsharp/diffsharp.github.io/master?filepath=getting-started-torch.ipynb)
+* [getting-started-install.ipynb](https://mybinder.org/v2/gh/diffsharp/diffsharp.github.io/master?filepath=getting-started-install.ipynb)
 
 To use locally in [Visual Studio Code](https://code.visualstudio.com/):
 
@@ -31,7 +31,7 @@ To use locally in [Visual Studio Code](https://code.visualstudio.com/):
 
 To use locally in Jupyter, first install Jupyter and then:
 
-    dotnet tool install -g --add-source "https://dotnet.myget.org/F/dotnet-try/api/v3/index.json" microsoft.dotnet-interactive
+    dotnet tool install -g microsoft.dotnet-interactive
     dotnet interactive jupyter install
 
 When using .NET Interactive it is best to completely turn off automatic HTML displays of outputs:
@@ -43,7 +43,7 @@ You can also use DiffSharp from a script or an application.  Here are some examp
 
 * [docs/index.fsx](http://diffsharp.github.io/index.fsx)
 
-* [docs/getting-started-torch.fsx](http://diffsharp.github.io/getting-started-torch.fsx)
+* [docs/getting-started-install.fsx](http://diffsharp.github.io/getting-started-install.fsx)
 
 ## Available packages and backends
 
@@ -53,7 +53,9 @@ Now reference an appropriate nuget package from https://nuget.org:
 
 * [`DiffSharp-cpu`](https://www.nuget.org/packages/DiffSharp-cpu) - This includes the Torch backend using CPU only.
 
-* [`DiffSharp-cuda-linux`](https://www.nuget.org/packages/DiffSharp-cuda-linux), [`DiffSharp-cuda-windows`](https://www.nuget.org/packages/DiffSharp-cuda-windows) - These include the Torch CPU/GPU backend for Linux and Windows respectively. Large download.
+* [`DiffSharp-cuda-linux`](https://www.nuget.org/packages/DiffSharp-cuda-linux) - This includes the Torch CPU/CUDA 11.1 backend for Windows. Large download. Requires .NET 6 SDK, version `6.0.100-preview.5.21302.13` or greater.
+
+* [`DiffSharp-cuda-windows`](https://www.nuget.org/packages/DiffSharp-cuda-windows) - This includes the Torch CPU/CUDA 11.1 backend for Windows. Large download.
 
 For all but `DiffSharp-lite` add the following to your code:
 

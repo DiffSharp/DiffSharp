@@ -2,8 +2,8 @@
 
   <PropertyGroup>
 
-    <LibTorchNugetVersion>1.8.0.7</LibTorchNugetVersion>
-    <TorchSharpVersion>0.91.52518</TorchSharpVersion>
+    <LibTorchNugetVersion>1.9.0.10</LibTorchNugetVersion>
+    <TorchSharpVersion>0.91.52681</TorchSharpVersion>
     <FSharpCoreVersion>5.0.1</FSharpCoreVersion>
     <!-- Standard nuget.org location -->
     <RestoreSources>https://api.nuget.org/v3/index.json</RestoreSources>
@@ -35,15 +35,15 @@
 
   <PropertyGroup>
      <Version>1.0.0</Version>
-     <Authors>Atılım Güneş Baydin, Barak A. Pearlmutter and DiffSharp contributors</Authors>
+     <Authors>Atılım Güneş Baydin, Don Syme, Barak A. Pearlmutter, Jeffrey Siskind, and DiffSharp contributors</Authors>
      <Owners>DiffSharp maintainers</Owners>
      <PackageProjectUrl>https://diffsharp.github.io</PackageProjectUrl>
      <RepositoryUrl>https://github.com/DiffSharp/DiffSharp/</RepositoryUrl>
      <RepositoryBranch>dev</RepositoryBranch>
      <PackageLicenseExpression>BSD-2-Clause</PackageLicenseExpression>
      <RepositoryType>git</RepositoryType>
-     <Copyright>Copyright 2014-2020</Copyright>
-     <PackageTags>F# fsharp ML AI Machine Learning PyTorch Automatic Differentiation Gradients</PackageTags>
+     <Copyright>Copyright 2014-2021</Copyright>
+     <PackageTags>F# fsharp ML AI Machine Learning PyTorch Tensor Automatic Differentiation Gradients</PackageTags>
 
 
      <!-- local build uses number unique by day -->

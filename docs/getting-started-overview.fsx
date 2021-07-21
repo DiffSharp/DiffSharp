@@ -3,6 +3,7 @@
 #r "DiffSharp.Core.dll"
 #r "DiffSharp.Data.dll"
 #r "DiffSharp.Backends.Reference.dll"
+#r "DiffSharp.Backends.Torch.dll"
 (*** condition: fsx ***)
 #if FSX
 #r "nuget: DiffSharp-lite,{{fsdocs-package-version}}"
@@ -20,12 +21,10 @@ Formatter.Register(fun (x:obj) (writer: TextWriter) -> fprintfn writer "%120A" x
 [![Script](img/badge-script.svg)]({{fsdocs-source-basename}}.fsx)&emsp;
 [![Script](img/badge-notebook.svg)]({{fsdocs-source-basename}}.ipynb)
 
-API Overview
-============
+# API Overview
 
 The DiffSharp API is designed to be similar to [the PyTorch Python API](https://pytorch.org/docs/stable/index.html) through very similar
 naming and idioms, and where elements have similar names the PyTorch documentation can generally be used as a guide.
-There are some improvements and DiffSharp supports a richer gradient/differentiation API.
 
 * The `cref:T:DiffSharp.dsharp` API
 
@@ -42,7 +41,3 @@ There are some improvements and DiffSharp supports a richer gradient/differentia
 * [Pyplot Plotting utilities](/reference/diffsharp-util-pyplot.html)
 
 *)
-
-open DiffSharp
-
-let t = dsharp.tensor [ 0 .. 10 ]

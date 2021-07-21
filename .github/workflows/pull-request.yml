@@ -1,4 +1,4 @@
-name: Build/test/codecov Release
+name: Build/test Release
 
 on:
   pull_request:
@@ -6,7 +6,7 @@ on:
       - '**'
 
 jobs:
-  build:
+  build_ubuntu:
 
     runs-on: ubuntu-latest
 
@@ -28,3 +28,41 @@ jobs:
       run: dotnet test --configuration Release --no-restore --verbosity normal
     - name: Run fsdocs
       run: dotnet fsdocs build --eval --strict --properties Configuration=Release
+
+  build_windows:
+
+    runs-on: windows-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Setup dotnet
+      uses: actions/setup-dotnet@v1
+      with:
+        dotnet-version: 5.0.100
+    - name: Install dependencies
+      run: dotnet restore
+    - name: Install tool dependencies
+      run: dotnet tool restore
+    - name: Build (Release)
+      run: dotnet build --configuration Release --no-restore --verbosity normal
+    - name: Test
+      run: dotnet test --configuration Release --no-restore --verbosity normal
+
+  build_macos:
+
+    runs-on: macos-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Setup dotnet
+      uses: actions/setup-dotnet@v1
+      with:
+        dotnet-version: 5.0.100
+    - name: Install dependencies
+      run: dotnet restore
+    - name: Install tool dependencies
+      run: dotnet tool restore
+    - name: Build (Release)
+      run: dotnet build --configuration Release --no-restore --verbosity normal
+    - name: Test
+      run: dotnet test --configuration Release --no-restore --verbosity normal

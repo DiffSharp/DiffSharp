@@ -33,14 +33,32 @@ jobs:
       run: dotnet build --configuration Debug --no-restore --verbosity normal
     - name: Test
       run: dotnet test /p:CollectCoverage=true /p:CoverletOutputFormat=opencover --configuration Release --no-build --verbosity normal
-    - name: Codecov
-      uses: codecov/codecov-action@v1
+    - name: Get git commit info
+      run: |
+        echo "GIT_COMMIT_AUTHOR=$(git log -1 --pretty=%cn)" >> $GITHUB_ENV
+        echo "GIT_COMMIT_AUTHOR_EMAIL=$(git log -1 --pretty=%ce)" >> $GITHUB_ENV
+        echo "GIT_COMMIT_MESSAGE=$(git log -1 --pretty=%s)" >> $GITHUB_ENV
+    - name: Run coveralls
+      run: >
+        dotnet csmacnz.Coveralls
+        --opencover -i tests/DiffSharp.Tests/coverage.opencover.xml
+        --useRelativePaths
+        --repoToken ${{ secrets.COVERALLS_REPO_TOKEN }}
+        --commitId ${{ github.sha }}
+        --commitBranch ${{ github.ref }}
+        --commitAuthor "${{ env.GIT_COMMIT_AUTHOR }}"
+        --commitEmail ${{ env.GIT_COMMIT_AUTHOR_EMAIL }}
+        --commitMessage "${{ env.GIT_COMMIT_MESSAGE }}"
+        --jobId ${{ github.run_number }}
+    # 16 Apr 2021: disabling codecov due to bash uploader security concern
+    # - name: Codecov
+      # uses: codecov/codecov-action@v1
     - name: Run fsdocs
       run: dotnet fsdocs build --eval --strict --properties Configuration=Release
     - name: Deploy docs
       uses: peaceiris/actions-gh-pages@v3
       with:
-        personal_token: ${{ secrets.PERSONAL_TOKEN }}
+        deploy_key: ${{ secrets.DIFFSHARP_GITHUB_IO_DEPLOY_DOCS_PRIVATE_KEY }}
         external_repository: DiffSharp/diffsharp.github.io
         publish_dir: ./output
         publish_branch: master
@@ -96,7 +114,7 @@ jobs:
     - name: Setup dotnet
       uses: actions/setup-dotnet@v1
       with:
-        dotnet-version: 5.0.100
+        dotnet-version: 6.0.100-preview.5.21302.13
     - name: Install dependencies
       run: dotnet restore
     - name: Pack (DiffSharp-cuda-linux)

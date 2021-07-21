@@ -436,6 +436,12 @@ type dsharp =
     /// <param name="b">The second tensor.</param>
     static member ge(a:Tensor, b:Tensor) = a.ge(b)
 
+    /// <summary>Returns a boolean tensor for the element-wise equality comparison of the elements in the two tensors.</summary>
+    /// <remarks>The shapes of input and other don’t need to match, but they must be broadcastable.</remarks>
+    /// <param name="a">The first tensor.</param>
+    /// <param name="b">The second tensor.</param>
+    static member eq(a:Tensor, b:Tensor) = a.eq(b)    
+
     /// <summary>Returns a boolean tensor where each element indicates if the corresponding element in the input tensor is an infinity value.</summary>
     /// <param name="input">The input tensor.</param>
     static member isinf(input:Tensor) = input.isinf()
@@ -1285,7 +1291,13 @@ type dsharp with
     static member evalReverseDiff f x =
         let x = x |> dsharp.reverseDiff (GlobalNestingLevel.Next())
         let fx = f x
-        let r = fun v -> fx |> dsharp.reverse v; x.derivative
+        let r = 
+            fun v -> 
+                fx |> dsharp.reverse v
+                // We create the derivative as zero in cases where fx does not depend on x, as this is mathematically correct
+                // Alternatively, we can introduce a "strict" mode like PyTorch and raise an exception when this situation occurs
+                if x.derivative.shape = [|0|] then (x.zerosLike())
+                else x.derivative
         fx.primal, r
 
     /// <summary>TBD</summary>
@@ -1309,7 +1321,7 @@ type dsharp with
     /// <param name="v">TBD</param>
     /// <remarks>The <c>x</c> and <c>v</c> tensors should have the same number of elements.</remarks>
     static member fjacobianv f (x:Tensor) (v:Tensor) = 
-        if x.nelement <> v.nelement then failwithf "x and v must have the same number of elements"
+        if x.shape <> v.shape then failwithf "x and v must have the same shape, encountered: %A %A" x.shape v.shape
         let fx, d = dsharp.evalForwardDiff f x v
         if x.dim <> 1 || fx.dim <> 1 then failwithf "f must be a vector-valued function of a vector, encountered f:%A->%A" x.shape fx.shape
         fx, d
@@ -1323,7 +1335,7 @@ type dsharp with
     /// <param name="v">TBD</param>
     /// <remarks>The <c>x</c> and <c>v</c> tensors should have the same number of elements.</remarks>
     static member fgradv f (x:Tensor) (v:Tensor) =
-        if x.nelement <> v.nelement then failwithf "x and v must have the same number of elements"
+        if x.shape <> v.shape then failwithf "x and v must have the same shape, encountered: %A %A" x.shape v.shape
         let fx, d = dsharp.evalForwardDiff f x v
         if x.dim <> 1 || fx.dim <> 0 then failwithf "f must be a scalar-valued function of a vector, encountered f:%A->%A" x.shape fx.shape
         fx, d
@@ -1364,8 +1376,8 @@ type dsharp with
     /// <param name="v">Vector</param>
     static member fjacobianTv f x (v:Tensor) =
         let fx, r = dsharp.evalReverseDiff f x
-        if x.dim <> 1 || fx.dim <> 1 then failwithf "f must be a vector-valued function of a vector, encountered f:%A->%A" x.shape fx.shape
-        if fx.nelement <> v.nelement then failwithf "(f x) and v must have the same number of elements"
+        if x.dim <> 1 || fx.dim > 1 then failwithf "f must be a vector or scalar valued function of a vector, encountered f:%A->%A" x.shape fx.shape
+        if fx.shape <> v.shape then failwithf "(f x) and v must have the same shape, encountered: %A %A" fx.shape v.shape
         fx, r v
 
     /// <summary>Transposed Jacobian-vector product of a vector-to-vector function `f`, at point `x`, along vector `v`</summary>
@@ -1379,9 +1391,9 @@ type dsharp with
         let fx, r = dsharp.evalReverseDiff f x
         if x.dim <> 1 || fx.dim <> 1 then failwithf "f must be a vector-valued function of a vector, encountered f:%A->%A" x.shape fx.shape
         if x.nelement > fx.nelement then
-            fx, dsharp.stack(Array.init fx.nelement (fun i -> r (x.onehotLike(fx.nelement, i))), 0)
+            fx, dsharp.stack(Array.init fx.nelement (fun i -> r (fx.onehotLike(fx.nelement, i).viewAs(fx))), 0)
         else
-            fx, dsharp.stack(Array.init x.nelement (fun j -> dsharp.jacobianv f x (x.onehotLike(x.nelement, j))), 1)
+            fx, dsharp.stack(Array.init x.nelement (fun j -> dsharp.jacobianv f x (x.onehotLike(x.nelement, j).viewAs(x))), 1)
 
     /// <summary>TBD</summary>
     static member jacobian f x = dsharp.fjacobian f x |> snd
@@ -1400,11 +1412,11 @@ type dsharp with
 
     /// <summary>TBD</summary>
     static member fgradhessianv f (x:Tensor) (v:Tensor) =
-        if x.nelement <> v.nelement then failwithf "x and v must have the same number of elements"
-        let x = x |> dsharp.reverseDiff (GlobalNestingLevel.Next())
-        let fx, gv = dsharp.fgradv f x v
-        gv.reverse()
-        fx.primal, gv.primal, x.derivative
+        if x.shape <> v.shape then failwithf "x and v must have the same shape, encountered: %A %A" x.shape v.shape
+        let mutable fx = x.zerosLike([])
+        let gradv x_ = let fx_, gv_ = dsharp.fgradv f x_ v in fx <- fx_; gv_
+        let gv, hv = dsharp.fjacobianTv gradv x (dsharp.tensor(1.))
+        fx, gv, hv
 
     /// <summary>TBD</summary>
     static member gradhessianv f x v = let _, gv, hv = dsharp.fgradhessianv f x v in gv, hv
@@ -1417,8 +1429,8 @@ type dsharp with
 
     /// <summary>TBD</summary>
     static member fgradhessian (f:Tensor->Tensor) (x:Tensor) =
-        let mutable fx = dsharp.zero()
-        let gvs, hvs = Array.init x.nelement (fun j -> let ffxx, gv, hv = dsharp.fgradhessianv f x (x.onehotLike(x.nelement, j)) in fx <- ffxx; gv, hv) |> Array.unzip
+        let mutable fx = x.zerosLike([])
+        let gvs, hvs = Array.init x.nelement (fun j -> let ffxx, gv, hv = dsharp.fgradhessianv f x (x.onehotLike(x.nelement, j).viewAs(x)) in fx <- ffxx; gv, hv) |> Array.unzip
         let h = dsharp.stack(hvs, 1)
         let g = dsharp.stack(gvs)
         if x.dim <> 1 || fx.dim <> 0 then failwithf "f must be a scalar-valued function of a vector, encountered f:%A->%A" x.shape fx.shape
@@ -1429,8 +1441,8 @@ type dsharp with
 
     /// <summary>TBD</summary>
     static member fhessian (f:Tensor->Tensor) (x:Tensor) =
-        let mutable fx = dsharp.zero()
-        let h = dsharp.stack(Array.init x.nelement (fun j -> let ffxx, hv = dsharp.fhessianv f x (x.onehotLike(x.nelement, j)) in fx <- ffxx; hv), 1)
+        let mutable fx = x.zerosLike([])
+        let h = dsharp.stack(Array.init x.nelement (fun j -> let ffxx, hv = dsharp.fhessianv f x (x.onehotLike(x.nelement, j).viewAs(x)) in fx <- ffxx; hv), 1)
         if x.dim <> 1 || fx.dim <> 0 then failwithf "f must be a scalar-valued function of a vector, encountered f:%A->%A" x.shape fx.shape
         fx, h
 

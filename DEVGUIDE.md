@@ -101,3 +101,4 @@ To run benchmarks:
     dotnet run --project tests\DiffSharp.Benchmarks\DiffSharp.Benchmarks.fsproj -c Release --filter "*"
 
 To filter etc., see `--help`
+

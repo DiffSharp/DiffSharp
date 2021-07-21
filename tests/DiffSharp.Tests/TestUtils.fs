@@ -17,7 +17,7 @@ module TestUtils =
 
     type Assert with 
 
-        /// Like Assert.AreEqual bute requires theat the actual and expected are the same type
+        /// Like Assert.AreEqual bute requires that the actual and expected are the same type
         static member CheckEqual (expected: 'T, actual: 'T) = Assert.AreEqual(box expected, box actual)
 
     type dsharp with
