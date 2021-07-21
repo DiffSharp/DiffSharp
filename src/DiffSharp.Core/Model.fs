@@ -347,12 +347,14 @@ type Model<'In, 'Out>() =
     static member load(fileName):Model<'In, 'Out> = loadBinary fileName
 
     /// <summary>TBD</summary>
-    member m.clone() = 
+    member m.clone():Model<'In, 'Out> = 
         let fileName = System.IO.Path.GetTempFileName()
         m.save(fileName)
-        Model.load(fileName)
+        Model<'In, 'Out>.load(fileName)
+
 
 type Model = Model<Tensor, Tensor>
+
 
 /// <summary>Contains functionality related to generating initial parameter weights.</summary>
 type Weight =
