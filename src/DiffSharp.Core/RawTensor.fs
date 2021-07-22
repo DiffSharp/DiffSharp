@@ -638,7 +638,7 @@ type RawTensor() =
         member x.CompareTo(yobj) =
             match yobj with
             | :? RawTensor as y -> Unchecked.compare (x.ToScalar()) (y.ToScalar())
-            | _ -> failwithf "cannot compare RawTensor with object of type %A" (yobj.GetType())
+            | _ -> failwithf "Cannot compare RawTensor with object of type %A" (yobj.GetType())
 
     default t.GetItem(indexes) =
         let t0 = t.GetSlice(Array2D.init indexes.Length 3 (fun i j -> if j = 0 || j = 1 then indexes.[i] else 1))
@@ -646,9 +646,9 @@ type RawTensor() =
 
     /// Returns a .NET object for the value of a scalar tensor
     override t.ToScalar() =
-        match t.Dim with
-        | 0 -> (t.ToValues() :?> scalar)
-        | _ -> failwithf "Cannot convert %Ad tensor to scalar" t.Dim
+        match t.Nelement with
+        | 1 -> t.ViewT([||]).ToValues() :?> scalar
+        | _ -> failwithf "Only one element tensors can be converted to scalars. This tensor has shape %A." t.Shape
 
     /// Returns a .NET array object for the values of a non-scalar tensor
     member t.ToArray() =
@@ -657,7 +657,7 @@ type RawTensor() =
         | _ ->
             match t.ToValues() with 
             | :? System.Array as a -> a
-            | _ -> failwithf "ToValue() should return an array but returned type %A" (t.GetType())
+            | _ -> failwithf "ToValues() should return an array but returned type %A" (t.GetType())
 
     /// A backdoor to switch this tensor to be usable as a mutable tensor. You should have a unique handle to
     /// this tensor for the entire time it is being used as a mutable tensor.
