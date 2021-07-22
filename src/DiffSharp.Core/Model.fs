@@ -186,7 +186,7 @@ type Mode =
 
 /// <summary>Represents a model, primarily a collection of named parameters and sub-models and a function governed by them.</summary>
 [<AbstractClass>]
-type Model() =
+type BaseModel() =
     [<DefaultValue>]
     val mutable mode: Mode
 
@@ -195,17 +195,17 @@ type Model() =
     let parameterPrefixes = Dictionary<string, int>()
 
     /// <summary>TBD</summary>
-    member val subModels = Dictionary<string, Model>()
+    member val subModels = Dictionary<string, BaseModel>()
 
     /// <summary>TBD</summary>
     member m.train() = 
         m.mode <- Mode.Train
-        for model:Model in m.allModels do model.mode <- Mode.Train
+        for model:BaseModel in m.allModels do model.mode <- Mode.Train
 
     /// <summary>TBD</summary>
     member m.eval() = 
         m.mode <- Mode.Eval
-        for model:Model in m.allModels do model.mode <- Mode.Eval
+        for model:BaseModel in m.allModels do model.mode <- Mode.Eval
 
     /// <summary>TBD</summary>
     member m.parameters
@@ -279,9 +279,6 @@ type Model() =
     /// <summary>Gets the number of parameters of the model</summary>
     member m.nparameters = m.parameters.nelement
 
-    /// <summary>Compute the output of the model with resepct to the given inputs</summary>
-    abstract member forward: input: Tensor -> Tensor
-
     abstract member getString: unit -> string
     default m.getString() =
         if m.allModels |> List.length < 2 then "Model()" // allModels has one element (m) in case there are no submodels
@@ -292,43 +289,6 @@ type Model() =
         sb.Append(")") |> ignore
         sb.ToString()
 
-    /// <summary>Use the model as a function of its input and parameters</summary>
-    /// <remarks>
-    ///    The resulting function can be composed with a loss function and differentiated.
-    ///    During execution the parameters of the model are temporarily set to the supplied parameters.
-    /// </remarks>
-    member m.asFunction (input:Tensor) (parameters:Tensor) =
-        let old = m.parametersVector
-        try 
-            m.parametersVector <- parameters
-            m.forward(input) 
-        finally
-            m.parametersVector <- old
-
-    /// <summary>TBD</summary>
-    override m.ToString() = sprintf "%s, nparameters:%A" (m.getString()) m.nparameters
-
-    /// <summary>TBD</summary>
-    static member create ps f =
-        let model = { new Model() with override __.forward(x) = f x}
-        model.add(ps)
-        model
-
-    /// <summary>TBD</summary>
-    static member compose (m1:Model) (m2:Model) = Model.create [m1; m2] (m1.forward >> m2.forward)
-
-    /// <summary>TBD</summary>
-    static member (-->) (m1:Model, m2:Model) = Model.compose m1 m2
-
-    /// <summary>TBD</summary>
-    static member (-->) (m:Model, f:Tensor->Tensor) = Model.create [m] (m.forward >> f)
-
-    /// <summary>TBD</summary>
-    static member (-->) (f:Tensor->Tensor, m:Model) = Model.create [m] (f >> m.forward)
-
-    /// <summary>TBD</summary>
-    static member (-->) (t:Tensor, m:Model) = m.forward t
-
     /// <summary>TBD</summary>
     member m.saveParameters(fileName) = m.parametersVector.save(fileName)
 
@@ -338,16 +298,65 @@ type Model() =
     /// <summary>TBD</summary>
     member m.save(fileName) = saveBinary m fileName
 
-    /// <summary>TBD</summary>
-    static member load(fileName):Model = loadBinary fileName
+    override m.ToString() = sprintf "%s, nparameters:%A" (m.getString()) m.nparameters
+
+
+[<AbstractClass>]
+type Model<'In, 'Out>() =
+    inherit BaseModel()
 
     /// <summary>TBD</summary>
-    member m.clone() = 
+    abstract member forward: 'In -> 'Out
+
+    /// <summary>Use the model as a function of its input and parameters</summary>
+    /// <remarks>
+    ///    The resulting function can be composed with a loss function and differentiated.
+    ///    During execution the parameters of the model are temporarily set to the supplied parameters.
+    /// </remarks>
+    member m.asFunction (input:'In) (parameters:Tensor) =
+        let old = m.parametersVector
+        try 
+            m.parametersVector <- parameters
+            m.forward(input) 
+        finally
+            m.parametersVector <- old
+
+    /// <summary>TBD</summary>
+    static member create (ps: seq<obj>) (f: 'In -> 'Out) : Model<'In, 'Out> =
+        let model = { new Model<'In, 'Out>() with override _.forward(x:'In) : 'Out = f x}
+        model.add(ps)
+        model
+
+    /// <summary>TBD</summary>
+    static member compose (m1:Model<'In, 'Out>) (m2:Model<'Out, 'Out2>) : Model<'In, 'Out2> =
+        Model<'In, 'Out2>.create [box m1; box m2] (m1.forward >> m2.forward)
+
+    /// <summary>TBD</summary>
+    static member (-->) (m1:Model<'In, 'Out>, m2:Model<'Out, 'Out2>) = Model<'In, 'Out>.compose m1 m2
+    
+    /// <summary>TBD</summary>
+    static member (-->) (m:Model<'In, 'Out>, f:'Out->'Out2) = Model<'In, 'Out2>.create [m] (m.forward >> f)
+
+    /// <summary>TBD</summary>
+    static member (-->) (f:'In->'Out, m:Model<'Out, 'Out2>) = Model<'In, 'Out2>.create [m] (f >> m.forward)
+
+    /// <summary>TBD</summary>
+    static member (-->) (t:'In, m:Model<'In, 'Out>) = m.forward t
+
+    /// <summary>TBD</summary>
+    static member load(fileName):Model<'In, 'Out> = loadBinary fileName
+
+    /// <summary>TBD</summary>
+    member m.clone():Model<'In, 'Out> = 
         let fileName = System.IO.Path.GetTempFileName()
         m.save(fileName)
-        Model.load(fileName)
+        Model<'In, 'Out>.load(fileName)
 
-/// <summary>Contains functionality related to generating initial paramerter weights.</summary>
+
+type Model = Model<Tensor, Tensor>
+
+
+/// <summary>Contains functionality related to generating initial parameter weights.</summary>
 type Weight =
 
     /// <summary>TBD</summary>
