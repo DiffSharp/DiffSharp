@@ -480,6 +480,25 @@ type TestTensor () =
             Assert.CheckEqual(t3, t3Correct)
 
     [<Test>]
+    member _.TestTensorToScalar () =
+        for combo in Combos.All do
+            let t = 1.
+            let t0 = combo.tensor(t)
+            let t1 = combo.tensor([t])
+            let t2 = combo.tensor([[t]])
+            let t3 = combo.tensor([[[t]]])
+
+            let t0s = float t0
+            let t1s = float t1
+            let t2s = float t2
+            let t3s = float t3
+
+            Assert.CheckEqual(t, t0s)
+            Assert.CheckEqual(t, t1s)
+            Assert.CheckEqual(t, t2s)
+            Assert.CheckEqual(t, t3s)
+
+    [<Test>]
     member _.TestTensorOnehot () =
         for combo in Combos.All do 
             let t0 = combo.onehot(3, 0)
