@@ -36,6 +36,34 @@ type ModelStyle1b() =
         |> fc2.forward
         |> dsharp.mul p.value
 
+type GenericModelFloatFloat() =
+    inherit Model<float,float>()
+    let fc1 = Linear(1, 2)
+    let fc2 = Linear(2, 1)
+    do base.add([fc1; fc2], ["fc1"; "fc2"])
+    do base.init (fun (_, t) -> t.onesLike())
+    override __.forward(x) =
+        x |> dsharp.tensor
+        |> dsharp.view([1; -1])
+        |> fc1.forward
+        |> fc2.forward
+        |> float
+
+type GenericModelIntString() =
+    inherit Model<int,string>()
+    let fc1 = Linear(1, 2)
+    let fc2 = Linear(2, 1)
+    do base.add([fc1; fc2], ["fc1"; "fc2"])
+    do base.init (fun (_, t) -> t.onesLike())
+    override __.forward(x) =
+        x |> dsharp.tensor
+        |> dsharp.view([1; -1])
+        |> fc1.forward
+        |> fc2.forward
+        |> int
+        |> string
+
+
 [<TestFixture>]
 type TestModel () =
 
@@ -253,6 +281,20 @@ type TestModel () =
         let y1 = x --> net1
         let y2 = x --> net2
         Assert.CheckEqual(y1, y2)
+
+    [<Test>]
+    member _.TestModelGeneric () =
+        let g1 = GenericModelFloatFloat()
+        let x1 = 1.
+        let y1 = x1 --> g1
+        let y1Correct = 5.
+        Assert.AreEqual(y1Correct, y1, 1e-6)
+
+        let g2 = GenericModelIntString()
+        let x2 = 1
+        let y2 = x2 --> g2
+        let y2Correct = "5"
+        Assert.AreEqual(y2Correct, y2)
 
     [<Test>]
     member _.TestModelTrainEval () =
