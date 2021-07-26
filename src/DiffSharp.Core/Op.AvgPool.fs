@@ -1,7 +1,7 @@
 ﻿namespace DiffSharp
 
 [<AutoOpen>]
-module AvgPoolExtensions =
+module OpAvgPoolExtensions =
 
     type Tensor with
         /// <summary>Applies a 1D average pooling over an input signal composed of several input planes, returning the max indices along with the outputs.</summary>

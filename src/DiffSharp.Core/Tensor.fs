@@ -1275,7 +1275,6 @@ type Tensor =
     ///  tensor.
     /// </para>
     /// </remarks>
-
     member a.matmul (b:Tensor) : Tensor =
         if a.dim = 1 && b.dim = 1 then a.dot(b) 
         // Increase to at least 2x2

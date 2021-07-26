@@ -436,6 +436,9 @@ type RawTensor() =
     /// Returns the matrix multiplication of two tensors
     abstract MatMulTT: t2: RawTensor -> RawTensor
 
+    /// Returns the batched matrix multiplication of two tensors
+    abstract BMMTT: t2: RawTensor -> RawTensor
+
     /// Returns the 1D maxpool of a tensor and its chosen maximum indices
     abstract MaxPool1D: kernelSize: int * stride: int * padding: int -> RawTensor * RawTensor
 

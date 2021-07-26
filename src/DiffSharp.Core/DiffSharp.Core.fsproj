@@ -18,7 +18,6 @@
     <Compile Include="DiffSharp.Compose.fs" />
     <Compile Include="DiffSharp.Shorten.fs" />
     <Compile Include="DiffSharp.Numerical.fs" />
-    <Compile Include="DiffSharp.AvgPool.fs" />
     <Compile Include="Distributions.fs" />
     <Compile Include="Data.fs" />
     <Compile Include="Model.fs" />
@@ -30,6 +29,8 @@
     <Compile Include="Model.Recurrent.fs" />
     <Compile Include="Model.VAE.fs" />
     <Compile Include="Optim.fs" />
+    <Compile Include="Op.AvgPool.fs" />
+    <Compile Include="Op.BMM.fs" />
 	  <PackageReference Update="FSharp.Core" Version="$(FSharpCoreVersion)" />
   </ItemGroup>
 </Project>

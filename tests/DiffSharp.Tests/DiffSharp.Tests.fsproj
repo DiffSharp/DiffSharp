@@ -25,12 +25,10 @@
     <Compile Include="TestTensor.fs" />
     <Compile Include="TestTensor.Conv.fs" />
     <Compile Include="TestTensor.MaxPool.fs" />
-    <Compile Include="TestTensor.AvgPool.fs" />
     <Compile Include="TestDiffSharp.fs" />
     <Compile Include="TestDerivatives.fs" />
     <Compile Include="TestDerivatives.Conv.fs" />
     <Compile Include="TestDerivatives.MaxPool.fs" />
-    <Compile Include="TestDerivatives.AvgPool.fs" />
     <Compile Include="TestDerivatives.Nested.fs" />
     <Compile Include="TestRandom.fs" />
     <Compile Include="TestDistributions.fs" />
@@ -38,6 +36,8 @@
     <Compile Include="TestData.fs" />
     <Compile Include="TestModel.fs" />
     <Compile Include="TestOptim.fs" />
+    <Compile Include="TestOp.AvgPool.fs" />
+    <Compile Include="TestOp.BMM.fs" />
     <Compile Include="Program.fs" />
   </ItemGroup>
 
