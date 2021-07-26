@@ -497,7 +497,7 @@ module rec Shape =
 
     /// Check if the given shape is appropriate for a matmul operation.
     let checkCanMatmul (shape1:int[]) (shape2:int[]) =
-        if shape1.Length < 2 || shape2.Length < 2 then failwithf "Expecting two 2d Tensors, received Tensors with shapes %A, %A" shape1 shape2
+        if shape1.Length < 2 || shape2.Length < 2 then failwithf "Expecting tensors to have at least two dimensions, received Tensors with shapes %A, %A" shape1 shape2
         let aBatchPart, aMatrixPart = Array.splitAt (shape1.Length-2) shape1
         let bBatchPart, bMatrixPart = Array.splitAt (shape2.Length-2) shape2
         if aMatrixPart.[1] <> bMatrixPart.[0] then failwithf "Cannot matrix multiply tensors with shapes %A, %A - mismatch in matrix dimension" shape1 shape2
