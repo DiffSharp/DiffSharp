@@ -818,8 +818,8 @@ module internal RawTensorCPU =
                         let i = (v*stride) + u - padding
                         if i >= 0 && i < inputSize then
                             let value = t1.[n, c, i]
-                            avg <- avg + value / ofInt kernelSize
-                    result.[[|n; c; v|]] <- avg
+                            avg <- avg + value
+                    result.[[|n; c; v|]] <- avg / ofInt kernelSize
         result
 
     let inline AvgPool2D ofInt (t1: RawTensorCPU< ^T >, kernelSize, stride, padding) : RawTensorCPU< ^T > =
@@ -838,8 +838,8 @@ module internal RawTensorCPU =
                                 let i1 = (v1*stride.[1]) + u1 - padding.[1]
                                 if i0 >= 0 && i0 < inputHeight && i1 >= 0 && i1 < inputWidth then
                                     let value = t1.[n, c, i0, i1]
-                                    avg <- avg + value / ofInt kernelSize
-                        result.[[|n; c; v0; v1|]] <- avg
+                                    avg <- avg + value
+                        result.[[|n; c; v0; v1|]] <- avg / ofInt kernelSize
         result
 
     let inline AvgPool3D ofInt (t1: RawTensorCPU< ^T >, kernelSize, stride, padding) : RawTensorCPU< ^T > =
@@ -861,8 +861,8 @@ module internal RawTensorCPU =
                                         let i2 = (v2*stride.[2]) + u2 - padding.[2]
                                         if i0 >= 0 && i0 < inputDepth && i1 >= 0 && i1 < inputHeight && i2 >= 0 && i2 < inputWidth then
                                             let value = t1.[n, c, i0, i1, i2]
-                                            avg <- avg + value / ofInt kernelSize
-                            result.[[|n; c; v0; v1; v2|]] <- avg
+                                            avg <- avg + value
+                            result.[[|n; c; v0; v1; v2|]] <- avg / ofInt kernelSize
         result
 
     let inline AvgPoolReverse1D ofInt (t1: RawTensorCPU< ^T >, originalInput: RawTensor, kernelSize, stride, padding) : RawTensorCPU< ^T > =
