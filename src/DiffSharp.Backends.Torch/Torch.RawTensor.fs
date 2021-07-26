@@ -631,6 +631,22 @@ type TorchRawTensor(tt: TorchTensor, shape: Shape, dtype: Dtype, device: Device)
                 tt.mm(t2.TorchTensor)
         t1.MakeLike(result, [| t1.Shape.[0]; t2.Shape.[1] |])
 
+    override t1.BMMTT(t2) =
+        match dtype with 
+        | Dtype.Bool -> opNotSupported2 "BMMTT" dtype t2.Dtype
+        | _ ->  
+        let resultShape = Shape.checkCanBMM t1.Shape t2.Shape
+        let result =
+            // "addmm for CUDA tensors only supports floating-point types. Try converting the tensors with .float()" | const char *
+            match t1.DeviceType, dtype with 
+            | DiffSharp.DeviceType.CUDA, (Dtype.Integral as dtype) ->
+                let tt1 = tt.to_type(ScalarType.Float64)
+                let tt2 = t2.TorchTensor.to_type(ScalarType.Float64)
+                tt1.bmm(tt2).round().to_type(toTorchType dtype) 
+            | _ ->
+                tt.bmm(t2.TorchTensor)
+        t1.MakeLike(result, resultShape)        
+
     override t1.Conv1D(t2, stride, padding) = // TODO: bias, dilation and groups
         let _batchSize, _inputChannels, _kernelSize, _outputChannels, _outputSize, outputShape =
             Shape.checkCanConv1d t1.DeviceType t2.DeviceType dtype t2.Dtype t1.Shape t2.Shape stride padding 1
