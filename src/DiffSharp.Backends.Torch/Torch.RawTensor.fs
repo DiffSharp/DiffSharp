@@ -619,17 +619,21 @@ type TorchRawTensor(tt: TorchTensor, shape: Shape, dtype: Dtype, device: Device)
         match dtype with 
         | Dtype.Bool -> opNotSupported2 "MatMulTT" dtype t2.Dtype
         | _ ->  
-        let _, _ = Shape.checkCanMatmul t1.Shape t2.Shape
+        let (t1BatchPart, t1MatrixPart), (t2BatchPart, t2MatrixPart) = Shape.checkCanMatmul t1.Shape t2.Shape
+        if t1BatchPart <> t2BatchPart then failwithf "Cannot matrix multiply raw tensors with shapes %A, %A - mismatch batching" t1.Shape t2.Shape
+        let t1rows = t1MatrixPart.[0]
+        let t2cols = t2MatrixPart.[1]
+        let newShape = Array.append t1BatchPart [| t1rows; t2cols |]        
         let result =
             // "addmm for CUDA tensors only supports floating-point types. Try converting the tensors with .float()" | const char *
             match t1.DeviceType, dtype with 
             | DiffSharp.DeviceType.CUDA, (Dtype.Integral as dtype) ->
                 let tt1 = tt.to_type(ScalarType.Float64)
                 let tt2 = t2.TorchTensor.to_type(ScalarType.Float64)
-                tt1.mm(tt2).round().to_type(toTorchType dtype) 
+                tt1.matmul(tt2).round().to_type(toTorchType dtype) 
             | _ ->
-                tt.mm(t2.TorchTensor)
-        t1.MakeLike(result, [| t1.Shape.[0]; t2.Shape.[1] |])
+                tt.matmul(t2.TorchTensor)
+        t1.MakeLike(result, newShape)
 
     override t1.BMMTT(t2) =
         match dtype with 
