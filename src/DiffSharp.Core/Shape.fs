@@ -287,9 +287,9 @@ module rec Shape =
         batchSize, inputChannels, (kernelDepth, kernelHeight, kernelWidth), (outputChannels, outputDepth, outputHeight, outputWidth), outputShape
 
     /// Checks if the given shapes are appropriate for a maxpool operation and returns information related to the resulting shape.
-    let checkCanMaxpool1d (dtype: Dtype) (shape: Shape) (kernelSize: int) (stride: int) (padding: int) =
+    let checkCanMaxOrAvgpool1d nm (dtype: Dtype) (shape: Shape) (kernelSize: int) (stride: int) (padding: int) =
         match dtype with
-        | Dtype.Bool | Dtype.Integral -> opNotSupported "maxpool1d" dtype
+        | Dtype.Bool | Dtype.Integral -> opNotSupported nm dtype
         | _ ->
         if shape.Length <> 3 then failwithf "Expecting a 3d tensor (NxCxL: batchSize x inputChannels x inputLength), received tensor with shape %A" shape
         if kernelSize < 1 then failwithf "Expecting kernelSize (%A) >= 1" kernelSize
@@ -306,9 +306,17 @@ module rec Shape =
         batchSize, channels, inputSize, outputSize, outputShape
 
     /// Checks if the given shapes are appropriate for a maxpool operation and returns information related to the resulting shape.
-    let checkCanMaxpool2d (dtype: Dtype) (shape: Shape) (kernelSize: int[]) (strides: int[]) (paddings: int[]) =
+    let checkCanMaxpool1d dtype shape kernelSize stride padding =
+        checkCanMaxOrAvgpool1d "maxpool1d" dtype shape kernelSize stride padding
+
+    /// Checks if the given shapes are appropriate for an avgpool operation and returns information related to the resulting shape.
+    let checkCanAvgpool1d dtype shape kernelSize stride padding =
+        checkCanMaxOrAvgpool1d "maxpool1d" dtype shape kernelSize stride padding
+
+    /// Checks if the given shapes are appropriate for a maxpool operation and returns information related to the resulting shape.
+    let checkCanMaxOrAvgpool2d nm (dtype: Dtype) (shape: Shape) (kernelSize: int[]) (strides: int[]) (paddings: int[]) =
         match dtype with
-        | Dtype.Bool | Dtype.Integral -> opNotSupported "maxpool2d" dtype
+        | Dtype.Bool | Dtype.Integral -> opNotSupported nm dtype
         | _ ->
         if shape.Length <> 4 then failwithf "Expecting a 4d tensor (NxCxHxW: batchSize x inputChannels x inputHeight x inputWidth), received tensor with shape %A" shape
         if kernelSize.[0] < 1 || kernelSize.[1] < 1 then failwithf "Expecting all kernelSizes (%A) >= 1" kernelSize
@@ -331,9 +339,17 @@ module rec Shape =
         (batchSize, channels, (inputHeight, inputWidth), (kernelHeight, kernelWidth), (outputHeight, outputWidth), outputShape)
 
     /// Checks if the given shapes are appropriate for a maxpool operation and returns information related to the resulting shape.
-    let checkCanMaxpool3d (dtype: Dtype) (shape: Shape) (kernelSize: int[]) (strides: int[]) (paddings: int[]) =
+    let checkCanMaxpool2d dtype shape kernelSize strides paddings =
+        checkCanMaxOrAvgpool2d "maxpool2d" dtype shape kernelSize strides paddings
+
+    /// Checks if the given shapes are appropriate for an avgpool operation and returns information related to the resulting shape.
+    let checkCanAvgpool2d dtype shape kernelSize strides paddings =
+        checkCanMaxOrAvgpool2d "avgpool2d" dtype shape kernelSize strides paddings
+
+    /// Checks if the given shapes are appropriate for a maxpool operation and returns information related to the resulting shape.
+    let checkCanMaxOrAvgpool3d nm (dtype: Dtype) (shape: Shape) (kernelSize: int[]) (strides: int[]) (paddings: int[]) =
         match dtype with
-        | Dtype.Bool | Dtype.Integral -> opNotSupported "maxpool3d" dtype
+        | Dtype.Bool | Dtype.Integral -> opNotSupported nm dtype
         | _ ->
         if shape.Length <> 5 then failwithf "Expecting a 5d tensor (NxCxDxHxW: batchSize x inputChannels x inputDepth x inputHeight x inputWidth), received tensor with shape %A" shape
         if kernelSize.[0] < 1 || kernelSize.[1] < 1 || kernelSize.[2] < 1 then failwithf "Expecting all kernelSizes (%A) >= 1" kernelSize
@@ -359,6 +375,14 @@ module rec Shape =
         let outputWidth = int (floor (float (inputWidthAfterPadding - kernelWidth)/(float strides.[2]))) + 1
         let outputShape = [|batchSize; channels; outputDepth; outputHeight; outputWidth|]
         (batchSize, channels, (inputDepth, inputHeight, inputWidth), (kernelDepth, kernelHeight, kernelWidth), (outputDepth, outputHeight, outputWidth), outputShape)
+
+    /// Checks if the given shapes are appropriate for a maxpool operation and returns information related to the resulting shape.
+    let checkCanMaxpool3d dtype shape kernelSize strides paddings =
+        checkCanMaxOrAvgpool3d "maxpool3d" dtype shape kernelSize strides paddings
+
+    /// Checks if the given shapes are appropriate for an avgpool operation and returns information related to the resulting shape.
+    let checkCanAvgpool3d dtype shape kernelSize strides paddings =
+        checkCanMaxOrAvgpool3d "avgpool3d" dtype shape kernelSize strides paddings
 
     /// Checks if the given shapes are appropriate for a maxunpool operation and returns information related to the resulting shape.
     let checkCanMaxunpool1d (dtype: Dtype) (shape: Shape) (indicesDtype: Dtype) (indicesShape: Shape) (outputSize: int[]) =
