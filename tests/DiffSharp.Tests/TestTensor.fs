@@ -2609,6 +2609,13 @@ type TestTensor () =
             Assert.CheckEqual(tVarianceBiased1.dtype, combo.dtype)
             Assert.CheckEqual(tVarianceBiased2.dtype, combo.dtype)
 
+        let tPrecisionCheckData = dsharp.tensor([1e10+4.0; 1e10+7.0; 1e10+13.0;1e10+16.0],dtype=Float64)
+        let tPrecisionCheck = tPrecisionCheckData.variance()
+        let tPrecisionCheck0 = tPrecisionCheckData.variance(0)
+        let tPrecisionCheckCorrect = dsharp.tensor(30.0,dtype=Float64)
+        Assert.True(tPrecisionCheck.allclose(tPrecisionCheckCorrect, 0.01, 0.01))
+        Assert.True(tPrecisionCheck0.allclose(tPrecisionCheckCorrect, 0.01, 0.01))
+
     [<Test>]
     member _.TestTensorVarianceKeepDim () =
         for combo in Combos.FloatingPoint do 

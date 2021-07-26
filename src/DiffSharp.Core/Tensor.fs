@@ -1417,18 +1417,20 @@ type Tensor =
         let sBounds = Array2D.init a.dim 3 (fun i j -> if j=0 then 0 elif j=1 then a.shape.[i]-1 else 0)
         sBounds.[dim, 1] <- 0
         sBounds.[dim, 2] <- 1
-        let mutable s = a.zerosLike().GetSlice(sBounds)
-        let mutable sSquare = a.zerosLike().GetSlice(sBounds)
+        let mutable mean = a.zerosLike().GetSlice(sBounds)
+        let mutable sse = a.zerosLike().GetSlice(sBounds)
         let n = a.shape.[dim]
         for i=0 to n-1 do
             sBounds.[dim,0] <- i
             sBounds.[dim,1] <- i
             sBounds.[dim,2] <- 1
             let slice = a.GetSlice(sBounds)
-            s <- s + slice
-            sSquare <- sSquare + slice * slice
+            let delta = slice - mean
+            mean <- mean + delta / (i + 1)
+            let delta2 = slice - mean 
+            sse <- sse + delta * delta2
         let nn = if unbiased then n - 1 else n
-        let res = (sSquare - (s * s) / n) / nn
+        let res = sse / nn
         if keepDim then res.unsqueeze(dim) else res
 
     /// <summary>Returns the standard deviation of each row of the input tensor in the given dimension dim.</summary>
