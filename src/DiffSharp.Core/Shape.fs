@@ -63,7 +63,7 @@ module rec Shape =
         let shape1 = shape.[0..dim-1]
         let shape3 = shape.[dim+1..]
         if shapes |> Array.exists (fun shapeOther -> shapeOther.[0..dim-1] <> shape1 || shapeOther.[dim+1..] <> shape3) then
-            invalidArg "tensors" "Expecting Tensors with similar shapes"
+            invalidArg "tensors" "Expecting tensors with similar shapes"
         let m2 = shapes |> Array.sumBy (fun shape -> shape.[dim])
         let outputShape = [| yield! shape1; yield m2; yield! shape3 |]
         n, shape1, m2, shape3, outputShape
@@ -112,7 +112,7 @@ module rec Shape =
         checkDeviceTypes deviceType1 deviceType2
         checkDtypes dtype1 dtype2
         checkConvDType "conv1d" dtype1
-        if shape1.Length <> 3 || shape2.Length <> 3 then failwithf "Expecting two 3d tensors t1, t2 where t1 is input (NxCxI: batchSize x inputChannels x inputLength) and t2 is filters (KxCxF: outputChannels x inputChannels x kernelLength), received Tensors with shapes %A, %A" shape1 shape2
+        if shape1.Length <> 3 || shape2.Length <> 3 then failwithf "Expecting two 3d tensors t1, t2 where t1 is input (NxCxI: batchSize x inputChannels x inputLength) and t2 is filters (KxCxF: outputChannels x inputChannels x kernelLength), received tensors with shapes %A, %A" shape1 shape2
         if padding < 0 then failwithf "Expecting padding (%A) >= 0" padding
         if stride < 1 then failwithf "Expecting stride (%A) >= 1" stride
         if dilation < 1 then failwithf "Expecting dilation (%A) >=1" dilation
@@ -134,7 +134,7 @@ module rec Shape =
         checkDeviceTypes deviceType1 deviceType2
         checkDtypes dtype1 dtype2
         checkConvDType "conv2d" dtype1
-        if shape1.Length <> 4 || shape2.Length <> 4 then failwithf "Expecting two 4d tensors t1, t2 where t1 is input, NxCxHxW (batchSize x inputChannels x inputHeight x inputWidth) and t2 is filters, KxCxFxG (outputChannels x inputChannels x kernelHeight x kernelWidth), received Tensors with shapes %A, %A" shape1 shape2
+        if shape1.Length <> 4 || shape2.Length <> 4 then failwithf "Expecting two 4d tensors t1, t2 where t1 is input, NxCxHxW (batchSize x inputChannels x inputHeight x inputWidth) and t2 is filters, KxCxFxG (outputChannels x inputChannels x kernelHeight x kernelWidth), received tensors with shapes %A, %A" shape1 shape2
         if strides.Length <> 2 then failwithf "Expecting strides (%A) to be a two-dimensional array" strides
         if paddings.Length <> 2 then failwithf "Expecting paddings (%A) to be a two-dimensional array" paddings
         if dilations.Length <> 2 then failwithf "Expecting dilations (%A) to be a two-dimensional array" dilations
@@ -164,7 +164,7 @@ module rec Shape =
         checkDeviceTypes deviceType1 deviceType2
         checkDtypes dtype1 dtype2
         checkConvDType "conv3d" dtype1
-        if shape1.Length <> 5 || shape2.Length <> 5 then failwithf "Expecting two 4d Tensors t1, t2 where t1 is input, NxCxDxHxW (batchSize x inputChannels x inputDepth x inputHeight x inputWidth) and t2 is filters, KxCxExFxG (outputChannels x inputChannels x kernelDepth x kernelHeight x kernelWidth), received Tensors with shapes %A, %A" shape1 shape2
+        if shape1.Length <> 5 || shape2.Length <> 5 then failwithf "Expecting two 4d tensors t1, t2 where t1 is input, NxCxDxHxW (batchSize x inputChannels x inputDepth x inputHeight x inputWidth) and t2 is filters, KxCxExFxG (outputChannels x inputChannels x kernelDepth x kernelHeight x kernelWidth), received tensors with shapes %A, %A" shape1 shape2
         if strides.Length <> 3 then failwithf "Expecting strides (%A) to be a length-three array" strides
         if paddings.Length <> 3 then failwithf "Expecting paddings (%A) to be a length-three array" paddings
         if dilations.Length <> 3 then failwithf "Expecting dilations (%A) to be a length-three array" dilations
@@ -199,7 +199,7 @@ module rec Shape =
         checkDeviceTypes deviceType1 deviceType2
         checkDtypes dtype1 dtype2
         checkConvDType "convTranspose1d" dtype1
-        if shape1.Length <> 3 || shape2.Length <> 3 then failwithf "Expecting two 3d tensors t1, t2 where t1 is input (NxCxI: batchSize x inputChannels x inputLength) and t2 is filters (KxCxF: outputChannels x inputChannels x kernelLength), received Tensors with shapes %A, %A" shape1 shape2
+        if shape1.Length <> 3 || shape2.Length <> 3 then failwithf "Expecting two 3d tensors t1, t2 where t1 is input (NxCxI: batchSize x inputChannels x inputLength) and t2 is filters (KxCxF: outputChannels x inputChannels x kernelLength), received tensors with shapes %A, %A" shape1 shape2
         if padding < 0 then failwithf "Expecting padding (%A) >= 0" padding
         if stride < 1 then failwithf "Expecting stride (%A) >= 1" stride
         if dilation < 1 then failwithf "Expecting dilation (%A) >=1" dilation
@@ -223,7 +223,7 @@ module rec Shape =
         checkDeviceTypes deviceType1 deviceType2
         checkDtypes dtype1 dtype2
         checkConvDType "convTranspose2d" dtype1
-        if shape1.Length <> 4 || shape2.Length <> 4 then failwithf "Expecting two 4d tensors t1, t2 where t1 is input, NxCxHxW (batchSize x inputChannels x inputHeight x inputWidth) and t2 is filters, KxCxFxG (outputChannels x inputChannels x kernelHeight x kernelWidth), received Tensors with shapes %A, %A" shape1 shape2
+        if shape1.Length <> 4 || shape2.Length <> 4 then failwithf "Expecting two 4d tensors t1, t2 where t1 is input, NxCxHxW (batchSize x inputChannels x inputHeight x inputWidth) and t2 is filters, KxCxFxG (outputChannels x inputChannels x kernelHeight x kernelWidth), received tensors with shapes %A, %A" shape1 shape2
         if strides.Length <> 2 then failwithf "Expecting strides (%A) to be a length-two array" strides
         if paddings.Length <> 2 then failwithf "Expecting paddings (%A) to be a length-two array" paddings
         if dilations.Length <> 2 then failwithf "Expecting dilations (%A) to be a length-two array" dilations
@@ -255,7 +255,7 @@ module rec Shape =
         checkDeviceTypes deviceType1 deviceType2
         checkDtypes dtype1 dtype2
         checkConvDType "convTranspose3d" dtype1
-        if shape1.Length <> 5 || shape2.Length <> 5 then failwithf "Expecting two 4d Tensors t1, t2 where t1 is input, NxCxDxHxW (batchSize x inputChannels x inputDepth x inputHeight x inputWidth) and t2 is filters, KxCxExFxG (outputChannels x inputChannels x kernelDepth x kernelHeight x kernelWidth), received Tensors with shapes %A, %A" shape1 shape2
+        if shape1.Length <> 5 || shape2.Length <> 5 then failwithf "Expecting two 4d tensors t1, t2 where t1 is input, NxCxDxHxW (batchSize x inputChannels x inputDepth x inputHeight x inputWidth) and t2 is filters, KxCxExFxG (outputChannels x inputChannels x kernelDepth x kernelHeight x kernelWidth), received tensors with shapes %A, %A" shape1 shape2
         if strides.Length <> 3 then failwithf "Expecting strides (%A) to be a length-three array" strides
         if paddings.Length <> 3 then failwithf "Expecting paddings (%A) to be a length-three array" paddings
         if dilations.Length <> 3 then failwithf "Expecting dilations (%A) to be a length-three array" dilations
@@ -287,9 +287,9 @@ module rec Shape =
         batchSize, inputChannels, (kernelDepth, kernelHeight, kernelWidth), (outputChannels, outputDepth, outputHeight, outputWidth), outputShape
 
     /// Checks if the given shapes are appropriate for a maxpool operation and returns information related to the resulting shape.
-    let checkCanMaxpool1d (dtype: Dtype) (shape: Shape) (kernelSize: int) (stride: int) (padding: int) =
+    let checkCanMaxOrAvgpool1d nm (dtype: Dtype) (shape: Shape) (kernelSize: int) (stride: int) (padding: int) =
         match dtype with
-        | Dtype.Bool | Dtype.Integral -> opNotSupported "maxpool1d" dtype
+        | Dtype.Bool | Dtype.Integral -> opNotSupported nm dtype
         | _ ->
         if shape.Length <> 3 then failwithf "Expecting a 3d tensor (NxCxL: batchSize x inputChannels x inputLength), received tensor with shape %A" shape
         if kernelSize < 1 then failwithf "Expecting kernelSize (%A) >= 1" kernelSize
@@ -306,9 +306,17 @@ module rec Shape =
         batchSize, channels, inputSize, outputSize, outputShape
 
     /// Checks if the given shapes are appropriate for a maxpool operation and returns information related to the resulting shape.
-    let checkCanMaxpool2d (dtype: Dtype) (shape: Shape) (kernelSize: int[]) (strides: int[]) (paddings: int[]) =
+    let checkCanMaxpool1d dtype shape kernelSize stride padding =
+        checkCanMaxOrAvgpool1d "maxpool1d" dtype shape kernelSize stride padding
+
+    /// Checks if the given shapes are appropriate for an avgpool operation and returns information related to the resulting shape.
+    let checkCanAvgpool1d dtype shape kernelSize stride padding =
+        checkCanMaxOrAvgpool1d "maxpool1d" dtype shape kernelSize stride padding
+
+    /// Checks if the given shapes are appropriate for a maxpool operation and returns information related to the resulting shape.
+    let checkCanMaxOrAvgpool2d nm (dtype: Dtype) (shape: Shape) (kernelSize: int[]) (strides: int[]) (paddings: int[]) =
         match dtype with
-        | Dtype.Bool | Dtype.Integral -> opNotSupported "maxpool2d" dtype
+        | Dtype.Bool | Dtype.Integral -> opNotSupported nm dtype
         | _ ->
         if shape.Length <> 4 then failwithf "Expecting a 4d tensor (NxCxHxW: batchSize x inputChannels x inputHeight x inputWidth), received tensor with shape %A" shape
         if kernelSize.[0] < 1 || kernelSize.[1] < 1 then failwithf "Expecting all kernelSizes (%A) >= 1" kernelSize
@@ -331,9 +339,17 @@ module rec Shape =
         (batchSize, channels, (inputHeight, inputWidth), (kernelHeight, kernelWidth), (outputHeight, outputWidth), outputShape)
 
     /// Checks if the given shapes are appropriate for a maxpool operation and returns information related to the resulting shape.
-    let checkCanMaxpool3d (dtype: Dtype) (shape: Shape) (kernelSize: int[]) (strides: int[]) (paddings: int[]) =
+    let checkCanMaxpool2d dtype shape kernelSize strides paddings =
+        checkCanMaxOrAvgpool2d "maxpool2d" dtype shape kernelSize strides paddings
+
+    /// Checks if the given shapes are appropriate for an avgpool operation and returns information related to the resulting shape.
+    let checkCanAvgpool2d dtype shape kernelSize strides paddings =
+        checkCanMaxOrAvgpool2d "avgpool2d" dtype shape kernelSize strides paddings
+
+    /// Checks if the given shapes are appropriate for a maxpool operation and returns information related to the resulting shape.
+    let checkCanMaxOrAvgpool3d nm (dtype: Dtype) (shape: Shape) (kernelSize: int[]) (strides: int[]) (paddings: int[]) =
         match dtype with
-        | Dtype.Bool | Dtype.Integral -> opNotSupported "maxpool3d" dtype
+        | Dtype.Bool | Dtype.Integral -> opNotSupported nm dtype
         | _ ->
         if shape.Length <> 5 then failwithf "Expecting a 5d tensor (NxCxDxHxW: batchSize x inputChannels x inputDepth x inputHeight x inputWidth), received tensor with shape %A" shape
         if kernelSize.[0] < 1 || kernelSize.[1] < 1 || kernelSize.[2] < 1 then failwithf "Expecting all kernelSizes (%A) >= 1" kernelSize
@@ -359,6 +375,14 @@ module rec Shape =
         let outputWidth = int (floor (float (inputWidthAfterPadding - kernelWidth)/(float strides.[2]))) + 1
         let outputShape = [|batchSize; channels; outputDepth; outputHeight; outputWidth|]
         (batchSize, channels, (inputDepth, inputHeight, inputWidth), (kernelDepth, kernelHeight, kernelWidth), (outputDepth, outputHeight, outputWidth), outputShape)
+
+    /// Checks if the given shapes are appropriate for a maxpool operation and returns information related to the resulting shape.
+    let checkCanMaxpool3d dtype shape kernelSize strides paddings =
+        checkCanMaxOrAvgpool3d "maxpool3d" dtype shape kernelSize strides paddings
+
+    /// Checks if the given shapes are appropriate for an avgpool operation and returns information related to the resulting shape.
+    let checkCanAvgpool3d dtype shape kernelSize strides paddings =
+        checkCanMaxOrAvgpool3d "avgpool3d" dtype shape kernelSize strides paddings
 
     /// Checks if the given shapes are appropriate for a maxunpool operation and returns information related to the resulting shape.
     let checkCanMaxunpool1d (dtype: Dtype) (shape: Shape) (indicesDtype: Dtype) (indicesShape: Shape) (outputSize: int[]) =
@@ -471,17 +495,26 @@ module rec Shape =
         if not (contains shape1 shape2) then failwithf "Expecting shape1 to contain shape2, received %A, %A" shape1 shape2
         if location.Length <> shape1.Length then failwithf "Expecting location of the same length as shape1, received %A, %A" (location.Length) shape1
 
-    /// Check if the given shape is appropriate for a matmul operation.
-    let checkCanMatmul (shape1:int[]) (shape2:int[]) =
-        if shape1.Length < 2 || shape2.Length < 2 then failwithf "Expecting two 2d Tensors, received Tensors with shapes %A, %A" shape1 shape2
+    /// Checks if the given shapes are appropriate for a matmul operation.
+    let checkCanMatmul (shape1: Shape) (shape2: Shape) =
+        if shape1.Length < 2 || shape2.Length < 2 then failwithf "Expecting tensors to have at least two dimensions, received tensors with shapes %A, %A" shape1 shape2
         let aBatchPart, aMatrixPart = Array.splitAt (shape1.Length-2) shape1
         let bBatchPart, bMatrixPart = Array.splitAt (shape2.Length-2) shape2
         if aMatrixPart.[1] <> bMatrixPart.[0] then failwithf "Cannot matrix multiply tensors with shapes %A, %A - mismatch in matrix dimension" shape1 shape2
         (aBatchPart, aMatrixPart), (bBatchPart, bMatrixPart)
 
+    /// Checks if the given shapes are appropriate for a batched matrix multiplication operation.
+    let checkCanBMM (shape1: Shape) (shape2: Shape) =
+        if shape1.Length <> 3 || shape2.Length <> 3 then failwithf "Expecting two 3d tensors, received tensors with shapes %A, %A" shape1 shape2
+        if shape1.[0] <> shape2.[0] then failwithf "Cannot batch matrix multiply tensors with shapes %A, %A - mismatch in batch dimension" shape1 shape2
+        let batchSize = shape1.[0]
+        if shape1.[2] <> shape2.[1] then failwithf "Cannot batch matrix multiply tensors with shapes %A, %A - mismatch in matrix dimension" shape1 shape2
+        let outputShape = [|batchSize; shape1.[1]; shape2.[2]|]
+        outputShape
+
     /// Checks if the given shape is appropriate for a dot product operation.
     let checkCanDot (shape1: Shape) (shape2: Shape) =
-        if shape1.Length <> 1 || shape2.Length <> 1 then failwithf "Expecting two vectors (1d Tensors), received Tensors with shapes %A, %A" shape1 shape2
+        if shape1.Length <> 1 || shape2.Length <> 1 then failwithf "Expecting two vectors (1d Tensors), received tensors with shapes %A, %A" shape1 shape2
         if shape1.[0] <> shape2.[0] then failwithf "Cannot multiply vectors with different lengths %A, %A" shape1.[0] shape2.[0]
 
     /// Checks if the given shape is appropriate for a pad operation.

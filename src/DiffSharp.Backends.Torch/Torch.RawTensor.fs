@@ -619,17 +619,37 @@ type TorchRawTensor(tt: TorchTensor, shape: Shape, dtype: Dtype, device: Device)
         match dtype with 
         | Dtype.Bool -> opNotSupported2 "MatMulTT" dtype t2.Dtype
         | _ ->  
-        let _, _ = Shape.checkCanMatmul t1.Shape t2.Shape
+        let (t1BatchPart, t1MatrixPart), (t2BatchPart, t2MatrixPart) = Shape.checkCanMatmul t1.Shape t2.Shape
+        if t1BatchPart <> t2BatchPart then failwithf "Cannot matrix multiply raw tensors with shapes %A, %A - mismatch batching" t1.Shape t2.Shape
+        let t1rows = t1MatrixPart.[0]
+        let t2cols = t2MatrixPart.[1]
+        let newShape = Array.append t1BatchPart [| t1rows; t2cols |]        
         let result =
             // "addmm for CUDA tensors only supports floating-point types. Try converting the tensors with .float()" | const char *
             match t1.DeviceType, dtype with 
             | DiffSharp.DeviceType.CUDA, (Dtype.Integral as dtype) ->
                 let tt1 = tt.to_type(ScalarType.Float64)
                 let tt2 = t2.TorchTensor.to_type(ScalarType.Float64)
-                tt1.mm(tt2).round().to_type(toTorchType dtype) 
+                tt1.matmul(tt2).round().to_type(toTorchType dtype) 
             | _ ->
-                tt.mm(t2.TorchTensor)
-        t1.MakeLike(result, [| t1.Shape.[0]; t2.Shape.[1] |])
+                tt.matmul(t2.TorchTensor)
+        t1.MakeLike(result, newShape)
+
+    override t1.BMMTT(t2) =
+        match dtype with 
+        | Dtype.Bool -> opNotSupported2 "BMMTT" dtype t2.Dtype
+        | _ ->  
+        let resultShape = Shape.checkCanBMM t1.Shape t2.Shape
+        let result =
+            // "addmm for CUDA tensors only supports floating-point types. Try converting the tensors with .float()" | const char *
+            match t1.DeviceType, dtype with 
+            | DiffSharp.DeviceType.CUDA, (Dtype.Integral as dtype) ->
+                let tt1 = tt.to_type(ScalarType.Float64)
+                let tt2 = t2.TorchTensor.to_type(ScalarType.Float64)
+                tt1.bmm(tt2).round().to_type(toTorchType dtype) 
+            | _ ->
+                tt.bmm(t2.TorchTensor)
+        t1.MakeLike(result, resultShape)        
 
     override t1.Conv1D(t2, stride, padding) = // TODO: bias, dilation and groups
         let _batchSize, _inputChannels, _kernelSize, _outputChannels, _outputSize, outputShape =
@@ -739,6 +759,56 @@ type TorchRawTensor(tt: TorchTensor, shape: Shape, dtype: Dtype, device: Device)
         let padding = outputSize |> Array.map (fun _ -> 0L)
         let resultt = tt.maxunpool3d(indices.TorchTensor, int64s outputSize, strides, padding)
         t1.MakeLike(resultt, shape=outputShape)
+
+    override t1.AvgPool1D(kernelSize, stride, padding) =
+        let _batchSize, _channels, _inputSize, _outputSize, outputShape = Shape.checkCanAvgpool1d dtype t1.Shape kernelSize stride padding
+        match dtype with 
+        | Dtype.Bool | Dtype.Integral -> opNotSupported "AvgPool1D" dtype
+        | _ ->
+        let resultt = tt.avg_pool1d(int64 kernelSize, stride=int64 stride, padding=int64 padding)
+        let result = t1.MakeLike(resultt, shape=outputShape)
+        result
+
+    override t1.AvgPool2D(kernelSize, stride, padding) = 
+        let _batchSize, _channels, _inputSize, _kernelSize, _outputSize, outputShape = Shape.checkCanAvgpool2d dtype t1.Shape kernelSize stride padding
+        match dtype with 
+        | Dtype.Bool | Dtype.Integral -> opNotSupported "AvgPool2D" dtype
+        | _ ->
+        let resultt = tt.avg_pool2d(int64s kernelSize, strides=int64s stride, paddings=int64s padding)
+        let result = t1.MakeLike(resultt, shape=outputShape)
+        result
+
+    override t1.AvgPool3D(kernelSize, stride, padding) =
+        let _batchSize, _channels, _inputSize, _kernelSize, _outputSize, outputShape = Shape.checkCanAvgpool3d dtype t1.Shape kernelSize stride padding
+        match dtype with 
+        | Dtype.Bool | Dtype.Integral -> opNotSupported "AvgPool3D" dtype
+        | _ ->
+        let resultt = tt.avg_pool3d(int64s kernelSize, strides=int64s stride, paddings=int64s padding)
+        let result = t1.MakeLike(resultt, shape=outputShape)
+        result
+
+    override t1.AvgPoolReverse1D(originalInput, kernelSize, stride, padding) =
+        let t1X = t1.UnsqueezeT(2)
+        let originalInputX = originalInput.UnsqueezeT(2)
+        let resulttX = t1X.AvgPoolReverse2D(originalInputX, [| 1; kernelSize |], [| 1; stride |], [| 0; padding |])
+        let resultt = resulttX.SqueezeT(2)
+        resultt
+
+    override t1.AvgPoolReverse2D(originalInput, kernelSize, stride, padding) = 
+        match dtype with 
+        | Dtype.Bool | Dtype.Integral -> opNotSupported "AvgPoolReverse2D" dtype
+        | _ ->
+        let resultt = tt.avg_pool2d_backward(originalInput.TorchTensor, int64s kernelSize, strides=int64s stride, paddings=int64s padding)
+        let result = t1.MakeLike(resultt, shape=originalInput.Shape)
+        result
+
+    override t1.AvgPoolReverse3D(originalInput, kernelSize, stride, padding) =
+        match dtype with 
+        | Dtype.Bool | Dtype.Integral -> opNotSupported "AvgPoolReverse3D" dtype
+        | _ ->
+        let resultt = tt.avg_pool3d_backward(originalInput.TorchTensor, int64s kernelSize, strides=int64s stride, paddings=int64s padding)
+        let result = t1.MakeLike(resultt, shape=originalInput.Shape)
+        result
 
     override t.SumT2Dim0() =
         let result = tt.sum([| 0L |], ``type``= tt.Type)

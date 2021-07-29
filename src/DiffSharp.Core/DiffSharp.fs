@@ -573,6 +573,8 @@ type dsharp =
     static member pow(a:Tensor, b:Tensor) = a.pow(b)
 
     /// <summary>Matrix product of two tensors.</summary>
+    /// <param name="a">The first tensor.</param>
+    /// <param name="b">The second tensor.</param>
     static member matmul(a:Tensor, b:Tensor) = a.matmul(b)
 
     /// <summary>Computes the dot product (inner product) of two tensors.</summary>

@@ -779,7 +779,8 @@ type Tensor =
             sb.AppendLine() |> ignore
         sb.ToString()
 
-    member internal t.GetSlice(bounds:int[,]) =
+    member t.GetSlice(bounds:int[,]) =
+        // printfn "t.GetSlice bounds\n %A" bounds
         if t.dim = 0 then failwith "Cannot slice a scalar Tensor"
         let fullBounds = t.shapeFullBounds |> Array2D.copy
         bounds |> Array2D.iteri (fun i j v -> 
@@ -1274,7 +1275,6 @@ type Tensor =
     ///  tensor.
     /// </para>
     /// </remarks>
-
     member a.matmul (b:Tensor) : Tensor =
         if a.dim = 1 && b.dim = 1 then a.dot(b) 
         // Increase to at least 2x2

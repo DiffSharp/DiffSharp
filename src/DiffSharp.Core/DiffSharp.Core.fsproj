@@ -29,6 +29,8 @@
     <Compile Include="Model.Recurrent.fs" />
     <Compile Include="Model.VAE.fs" />
     <Compile Include="Optim.fs" />
+    <Compile Include="Op.AvgPool.fs" />
+    <Compile Include="Op.BMM.fs" />
 	  <PackageReference Update="FSharp.Core" Version="$(FSharpCoreVersion)" />
   </ItemGroup>
 </Project>
