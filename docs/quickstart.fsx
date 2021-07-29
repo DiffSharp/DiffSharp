@@ -1,15 +1,12 @@
 (*** condition: prepare ***)
-#I "../src/DiffSharp.Core/bin/Debug/netstandard2.1"
-#I "../src/DiffSharp.Data/bin/Debug/netstandard2.1"
-#I "../src/DiffSharp.Backends.Reference/bin/Debug/netstandard2.1"
-#I "../src/DiffSharp.Backends.Torch/bin/Debug/net5.0"
+#I "../tests/DiffSharp.Tests/bin/Debug/net5.0"
 #r "DiffSharp.Core.dll"
 #r "DiffSharp.Data.dll"
 #r "DiffSharp.Backends.Reference.dll"
 #r "DiffSharp.Backends.Torch.dll"
 #r "nuget: SixLabors.ImageSharp,1.0.1" 
 // These are needed to make fsdocs --eval work. If we don't select a backend like this in the beginning, we get erratic behavior.
-DiffSharp.dsharp.config(backend=DiffSharp.Backend.Reference)
+DiffSharp.dsharp.config(backend=DiffSharp.Backend.Torch)
 DiffSharp.dsharp.seed(123)
 open DiffSharp.Util
 
@@ -248,7 +245,7 @@ let classifier =
     --> Linear(128, 10)
     --> dsharp.logsoftmax(dim=1)
 
-let epochs = 20
+let epochs = 2
 let batchSize = 64
 let numSamples = 4
 
@@ -257,9 +254,9 @@ let urls = ["https://ossci-datasets.s3.amazonaws.com/mnist/train-images-idx3-uby
             "https://ossci-datasets.s3.amazonaws.com/mnist/t10k-images-idx3-ubyte.gz";
             "https://ossci-datasets.s3.amazonaws.com/mnist/t10k-labels-idx1-ubyte.gz"]
 
-let trainSet = MNIST("../data", urls=urls, train=true)
+let trainSet = MNIST("../data", urls=urls, train=true, n=1000)
 let trainLoader = trainSet.loader(batchSize=batchSize, shuffle=true)
-let validSet = MNIST("../data", urls=urls, train=false)
+let validSet = MNIST("../data", urls=urls, train=false, n=1000)
 let validLoader = validSet.loader(batchSize=batchSize, shuffle=false)
 
 
