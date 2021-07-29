@@ -6,7 +6,7 @@
 #r "DiffSharp.Backends.Torch.dll"
 #r "nuget: SixLabors.ImageSharp,1.0.1" 
 // These are needed to make fsdocs --eval work. If we don't select a backend like this in the beginning, we get erratic behavior.
-DiffSharp.dsharp.config(backend=DiffSharp.Backend.Torch)
+DiffSharp.dsharp.config(backend=DiffSharp.Backend.Reference)
 DiffSharp.dsharp.seed(123)
 open DiffSharp.Util
 
@@ -212,84 +212,3 @@ let discriminator =
 print generator
 print discriminator
 (*** include-output ***)
-
-(**
-## Optimizers
-
-See the [DiffSharp.Optim](/reference/diffsharp-optim.html) namespace for the full API reference.
-
-*)
-open DiffSharp.Optim
-
-(**
-## A Complete Typical Training Loop
-
-The following example puts together ...
-
-*)
-dsharp.config(backend=Backend.Torch, device=Device.CPU)
-dsharp.seed(0)
-
-
-let classifier =
-    Conv2d(1, 32, 3, 2)
-    --> dsharp.relu
-    --> Conv2d(32, 64, 3, 2)
-    --> dsharp.relu
-    --> dsharp.maxpool2d(2)
-    --> dsharp.dropout(0.25)
-    --> dsharp.flatten(1)
-    --> Linear(576, 128)
-    --> dsharp.relu
-    --> dsharp.dropout(0.5)
-    --> Linear(128, 10)
-    --> dsharp.logsoftmax(dim=1)
-
-let epochs = 2
-let batchSize = 64
-let numSamples = 4
-
-let urls = ["https://ossci-datasets.s3.amazonaws.com/mnist/train-images-idx3-ubyte.gz";
-            "https://ossci-datasets.s3.amazonaws.com/mnist/train-labels-idx1-ubyte.gz";
-            "https://ossci-datasets.s3.amazonaws.com/mnist/t10k-images-idx3-ubyte.gz";
-            "https://ossci-datasets.s3.amazonaws.com/mnist/t10k-labels-idx1-ubyte.gz"]
-
-let trainSet = MNIST("../data", urls=urls, train=true, n=1000)
-let trainLoader = trainSet.loader(batchSize=batchSize, shuffle=true)
-let validSet = MNIST("../data", urls=urls, train=false, n=1000)
-let validLoader = validSet.loader(batchSize=batchSize, shuffle=false)
-
-
-printfn "Model: %A" classifier
-
-let optimizer = Adam(classifier, lr=dsharp.tensor(0.001))
-
-for epoch = 1 to epochs do
-    for i, data, target in trainLoader.epoch() do
-        classifier.reverseDiff()
-        let output = data --> classifier
-        let l = dsharp.nllLoss(output, target)
-        l.reverse()
-        optimizer.step()
-        if i % 10 = 0 then
-            printfn "Epoch: %A/%A, minibatch: %A/%A, loss: %A" epoch epochs i trainLoader.length (float(l))
-
-
-    printfn "Computing validation loss"
-    classifier.noDiff()
-    let mutable validLoss = dsharp.zero()
-    let mutable correct = 0
-    for j, data, target in validLoader.epoch() do
-        let output = data --> classifier
-        validLoss <- validLoss + dsharp.nllLoss(output, target, reduction="sum")
-        let pred = output.argmax(1)
-        correct <- correct + int (pred.eq(target).sum())
-    validLoss <- validLoss / validSet.length
-    let accuracy = 100.*(float correct) / (float validSet.length)
-    printfn "\nValidation loss: %A, accuracy: %.2f%%" (float validLoss) accuracy
-
-    let samples, sampleLabels = validLoader.batch(numSamples)
-    printfn "Sample predictions:\n%s" (samples.toImageString(gridCols=4))
-    printfn "True labels     : %A " (sampleLabels.int())
-    let predictedLabels = (samples --> classifier).argmax(dim=1)
-    printfn "Predicted labels: %A\n" predictedLabels
