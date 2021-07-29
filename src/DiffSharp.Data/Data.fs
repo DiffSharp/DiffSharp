@@ -167,7 +167,7 @@ type CIFAR100(path:string, ?url:string, ?train:bool, ?transform:Tensor->Tensor, 
     override d.item(i) = transform data.[i], targetTransform targetFine.[i]    
 
 
-type MNIST(path:string, ?urls:seq<string>, ?train:bool, ?transform:Tensor->Tensor, ?targetTransform:Tensor->Tensor) =
+type MNIST(path:string, ?urls:seq<string>, ?train:bool, ?transform:Tensor->Tensor, ?targetTransform:Tensor->Tensor, ?n:int) =
     inherit Dataset()
     let path = Path.Combine(path, "mnist") |> Path.GetFullPath
     let train = defaultArg train true
@@ -186,7 +186,7 @@ type MNIST(path:string, ?urls:seq<string>, ?train:bool, ?transform:Tensor->Tenso
                     "https://ossci-datasets.s3.amazonaws.com/mnist/t10k-labels-idx1-ubyte.gz"])
     let files = [for url in urls do Path.Combine(path, Path.GetFileName(url))]
 
-    let loadMNISTImages(filename:string) (n:option<int>) =
+    let loadMNISTImages(filename:string) =
         let r = new BinaryReader(new GZipStream(File.OpenRead(filename), CompressionMode.Decompress))
         let magicnumber = r.ReadInt32() |> IPAddress.NetworkToHostOrder
         match magicnumber with
@@ -194,20 +194,20 @@ type MNIST(path:string, ?urls:seq<string>, ?train:bool, ?transform:Tensor->Tenso
             let maxitems = r.ReadInt32() |> IPAddress.NetworkToHostOrder
             let rows = r.ReadInt32() |> IPAddress.NetworkToHostOrder
             let cols = r.ReadInt32() |> IPAddress.NetworkToHostOrder
-            let n = defaultArg n maxitems
+            let n = min maxitems (defaultArg n maxitems)
             r.ReadBytes(n * rows * cols)
             |> Array.map float32 // Mapping bytes to float32 before tensor construction is crucial, otherwise we have an issue with confusing byte with int8 that is destructive
             |> dsharp.tensor
             |> dsharp.view ([n; 1; 28; 28])
             |> fun t -> t / 255
         | _ -> failwith "Given file is not in the MNIST format."
-    let loadMNISTLabels(filename:string) (n:option<int>) =
+    let loadMNISTLabels(filename:string) =
         let r = new BinaryReader(new GZipStream(File.OpenRead(filename), CompressionMode.Decompress))
         let magicnumber = r.ReadInt32() |> IPAddress.NetworkToHostOrder
         match magicnumber with
         | 2049 -> // Labels
             let maxitems = r.ReadInt32() |> IPAddress.NetworkToHostOrder
-            let n = defaultArg n maxitems
+            let n = min maxitems (defaultArg n maxitems)
             r.ReadBytes(n)
             |> Array.map int
             |> dsharp.tensor
@@ -218,11 +218,11 @@ type MNIST(path:string, ?urls:seq<string>, ?train:bool, ?transform:Tensor->Tenso
         if train then
             if not (File.Exists(files.[0])) then download urls.[0] files.[0]
             if not (File.Exists(files.[1])) then download urls.[1] files.[1]
-            loadMNISTImages files.[0] None, loadMNISTLabels files.[1] None
+            loadMNISTImages files.[0], loadMNISTLabels files.[1]
         else
             if not (File.Exists(files.[2])) then download urls.[2] files.[2]
             if not (File.Exists(files.[3])) then download urls.[3] files.[3]
-            loadMNISTImages files.[2] None, loadMNISTLabels files.[3] None
+            loadMNISTImages files.[2], loadMNISTLabels files.[3]
 
     member d.classes = 10
     member d.classNames = Array.init 10 id |> Array.map string

@@ -247,7 +247,7 @@ type TestData () =
                     Assert.AreEqual(ybackendCorrect, ybackend)
 
     [<Test>]
-    member _.TestDataloaderNumBatches () =
+    member _.TestDataLoaderNumBatches () =
         let ndata = 100
         let batchSize = 10
         let x = dsharp.zeros([ndata; 10])
@@ -262,7 +262,7 @@ type TestData () =
         Assert.AreEqual(numBatchesCorrect, numBatches)
 
     [<Test>]
-    member _.TestDataloaderDroplast () =
+    member _.TestDataLoaderDroplast () =
         let ndata = 1000
         let batchSize = 16
         let x = dsharp.zeros([ndata; 10])
@@ -284,6 +284,31 @@ type TestData () =
         for _ in loaderDrop.epoch() do nBatchesDropActual <- nBatchesDropActual + 1
         Assert.AreEqual(nBatchesDropCorrect, nBatchesDrop)
         Assert.AreEqual(nBatchesDropCorrect, nBatchesDropActual)
+
+    [<Test>]
+    member _.TestDataLoaderBatch () =
+        let ndata = 100
+        let batchSize = 16
+        let x = dsharp.zeros([ndata; 10])
+        let y = dsharp.zeros([ndata; 1])
+        let dataset = TensorDataset(x, y)        
+
+        let loader = dataset.loader(batchSize=batchSize, dropLast=false)
+
+        let batch1, batchTarget1 = loader.batch()
+        let batchLen1 = batch1.shape.[0]
+        let batchTargetLen1 = batchTarget1.shape.[0]
+        let batchLenCorrect1 = 16
+        Assert.AreEqual(batchLenCorrect1, batchLen1)
+        Assert.AreEqual(batchLenCorrect1, batchTargetLen1)
+
+        let len = 5
+        let batch1, batchTarget1 = loader.batch(len)
+        let batchLen1 = batch1.shape.[0]
+        let batchTargetLen1 = batchTarget1.shape.[0]
+        let batchLenCorrect1 = len
+        Assert.AreEqual(batchLenCorrect1, batchLen1)
+        Assert.AreEqual(batchLenCorrect1, batchTargetLen1)
 
     [<Test>]
     member _.TestTextDataset () =
