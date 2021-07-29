@@ -49,7 +49,7 @@ It is designed for use in machine learning, probabilistic programming, optimizat
 
 🗹 Common optimizers, model elements, differentiable probability distributions
 
-🗹 F# programming language for robust functional programming 
+🗹 F# for robust functional programming 
 
 🗹 PyTorch familiar naming and idioms, efficient LibTorch CUDA/C++ tensors with GPU support
 
@@ -115,7 +115,7 @@ t3.conv2d(t4)
 Take the gradient of a vector-to-scalar function:
 *)
 
-let f (x:Tensor) = x.exp().sum()
+let f (x: Tensor) = x.exp().sum()
 
 dsharp.grad f (dsharp.tensor([1.8, 2.5]))
 (*** include-it ***)
