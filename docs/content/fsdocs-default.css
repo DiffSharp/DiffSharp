@@ -311,7 +311,7 @@ body {
 }
 
 #fsdocs-content pre .fssnip code {
-    font: 0.85rem 'Roboto Mono', monospace;
+    font: 0.86rem 'Roboto Mono', monospace;
 }
 
 #fsdocs-content table.pre,
@@ -322,18 +322,24 @@ body {
     border-top: 0px solid #e3e3e3;
     border-collapse: separate;
     white-space: pre;
-    font: 0.85rem 'Roboto Mono', monospace;
-    width: 90%;
-    /* margin: 10px 20px 20px 20px; */
+    font: 0.86rem 'Roboto Mono', monospace;
+    width: 100%;
+    margin: 10px 0px 20px 0px;
     background-color: #f3f4f7;
     padding: 10px;
-    /* border-radius: 5px; */
+    border-radius: 5px;
     color: #8e0e2b;
     max-width: none;
+    box-sizing: border-box;
 }
 
 #fsdocs-content pre.fssnip code {
-    font: 0.85rem 'Roboto Mono', monospace;
+    font: 0.86rem 'Roboto Mono', monospace;
+    font-weight: 600;
+}
+
+#fsdocs-content table.pre {
+    background-color: #fff7ed;
 }
 
 #fsdocs-content table.pre pre {
@@ -341,12 +347,15 @@ body {
     margin: 0px;
     border-radius: 0px;
     width: 100%;
+    background-color: #fff7ed;
+    color: #837b79;
 }
 
 #fsdocs-content table.pre td {
     padding: 0px;
     white-space: normal;
     margin: 0px;
+    width: 100%;
 }
 
 #fsdocs-content table.pre td.lines {
@@ -378,6 +387,8 @@ body {
     .fsdocs-source-link img {
         border-style: none;
         margin-left: 10px;
+        width: auto;
+        height: 1.4em;        
     }
 
     .fsdocs-source-link .hover {
@@ -535,6 +546,8 @@ body {
 /* comment */
 #fsdocs-content span.c {
     color: #808080;
+    font-weight: 400;
+    font-style: italic;
 }
 /* operators */
 #fsdocs-content span.o {
@@ -581,3 +594,41 @@ div.fsdocs-tip {
         color: #d1d1d1;
         font: 0.85rem 'Roboto Mono', monospace;
     }
+
+.button {
+display: inline-block;
+border-radius: 2px;
+background-color: #262626;
+border: none;
+color: #FFFFFF;
+text-align: center;
+font-size: 18px;
+padding: 20px;
+width: 120px;
+transition: all 0.5s;
+cursor: pointer;
+/* margin: 5px; */
+opacity: 0.85;
+}
+
+.button span {
+cursor: pointer;
+display: inline-block;
+position: relative;
+transition: 0.25s;
+}
+
+.button:hover {
+    opacity: 1;
+    background-color: #8e0e2b;
+}
+
+.button:hover span {
+padding-left: 5px;
+/* opacity: 1; */
+}
+
+.button:hover span:after {
+opacity: 1;
+/* right: 0; */
+}
