@@ -157,6 +157,9 @@ type Tensor =
     /// Returns a new tensor with each element converted to type float64
     member t.double() = t.cast(Dtype.Float64)
 
+    /// Returns a new tensor with each element converted to type float64
+    member t.byte() = t.cast(Dtype.Byte)
+
     /// Gets the element type of the tensor
     member t.dtype = t.primalRaw.Dtype
 
