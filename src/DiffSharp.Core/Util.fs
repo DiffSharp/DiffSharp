@@ -298,17 +298,11 @@ module DataConverter =
         match value |> tryFlatArrayAndShape<double> with
         | Some (values, shape) -> (values |> Array.map ofFloat64, shape) 
         | None -> 
-        match value |> tryFlatArrayAndShape<int32> with
-        | Some (values, shape) -> (values |> Array.map ofInt32, shape) 
-        | None -> 
         match value |> tryFlatArrayAndShape<int64> with
         | Some (values, shape) -> (values |> Array.map ofInt64, shape)
         | None -> 
-        match value |> tryFlatArrayAndShape<byte>  with
-        | Some (values, shape) -> (values |> Array.map ofByte, shape)
-        | None -> 
-        match value |> tryFlatArrayAndShape<int8>  with
-        | Some (values, shape) -> (values |> Array.map ofInt8, shape)
+        match value |> tryFlatArrayAndShape<int32> with
+        | Some (values, shape) -> (values |> Array.map ofInt32, shape) 
         | None -> 
         match value |> tryFlatArrayAndShape<int16>  with
         | Some (values, shape) -> (values |> Array.map ofInt16, shape)
@@ -316,10 +310,22 @@ module DataConverter =
         match value |> tryFlatArrayAndShape<bool> with
         | Some (values, shape) -> (values |> Array.map ofBool, shape) 
         | None -> 
+
+        // Handles empty tensors
         match value with
         | :? (obj[]) as v when Array.isEmpty v -> ([||] |> Array.map ofFloat32, [|0|])
         | :? (seq<obj>) as v when Seq.isEmpty v -> ([||] |> Array.map ofFloat32, [|0|])
-        | _ -> failwithf "Cannot convert value of type %A to RawTensorCPU" (value.GetType())
+        | _ ->
+
+        // Matching of byte and int8 is problematic and not reliable, see https://github.com/dotnet/fsharp/issues/10202
+        // TODO: implement some careful special treatment
+        match value |> tryFlatArrayAndShape<byte>  with
+        | Some (values, shape) -> (values |> Array.map ofByte, shape)
+        | None -> 
+        match value |> tryFlatArrayAndShape<int8>  with
+        | Some (values, shape) -> (values |> Array.map ofInt8, shape)
+        | None -> failwithf "Cannot convert value of type %A to RawTensorCPU" (value.GetType())
+
 
     let dataOfValuesForFloat32 (value:obj) =
         dataOfValues float32 float32 float32 float32 float32 float32 (fun x -> if x then 1.0f else 0.0f) float32 value 
