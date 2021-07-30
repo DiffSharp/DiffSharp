@@ -38,4 +38,27 @@ Formatter.Register(fun (x:obj) (writer: TextWriter) -> fprintfn writer "%120A" x
 * The `cref:T:DiffSharp.Tensor` type
 
 Saving tensors as image and loading images as tensors
+
+
+## Converting between Tensors and arrays
+
+System.Array and F# arrays
+
 *)
+
+open DiffSharp
+
+// Tensor
+let t1 = dsharp.tensor [ 0.0 .. 0.2 .. 1.0 ]
+
+// System.Array
+let a1 = t1.toArray()
+
+// []<float32>
+let a1b = t1.toArray() :?> float32[]
+
+// Tensor
+let t2 = dsharp.randn([3;3;3])
+
+// [,,]<float32>
+let a2 = t2.toArray() :?> float32[,,]
