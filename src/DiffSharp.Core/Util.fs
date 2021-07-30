@@ -317,7 +317,7 @@ module DataConverter =
         | :? (seq<obj>) as v when Seq.isEmpty v -> ([||] |> Array.map ofFloat32, [|0|])
         | _ ->
 
-        // Matching of byte and int8 is problematic and not reliable, see https://github.com/dotnet/fsharp/issues/10202
+        // Matching of byte and int8 is problematic and not reliable, see https://github.com/dotnet/fsharp/issues/10202 and https://github.com/DiffSharp/DiffSharp/issues/203
         // TODO: implement some careful special treatment
         match value |> tryFlatArrayAndShape<byte>  with
         | Some (values, shape) -> (values |> Array.map ofByte, shape)
