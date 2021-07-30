@@ -1396,6 +1396,7 @@ type Tensor =
     /// <remarks>If unbiased is False, then the variance will be calculated via the biased estimator. Otherwise, Bessel’s correction will be used.</remarks>
     /// <param name="unbiased">Whether to use the unbiased estimation or not.</param>
     member a.variance(?unbiased:bool) = 
+        // This is the two-pass algorithm, see https://en.wikipedia.org/wiki/Algorithms_for_calculating_variance
         let unbiased = defaultArg unbiased true  // Use Bessel's correction if unbiased=true
         let n = if unbiased then a.nelement - 1 else a.nelement
         let a' = a - a.mean() in (a' * a').sum() / n
@@ -1409,7 +1410,7 @@ type Tensor =
     /// <param name="keepDim">Whether the output tensor has dim retained or not.</param>
     /// <param name="unbiased">Whether to use the unbiased estimation or not.</param>
     member a.variance(dim:int, ?keepDim:bool, ?unbiased:bool) =
-         // TODO: this is the naive algorithm, can be improved for better numerical stability
+        // This is Welford's algorithm, see https://en.wikipedia.org/wiki/Algorithms_for_calculating_variance
         let keepDim = defaultArg keepDim false
         let unbiased = defaultArg unbiased true  // Use Bessel's correction if unbiased=true
         let dim = Shape.completeDim a.dim dim  // Handles -1 semantics
