@@ -317,14 +317,14 @@ module DataConverter =
         | :? (seq<obj>) as v when Seq.isEmpty v -> ([||] |> Array.map ofFloat32, [|0|])
         | _ ->
 
-        // Matching of byte and int8 is problematic and not reliable, see https://github.com/dotnet/fsharp/issues/10202 and https://github.com/DiffSharp/DiffSharp/issues/203
+        // Matching of byte and int8 by type is problematic and not reliable, see https://github.com/dotnet/fsharp/issues/10202 and https://github.com/DiffSharp/DiffSharp/issues/203
         // TODO: implement some careful special treatment
         match value |> tryFlatArrayAndShape<byte>  with
         | Some (values, shape) -> (values |> Array.map ofByte, shape)
         | None -> 
         match value |> tryFlatArrayAndShape<int8>  with
         | Some (values, shape) -> (values |> Array.map ofInt8, shape)
-        | None -> failwithf "Cannot convert value of type %A to RawTensorCPU" (value.GetType())
+        | None -> failwithf "Cannot convert from value of type %A" (value.GetType())
 
 
     let dataOfValuesForFloat32 (value:obj) =
