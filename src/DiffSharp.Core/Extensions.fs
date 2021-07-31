@@ -54,6 +54,11 @@ module Array =
             i <- i + 1
         (i = n)
 
+module Array4D =
+    /// Builds a new array whose elements are the results of applying the given function to each of the elements of the array.
+    let map mapping (array:'a[,,,]) =
+        Array4D.init (array.GetLength(0)) (array.GetLength(1)) (array.GetLength(2)) (array.GetLength(3)) (fun i j k l -> mapping array.[i, j, k, l])
+
 module ArrayND = 
     /// Initializes an array with a given shape and initializer function.
     let init (shape: int[]) (f: int[] -> 'T) : obj =

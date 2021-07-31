@@ -316,7 +316,14 @@ type RawTensorCPU<'T when 'T : equality and 'T :> scalar>(values: 'T[], shape: S
             upcast t
         else
             let tflat = t.ViewT([|t.Nelement|]) // We flatten, cast, and return with the correct shape because .ToValues() in the next line does not support tensors with dimension > 4.
-            RawTensor.Create(tflat.ToValues(), dtype=dtype, backend=t.Backend, device=t.Device).ViewT(t.Shape)
+            let values = 
+                match t.Dtype with
+                // These special cases for byte and int8 are to ensure that values don't get truncated because RawTensor.Create cannot distinguish between byte and int8
+                | Dtype.Byte -> tflat.ToValues():?>byte[] |> Array.map int |> box
+                | Dtype.Int8 -> tflat.ToValues():?>int8[] |> Array.map int |> box
+                | _ -> tflat.ToValues()
+
+            RawTensor.Create(values, dtype=dtype, backend=t.Backend, device=t.Device).ViewT(t.Shape)
 
     override t.MoveTo(device: Device) = t.MakeLike(values, shape, device=device)
 

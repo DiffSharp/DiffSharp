@@ -57,13 +57,26 @@ type Tensor =
         | TensorF(_,_,tt) -> tt
         | TensorR(_,_,_,_,tt) -> tt
 
-    /// Converts the tensor to a new tensor with the given element type
+    /// Converts the tensor to a new tensor with the given <see cref="T:DiffSharp.Dtype"/>
     member t.cast(dtype) =
         if t.dtype = dtype then t else
         match t with
         | TensorC(tp) -> TensorC(tp.Cast(dtype))
         | TensorF(_) -> failwith "Cannot cast TensorF - do not cast during differentiation"
         | TensorR(_) -> failwith "Cannot cast TensorR - do not cast during differentiation"
+
+    /// Converts the tensor to a new tensor with the given system type
+    member t.cast<'T>() =
+        match box Unchecked.defaultof<'T> with
+        | :? float32 -> t.cast(Dtype.Float32)
+        | :? double -> t.cast(Dtype.Float64)
+        | :? int32 -> t.cast(Dtype.Int32)
+        | :? int64 -> t.cast(Dtype.Int64)
+        | :? int16 -> t.cast(Dtype.Int16)
+        | :? int8 -> t.cast(Dtype.Int8)
+        | :? byte -> t.cast(Dtype.Byte)
+        | :? bool -> t.cast(Dtype.Bool)
+        | _ -> failwith "Cannot cast tensor to given type"
 
     /// Returns a new tensor with the same contents moved to the given backend
     member t.move(backend: Backend) =
@@ -143,6 +156,9 @@ type Tensor =
 
     /// Returns a new tensor with each element converted to type float64
     member t.double() = t.cast(Dtype.Float64)
+
+    /// Returns a new tensor with each element converted to type float64
+    member t.byte() = t.cast(Dtype.Byte)
 
     /// Gets the element type of the tensor
     member t.dtype = t.primalRaw.Dtype
@@ -268,11 +284,31 @@ type Tensor =
     /// Gets the number of elements in the tensor
     member t.nelement = t.primalRaw.Nelement
 
+    /// Returns the value of a scalar tensor as an object
+    member t.toScalar() = t.primalRaw.ToScalar()
+
     /// Returns the value of a (non-scalar) tensor as an array
     member t.toArray() = t.primalRaw.ToArray()
 
-    /// Returns the value of a scalar tensor as an object
-    member t.toScalar() = t.primalRaw.ToScalar()
+    /// Returns the value of a 1D tensor as a 1D array
+    member t.toArray1D<'T>() = 
+        if t.dim <> 1 then failwithf "Cannot convert tensor with shape %A to 1D array" t.shape
+        t.cast<'T>().toArray() :?> 'T[]
+
+    /// Returns the value of a 2D tensor as a 2D array
+    member t.toArray2D<'T>() = 
+        if t.dim <> 2 then failwithf "Cannot convert tensor with shape %A to 2D array" t.shape
+        t.cast<'T>().toArray() :?> 'T[,]
+
+    /// Returns the value of a 3D tensor as a 3D array
+    member t.toArray3D<'T>() = 
+        if t.dim <> 3 then failwithf "Cannot convert tensor with shape %A to 3D array" t.shape
+        t.cast<'T>().toArray() :?> 'T[,,]
+
+    /// Returns the value of a 4D tensor as a 4D array
+    member t.toArray4D<'T>() = 
+        if t.dim <> 4 then failwithf "Cannot convert tensor with shape %A to 4D array" t.shape
+        t.cast<'T>().toArray() :?> 'T[,,,]      
 
     /// Indicates if two tensors have the same differentiation type
     member t1.isSameDiffType(t2:Tensor) =

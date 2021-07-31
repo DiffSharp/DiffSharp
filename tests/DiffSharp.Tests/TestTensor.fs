@@ -266,8 +266,148 @@ type TestTensor () =
         for combo in Combos.All do 
             let a = array2D [[1.; 2.]; [3.; 4.]]
             let t = combo.tensor(a)
-            let tToArrayCorrect = combo.arrayCreator2D a
-            Assert.CheckEqual(tToArrayCorrect, t.toArray())
+            let tArray = t.toArray()
+            let tArrayCorrect = combo.arrayCreator2D a
+            Assert.CheckEqual(tArrayCorrect, tArray)
+
+            let a1 = [|0.; 1.; 0.|]
+            let t1 = combo.tensor(a1)
+            let t1aFloat32 = t1.toArray1D<float32>()
+            let t1aFloat32Correct = a1 |> Array.map (fun v -> System.Convert.ToSingle(v))
+            Assert.AreEqual(t1aFloat32Correct, t1aFloat32)
+
+            let t1aFloat64 = t1.toArray1D<double>()
+            let t1aFloat64Correct = a1 |> Array.map (fun v -> System.Convert.ToDouble(v))
+            Assert.AreEqual(t1aFloat64Correct, t1aFloat64)
+
+            let t1aInt64 = t1.toArray1D<int64>()
+            let t1aInt64Correct = a1 |> Array.map (fun v -> System.Convert.ToInt64(v))
+            Assert.AreEqual(t1aInt64Correct, t1aInt64)
+
+            let t1aInt32 = t1.toArray1D<int32>()
+            let t1aInt32Correct = a1 |> Array.map (fun v -> System.Convert.ToInt32(v))
+            Assert.AreEqual(t1aInt32Correct, t1aInt32)
+
+            let t1aInt16 = t1.toArray1D<int16>()
+            let t1aInt16Correct = a1 |> Array.map (fun v -> System.Convert.ToInt16(v))
+            Assert.AreEqual(t1aInt16Correct, t1aInt16)
+
+            let t1aInt8 = t1.toArray1D<int8>()
+            let t1aInt8Correct = a1 |> Array.map (fun v -> System.Convert.ToSByte(v))
+            Assert.AreEqual(t1aInt8Correct, t1aInt8)
+
+            let t1aByte = t1.toArray1D<byte>()
+            let t1aByteCorrect = a1 |> Array.map (fun v -> System.Convert.ToByte(v))
+            Assert.AreEqual(t1aByteCorrect, t1aByte)
+
+            let t1aBool = t1.toArray1D<bool>()
+            let t1aBoolCorrect = a1 |> Array.map (fun v -> System.Convert.ToBoolean(v))
+            Assert.AreEqual(t1aBoolCorrect, t1aBool)
+
+
+            let a2 = array2D [[0.; 1.; 0.]; [1.; 0.; 1.]]
+            let t2 = combo.tensor(a2)
+            let t2aFloat32 = t2.toArray2D<float32>()
+            let t2aFloat32Correct = a2 |> Array2D.map (fun v -> System.Convert.ToSingle(v))
+            Assert.AreEqual(t2aFloat32Correct, t2aFloat32)
+
+            let t2aFloat64 = t2.toArray2D<double>()
+            let t2aFloat64Correct = a2 |> Array2D.map (fun v -> System.Convert.ToDouble(v))
+            Assert.AreEqual(t2aFloat64Correct, t2aFloat64)
+
+            let t2aInt64 = t2.toArray2D<int64>()
+            let t2aInt64Correct = a2 |> Array2D.map (fun v -> System.Convert.ToInt64(v))
+            Assert.AreEqual(t2aInt64Correct, t2aInt64)
+
+            let t2aInt32 = t2.toArray2D<int32>()
+            let t2aInt32Correct = a2 |> Array2D.map (fun v -> System.Convert.ToInt32(v))
+            Assert.AreEqual(t2aInt32Correct, t2aInt32)
+
+            let t2aInt16 = t2.toArray2D<int16>()
+            let t2aInt16Correct = a2 |> Array2D.map (fun v -> System.Convert.ToInt16(v))
+            Assert.AreEqual(t2aInt16Correct, t2aInt16)
+
+            let t2aInt8 = t2.toArray2D<int8>()
+            let t2aInt8Correct = a2 |> Array2D.map (fun v -> System.Convert.ToSByte(v))
+            Assert.AreEqual(t2aInt8Correct, t2aInt8)
+
+            let t2aByte = t2.toArray2D<byte>()
+            let t2aByteCorrect = a2 |> Array2D.map (fun v -> System.Convert.ToByte(v))
+            Assert.AreEqual(t2aByteCorrect, t2aByte)
+
+            let t2aBool = t2.toArray2D<bool>()
+            let t2aBoolCorrect = a2 |> Array2D.map (fun v -> System.Convert.ToBoolean(v))
+            Assert.AreEqual(t2aBoolCorrect, t2aBool)
+
+
+            let a3 = array3D [[[0.; 1.; 0.]; [1.; 0.; 1.]]]
+            let t3 = combo.tensor(a3)
+            let t3aFloat32 = t3.toArray3D<float32>()
+            let t3aFloat32Correct = a3 |> Array3D.map (fun v -> System.Convert.ToSingle(v))
+            Assert.AreEqual(t3aFloat32Correct, t3aFloat32)
+
+            let t3aFloat64 = t3.toArray3D<double>()
+            let t3aFloat64Correct = a3 |> Array3D.map (fun v -> System.Convert.ToDouble(v))
+            Assert.AreEqual(t3aFloat64Correct, t3aFloat64)
+
+            let t3aInt64 = t3.toArray3D<int64>()
+            let t3aInt64Correct = a3 |> Array3D.map (fun v -> System.Convert.ToInt64(v))
+            Assert.AreEqual(t3aInt64Correct, t3aInt64)
+
+            let t3aInt32 = t3.toArray3D<int32>()
+            let t3aInt32Correct = a3 |> Array3D.map (fun v -> System.Convert.ToInt32(v))
+            Assert.AreEqual(t3aInt32Correct, t3aInt32)
+
+            let t3aInt16 = t3.toArray3D<int16>()
+            let t3aInt16Correct = a3 |> Array3D.map (fun v -> System.Convert.ToInt16(v))
+            Assert.AreEqual(t3aInt16Correct, t3aInt16)
+
+            let t3aInt8 = t3.toArray3D<int8>()
+            let t3aInt8Correct = a3 |> Array3D.map (fun v -> System.Convert.ToSByte(v))
+            Assert.AreEqual(t3aInt8Correct, t3aInt8)
+
+            let t3aByte = t3.toArray3D<byte>()
+            let t3aByteCorrect = a3 |> Array3D.map (fun v -> System.Convert.ToByte(v))
+            Assert.AreEqual(t3aByteCorrect, t3aByte)
+
+            let t3aBool = t3.toArray3D<bool>()
+            let t3aBoolCorrect = a3 |> Array3D.map (fun v -> System.Convert.ToBoolean(v))
+            Assert.AreEqual(t3aBoolCorrect, t3aBool)
+
+
+            let a4 = array4D [[[[0.; 1.; 0.]; [1.; 0.; 1.]]]]
+            let t4 = combo.tensor(a4)
+            let t4aFloat32 = t4.toArray4D<float32>()
+            let t4aFloat32Correct = a4 |> Array4D.map (fun v -> System.Convert.ToSingle(v))
+            Assert.AreEqual(t4aFloat32Correct, t4aFloat32)
+
+            let t4aFloat64 = t4.toArray4D<double>()
+            let t4aFloat64Correct = a4 |> Array4D.map (fun v -> System.Convert.ToDouble(v))
+            Assert.AreEqual(t4aFloat64Correct, t4aFloat64)
+
+            let t4aInt64 = t4.toArray4D<int64>()
+            let t4aInt64Correct = a4 |> Array4D.map (fun v -> System.Convert.ToInt64(v))
+            Assert.AreEqual(t4aInt64Correct, t4aInt64)
+
+            let t4aInt32 = t4.toArray4D<int32>()
+            let t4aInt32Correct = a4 |> Array4D.map (fun v -> System.Convert.ToInt32(v))
+            Assert.AreEqual(t4aInt32Correct, t4aInt32)
+
+            let t4aInt16 = t4.toArray4D<int16>()
+            let t4aInt16Correct = a4 |> Array4D.map (fun v -> System.Convert.ToInt16(v))
+            Assert.AreEqual(t4aInt16Correct, t4aInt16)
+
+            let t4aInt8 = t4.toArray4D<int8>()
+            let t4aInt8Correct = a4 |> Array4D.map (fun v -> System.Convert.ToSByte(v))
+            Assert.AreEqual(t4aInt8Correct, t4aInt8)
+
+            let t4aByte = t4.toArray4D<byte>()
+            let t4aByteCorrect = a4 |> Array4D.map (fun v -> System.Convert.ToByte(v))
+            Assert.AreEqual(t4aByteCorrect, t4aByte)
+
+            let t4aBool = t4.toArray4D<bool>()
+            let t4aBoolCorrect = a4 |> Array4D.map (fun v -> System.Convert.ToBoolean(v))
+            Assert.AreEqual(t4aBoolCorrect, t4aBool)
 
     [<Test>]
     member _.TestTensorSaveSaveAndLoadToSpecificConfiguration () =
