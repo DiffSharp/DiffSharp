@@ -593,6 +593,18 @@ type Tensor =
         let dtype = defaultArg dtype Dtype.Int32
         a.arangeLike(endVal=endVal, startVal=startVal, step=step, dtype=dtype, ?device=device, ?backend=backend)
 
+    /// Returns a tensor in the manner of <see cref="M:DiffSharp.dsharp.linspace"/> for the given element type and configuration, defaulting to
+    /// the element type and configuration of the input tensor.
+    member a.linspaceLike(startVal:float, endVal:float, steps:int, ?dtype, ?device, ?backend) =
+        let stepVal = (endVal - startVal) / (float (steps - 1))
+        let v = Array.init steps (fun i -> startVal + (float i) * stepVal)
+        a.like(box v, ?dtype=dtype, ?device=device, ?backend=backend)
+
+    /// Returns a tensor in the manner of <see cref="M:DiffSharp.dsharp.linspace"/> for the given element type and configuration, defaulting to
+    /// the element type and configuration of the input tensor.
+    member a.linspaceLike(startVal:int, endVal:int, steps:int, ?dtype, ?device, ?backend) =
+        a.linspaceLike(startVal |> float, endVal |> float, steps, ?dtype=dtype, ?device=device, ?backend=backend)
+
     /// <summary>
     ///  Returns a tensor from the .NET data in <c>value</c> for the given element type and configuration, defaulting to
     ///  the element type and configuration of the input tensor.

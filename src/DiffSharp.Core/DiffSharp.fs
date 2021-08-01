@@ -178,6 +178,42 @@ type dsharp =
     static member arange(endVal:int, ?startVal:int, ?step:int, ?dtype:Dtype, ?device:Device, ?backend:Backend) =
         dsharp.zero(?dtype=dtype, ?device=device, ?backend=backend).arangeLike(endVal=endVal, ?startVal=startVal, ?step=step)
 
+    /// <summary>
+    /// Returns a 1-D tensor of size `steps` whose values are evenly space from `startVal` to `endVal`. The values are going to be: \(
+    /// (\text{startVal},
+    /// \text{startVal} + \frac{\text{endVal} - \text{startVal}}{\text{steps} - 1},
+    /// \ldots,
+    /// \text{startVal} + (\text{steps} - 2) * \frac{\text{endVal} - \text{startVal}}{\text{steps} - 1},
+    /// \text{endVal}) 
+    /// \)
+    /// </summary>
+    /// <param name="startVal">The starting value for the set of points.</param>
+    /// <param name="endVal">The ending value for the set of points.</param>
+    /// <param name="steps">The size of the returned tensor.</param>
+    /// <param name="dtype">The desired element type of returned tensor. Default: if None, uses Dtype.Default.</param>
+    /// <param name="device">The desired device of returned tensor. Default: if None, uses Device.Default.</param>
+    /// <param name="backend">The desired backend of returned tensor. Default: if None, uses Backend.Default.</param>
+    static member linspace(startVal:float, endVal:float, steps:int, ?dtype:Dtype, ?device:Device, ?backend:Backend) =
+        dsharp.zero(?dtype=dtype, ?device=device, ?backend=backend).linspaceLike(startVal=startVal, endVal=endVal, steps=steps)
+
+    /// <summary>
+    /// Returns a 1-D tensor of size `steps` whose values are evenly space from `startVal` to `endVal`. The values are going to be: \(
+    /// (\text{startVal},
+    /// \text{startVal} + \frac{\text{endVal} - \text{startVal}}{\text{steps} - 1},
+    /// \ldots,
+    /// \text{startVal} + (\text{steps} - 2) * \frac{\text{endVal} - \text{startVal}}{\text{steps} - 1},
+    /// \text{endVal}) 
+    /// \)
+    /// </summary>
+    /// <param name="startVal">The starting value for the set of points.</param>
+    /// <param name="endVal">The ending value for the set of points.</param>
+    /// <param name="steps">The size of the returned tensor.</param>
+    /// <param name="dtype">The desired element type of returned tensor. Default: if None, uses Dtype.Default.</param>
+    /// <param name="device">The desired device of returned tensor. Default: if None, uses Device.Default.</param>
+    /// <param name="backend">The desired backend of returned tensor. Default: if None, uses Backend.Default.</param>
+    static member linspace(startVal:int, endVal:int, steps:int, ?dtype:Dtype, ?device:Device, ?backend:Backend) =
+        dsharp.zero(?dtype=dtype, ?device=device, ?backend=backend).linspaceLike(startVal=startVal, endVal=endVal, steps=steps)
+
     /// <summary>Returns a 2-D tensor with ones on the diagonal and zeros elsewhere.</summary>
     /// <param name="rows">The number of rows</param>
     /// <param name="cols">The number of columns with default being n</param>

@@ -781,6 +781,17 @@ type TestTensor () =
             Assert.CheckEqual(t3Correct, t3)
 
     [<Test>]
+    member _.TestTensorLinspace () =
+        for combo in Combos.IntegralAndFloatingPoint do
+            let t = combo.linspace(0, 5, 5)
+            let tCorrect = combo.tensor([0.0000, 1.2500, 2.5000, 3.7500, 5.0000])
+            Assert.True(tCorrect.allclose(t, 0.1))
+
+            let t = combo.linspace(-4, 5, 8)
+            let tCorrect = combo.tensor([-4.0000, -2.7143, -1.4286, -0.1429,  1.1429,  2.4286,  3.7143,  5.0000])
+            Assert.True(tCorrect.allclose(t, 0.1))
+
+    [<Test>]
     member _.TestTensorZeroSize () =
         for combo in Combos.AllExcept16s do
             let t = combo.tensor([])
