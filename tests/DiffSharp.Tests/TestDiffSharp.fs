@@ -106,8 +106,6 @@ type TestDiffSharp () =
         let tMeanCorrect = dsharp.tensor(0.)
         let tStddev = t.stddev()
         let tStddevCorrect = dsharp.tensor(1.)
-        printfn "%A %A" tMean tMeanCorrect
-        printfn "%A %A" tStddev tStddevCorrect
         Assert.True(tMeanCorrect.allclose(tMean, 0.1, 0.1))
         Assert.True(tStddevCorrect.allclose(tStddev, 0.1, 0.1))
 
