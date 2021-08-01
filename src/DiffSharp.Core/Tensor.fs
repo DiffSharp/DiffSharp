@@ -605,6 +605,18 @@ type Tensor =
     member a.linspaceLike(startVal:int, endVal:int, steps:int, ?dtype, ?device, ?backend) =
         a.linspaceLike(startVal |> float, endVal |> float, steps, ?dtype=dtype, ?device=device, ?backend=backend)
 
+    /// Returns a tensor in the manner of <see cref="M:DiffSharp.dsharp.logspace"/> for the given element type and configuration, defaulting to
+    /// the element type and configuration of the input tensor.
+    member a.logspaceLike(startVal:float, endVal:float, steps:int, ?baseVal:float, ?dtype, ?device, ?backend) =
+        let baseVal = defaultArg baseVal 10.
+        a.scalarLike(baseVal, ?dtype=dtype, ?device=device, ?backend=backend).pow(a.linspaceLike(startVal, endVal, steps, ?dtype=dtype, ?device=device, ?backend=backend))
+
+    /// Returns a tensor in the manner of <see cref="M:DiffSharp.dsharp.logspace"/> for the given element type and configuration, defaulting to
+    /// the element type and configuration of the input tensor.
+    member a.logspaceLike(startVal:int, endVal:int, steps:int, ?baseVal:int, ?dtype, ?device, ?backend) =
+        let baseVal = defaultArg baseVal 10
+        a.logspaceLike(startVal |> float, endVal |> float, steps, baseVal |> float, ?dtype=dtype, ?device=device, ?backend=backend)
+
     /// <summary>
     ///  Returns a tensor from the .NET data in <c>value</c> for the given element type and configuration, defaulting to
     ///  the element type and configuration of the input tensor.

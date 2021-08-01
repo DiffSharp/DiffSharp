@@ -179,7 +179,7 @@ type dsharp =
         dsharp.zero(?dtype=dtype, ?device=device, ?backend=backend).arangeLike(endVal=endVal, ?startVal=startVal, ?step=step)
 
     /// <summary>
-    /// Returns a 1-D tensor of size `steps` whose values are evenly space from `startVal` to `endVal`. The values are going to be: \(
+    /// Returns a 1-D tensor of size <paramref name="steps"/> whose values are evenly spaced from <paramref name="startVal"/> to <paramref name="endVal"/>. The values are going to be: \(
     /// (\text{startVal},
     /// \text{startVal} + \frac{\text{endVal} - \text{startVal}}{\text{steps} - 1},
     /// \ldots,
@@ -197,7 +197,7 @@ type dsharp =
         dsharp.zero(?dtype=dtype, ?device=device, ?backend=backend).linspaceLike(startVal=startVal, endVal=endVal, steps=steps)
 
     /// <summary>
-    /// Returns a 1-D tensor of size `steps` whose values are evenly space from `startVal` to `endVal`. The values are going to be: \(
+    /// Returns a 1-D tensor of size <paramref name="steps"/> whose values are evenly spaced from <paramref name="startVal"/> to <paramref name="endVal"/>. The values are going to be: \(
     /// (\text{startVal},
     /// \text{startVal} + \frac{\text{endVal} - \text{startVal}}{\text{steps} - 1},
     /// \ldots,
@@ -213,6 +213,44 @@ type dsharp =
     /// <param name="backend">The desired backend of returned tensor. Default: if None, uses Backend.Default.</param>
     static member linspace(startVal:int, endVal:int, steps:int, ?dtype:Dtype, ?device:Device, ?backend:Backend) =
         dsharp.zero(?dtype=dtype, ?device=device, ?backend=backend).linspaceLike(startVal=startVal, endVal=endVal, steps=steps)
+
+    /// <summary>
+    /// Returns a 1-D tensor of size <paramref name="steps"/> whose values are evenly spaced logarithmically from \(\text{baseVal}^{\text{startVal}}\) to \(\text{baseVal}^{\text{endVal}}\). The values are going to be: \(
+    /// (\text{baseVal}^{\text{startVal}},
+    /// \text{baseVal}^{(\text{startVal} + \frac{\text{endVal} - \text{startVal}}{ \text{steps} - 1})},
+    /// \ldots,
+    /// \text{baseVal}^{(\text{startVal} + (\text{steps} - 2) * \frac{\text{endVal} - \text{startVal}}{ \text{steps} - 1})},
+    /// \text{baseVal}^{\text{endVal}})
+    /// \)
+    /// </summary>
+    /// <param name="startVal">The starting value for the set of points.</param>
+    /// <param name="endVal">The ending value for the set of points.</param>
+    /// <param name="steps">The size of the returned tensor.</param>
+    /// <param name="baseVal">The base of the logarithm. Default: 10.0.</param>
+    /// <param name="dtype">The desired element type of returned tensor. Default: if None, uses Dtype.Default.</param>
+    /// <param name="device">The desired device of returned tensor. Default: if None, uses Device.Default.</param>
+    /// <param name="backend">The desired backend of returned tensor. Default: if None, uses Backend.Default.</param>
+    static member logspace(startVal:float, endVal:float, steps:int, ?baseVal:float, ?dtype:Dtype, ?device:Device, ?backend:Backend) =
+        dsharp.zero(?dtype=dtype, ?device=device, ?backend=backend).logspaceLike(startVal=startVal, endVal=endVal, steps=steps, ?baseVal=baseVal)
+
+    /// <summary>
+    /// Returns a 1-D tensor of size <paramref name="steps"/> whose values are evenly spaced logarithmically from \(\text{baseVal}^{\text{startVal}}\) to \(\text{baseVal}^{\text{endVal}}\). The values are going to be: \(
+    /// (\text{baseVal}^{\text{startVal}},
+    /// \text{baseVal}^{(\text{startVal} + \frac{\text{endVal} - \text{startVal}}{ \text{steps} - 1})},
+    /// \ldots,
+    /// \text{baseVal}^{(\text{startVal} + (\text{steps} - 2) * \frac{\text{endVal} - \text{startVal}}{ \text{steps} - 1})},
+    /// \text{baseVal}^{\text{endVal}})
+    /// \)
+    /// </summary>
+    /// <param name="startVal">The starting value for the set of points.</param>
+    /// <param name="endVal">The ending value for the set of points.</param>
+    /// <param name="steps">The size of the returned tensor.</param>
+    /// <param name="baseVal">The base of the logarithm. Default: 10.</param>
+    /// <param name="dtype">The desired element type of returned tensor. Default: if None, uses Dtype.Default.</param>
+    /// <param name="device">The desired device of returned tensor. Default: if None, uses Device.Default.</param>
+    /// <param name="backend">The desired backend of returned tensor. Default: if None, uses Backend.Default.</param>
+    static member logspace(startVal:int, endVal:int, steps:int, ?baseVal:int, ?dtype:Dtype, ?device:Device, ?backend:Backend) =
+        dsharp.zero(?dtype=dtype, ?device=device, ?backend=backend).logspaceLike(startVal=startVal, endVal=endVal, steps=steps, ?baseVal=baseVal)
 
     /// <summary>Returns a 2-D tensor with ones on the diagonal and zeros elsewhere.</summary>
     /// <param name="rows">The number of rows</param>
