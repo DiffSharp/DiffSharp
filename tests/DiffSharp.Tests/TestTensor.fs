@@ -997,15 +997,15 @@ type TestTensor () =
             Assert.CheckEqual(t3StringCorrect, t3String)
             Assert.CheckEqual(t4StringCorrect, t4String)
 
-        let t0Bool = dsharp.tensor([ 0.5; 1.0 ], dtype=Dtype.Bool)
+        let t0Bool = dsharp.tensor([ 0.; 1. ], dtype=Dtype.Bool)
         let t0BoolToString = t0Bool.ToString()
         let t0BoolToStringCorrect = sprintf "tensor([false, true],dtype=Bool)" 
-        Assert.CheckEqual(t0BoolToString, t0BoolToStringCorrect)
+        Assert.CheckEqual(t0BoolToStringCorrect, t0BoolToString)
 
         let t1Bool = dsharp.tensor([ false; true ], dtype=Dtype.Bool)
         let t1BoolToString = t1Bool.ToString()
         let t1BoolToStringCorrect = sprintf "tensor([false, true],dtype=Bool)" 
-        Assert.CheckEqual(t1BoolToString, t1BoolToStringCorrect)
+        Assert.CheckEqual(t1BoolToStringCorrect, t1BoolToString)
 
     [<Test>]
     member _.TestTensorEqual () =
@@ -3351,6 +3351,22 @@ type TestTensor () =
 
         for combo in Combos.IntegralAndBool do
             isInvalidOp(fun () -> combo.tensor([1.0]).atan())
+
+    [<Test>]
+    member _.TestTensorNumToBool () =
+        for combo in Combos.FloatingPoint do
+            let t = combo.tensor([-2., -1., -0.5, 0., 0.5, 1., 2.])
+            let tb = t.bool()
+            let tbCorrect = combo.tensor([true, true, true, false, true, true, true], dtype=Dtype.Bool)
+
+            Assert.CheckEqual(tbCorrect, tb)
+
+        for combo in Combos.Integral do
+            let t = combo.tensor([-2., -1., 0., 1., 2.])
+            let tb = t.bool()
+            let tbCorrect = combo.tensor([true, true, false, true, true], dtype=Dtype.Bool)
+
+            Assert.CheckEqual(tbCorrect, tb)
 
     [<Test>]
     member _.TestTensorSlice () =

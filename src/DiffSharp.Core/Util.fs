@@ -349,7 +349,7 @@ module DataConverter =
         dataOfValues int64 int64 int64 int64 int64 int64 (fun x -> if x then 1L else 0L) int64 value
 
     let dataOfValuesForBool (value:obj) =
-        dataOfValues (fun i -> abs i >= 1.0f) (fun i -> abs i >= 1.0) (fun i -> abs i > 0y) (fun i -> abs i > 0s) (fun i -> abs i > 0) (fun i -> abs i > 0L) id (fun i -> i > 0uy) value 
+        dataOfValues System.Convert.ToBoolean System.Convert.ToBoolean System.Convert.ToBoolean System.Convert.ToBoolean System.Convert.ToBoolean System.Convert.ToBoolean id System.Convert.ToBoolean value 
 
 
 /// Contains auto-opened utilities related to the DiffSharp programming model.
