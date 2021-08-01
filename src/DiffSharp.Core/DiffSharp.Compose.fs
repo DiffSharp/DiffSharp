@@ -59,6 +59,12 @@ type dsharp with
     static member arangeLike(endVal:int, ?startVal:int, ?step:int, ?dtype:Dtype, ?device:Device, ?backend:Backend) = fun (a:Tensor) -> a.arangeLike(endVal=endVal, ?startVal=startVal, ?step=step, ?dtype=dtype, ?device=device, ?backend=backend)
 
     /// <summary>TBD</summary>
+    static member linspaceLike(startVal:float, endVal:float, steps:int, ?dtype:Dtype, ?device:Device, ?backend:Backend) = fun (a:Tensor) -> a.linspaceLike(startVal=startVal, endVal=endVal, steps=steps, ?dtype=dtype, ?device=device, ?backend=backend)
+
+    /// <summary>TBD</summary>
+    static member linspaceLike(startVal:int, endVal:int, steps:int, ?dtype:Dtype, ?device:Device, ?backend:Backend) = fun (a:Tensor) -> a.linspaceLike(startVal=startVal, endVal=endVal, steps=steps, ?dtype=dtype, ?device=device, ?backend=backend)
+
+    /// <summary>TBD</summary>
     static member onehotLike(length:int, hot:int, ?dtype, ?device, ?backend) = fun (a:Tensor) -> a.onehotLike(length, hot, ?dtype=dtype, ?device=device, ?backend=backend)
 
     /// <summary>TBD</summary>
