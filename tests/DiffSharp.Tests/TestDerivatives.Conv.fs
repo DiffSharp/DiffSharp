@@ -3060,7 +3060,6 @@ type TestDerivativesConv () =
                [-3.1639, -2.1265, -2.0348],
                [ 1.2052,  0.3915, -0.0322]]]]).unsqueeze(0)
 
-            printfn "%A %A %A" fwdx.shape fwdy.shape fwdz.shape
             let fwdzd = fwdz.derivative
             let fwdzdCorrect = combo.tensor([[[[-1.7395,  7.9394, -3.6845],
                [ 1.6466,  4.5153, -5.6526],
@@ -4354,7 +4353,6 @@ type TestDerivativesConv () =
                                                   [-2.7707, -0.8894,  3.5974],
                                                   [-1.2403,  3.5118,  0.2221]]]]).unsqueeze(0)
 
-            printfn "%A" fwdzd
             Assert.True(fwdz.allclose(fwdzCorrect, 0.05))
             Assert.True(fwdzd.allclose(fwdzdCorrect, 0.05))
             Assert.True(revz.allclose(revzCorrect, 0.05))

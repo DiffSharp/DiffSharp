@@ -92,6 +92,18 @@ type ComboInfo(?defaultBackend: Backend, ?defaultDevice: Device, ?defaultDtype: 
     member _.arange(endVal:int, ?startVal:int, ?step:int, ?device, ?backend, ?dtype) =
         dsharp.arange(endVal, ?startVal=startVal, ?step=step, ?device=dflt device defaultDevice, ?backend=dflt backend defaultBackend, ?dtype=dflt dtype defaultDtype)
 
+    member _.linspace(startVal:float, endVal:float, steps:int, ?device, ?backend, ?dtype) =
+        dsharp.linspace(startVal, endVal, steps, ?device=dflt device defaultDevice, ?backend=dflt backend defaultBackend, ?dtype=dflt dtype defaultDtype)
+
+    member _.linspace(startVal:int, endVal:int, steps:int, ?device, ?backend, ?dtype) =
+        dsharp.linspace(startVal, endVal, steps, ?device=dflt device defaultDevice, ?backend=dflt backend defaultBackend, ?dtype=dflt dtype defaultDtype)
+
+    member _.logspace(startVal:float, endVal:float, steps:int, ?baseVal, ?device, ?backend, ?dtype) =
+        dsharp.logspace(startVal, endVal, steps, ?baseVal=baseVal, ?device=dflt device defaultDevice, ?backend=dflt backend defaultBackend, ?dtype=dflt dtype defaultDtype)
+
+    member _.logspace(startVal:int, endVal:int, steps:int, ?baseVal, ?device, ?backend, ?dtype) =
+        dsharp.logspace(startVal, endVal, steps, ?baseVal=baseVal, ?device=dflt device defaultDevice, ?backend=dflt backend defaultBackend, ?dtype=dflt dtype defaultDtype)
+
     member c.arrayCreator1D(arr: double[]) =
         match c.dtype with 
         | Dtype.Float16 -> arr |> Array.map float32 :> Array
