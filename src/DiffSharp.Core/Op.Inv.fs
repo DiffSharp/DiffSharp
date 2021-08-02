@@ -15,4 +15,4 @@ module OpBInvExtensions =
                 (a)
 
     type dsharp with
-        static member bmm(a:Tensor, b:Tensor) = a.bmm(b)
+        static member inv(a:Tensor) = a.inv()
