@@ -453,7 +453,9 @@ module rec Shape =
     /// Checks if the given shape is appropriate for a transpose operation.
     let checkCanInvert (shape: Shape) =
         let dim = shape.Length
-        if dim <> 2 || dim <> 3 then failwith "Expecting 2d tensor (a square matrix) or a 3d tensor (a batch of square matrices)."
+        if not (dim = 2 || dim = 3) then failwith "Expecting 2d tensor (a square matrix) or a 3d tensor (a batch of square matrices)."
+        if dim = 2 then if shape.[0] <> shape.[1] then failwith "Expecting a square matrix"
+        if dim = 3 then if shape.[1] <> shape.[2] then failwith "Expecting square matrices"
 
     /// Checks if the given shape is appropriate for a permute operation and returns information related to the resulting shape.
     let checkCanPermute (shape: Shape) (permutation: int[]) =
