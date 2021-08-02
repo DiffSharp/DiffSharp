@@ -301,6 +301,11 @@ type TorchRawTensor(tt: TorchTensor, shape: Shape, dtype: Dtype, device: Device)
         let result = tt.t()
         t.MakeLike(result, shape=newShape)
 
+    override t.InverseT2() =
+        Shape.checkCanInvert t.Shape
+        let result = tt.inverse()
+        t.MakeLike(result, shape=t.Shape)
+
     override t.SqueezeT(dim) = 
         let shape = t.Shape
         let newShape = Shape.squeeze dim shape

@@ -230,6 +230,10 @@ type RawTensorCPU<'T when 'T : equality and 'T :> scalar>(values: 'T[], shape: S
         let result = Array2D.init t.Shape.[1] t.Shape.[0] (fun i j -> t.Values.[j*tcols + i])
         t.CreateLike(result)
 
+    override t.InverseT2() =
+        failwithf "Not implemented"
+        upcast t
+
     override t.SqueezeT(dim) =
         let result = Array.copy t.Values
         t.MakeLike(result, Shape.squeeze dim t.Shape)
