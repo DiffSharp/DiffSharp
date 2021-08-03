@@ -10,7 +10,7 @@ module OpBInvExtensions =
                 { new UnaryOp("inv") with 
                     member _.fRaw(a) = a.InverseT2()
                     member _.ad_dfda(a,ad,f) = -f.matmul(ad).matmul(f)
-                    member _.fd_dfda(a,f,fd) = let ft = f.transpose() in -ft.matmul(fd).matmul(ft)
+                    member _.fd_dfda(a,f,fd) = let ft = f.transpose(-1, -2) in -ft.matmul(fd).matmul(ft)
                 }
                 (a)
 
