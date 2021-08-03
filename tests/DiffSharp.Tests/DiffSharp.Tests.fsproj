@@ -38,6 +38,7 @@
     <Compile Include="TestOptim.fs" />
     <Compile Include="TestOp.AvgPool.fs" />
     <Compile Include="TestOp.BMM.fs" />
+    <Compile Include="TestOp.Inv.fs" />
     <Compile Include="Program.fs" />
   </ItemGroup>
 
