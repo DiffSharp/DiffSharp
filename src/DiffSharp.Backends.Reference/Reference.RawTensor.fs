@@ -230,9 +230,9 @@ type RawTensorCPU<'T when 'T : equality and 'T :> scalar>(values: 'T[], shape: S
         let result = Array2D.init t.Shape.[1] t.Shape.[0] (fun i j -> t.Values.[j*tcols + i])
         t.CreateLike(result)
 
-    override t.InverseT2() =
-        failwithf "Not implemented"
-        upcast t
+    // override t.InverseT2() =
+    //     failwithf "Not implemented"
+    //     upcast t
 
     override t.SqueezeT(dim) =
         let result = Array.copy t.Values
@@ -616,6 +616,9 @@ module internal RawTensorCPU =
     let inline BMMTT(t1: RawTensorCPU< ^T >, t2: RawTensor) : (^T[] * Shape) =
         Shape.checkCanBMM t1.Shape t2.Shape |> ignore
         MatMulTT(t1, t2)
+
+    let inline InverseT(t: RawTensorCPU< ^T >) : (^T[] * Shape) =
+        failwith "Not implemented"
 
     let inline MaxPool1D(t1: RawTensorCPU< ^T >, kernelSize, stride, padding) : RawTensorCPU< ^T > * RawTensorCPU< int > =
         let batchSize, channels, inputSize, outputSize, outputShape =
@@ -1125,6 +1128,7 @@ type RawTensorFloat32(values: float32[], shape:Shape, device) =
     override t.AsinT() = RawTensorCPU.AsinT(t) |> create
     override t.AcosT() = RawTensorCPU.AcosT(t) |> create
     override t.AtanT() = RawTensorCPU.AtanT(t) |> create
+    override t.InverseT() = RawTensorCPU.InverseT(t) |> create
 
     static member Seed(seed) = Random.Seed(seed)
     static member Zero(device) = RawTensorCPU.Zero() |> createOn device
@@ -1222,6 +1226,7 @@ type RawTensorFloat64(values: double[], shape:Shape, device) =
     override t.AsinT() = RawTensorCPU.AsinT(t) |> create
     override t.AcosT() = RawTensorCPU.AcosT(t) |> create
     override t.AtanT() = RawTensorCPU.AtanT(t) |> create
+    override t.InverseT() = RawTensorCPU.InverseT(t) |> create
 
     static member Seed(seed) = Random.Seed(seed)
     static member Zero(device) = RawTensorCPU.Zero() |> createOn device
@@ -1316,6 +1321,7 @@ type RawTensorInt8(values: int8[], shape:Shape, device) =
     override t.AsinT() = opNotSupported "AsinT" t.Dtype
     override t.AcosT() = opNotSupported "AcosT" t.Dtype
     override t.AtanT() = opNotSupported "AtanT" t.Dtype
+    override t.InverseT() = opNotSupported "InverseT" t.Dtype
 
     static member Seed(seed) = Random.Seed(seed)
     static member Zero(device) = RawTensorCPU.Zero() |> createOn device
@@ -1410,6 +1416,7 @@ type RawTensorByte(values: byte[], shape:Shape, device) =
     override t.AsinT() = opNotSupported "AsinT" t.Dtype
     override t.AcosT() = opNotSupported "AcosT" t.Dtype
     override t.AtanT() = opNotSupported "AtanT" t.Dtype
+    override t.InverseT() = opNotSupported "InverseT" t.Dtype
 
     static member Seed(seed) = Random.Seed(seed)
     static member Zero(device) = RawTensorCPU.Zero() |> createOn device
@@ -1504,6 +1511,7 @@ type RawTensorInt16(values: int16[], shape:Shape, device) =
     override t.AsinT() = opNotSupported "AsinT" t.Dtype
     override t.AcosT() = opNotSupported "AcosT" t.Dtype
     override t.AtanT() = opNotSupported "AtanT" t.Dtype
+    override t.InverseT() = opNotSupported "InverseT" t.Dtype
 
     static member Seed(seed) = Random.Seed(seed)
     static member Zero(device) = RawTensorCPU.Zero() |> createOn device
@@ -1598,6 +1606,7 @@ type RawTensorInt32(values: int32[], shape:Shape, device) =
     override t.AsinT() = opNotSupported "AsinT" t.Dtype
     override t.AcosT() = opNotSupported "AcosT" t.Dtype
     override t.AtanT() = opNotSupported "AtanT" t.Dtype
+    override t.InverseT() = opNotSupported "InverseT" t.Dtype
 
     static member Seed(seed) = Random.Seed(seed)
     static member Zero(device) = RawTensorCPU.Zero() |> createOn device
@@ -1696,6 +1705,7 @@ type RawTensorInt64(values: int64[], shape:Shape, device) =
     override t.AsinT() = opNotSupported "AsinT" t.Dtype
     override t.AcosT() = opNotSupported "AcosT" t.Dtype
     override t.AtanT() = opNotSupported "AtanT" t.Dtype
+    override t.InverseT() = opNotSupported "InverseT" t.Dtype
 
     static member Seed(seed) = Random.Seed(seed)
     static member Zero(device) = RawTensorCPU.Zero() |> createOn device
@@ -1793,6 +1803,7 @@ type RawTensorBool(values: bool[], shape:Shape, device) =
     override t.AsinT() = opNotSupported "AsinT" t.Dtype
     override t.AcosT() = opNotSupported "AcosT" t.Dtype
     override t.AtanT() = opNotSupported "AtanT" t.Dtype
+    override t.InverseT() = opNotSupported "InverseT" t.Dtype
 
     static member Seed(seed) = Random.Seed(seed)
     static member Zero(device) = ([| false |], Shape.scalar) |> createOn device
@@ -1890,6 +1901,7 @@ type RawTensorFloat16(values: float32[], shape:Shape, device) =
     override t.AsinT() = RawTensorCPU.AsinT(t) |> create
     override t.AcosT() = RawTensorCPU.AcosT(t) |> create
     override t.AtanT() = RawTensorCPU.AtanT(t) |> create
+    override t.InverseT() = opNotSupported "InverseT" t.Dtype
 
     static member Seed(seed) = Random.Seed(seed)
     static member Zero(device) = RawTensorCPU.Zero() |> createOn device
@@ -1987,6 +1999,7 @@ type RawTensorBFloat16(values: float32[], shape:Shape, device) =
     override t.AsinT() = RawTensorCPU.AsinT(t) |> create
     override t.AcosT() = RawTensorCPU.AcosT(t) |> create
     override t.AtanT() = RawTensorCPU.AtanT(t) |> create
+    override t.InverseT() = opNotSupported "InverseT" t.Dtype
 
     static member Seed(seed) = Random.Seed(seed)
     static member Zero(device) = RawTensorCPU.Zero() |> createOn device
