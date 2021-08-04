@@ -617,74 +617,80 @@ module internal RawTensorCPU =
         Shape.checkCanBMM t1.Shape t2.Shape |> ignore
         MatMulTT(t1, t2)
 
-    let rec inline InverseT(t: RawTensorCPU< ^T >) : RawTensorCPU< ^T > =
-        Shape.checkCanInvert t.Shape
-        // Returns the LU decomposition of this matrix. The return values are the LU matrix, pivot indices, and a toggle value indicating the number of row exchanges during the decomposition, which is +1 if the number of exchanges were even, -1 if odd. Source: Atilim Gunes Baydin, FsAlg, 2015, https://github.com/gbaydin/FsAlg
-        let LUDecomposition (m: ^T[,]) =
-            let rows = m.GetLength(0)
-            let res = Array2D.copy m
-            let perm = Array.init rows (fun i -> i)
-            let mutable toggle = LanguagePrimitives.GenericOne<'T>
-            for j = 0 to rows - 2 do
-                let mutable colmax:'T = abs res.[j, j]
-                let mutable prow = j
-                for i = j + 1 to rows - 1 do
-                    let absresij = abs res.[i, j]
-                    if absresij > colmax then
-                        colmax <- absresij
-                        prow <- i
-                if prow <> j then
-                    let tmprow = res.[prow, 0..]
-                    res.[prow, 0..] <- res.[j, 0..]
-                    res.[j, 0..] <- tmprow
-                    let tmp = perm.[prow]
-                    perm.[prow] <- perm.[j]
-                    perm.[j] <- tmp
-                    toggle <- -toggle
-                for i = j + 1 to rows - 1 do
-                    res.[i, j] <- res.[i, j] / res.[j, j]
-                    for k = j + 1 to rows - 1 do
-                        res.[i, k] <- res.[i, k] - res.[i, j] * res.[j, k]
-            res, perm, toggle
+    // Returns the LU decomposition of this matrix. The return values are the LU matrix, pivot indices, and a toggle value indicating the number of row exchanges during the decomposition, which is +1 if the number of exchanges were even, -1 if odd. Source: Atilim Gunes Baydin, FsAlg, 2015, https://github.com/gbaydin/FsAlg
+    let inline LUDecomposition (m: ^T[,]) =
+        let rows = m.GetLength(0)
+        let res = Array2D.copy m
+        let perm = Array.init rows (fun i -> i)
+        let mutable toggle = LanguagePrimitives.GenericOne<'T>
+        for j = 0 to rows - 2 do
+            let mutable colmax:'T = abs res.[j, j]
+            let mutable prow = j
+            for i = j + 1 to rows - 1 do
+                let absresij = abs res.[i, j]
+                if absresij > colmax then
+                    colmax <- absresij
+                    prow <- i
+            if prow <> j then
+                let tmprow = res.[prow, 0..]
+                res.[prow, 0..] <- res.[j, 0..]
+                res.[j, 0..] <- tmprow
+                let tmp = perm.[prow]
+                perm.[prow] <- perm.[j]
+                perm.[j] <- tmp
+                toggle <- -toggle
+            for i = j + 1 to rows - 1 do
+                res.[i, j] <- res.[i, j] / res.[j, j]
+                for k = j + 1 to rows - 1 do
+                    res.[i, k] <- res.[i, k] - res.[i, j] * res.[j, k]
+        res, perm, toggle
 
-        // Finds an array that, when multiplied by an LU matrix `lu`, gives array `b`. Source: Atilim Gunes Baydin, FsAlg, 2015, https://github.com/gbaydin/FsAlg
-        let matrixSolveHelper (lu:^T[,]) (b:^T[]) =
-            let n = lu.GetLength 0
-            let x = Array.copy b
-            for i = 1 to n - 1 do
-                let mutable sum = x.[i]
-                for j = 0 to i - 1 do
-                    sum <- sum - lu.[i, j] * x.[j]
-                x.[i] <- sum
-            x.[n - 1] <- x.[n - 1] / lu.[n - 1, n - 1]
-            for i in (n - 2) .. -1 .. 0 do
-                let mutable sum = x.[i]
-                for j = i + 1 to n - 1 do
-                    sum <- sum - lu.[i, j] * x.[j]
-                x.[i] <- sum / lu.[i, i]
-            x
-        // Inverts matrix. Source: Atilim Gunes Baydin, FsAlg, 2015, https://github.com/gbaydin/FsAlg
-        let invertMatrix (m: ^T[,]) =
-            let rows = m.GetLength(0)
-            let res = Array2D.copy m
-            let lu, perm, _ = LUDecomposition m
-            let b:'T[] = Array.zeroCreate rows
-            for i = 0 to rows - 1 do
-                for j = 0 to rows - 1 do
-                    if i = perm.[j] then
-                        b.[j] <- LanguagePrimitives.GenericOne<'T>
-                    else
-                        b.[j] <- LanguagePrimitives.GenericZero<'T>
-                let x = matrixSolveHelper lu b
-                res.[0.., i] <- x
-            res
+    // Finds an array that, when multiplied by an LU matrix `lu`, gives array `b`. Source: Atilim Gunes Baydin, FsAlg, 2015, https://github.com/gbaydin/FsAlg
+    let inline matrixSolveHelper (lu:^T[,]) (b:^T[]) =
+        let n = lu.GetLength 0
+        let x = Array.copy b
+        for i = 1 to n - 1 do
+            let mutable sum = x.[i]
+            for j = 0 to i - 1 do
+                sum <- sum - lu.[i, j] * x.[j]
+            x.[i] <- sum
+        x.[n - 1] <- x.[n - 1] / lu.[n - 1, n - 1]
+        for i in (n - 2) .. -1 .. 0 do
+            let mutable sum = x.[i]
+            for j = i + 1 to n - 1 do
+                sum <- sum - lu.[i, j] * x.[j]
+            x.[i] <- sum / lu.[i, i]
+        x
+    // Inverts matrix. Source: Atilim Gunes Baydin, FsAlg, 2015, https://github.com/gbaydin/FsAlg
+    let inline inverseMatrix (m: ^T[,]) =
+        let rows = m.GetLength(0)
+        let res = Array2D.copy m
+        let lu, perm, _ = LUDecomposition m
+        let b:'T[] = Array.zeroCreate rows
+        for i = 0 to rows - 1 do
+            for j = 0 to rows - 1 do
+                if i = perm.[j] then
+                    b.[j] <- LanguagePrimitives.GenericOne<'T>
+                else
+                    b.[j] <- LanguagePrimitives.GenericZero<'T>
+            let x = matrixSolveHelper lu b
+            res.[0.., i] <- x
+        res
+
+    let inline InverseT(t: RawTensorCPU< ^T >) : RawTensorCPU< ^T > =
+        Shape.checkCanInvert t.Shape
         let dim = t.Shape.Length
         if dim = 2 then  // One matrix
-            let tinv = invertMatrix (t.ToArray() :?> ^T[,])
+            let tinv = inverseMatrix (t.ToArray() :?> ^T[,])
             let tinvflat = [|  for i=0 to tinv.GetLength(0)-1 do for j=0 to tinv.GetLength(1)-1 do yield tinv.[i, j] |]
             t.MakeLike(tinvflat, t.Shape) :?> RawTensorCPU<'T>
         else  // Batch of matrices
-            failwith "Not implemented"
+            let tinvs = 
+                t.UnstackT(0)
+                |> Array.map (fun v -> inverseMatrix (v.ToArray() :?> ^T[,]))
+                |> Array.map (fun v -> [|  for i=0 to v.GetLength(0)-1 do for j=0 to v.GetLength(1)-1 do yield v.[i, j] |])
+                |> Array.map (fun v -> t.MakeLike(v, [|t.Shape.[1]; t.Shape.[2]|]))
+            t.StackTs(tinvs, 0) :?> RawTensorCPU<'T>
 
     let inline MaxPool1D(t1: RawTensorCPU< ^T >, kernelSize, stride, padding) : RawTensorCPU< ^T > * RawTensorCPU< int > =
         let batchSize, channels, inputSize, outputSize, outputShape =
