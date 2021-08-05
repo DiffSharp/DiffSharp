@@ -456,6 +456,26 @@ module rec Shape =
         if not (dim = 2 || dim = 3) then failwith "Expecting 2d tensor (a square matrix) or a 3d tensor (a batch of square matrices)."
         if dim = 2 then if shape.[0] <> shape.[1] then failwith "Expecting a square matrix"
         if dim = 3 then if shape.[1] <> shape.[2] then failwith "Expecting square matrices"
+    
+    /// Checks if the given shapes are appropriate for a linear solve operation.
+    let checkCanSolve (shapeA: Shape) (shapeB: Shape) =
+        let dimA = shapeA.Length
+        let dimB = shapeB.Length
+        let k =
+            if dimA = 2 then
+                if shapeA.[0] <> shapeA.[1] then failwithf "Expecting A to be a square matrix, received A with shape %A." shapeA
+                if dimB <> 2 then failwithf "Expecting B to be a 2d tensor (a matrix), received B with shape %A." shapeB
+                if shapeA.[0] <> shapeB.[0] then failwithf "Expecting A and B to have the same number of rows (1st dimension), received A and B with shapes %A and %A." shapeA shapeB
+                shapeB.[1]
+            elif dimA = 3 then 
+                if shapeA.[1] <> shapeA.[2] then failwithf "Expecting A to be a batch of square matrices, received A with shape %A." shapeA
+                if dimB <> 3 then failwithf "Expecting B to be a 3d tensor (a batch of matrices), received B with shape %A." shapeB
+                if shapeA.[0] <> shapeB.[0] then failwithf "Expecting A and B to have the same number of batch items (1st dimension), received A and B with shapes %A and %A." shapeA shapeB
+                if shapeA.[1] <> shapeB.[1] then failwithf "Expecting the matrices in batches A and B to have the same number of rows items (2nd dimension), received A and B with shapes %A and %A." shapeA shapeB
+                shapeB.[2]
+            else
+                failwithf "Expecting A to be a 2d tensor (a square matrix) or a 3d tensor (a batch of square matrices), received A with shape %A." shapeA
+        k
 
     /// Checks if the given shape is appropriate for a permute operation and returns information related to the resulting shape.
     let checkCanPermute (shape: Shape) (permutation: int[]) =
