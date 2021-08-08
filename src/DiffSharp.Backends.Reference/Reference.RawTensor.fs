@@ -662,7 +662,7 @@ module internal RawTensorCPU =
             x.[i] <- sum / lu.[i, i]
         x
 
-    // Solves a system of linear equations ax = b, where the coefficients are given in matrix `a` and the result vector is vector `b`. The returned vector will correspond to x.
+    // Solves a system of linear equations ax = b, where the coefficients are given in matrix `a` and the result vector is vector `b`. The returned vector will correspond to x. Source: Atilim Gunes Baydin, FsAlg, 2015, https://github.com/gbaydin/FsAlg
     let inline solve (a: ^T[,]) (b: ^T[]) =
         let lu, perm, _ = LUDecomposition a
         let bp = Array.init (a.GetLength(0)) (fun i -> b.[perm.[i]])
@@ -703,17 +703,48 @@ module internal RawTensorCPU =
         let newShape = Shape.checkCanSolve a.Shape b.Shape
         let dimA = a.Shape.Length
         let dimB = b.Shape.Length
-        let solution = 
-            if dimA = 2 then
-                let amatrix = (a.ToArray() :?> ^T[,])
-                if dimB = 1 then
-                    let bvector = (b.ToArray() :?> ^T[])
-                    solve amatrix bvector
-                else // dimB = 2
-                    failwithf "Not implemented"
-            else
-                failwithf "Unsupported shapes %A %A" a.Shape b.Shape
-        a.MakeLike(solution, newShape) :?> RawTensorCPU<'T>
+        if dimA = 2 then
+            let n = a.Shape.[0]
+            let amatrix = (a.ToArray() :?> ^T[,])
+            if dimB = 1 then
+                let bvector = (b.ToArray() :?> ^T[])
+                let s = solve amatrix bvector
+                a.MakeLike(s, newShape) :?> RawTensorCPU<'T>
+            else // dimB = 2
+                let cols =
+                    b.UnstackT(1) 
+                    |> Array.map (fun v -> v.ToArray() :?> ^T[])
+                    |> Array.map (fun v -> solve amatrix v)
+                    |> Array.map (fun v -> a.MakeLike(v, [|n|]))
+                a.StackTs(cols, 1) :?> RawTensorCPU<'T>
+        else // dimA = 3
+            let n = a.Shape.[1]
+            if dimB = 2 then
+                let aa = a.UnstackT(0)
+                let bb = b.UnstackT(0)
+                let ss = 
+                    Array.zip aa bb
+                    |> Array.map (fun (aaa, bbb) ->
+                                            let amatrix = (aaa.ToArray() :?> ^T[,])
+                                            let bvector = (bbb.ToArray() :?> ^T[])
+                                            let s = solve amatrix bvector
+                                            a.MakeLike(s, [|n|]))
+                a.StackTs(ss, 0) :?> RawTensorCPU<'T>
+            else // dimB = 3
+                let aa = a.UnstackT(0)
+                let bb = b.UnstackT(0)
+                let ss = 
+                    Array.zip aa bb
+                    |> Array.map (fun (aaa, bbb) ->
+                                            let amatrix = (aaa.ToArray() :?> ^T[,])
+                                            let cols =
+                                                bbb.UnstackT(1)
+                                                |> Array.map (fun v -> v.ToArray() :?> ^T[])
+                                                |> Array.map (fun v -> solve amatrix v)
+                                                |> Array.map (fun v -> a.MakeLike(v, [|n|]))
+                                            a.StackTs(cols, 1))
+                a.StackTs(ss, 0) :?> RawTensorCPU<'T>
+            // failwithf "Unsupported shapes %A %A" a.Shape b.Shape
 
     let inline MaxPool1D(t1: RawTensorCPU< ^T >, kernelSize, stride, padding) : RawTensorCPU< ^T > * RawTensorCPU< int > =
         let batchSize, channels, inputSize, outputSize, outputShape =
