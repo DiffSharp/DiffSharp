@@ -693,7 +693,7 @@ module internal RawTensorCPU =
             t.StackTs(tinvs, 0) :?> RawTensorCPU<'T>
     
     let inline SolveTT(a: RawTensorCPU< ^T >, b: RawTensor) : RawTensorCPU< ^T > =
-        let k = Shape.checkCanSolve a.Shape b.Shape
+        let _ = Shape.checkCanSolve a.Shape b.Shape
         failwithf "Not implemented"
 
     let inline MaxPool1D(t1: RawTensorCPU< ^T >, kernelSize, stride, padding) : RawTensorCPU< ^T > * RawTensorCPU< int > =

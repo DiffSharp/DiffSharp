@@ -306,9 +306,10 @@ type TorchRawTensor(tt: TorchTensor, shape: Shape, dtype: Dtype, device: Device)
         let result = tt.inverse()
         t.MakeLike(result, shape=t.Shape)
 
-    override a.SolveTT(b) =
-        let k = Shape.checkCanSolve a.Shape b.Shape
-        failwithf "Not implemented"
+    override t1.SolveTT(t2) =
+        let newShape = Shape.checkCanSolve t1.Shape t2.Shape
+        let result = linalg.solve(tt, t2.TorchTensor)
+        t1.MakeLike(result, shape=newShape)
 
     override t.SqueezeT(dim) = 
         let shape = t.Shape
