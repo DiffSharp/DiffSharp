@@ -661,6 +661,13 @@ module internal RawTensorCPU =
                 sum <- sum - lu.[i, j] * x.[j]
             x.[i] <- sum / lu.[i, i]
         x
+
+    // Solves a system of linear equations ax = b, where the coefficients are given in matrix `a` and the result vector is vector `b`. The returned vector will correspond to x.
+    let inline solve (a: ^T[,]) (b: ^T[]) =
+        let lu, perm, _ = LUDecomposition a
+        let bp = Array.init (a.GetLength(0)) (fun i -> b.[perm.[i]])
+        matrixSolveHelper lu bp
+
     // Inverts matrix. Source: Atilim Gunes Baydin, FsAlg, 2015, https://github.com/gbaydin/FsAlg
     let inline inverseMatrix (m: ^T[,]) =
         let rows = m.GetLength(0)
@@ -693,8 +700,20 @@ module internal RawTensorCPU =
             t.StackTs(tinvs, 0) :?> RawTensorCPU<'T>
     
     let inline SolveTT(a: RawTensorCPU< ^T >, b: RawTensor) : RawTensorCPU< ^T > =
-        let _ = Shape.checkCanSolve a.Shape b.Shape
-        failwithf "Not implemented"
+        let newShape = Shape.checkCanSolve a.Shape b.Shape
+        let dimA = a.Shape.Length
+        let dimB = b.Shape.Length
+        let solution = 
+            if dimA = 2 then
+                let amatrix = (a.ToArray() :?> ^T[,])
+                if dimB = 1 then
+                    let bvector = (b.ToArray() :?> ^T[])
+                    solve amatrix bvector
+                else // dimB = 2
+                    failwithf "Not implemented"
+            else
+                failwithf "Unsupported shapes %A %A" a.Shape b.Shape
+        a.MakeLike(solution, newShape) :?> RawTensorCPU<'T>
 
     let inline MaxPool1D(t1: RawTensorCPU< ^T >, kernelSize, stride, padding) : RawTensorCPU< ^T > * RawTensorCPU< int > =
         let batchSize, channels, inputSize, outputSize, outputShape =
