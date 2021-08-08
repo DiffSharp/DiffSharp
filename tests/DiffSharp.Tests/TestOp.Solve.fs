@@ -98,3 +98,39 @@ type TestTensorSolve () =
                                                              [ 0.6338, -0.1659, -0.4142]]])
 
             Assert.True(t4x2x2Solvet4x2x3Correct.allclose(t4x2x2Solvet4x2x3, 0.01))
+
+
+[<TestFixture>]
+type TestDerivativesSolve () =
+    [<Test>]
+    member _.TestDerivativeSolveTT () =
+        for combo in Combos.FloatingPointExcept16s do
+            let fwdx = combo.tensor([[ 1.3299,  1.5288],
+                                        [-1.7740, -2.0062]])
+            let fwdx = fwdx.forwardDiff(combo.tensor([[-2.2180, -1.6499],
+                                                        [-1.1382,  0.8492]]))
+            let fwdy = combo.tensor([-2.1001, -0.5405])
+            let fwdy = fwdy.forwardDiff(combo.tensor([-0.2762, -0.7975]))
+            let fwdz = dsharp.solve(fwdx, fwdy)
+            let fwdzCorrect = combo.tensor([ 114.7422, -101.1898])
+            let fwdzd = fwdz.derivative
+            let fwdzdCorrect = combo.tensor([-11495.3730,  10057.0986])
+
+            let revx = combo.tensor([[ 1.3299,  1.5288],
+                                        [-1.7740, -2.0062]]).reverseDiff()
+            let revy = combo.tensor([[-2.2180, -1.6499],
+                                        [-1.1382,  0.8492]]).reverseDiff()
+            let revz = dsharp.solve(revx, revy)
+            let revzCorrect = combo.tensor([ 114.7422, -101.1898])
+            revz.reverse(combo.tensor([-1.3181,  0.8040]))            
+            let revxd = revx.derivative
+            let revxdCorrect = combo.tensor([[-10634.0508,   9378.0439],
+                                                [ -8057.3462,   7105.6787]])
+            let revyd = revy.derivative
+            let revydCorrect = combo.tensor([92.6778, 70.2213])
+
+            Assert.True(fwdz.allclose(fwdzCorrect, 0.01))
+            Assert.True(fwdzd.allclose(fwdzdCorrect, 0.01))
+            Assert.True(revz.allclose(revzCorrect, 0.01))
+            Assert.True(revxd.allclose(revxdCorrect, 0.01))
+            Assert.True(revyd.allclose(revydCorrect, 0.01))

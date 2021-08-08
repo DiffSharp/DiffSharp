@@ -1,3 +1,8 @@
+// Copyright (c) 2016-     University of Oxford (Atilim Gunes Baydin <gunes@robots.ox.ac.uk>)
+// and other contributors, see LICENSE in root of repository.
+//
+// BSD 2-Clause License. See LICENSE in root of repository.
+
 namespace DiffSharp
 
 [<AutoOpen>]
@@ -11,8 +16,8 @@ module OpSolveExtensions =
                     member _.fRaw(a,b) = a.SolveTT(b)
                     member _.ad_dfda(a,ad,b,f) = a.solve(-ad.matmul(f))
                     member _.bd_dfdb(a,b,bd,f) = a.solve(bd)
-                    member _.fd_dfda(a,b,f,fd) = fd.bmm(b.transpose(1, 2))
-                    member _.fd_dfdb(a,b,f,fd) = a.transpose(1, 2).bmm(fd)
+                    member _.fd_dfda(a,b,f,fd) = let ba = a.transpose(-2, -1).solve(fd) in -ba
+                    member _.fd_dfdb(a,b,f,fd) = a.transpose(-2, -1).bmm(fd)
                 }
                 (a,b)
 
