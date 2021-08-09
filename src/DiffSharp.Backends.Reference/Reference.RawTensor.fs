@@ -21,7 +21,7 @@ module internal Utils =
     type RawTensor with
         member x.GetTypedValues() : 'T[] = (x :?> RawTensorCPU<'T>).Values
 
-/// This is the base class for all RawTensorXyz tuypes.
+/// This is the base class for all RawTensorXyz types.
 /// All type-independent operations are implemented directly on this class. 
 [<AbstractClass>]
 type RawTensorCPU<'T when 'T : equality and 'T :> scalar>(values: 'T[], shape: Shape, dtype: Dtype, device: Device) =
@@ -229,6 +229,10 @@ type RawTensorCPU<'T when 'T : equality and 'T :> scalar>(values: 'T[], shape: S
         let tcols = t.Shape.[1]
         let result = Array2D.init t.Shape.[1] t.Shape.[0] (fun i j -> t.Values.[j*tcols + i])
         t.CreateLike(result)
+
+    // override t.InverseT2() =
+    //     failwithf "Not implemented"
+    //     upcast t
 
     override t.SqueezeT(dim) =
         let result = Array.copy t.Values
@@ -612,6 +616,135 @@ module internal RawTensorCPU =
     let inline BMMTT(t1: RawTensorCPU< ^T >, t2: RawTensor) : (^T[] * Shape) =
         Shape.checkCanBMM t1.Shape t2.Shape |> ignore
         MatMulTT(t1, t2)
+
+    // Returns the LU decomposition of this matrix. The return values are the LU matrix, pivot indices, and a toggle value indicating the number of row exchanges during the decomposition, which is +1 if the number of exchanges were even, -1 if odd. Source: Atilim Gunes Baydin, FsAlg, 2015, https://github.com/gbaydin/FsAlg
+    let inline LUDecomposition (m: ^T[,]) =
+        let rows = m.GetLength(0)
+        let res = Array2D.copy m
+        let perm = Array.init rows (fun i -> i)
+        let mutable toggle = LanguagePrimitives.GenericOne<'T>
+        for j = 0 to rows - 2 do
+            let mutable colmax:'T = abs res.[j, j]
+            let mutable prow = j
+            for i = j + 1 to rows - 1 do
+                let absresij = abs res.[i, j]
+                if absresij > colmax then
+                    colmax <- absresij
+                    prow <- i
+            if prow <> j then
+                let tmprow = res.[prow, 0..]
+                res.[prow, 0..] <- res.[j, 0..]
+                res.[j, 0..] <- tmprow
+                let tmp = perm.[prow]
+                perm.[prow] <- perm.[j]
+                perm.[j] <- tmp
+                toggle <- -toggle
+            for i = j + 1 to rows - 1 do
+                res.[i, j] <- res.[i, j] / res.[j, j]
+                for k = j + 1 to rows - 1 do
+                    res.[i, k] <- res.[i, k] - res.[i, j] * res.[j, k]
+        res, perm, toggle
+
+    // Finds an array that, when multiplied by a LU matrix `lu`, gives array `b`. Source: Atilim Gunes Baydin, FsAlg, 2015, https://github.com/gbaydin/FsAlg
+    let inline matrixSolveHelper (lu:^T[,]) (b:^T[]) =
+        let n = lu.GetLength 0
+        let x = Array.copy b
+        for i = 1 to n - 1 do
+            let mutable sum = x.[i]
+            for j = 0 to i - 1 do
+                sum <- sum - lu.[i, j] * x.[j]
+            x.[i] <- sum
+        x.[n - 1] <- x.[n - 1] / lu.[n - 1, n - 1]
+        for i in (n - 2) .. -1 .. 0 do
+            let mutable sum = x.[i]
+            for j = i + 1 to n - 1 do
+                sum <- sum - lu.[i, j] * x.[j]
+            x.[i] <- sum / lu.[i, i]
+        x
+
+    // Solves a system of linear equations ax = b, where the coefficients are given in matrix `a` and the result vector is vector `b`. The returned vector will correspond to x. Source: Atilim Gunes Baydin, FsAlg, 2015, https://github.com/gbaydin/FsAlg
+    let inline solve (a: ^T[,]) (b: ^T[]) =
+        let lu, perm, _ = LUDecomposition a
+        let bp = Array.init (a.GetLength(0)) (fun i -> b.[perm.[i]])
+        matrixSolveHelper lu bp
+
+    // Inverts matrix. Source: Atilim Gunes Baydin, FsAlg, 2015, https://github.com/gbaydin/FsAlg
+    let inline inverseMatrix (m: ^T[,]) =
+        let rows = m.GetLength(0)
+        let res = Array2D.copy m
+        let lu, perm, _ = LUDecomposition m
+        let b:'T[] = Array.zeroCreate rows
+        for i = 0 to rows - 1 do
+            for j = 0 to rows - 1 do
+                if i = perm.[j] then
+                    b.[j] <- LanguagePrimitives.GenericOne<'T>
+                else
+                    b.[j] <- LanguagePrimitives.GenericZero<'T>
+            let x = matrixSolveHelper lu b
+            res.[0.., i] <- x
+        res
+
+    let inline InverseT(t: RawTensorCPU< ^T >) : RawTensorCPU< ^T > =
+        Shape.checkCanInvert t.Shape
+        let dim = t.Shape.Length
+        if dim = 2 then  // One matrix
+            let tinv = inverseMatrix (t.ToArray() :?> ^T[,])
+            let tinvflat = [|  for i=0 to tinv.GetLength(0)-1 do for j=0 to tinv.GetLength(1)-1 do yield tinv.[i, j] |]
+            t.MakeLike(tinvflat, t.Shape) :?> RawTensorCPU<'T>
+        else  // Batch of matrices
+            let tinvs = 
+                t.UnstackT(0)
+                |> Array.map (fun v -> inverseMatrix (v.ToArray() :?> ^T[,]))
+                |> Array.map (fun v -> [|  for i=0 to v.GetLength(0)-1 do for j=0 to v.GetLength(1)-1 do yield v.[i, j] |])
+                |> Array.map (fun v -> t.MakeLike(v, [|t.Shape.[1]; t.Shape.[2]|]))
+            t.StackTs(tinvs, 0) :?> RawTensorCPU<'T>
+    
+    let inline SolveTT(a: RawTensorCPU< ^T >, b: RawTensor) : RawTensorCPU< ^T > =
+        let newShape = Shape.checkCanSolve a.Shape b.Shape
+        let dimA = a.Shape.Length
+        let dimB = b.Shape.Length
+        if dimA = 2 then
+            let n = a.Shape.[0]
+            let amatrix = (a.ToArray() :?> ^T[,])
+            if dimB = 1 then
+                let bvector = (b.ToArray() :?> ^T[])
+                let s = solve amatrix bvector
+                a.MakeLike(s, newShape) :?> RawTensorCPU<'T>
+            else // dimB = 2
+                let cols =
+                    b.UnstackT(1) 
+                    |> Array.map (fun v -> v.ToArray() :?> ^T[])
+                    |> Array.map (fun v -> solve amatrix v)
+                    |> Array.map (fun v -> a.MakeLike(v, [|n|]))
+                a.StackTs(cols, 1) :?> RawTensorCPU<'T>
+        else // dimA = 3
+            let n = a.Shape.[1]
+            if dimB = 2 then
+                let aa = a.UnstackT(0)
+                let bb = b.UnstackT(0)
+                let ss = 
+                    Array.zip aa bb
+                    |> Array.map (fun (aaa, bbb) ->
+                                            let amatrix = (aaa.ToArray() :?> ^T[,])
+                                            let bvector = (bbb.ToArray() :?> ^T[])
+                                            let s = solve amatrix bvector
+                                            a.MakeLike(s, [|n|]))
+                a.StackTs(ss, 0) :?> RawTensorCPU<'T>
+            else // dimB = 3
+                let aa = a.UnstackT(0)
+                let bb = b.UnstackT(0)
+                let ss = 
+                    Array.zip aa bb
+                    |> Array.map (fun (aaa, bbb) ->
+                                            let amatrix = (aaa.ToArray() :?> ^T[,])
+                                            let cols =
+                                                bbb.UnstackT(1)
+                                                |> Array.map (fun v -> v.ToArray() :?> ^T[])
+                                                |> Array.map (fun v -> solve amatrix v)
+                                                |> Array.map (fun v -> a.MakeLike(v, [|n|]))
+                                            a.StackTs(cols, 1))
+                a.StackTs(ss, 0) :?> RawTensorCPU<'T>
+            // failwithf "Unsupported shapes %A %A" a.Shape b.Shape
 
     let inline MaxPool1D(t1: RawTensorCPU< ^T >, kernelSize, stride, padding) : RawTensorCPU< ^T > * RawTensorCPU< int > =
         let batchSize, channels, inputSize, outputSize, outputShape =
@@ -1121,6 +1254,8 @@ type RawTensorFloat32(values: float32[], shape:Shape, device) =
     override t.AsinT() = RawTensorCPU.AsinT(t) |> create
     override t.AcosT() = RawTensorCPU.AcosT(t) |> create
     override t.AtanT() = RawTensorCPU.AtanT(t) |> create
+    override t.InverseT() = RawTensorCPU.InverseT(t) :> _
+    override a.SolveTT(b) = RawTensorCPU.SolveTT(a, b) :> _
 
     static member Seed(seed) = Random.Seed(seed)
     static member Zero(device) = RawTensorCPU.Zero() |> createOn device
@@ -1218,6 +1353,8 @@ type RawTensorFloat64(values: double[], shape:Shape, device) =
     override t.AsinT() = RawTensorCPU.AsinT(t) |> create
     override t.AcosT() = RawTensorCPU.AcosT(t) |> create
     override t.AtanT() = RawTensorCPU.AtanT(t) |> create
+    override t.InverseT() = RawTensorCPU.InverseT(t) :> _
+    override a.SolveTT(b) = RawTensorCPU.SolveTT(a, b) :> _
 
     static member Seed(seed) = Random.Seed(seed)
     static member Zero(device) = RawTensorCPU.Zero() |> createOn device
@@ -1312,6 +1449,8 @@ type RawTensorInt8(values: int8[], shape:Shape, device) =
     override t.AsinT() = opNotSupported "AsinT" t.Dtype
     override t.AcosT() = opNotSupported "AcosT" t.Dtype
     override t.AtanT() = opNotSupported "AtanT" t.Dtype
+    override t.InverseT() = opNotSupported "InverseT" t.Dtype
+    override a.SolveTT(_) = opNotSupported "SolveTT" a.Dtype
 
     static member Seed(seed) = Random.Seed(seed)
     static member Zero(device) = RawTensorCPU.Zero() |> createOn device
@@ -1406,6 +1545,8 @@ type RawTensorByte(values: byte[], shape:Shape, device) =
     override t.AsinT() = opNotSupported "AsinT" t.Dtype
     override t.AcosT() = opNotSupported "AcosT" t.Dtype
     override t.AtanT() = opNotSupported "AtanT" t.Dtype
+    override t.InverseT() = opNotSupported "InverseT" t.Dtype
+    override a.SolveTT(_) = opNotSupported "SolveTT" a.Dtype
 
     static member Seed(seed) = Random.Seed(seed)
     static member Zero(device) = RawTensorCPU.Zero() |> createOn device
@@ -1500,6 +1641,8 @@ type RawTensorInt16(values: int16[], shape:Shape, device) =
     override t.AsinT() = opNotSupported "AsinT" t.Dtype
     override t.AcosT() = opNotSupported "AcosT" t.Dtype
     override t.AtanT() = opNotSupported "AtanT" t.Dtype
+    override t.InverseT() = opNotSupported "InverseT" t.Dtype
+    override a.SolveTT(_) = opNotSupported "SolveTT" a.Dtype
 
     static member Seed(seed) = Random.Seed(seed)
     static member Zero(device) = RawTensorCPU.Zero() |> createOn device
@@ -1594,6 +1737,8 @@ type RawTensorInt32(values: int32[], shape:Shape, device) =
     override t.AsinT() = opNotSupported "AsinT" t.Dtype
     override t.AcosT() = opNotSupported "AcosT" t.Dtype
     override t.AtanT() = opNotSupported "AtanT" t.Dtype
+    override t.InverseT() = opNotSupported "InverseT" t.Dtype
+    override a.SolveTT(_) = opNotSupported "SolveTT" a.Dtype
 
     static member Seed(seed) = Random.Seed(seed)
     static member Zero(device) = RawTensorCPU.Zero() |> createOn device
@@ -1692,6 +1837,8 @@ type RawTensorInt64(values: int64[], shape:Shape, device) =
     override t.AsinT() = opNotSupported "AsinT" t.Dtype
     override t.AcosT() = opNotSupported "AcosT" t.Dtype
     override t.AtanT() = opNotSupported "AtanT" t.Dtype
+    override t.InverseT() = opNotSupported "InverseT" t.Dtype
+    override a.SolveTT(_) = opNotSupported "SolveTT" a.Dtype
 
     static member Seed(seed) = Random.Seed(seed)
     static member Zero(device) = RawTensorCPU.Zero() |> createOn device
@@ -1789,6 +1936,8 @@ type RawTensorBool(values: bool[], shape:Shape, device) =
     override t.AsinT() = opNotSupported "AsinT" t.Dtype
     override t.AcosT() = opNotSupported "AcosT" t.Dtype
     override t.AtanT() = opNotSupported "AtanT" t.Dtype
+    override t.InverseT() = opNotSupported "InverseT" t.Dtype
+    override a.SolveTT(_) = opNotSupported "SolveTT" a.Dtype
 
     static member Seed(seed) = Random.Seed(seed)
     static member Zero(device) = ([| false |], Shape.scalar) |> createOn device
@@ -1886,6 +2035,8 @@ type RawTensorFloat16(values: float32[], shape:Shape, device) =
     override t.AsinT() = RawTensorCPU.AsinT(t) |> create
     override t.AcosT() = RawTensorCPU.AcosT(t) |> create
     override t.AtanT() = RawTensorCPU.AtanT(t) |> create
+    override t.InverseT() = opNotSupported "InverseT" t.Dtype
+    override a.SolveTT(_) = opNotSupported "SolveTT" a.Dtype
 
     static member Seed(seed) = Random.Seed(seed)
     static member Zero(device) = RawTensorCPU.Zero() |> createOn device
@@ -1983,6 +2134,8 @@ type RawTensorBFloat16(values: float32[], shape:Shape, device) =
     override t.AsinT() = RawTensorCPU.AsinT(t) |> create
     override t.AcosT() = RawTensorCPU.AcosT(t) |> create
     override t.AtanT() = RawTensorCPU.AtanT(t) |> create
+    override t.InverseT() = opNotSupported "InverseT" t.Dtype
+    override a.SolveTT(_) = opNotSupported "SolveTT" a.Dtype
 
     static member Seed(seed) = Random.Seed(seed)
     static member Zero(device) = RawTensorCPU.Zero() |> createOn device

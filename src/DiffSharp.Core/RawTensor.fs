@@ -505,6 +505,12 @@ type RawTensor() =
     /// Returns the transpose of a 2D tensor
     abstract TransposeT2: unit -> RawTensor
 
+    /// Returns the inverse of a single square matrix (2d tensor) or a batch of square matrices (3d tensor)
+    abstract InverseT: unit -> RawTensor
+
+    /// Returns the solution of single a square system of linear equations with a unique solution or a batch of several such systems
+    abstract SolveTT: RawTensor -> RawTensor
+    
     /// Returns the tensor with the same values and the given dimension removed. The given dimension must be of size 1.
     abstract SqueezeT: dim: int -> RawTensor
 
