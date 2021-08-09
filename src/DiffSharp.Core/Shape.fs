@@ -619,8 +619,14 @@ module rec Shape =
 
     /// Completes the given shape dimension with respect to a concrete dimension.
     let completeDim (dims:int) (dim:int) =
-      if dim < -dims || dim >= dims then failwithf "Invalid choice (%A) for dim (%A)" dim dims
+      if dim < -dims || dim >= dims then failwithf "Expecting dim (%A) to be within the range [%A, %A)" dim (-dims) dims
       if dim < 0 then dims+dim
+      else dim
+
+    /// Completes the given shape dimension with respect to a concrete dimension, for the unsqueeze operation.
+    let completeDimUnsqueeze (dims:int) (dim:int) =
+      if dim < (-1 - dims) || dim >= (dims + 1) then failwithf "Expecting dim (%A) to be within the range [%A, %A)" dim (-1 - dims) (dims + 1)
+      if dim < 0 then dims + dim + 1
       else dim
 
     /// Completes the new shape for an expand operation based on the current shape of the tensor.
