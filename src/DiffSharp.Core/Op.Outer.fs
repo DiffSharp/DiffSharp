@@ -12,7 +12,7 @@ module OpOuterExtensions =
         member a.outer(b:Tensor) =
             match a.dim, b.dim with
             | 1, 1 -> a.unsqueeze(1).matmul(b.unsqueeze(0))
-            | 2, 2 -> a.unsqueeze(2).bmm(b.unsqueeze(1))
+            | 2, 2 when a.shape.[0] = b.shape.[0] -> a.unsqueeze(2).bmm(b.unsqueeze(1))  // Batched outer product
             | _ -> failwithf "Outer product unsupported for tensor shapes %A %A" a.shape b.shape
 
     type dsharp with
