@@ -2604,20 +2604,23 @@ type Tensor =
         let (aderivative:Tensor), _ = Tensor.conv3dReverseDiff(a, b, fderivative, aConst=false, bConst=true, strides=strides, paddings=paddings)
         aderivative
 
-    /// <summary>Compute the reverse-mode derivative at the given output tensor.</summary>
-    /// <param name="value">The value to apply.</param>
-    /// <param name="zeroDerivatives">Indicates whether the derivatives should be zeroed or not.</param>
+    /// <summary>Propagate the reverse-mode derivative backwards in the computation graph, starting from this tensor.</summary>
+    /// <param name="value">The derivative value to propagate backwards. Should have the same shape with this tensor.</param>
+    /// <param name="zeroDerivatives">Indicates whether any existing derivatives in the computation graph (for example from a previous reverse propagation that was executed) should be zeroed or not before starting this propagation. Default: true</param>
     member t.reverse(?value:Tensor, ?zeroDerivatives:bool) =
         let value = defaultArg value (t.onesLike())
         let zeroDerivatives = defaultArg zeroDerivatives true
-        if value.shape <> t.shape then failwithf "Expecting value.shape (%A) and t.shape (%A) to be the same" value.shape t.shape
+        if value.shape <> t.shape then 
+            printfn "%A" t
+            printfn "%A" value
+            failwithf "Reverse propagation: Expecting t.shape (%A) and value.shape (%A) to be the same" t.shape value.shape
         t.reverseReset(zeroDerivatives)
         t.reversePush(value)
 
     /// <summary>See <c>reverse</c></summary>
     member inline t.backward(value) = t.reverse(value)
 
-    /// <summary>Reset the reverse mode computation associated with the given output tensor.</summary>
+    /// <summary>Reset the reverse mode computation graph associated with the given output tensor.</summary>
     // TODO: other designs without this reverseReset function are possible, but they introduce more complications in the handling of fanout counters and multiple reverse passes of the same graph
     member t.reverseReset(zeroDerivatives:bool) =
         let rec reset (ts: Tensor list) =
@@ -2736,7 +2739,10 @@ type Tensor =
             // Check that either:
             // 1. shape of backpropagated adjoint matches shape of primal of node to which it is being propagated
             // 2. the backpropagated adjoint is zero, indicating that the derivative accumulation was already performed by the code that called check (this behavior is for efficiency reasons, eliminating a zerosLike call for several ops involving sliced tensors)
-            assert (v.shape = t.primal.shape || float(v) = 0.)
+            // assert (v.shape = t.primal.shape || (v.dim = 0 && float(v) = 0.))
+            if v.shape <> t.primal.shape then
+                if not (v.dim = 0 && float(v) = 0.) then
+                    failwithf "Cannot reverse push value with shape %A to tensor with shape %A" v.shape t.shape
             // The following is good for debugging NaN cases during gradient descent, but probably shouldn't be enabled by default. This is about where we would like the user to discover a NaN case (during differentiation or after differentiation).
             // assert not (v.hasinfnan())
             (v,t)

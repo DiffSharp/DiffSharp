@@ -118,8 +118,7 @@ type TestDerivativesSolve () =
 
             let revx = combo.tensor([[ 1.3299,  1.5288],
                                         [-1.7740, -2.0062]]).reverseDiff()
-            let revy = combo.tensor([[-2.2180, -1.6499],
-                                        [-1.1382,  0.8492]]).reverseDiff()
+            let revy = combo.tensor([-2.1001, -0.5405]).reverseDiff()
             let revz = dsharp.solve(revx, revy)
             let revzCorrect = combo.tensor([ 114.7422, -101.1898])
             revz.reverse(combo.tensor([-1.3181,  0.8040]))            
@@ -132,5 +131,9 @@ type TestDerivativesSolve () =
             Assert.True(fwdz.allclose(fwdzCorrect, 0.01))
             Assert.True(fwdzd.allclose(fwdzdCorrect, 0.01))
             Assert.True(revz.allclose(revzCorrect, 0.01))
+
+            printfn "revxd %A %A" revxd revxdCorrect
             Assert.True(revxd.allclose(revxdCorrect, 0.01))
+
+            printfn "revyd %A %A" revyd revydCorrect
             Assert.True(revyd.allclose(revydCorrect, 0.01))

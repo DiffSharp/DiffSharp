@@ -16,8 +16,8 @@ module OpSolveExtensions =
                     member _.fRaw(a,b) = a.SolveTT(b)
                     member _.ad_dfda(a,ad,b,f) = a.solve(-ad.matmul(f))
                     member _.bd_dfdb(a,b,bd,f) = a.solve(bd)
-                    member _.fd_dfda(a,b,f,fd) = let ba = a.transpose(-2, -1).solve(fd) in -ba
-                    member _.fd_dfdb(a,b,f,fd) = a.transpose(-2, -1).bmm(fd)
+                    member _.fd_dfda(a,b,f,fd) = a.zerosLike() // let ba = a.transpose(-2, -1).solve(fd) in ba// let ba = a.transpose(-2, -1).solve(fd) in -ba.outer(fd)
+                    member _.fd_dfdb(a,b,f,fd) = b.zerosLike() // let ba = a.transpose(-2, -1).solve(fd) in ba
                 }
                 (a,b)
 
