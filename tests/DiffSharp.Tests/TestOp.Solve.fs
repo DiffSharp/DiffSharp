@@ -175,7 +175,7 @@ type TestDerivativesSolve () =
             Assert.True(revyd.allclose(revydCorrect, 0.01))
 
     [<Test>]
-    member _.TestDerivativeSolveT3T2 () =
+    member _.TestDerivativeSolveBatchedT3T2 () =
         for combo in Combos.FloatingPointExcept16s do
             let fwdx = combo.tensor([[[-0.1101, -0.9294],
                                          [-1.3321, -0.5504]],
