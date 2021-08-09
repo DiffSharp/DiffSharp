@@ -2416,6 +2416,39 @@ type TestDerivatives () =
             Assert.True(revxd.allclose(revxdCorrect, 0.01))
 
     [<Test>]
+    member _.TestDerivativeSplitTWithDim () =
+        for combo in Combos.AllDevicesAndBackendsFloat32 do
+            let fwdx = combo.tensor([[1,2,3],[4,5,6]]).forwardDiff(combo.tensor([[10,20,30],[40,50,60]]))
+            let fwdz = fwdx.split([| 1;2 |], dim=1)
+            let fwdza = fwdz.[0]
+            let fwdzb = fwdz.[1]
+            let fwdzda = fwdza.derivative
+            let fwdzdb = fwdzb.derivative
+            let fwdzaCorrect = combo.tensor([[1], [4]])
+            let fwdzbCorrect = combo.tensor([[2, 3], [5, 6]])
+            let fwdzdaCorrect = combo.tensor([[10], [40]])
+            let fwdzdbCorrect = combo.tensor([[20, 30], [50, 60]])
+
+            let revx = combo.tensor([[1,2,3],[4,5,6]]).reverseDiff()
+            let revz = revx.split([| 1;2 |], dim=1)
+            let revza = revz.[0]
+            let revzb = revz.[1]
+            let revzaCorrect = combo.tensor([[1], [4]])
+            let revzbCorrect = combo.tensor([[2, 3], [5, 6]])
+            revza.reverse(combo.tensor([[10], [40]]))
+            revzb.reverse(combo.tensor([[20, 30], [50, 60]]), zeroDerivatives=false)
+            let revxd = revx.derivative
+            let revxdCorrect = combo.tensor([[10,20,30],[40,50,60]])
+
+            Assert.True(fwdza.allclose(fwdzaCorrect, 0.01))
+            Assert.True(fwdzb.allclose(fwdzbCorrect, 0.01))
+            Assert.True(fwdzda.allclose(fwdzdaCorrect, 0.01))
+            Assert.True(fwdzdb.allclose(fwdzdbCorrect, 0.01))
+            Assert.True(revza.allclose(revzaCorrect, 0.01))
+            Assert.True(revzb.allclose(revzbCorrect, 0.01))
+            Assert.True(revxd.allclose(revxdCorrect, 0.01))
+
+    [<Test>]
     member _.TestDerivativeSliceT () =
         for combo in Combos.AllDevicesAndBackendsFloat32 do
             let fwdx = combo.tensor([54.7919; 70.6440; 16.0868; 74.5486; 82.9318]).forwardDiff(combo.tensor([8.8405; 2.7188; 1.5814; 8.7951; 0.1119]))

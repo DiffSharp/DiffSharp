@@ -966,7 +966,7 @@ type Tensor =
         let sizes = sizes |> Seq.toArray
         match a with
         | TensorC(ap) -> ap.SplitT(sizes, dim=dim) |> Array.map TensorC
-        | TensorF(ap,ad,at) -> Array.map2 (fun p d -> TensorF(p,d,at)) (ap.split(sizes)) (ad.split(sizes, dim=dim))
+        | TensorF(ap,ad,at) -> Array.map2 (fun p d -> TensorF(p,d,at)) (ap.split(sizes, dim=dim)) (ad.split(sizes, dim=dim))
         | TensorR(ap,_,_,_,at) -> Array.mapi (fun i p -> TensorR(p, ref (p.zerosLike([0])), SplitT(a, sizes, dim, i), ref 0u, at)) (ap.split(sizes, dim=dim))
 
     /// <summary>Pipeline the tensor into a function.</summary>
