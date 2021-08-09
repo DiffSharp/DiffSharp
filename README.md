@@ -25,7 +25,7 @@ To use locally in [Visual Studio Code](https://code.visualstudio.com/):
 
 - Install [.NET Interactive Notebooks for VS Code](https://marketplace.visualstudio.com/items?itemName=ms-dotnettools.dotnet-interactive-vscode)
 
-- After opening an `.ipynb` execute `Ctrl-Shift-P` for the command palette and chose `Reopen Editoer With...` then `.NET Interactive Notebooks`
+- After opening an `.ipynb` execute `Ctrl-Shift-P` for the command palette and chose `Reopen Editor With...` then `.NET Interactive Notebooks`
 
 - To restart the kernel use `restart` from the command palette.
 

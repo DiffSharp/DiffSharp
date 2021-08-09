@@ -3663,6 +3663,27 @@ type TestTensor () =
             Assert.True(t1Unsqueeze.allclose(t1UnsqueezeCorrect, 0.01))
             Assert.CheckEqual(t1Unsqueeze.dtype, combo.dtype)
 
+            let t = combo.tensor([1, 2, 3, 4])
+            let tUnsqueezeMinus2 = t.unsqueeze(-2)
+            let tUnsqueezeMinus2Correct = combo.tensor([[1, 2, 3, 4]])
+            let tUnsqueezeMinus1 = t.unsqueeze(-1)
+            let tUnsqueezeMinus1Correct = combo.tensor([[1],
+                                                        [2],
+                                                        [3],
+                                                        [4]])
+            let tUnsqueeze0 = t.unsqueeze(0)
+            let tUnsqueeze0Correct = combo.tensor([[1, 2, 3, 4]])            
+            let tUnsqueeze1 = t.unsqueeze(1)
+            let tUnsqueeze1Correct = combo.tensor([[1],
+                                                        [2],
+                                                        [3],
+                                                        [4]])
+
+            Assert.True(tUnsqueezeMinus2Correct.allclose(tUnsqueezeMinus2, 0.01))
+            Assert.True(tUnsqueezeMinus1Correct.allclose(tUnsqueezeMinus1, 0.01))
+            Assert.True(tUnsqueeze0Correct.allclose(tUnsqueeze0, 0.01))
+            Assert.True(tUnsqueeze1Correct.allclose(tUnsqueeze1, 0.01))
+
     [<Test>]
     member _.TestTensorFlipT () =
         for combo in Combos.All do 

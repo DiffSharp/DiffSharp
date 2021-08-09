@@ -1660,6 +1660,7 @@ type Tensor =
     /// <summary>Returns a new tensor with a dimension of size one inserted at the specified position</summary>
     /// <param name="dim">The index at which to insert the singleton dimension.</param>
     member a.unsqueeze(dim:int) : Tensor =
+        let dim = Shape.completeDimUnsqueeze a.dim dim
         let inline fRaw(a:RawTensor) = a.UnsqueezeT(dim)
         let inline fTensor(a:Tensor) = a.unsqueeze(dim)
         let inline dfFwd(ap,ad:Tensor,fp) = ad.unsqueeze(dim)
