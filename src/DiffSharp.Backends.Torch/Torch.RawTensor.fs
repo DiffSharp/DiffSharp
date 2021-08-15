@@ -10,7 +10,6 @@ open DiffSharp
 open DiffSharp.Backends
 open DiffSharp.Util
 open TorchSharp
-// open TorchSharp.Tensor
 
 type TorchShape = int64[]
 type TorchDevice = Torch.Device

@@ -16,7 +16,6 @@ open System.IO
 open System.Threading
 open DiffSharp.Backends
 open TorchSharp
-// open TorchSharp.Tensor
 
 type TorchDevice = Torch.Device
 type Device = DiffSharp.Device
