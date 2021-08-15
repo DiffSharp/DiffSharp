@@ -643,12 +643,12 @@ type TestDiffSharp () =
         // Get devices for explicitly specified Torch backend
         let explicitTorchBackendDevices = dsharp.devices(backend=Backend.Torch)
         Assert.True(explicitTorchBackendDevices |> List.contains Device.CPU)
-        let cudaAvailable = TorchSharp.Torch.IsCudaAvailable()
+        let cudaAvailable = TorchSharp.torch.cuda.is_available()
         Assert.CheckEqual(cudaAvailable, (explicitTorchBackendDevices |> List.contains Device.GPU))
 
         let explicitTorchBackendDevices = dsharp.devices(backend=Backend.Torch)
         Assert.True(explicitTorchBackendDevices |> List.contains Device.CPU)
-        let cudaAvailable = TorchSharp.Torch.IsCudaAvailable()
+        let cudaAvailable = TorchSharp.torch.cuda.is_available()
         Assert.CheckEqual(cudaAvailable, (explicitTorchBackendDevices |> List.contains Device.GPU))
 
     [<Test>]
@@ -660,7 +660,7 @@ type TestDiffSharp () =
 
         Assert.True(dsharp.isDeviceTypeSupported(DeviceType.CPU, Backend.Torch))
 
-        let cudaAvailable = TorchSharp.Torch.IsCudaAvailable()
+        let cudaAvailable = TorchSharp.torch.cuda.is_available()
         let deviceSupported = dsharp.isDeviceTypeSupported(DeviceType.CUDA, Backend.Torch)
         Assert.CheckEqual(cudaAvailable, deviceSupported)
 
