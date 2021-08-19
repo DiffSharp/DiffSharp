@@ -1375,6 +1375,28 @@ type TestTensor () =
             Assert.CheckEqual(t1Boolt2BoolEqCorrect, t1Boolt2BoolEq)
 
     [<Test>]
+    member _.TestTensorNeq () =
+        // Test all non-bool types
+        for combo in Combos.IntegralAndFloatingPoint do 
+            let t1 = combo.tensor([1.; 2.; 3.; 5.])
+            let t2 = combo.tensor([1.; 2.; 5.; 4.])
+            let t1t2Neq = t1.ne(t2)
+            let t1t2NeqCorrect = combo.tensor([0.; 0.; 1.; 1.], dtype=Dtype.Bool)
+
+            Assert.CheckEqual(t1t2NeqCorrect, t1t2Neq)
+            Assert.CheckEqual(Dtype.Bool, t1t2Neq.dtype)
+
+        // Test bool type separately
+        for combo in Combos.Bool do 
+            // Test bool type separately
+            let t1Bool = combo.tensor([true; true; false; false ])
+            let t2Bool = combo.tensor([true; false; true; false ])
+            let t1Boolt2BoolNeq = t1Bool.ne(t2Bool)
+            let t1Boolt2BoolNeqCorrect = combo.tensor([false; true; true; false ], dtype=Dtype.Bool)
+
+            Assert.CheckEqual(t1Boolt2BoolNeqCorrect, t1Boolt2BoolNeq)
+
+    [<Test>]
     member _.TestTensorIsinf () =
         // isinf always returns bool tensor
         for combo in Combos.FloatingPoint do 
@@ -3893,7 +3915,7 @@ type TestTensor () =
             Assert.CheckEqual(combo.dtype, t1Max.dtype)
 
             let t2 = combo.tensor([4.;1.;-20.;3.])
-            let t2Max = t2.max(0)
+            let t2Max = t2.max(t2.scalarLike(0))
             let t2MaxCorrect = combo.tensor([4.;1.;0.;3.])
 
             Assert.CheckEqual(t2MaxCorrect, t2Max)
@@ -3912,7 +3934,7 @@ type TestTensor () =
             Assert.CheckEqual(combo.dtype, t1Min.dtype)
 
             let t2 = combo.tensor([4.;1.;-20.;3.])
-            let t2Min = t2.min(-1)
+            let t2Min = t2.min(t2.scalarLike(-1))
             let t2MinCorrect = combo.tensor([-1.;-1.;-20.;-1.])
 
             Assert.CheckEqual(t2MinCorrect, t2Min)
@@ -4039,6 +4061,54 @@ type TestTensor () =
             Assert.CheckEqual(t2Min.dtype, combo.dtype)
             Assert.CheckEqual(t3Min.dtype, combo.dtype)
             Assert.CheckEqual(t4Min.dtype, combo.dtype)
+
+    [<Test>]
+    member _.TestTensorMaxDim () =
+        for combo in Combos.All do
+            let t = combo.tensor([[5.5834, 5.6240],
+                                    [0.7616, 1.8576],
+                                    [7.3116, 9.7464]])
+
+            let tmax0 = t.max(dim=0)
+            let tmax0Correct = combo.tensor([7.3116, 9.7464])
+            let tmax0KeepDim = t.max(dim=0, keepDim=true)
+            let tmax0KeepDimCorrect = combo.tensor([[7.3116, 9.7464]])
+
+            let tmax1 = t.max(dim=1)
+            let tmax1Correct = combo.tensor([5.6240, 1.8576, 9.7464])
+            let tmax1KeepDim = t.max(dim=1, keepDim=true)
+            let tmax1KeepDimCorrect = combo.tensor([[5.6240],
+                                                    [1.8576],
+                                                    [9.7464]])
+
+            Assert.True(tmax0Correct.allclose(tmax0, 0.01))
+            Assert.True(tmax0KeepDimCorrect.allclose(tmax0KeepDim, 0.01))
+            Assert.True(tmax1Correct.allclose(tmax1, 0.01))
+            Assert.True(tmax1KeepDimCorrect.allclose(tmax1KeepDim, 0.01))
+
+    [<Test>]
+    member _.TestTensorMinDim () =
+        for combo in Combos.All do
+            let t = combo.tensor([[5.5834, 5.6240],
+                                    [0.7616, 1.8576],
+                                    [7.3116, 9.7464]])
+
+            let tmin0 = t.min(dim=0)
+            let tmin0Correct = combo.tensor([0.7616, 1.8576])
+            let tmin0KeepDim = t.min(dim=0, keepDim=true)
+            let tmin0KeepDimCorrect = combo.tensor([[0.7616, 1.8576]])
+
+            let tmin1 = t.min(dim=1)
+            let tmin1Correct = combo.tensor([5.5834, 0.7616, 7.3116])
+            let tmin1KeepDim = t.min(dim=1, keepDim=true)
+            let tmin1KeepDimCorrect = combo.tensor([[5.5834],
+                                                    [0.7616],
+                                                    [7.3116]])
+
+            Assert.True(tmin0Correct.allclose(tmin0, 0.01))
+            Assert.True(tmin0KeepDimCorrect.allclose(tmin0KeepDim, 0.01))
+            Assert.True(tmin1Correct.allclose(tmin1, 0.01))
+            Assert.True(tmin1KeepDimCorrect.allclose(tmin1KeepDim, 0.01))
 
     [<Test>]
     member _.TestTensorArgmax () =
