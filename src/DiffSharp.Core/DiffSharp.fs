@@ -516,6 +516,12 @@ type dsharp =
     /// <param name="b">The second tensor.</param>
     static member eq(a:Tensor, b:Tensor) = a.eq(b)    
 
+    /// <summary>Returns a boolean tensor for the element-wise non-equality comparison of the elements in the two tensors.</summary>
+    /// <remarks>The shapes of input and other don’t need to match, but they must be broadcastable.</remarks>
+    /// <param name="a">The first tensor.</param>
+    /// <param name="b">The second tensor.</param>
+    static member ne(a:Tensor, b:Tensor) = a.ne(b)    
+
     /// <summary>Returns a boolean tensor where each element indicates if the corresponding element in the input tensor is an infinity value.</summary>
     /// <param name="input">The input tensor.</param>
     static member isinf(input:Tensor) = input.isinf()
@@ -540,12 +546,12 @@ type dsharp =
     /// <param name="input">The input tensor.</param>
     static member argmin(input:Tensor) = input.argmin()
 
-    /// <summary>Returns the maximum value of all elements in the input tensor</summary>
+    /// <summary>Returns the maximum value of all elements in the input tensor.</summary>
     /// <param name="input">The input tensor.</param>
     static member max(input:Tensor) = input.max()
 
-    /// <summary>Returns the minimum value of all elements in the input tensor</summary>
-/// <param name="input">The input tensor.</param>
+    /// <summary>Returns the minimum value of all elements in the input tensor.</summary>
+    /// <param name="input">The input tensor.</param>
     static member min(input:Tensor) = input.min()
 
     /// <summary>Each element of the tensor input is compared with the corresponding element of the tensor other and an element-wise maximum is taken.</summary>
@@ -559,6 +565,18 @@ type dsharp =
     /// <param name="a">The first tensor.</param>
     /// <param name="b">The second tensor.</param>
     static member min(a:Tensor, b:Tensor) = a.min(b)
+
+    /// <summary>Returns the maximum value of all elements in the input tensor along the given dimension.</summary>
+    /// <param name="a">The tensor.</param>
+    /// <param name="dim">The dimension.</param>
+    /// <param name="keepDim">Whether the output tensor has dim retained or not.</param>
+    static member max(a:Tensor, dim:int, ?keepDim:bool) = a.max(dim=dim, ?keepDim=keepDim)
+
+    /// <summary>Returns the minimum value of all elements in the input tensor along the given dimension.</summary>
+    /// <param name="a">The tensor.</param>
+    /// <param name="dim">The dimension.</param>
+    /// <param name="keepDim">Whether the output tensor has dim retained or not.</param>
+    static member min(a:Tensor, dim:int, ?keepDim:bool) = a.min(dim=dim, ?keepDim=keepDim)
 
     /// <summary>Clamp all elements in input into the range [ low..high] and return a resulting tensor</summary>
     /// <param name="input">The input tensor.</param>
