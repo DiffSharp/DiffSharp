@@ -9,7 +9,7 @@ namespace DiffSharp
 module OpNormExtensions =
 
     type Tensor with
-        member a.vectorNorm(?order:float, ?dim:int, ?keepDim:bool) =
+        member a.norm(?order:float, ?dim:int, ?keepDim:bool) =
             if not (a.dtype = Dtype.Float32 || a.dtype = Dtype.Float64) then failwithf "Vector norm is only supported for Float32 and Float64 dtypes."
             let order = defaultArg order 2.
             match order, dim with
@@ -27,4 +27,4 @@ module OpNormExtensions =
             | order, Some(dim) -> a.abs().pow(order).sum(dim=dim, ?keepDim=keepDim).pow(1./order)
 
     type dsharp with
-        static member vectorNorm(a:Tensor, ?order:float, ?dim:int, ?keepDim:bool) = a.vectorNorm(?order=order, ?dim=dim, ?keepDim=keepDim)
+        static member norm(a:Tensor, ?order:float, ?dim:int, ?keepDim:bool) = a.norm(?order=order, ?dim=dim, ?keepDim=keepDim)

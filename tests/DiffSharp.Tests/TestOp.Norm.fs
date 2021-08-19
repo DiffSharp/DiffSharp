@@ -12,17 +12,17 @@ open DiffSharp
 [<TestFixture>]
 type TestTensorNorm () =
     [<Test>]
-    member _.TestTensorVectorNorm () =
+    member _.TestTensornorm () =
         for combo in Combos.FloatingPointExcept16s do
             let t = combo.tensor([[ -0.7868,  -2.5744,   6.1267, 0.],
                                     [ -6.3106,  -9.7653,   7.7777,  16.2869],
                                     [-10.8601,  15.1932,  0.,   1.7327]])
 
-            let n0 = t.vectorNorm(0.)
-            let n0Dim0 = t.vectorNorm(0., dim=0)
-            let n0Dim1 = t.vectorNorm(0., dim=1)
-            let n0Dim0KeepDim = t.vectorNorm(0., dim=0, keepDim=true)
-            let n0Dim1KeepDim = t.vectorNorm(0., dim=1, keepDim=true)
+            let n0 = t.norm(0.)
+            let n0Dim0 = t.norm(0., dim=0)
+            let n0Dim1 = t.norm(0., dim=1)
+            let n0Dim0KeepDim = t.norm(0., dim=0, keepDim=true)
+            let n0Dim1KeepDim = t.norm(0., dim=1, keepDim=true)
 
             let n0Correct = combo.tensor(10.)
             let n0Dim0Correct = combo.tensor([3., 3., 2., 2.])
@@ -36,11 +36,11 @@ type TestTensorNorm () =
             Assert.True(n0Dim0KeepDimCorrect.allclose(n0Dim0KeepDim, 0.01))
             Assert.True(n0Dim1KeepDimCorrect.allclose(n0Dim1KeepDim, 0.01))
 
-            let n1 = t.vectorNorm(1.)
-            let n1Dim0 = t.vectorNorm(1., dim=0)
-            let n1Dim1 = t.vectorNorm(1., dim=1)
-            let n1Dim0KeepDim = t.vectorNorm(1., dim=0, keepDim=true)
-            let n1Dim1KeepDim = t.vectorNorm(1., dim=1, keepDim=true)
+            let n1 = t.norm(1.)
+            let n1Dim0 = t.norm(1., dim=0)
+            let n1Dim1 = t.norm(1., dim=1)
+            let n1Dim0KeepDim = t.norm(1., dim=0, keepDim=true)
+            let n1Dim1KeepDim = t.norm(1., dim=1, keepDim=true)
 
             let n1Correct = combo.tensor(77.4144)
             let n1Dim0Correct = combo.tensor([17.9575, 27.5329, 13.9044, 18.0196])
@@ -54,11 +54,11 @@ type TestTensorNorm () =
             Assert.True(n1Dim0KeepDimCorrect.allclose(n1Dim0KeepDim, 0.01))
             Assert.True(n1Dim1KeepDimCorrect.allclose(n1Dim1KeepDim, 0.01))
 
-            let n2 = t.vectorNorm(2.)
-            let n2Dim0 = t.vectorNorm(2., dim=0)
-            let n2Dim1 = t.vectorNorm(2., dim=1)
-            let n2Dim0KeepDim = t.vectorNorm(2., dim=0, keepDim=true)
-            let n2Dim1KeepDim = t.vectorNorm(2., dim=1, keepDim=true)
+            let n2 = t.norm(2.)
+            let n2Dim0 = t.norm(2., dim=0)
+            let n2Dim1 = t.norm(2., dim=1)
+            let n2Dim0KeepDim = t.norm(2., dim=0, keepDim=true)
+            let n2Dim1KeepDim = t.norm(2., dim=1, keepDim=true)
 
             let n2Correct = combo.tensor(29.2831)
             let n2Dim0Correct = combo.tensor([12.5851, 18.2434,  9.9010, 16.3788])
@@ -72,11 +72,11 @@ type TestTensorNorm () =
             Assert.True(n2Dim0KeepDimCorrect.allclose(n2Dim0KeepDim, 0.01))
             Assert.True(n2Dim1KeepDimCorrect.allclose(n2Dim1KeepDim, 0.01))
 
-            let nInf = t.vectorNorm(System.Double.PositiveInfinity)
-            let nInfDim0 = t.vectorNorm(System.Double.PositiveInfinity, dim=0)
-            let nInfDim1 = t.vectorNorm(System.Double.PositiveInfinity, dim=1)
-            let nInfDim0KeepDim = t.vectorNorm(System.Double.PositiveInfinity, dim=0, keepDim=true)
-            let nInfDim1KeepDim = t.vectorNorm(System.Double.PositiveInfinity, dim=1, keepDim=true)
+            let nInf = t.norm(System.Double.PositiveInfinity)
+            let nInfDim0 = t.norm(System.Double.PositiveInfinity, dim=0)
+            let nInfDim1 = t.norm(System.Double.PositiveInfinity, dim=1)
+            let nInfDim0KeepDim = t.norm(System.Double.PositiveInfinity, dim=0, keepDim=true)
+            let nInfDim1KeepDim = t.norm(System.Double.PositiveInfinity, dim=1, keepDim=true)
 
             let nInfCorrect = combo.tensor(16.2869)
             let nInfDim0Correct = combo.tensor([10.8601, 15.1932,  7.7777, 16.2869])
@@ -90,11 +90,11 @@ type TestTensorNorm () =
             Assert.True(nInfDim0KeepDimCorrect.allclose(nInfDim0KeepDim, 0.01))
             Assert.True(nInfDim1KeepDimCorrect.allclose(nInfDim1KeepDim, 0.01))
 
-            let nNegInf = t.vectorNorm(System.Double.NegativeInfinity)
-            let nNegInfDim0 = t.vectorNorm(System.Double.NegativeInfinity, dim=0)
-            let nNegInfDim1 = t.vectorNorm(System.Double.NegativeInfinity, dim=1)
-            let nNegInfDim0KeepDim = t.vectorNorm(System.Double.NegativeInfinity, dim=0, keepDim=true)
-            let nNegInfDim1KeepDim = t.vectorNorm(System.Double.NegativeInfinity, dim=1, keepDim=true)
+            let nNegInf = t.norm(System.Double.NegativeInfinity)
+            let nNegInfDim0 = t.norm(System.Double.NegativeInfinity, dim=0)
+            let nNegInfDim1 = t.norm(System.Double.NegativeInfinity, dim=1)
+            let nNegInfDim0KeepDim = t.norm(System.Double.NegativeInfinity, dim=0, keepDim=true)
+            let nNegInfDim1KeepDim = t.norm(System.Double.NegativeInfinity, dim=1, keepDim=true)
 
             let nNegInfCorrect = combo.tensor(0.)
             let nNegInfDim0Correct = combo.tensor([0.7868, 2.5744, 0.0000, 0.0000])
@@ -108,11 +108,11 @@ type TestTensorNorm () =
             Assert.True(nNegInfDim0KeepDimCorrect.allclose(nNegInfDim0KeepDim, 0.01))
             Assert.True(nNegInfDim1KeepDimCorrect.allclose(nNegInfDim1KeepDim, 0.01))
 
-            let nOther = t.vectorNorm(3.5)
-            let nOtherDim0 = t.vectorNorm(3.5, dim=0)
-            let nOtherDim1 = t.vectorNorm(3.5, dim=1)
-            let nOtherDim0KeepDim = t.vectorNorm(3.5, dim=0, keepDim=true)
-            let nOtherDim1KeepDim = t.vectorNorm(3.5, dim=1, keepDim=true)
+            let nOther = t.norm(3.5)
+            let nOtherDim0 = t.norm(3.5, dim=0)
+            let nOtherDim1 = t.norm(3.5, dim=1)
+            let nOtherDim0KeepDim = t.norm(3.5, dim=0, keepDim=true)
+            let nOtherDim1KeepDim = t.norm(3.5, dim=1, keepDim=true)
 
             let nOtherCorrect = combo.tensor(20.7627)
             let nOtherDim0Correct = combo.tensor([11.3016, 16.0621,  8.6211, 16.2887])
