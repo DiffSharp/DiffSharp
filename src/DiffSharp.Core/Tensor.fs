@@ -684,23 +684,31 @@ type Tensor =
         Shape.checkCanMinMaxReduce dim keepDim a.shape |> ignore
         a.primalRaw.MinReduceT(dim, keepdim=keepDim) |> snd |> TensorC
 
+    /// Returns the maximum value along the given dimension of all elements in the input tensor.
+    member a.max(dim:int, ?keepDim:bool) =
+        let keepdim = defaultArg keepDim false
+        let indices = a.argmax(dim=dim, keepDim=true)
+        let ret:Tensor = a.gather(dim, indices)
+        if keepdim then ret else ret.squeeze(dim)
+
+    /// Returns the minimum value along the given dimension of all elements in the input tensor.
+    member a.min(dim:int, ?keepDim:bool) =
+        let keepdim = defaultArg keepDim false
+        let indices = a.argmin(dim=dim, keepDim=true)
+        let ret:Tensor = a.gather(dim, indices)
+        if keepdim then ret else ret.squeeze(dim)
+
     /// Returns the maximum value of all elements in the input tensor.
     member a.max() = if a.dim = 0 then a else a.[a.argmax()]
 
     /// Returns the element-wise maximum of the elements in the two tensors.
     member a.max(b:Tensor) = ((a + b) + Tensor.Abs(b - a)) / 2
 
-    /// Returns the element-wise maximum of the tensor and the given scalar
-    member a.max(b:scalar) = a.max(a.scalarLike(b))
-
     /// Returns the minimum value of all elements in the input tensor.
     member a.min() = if a.dim = 0 then a else a.[a.argmin()]
 
     /// Returns the element-wise minimum of the elements in the two tensors.
     member a.min(b:Tensor) = ((a + b) - Tensor.Abs(a - b)) / 2
-
-    /// Returns the element-wise minimum of the tensor and the given scalar
-    member a.min(b:scalar) = a.min(a.scalarLike(b))
 
     /// <summary>
     ///  Returns a tensor with the diagonal elements with respect to <c>dim1</c> and <c>dim2</c>.
