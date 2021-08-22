@@ -310,6 +310,16 @@ type Tensor =
         if t.dim <> 4 then failwithf "Cannot convert tensor with shape %A to 4D array" t.shape
         t.cast<'T>().toArray() :?> 'T[,,,]      
 
+    /// Returns the value of a 5D tensor as a 5D array
+    member t.toArray5D<'T>() = 
+        if t.dim <> 5 then failwithf "Cannot convert tensor with shape %A to 5D array" t.shape
+        t.cast<'T>().toArray()
+
+    /// Returns the value of a 6D tensor as a 6D array
+    member t.toArray6D<'T>() = 
+        if t.dim <> 6 then failwithf "Cannot convert tensor with shape %A to 6D array" t.shape
+        t.cast<'T>().toArray()
+
     /// Indicates if two tensors have the same differentiation type
     member t1.isSameDiffType(t2:Tensor) =
         match t1, t2 with
