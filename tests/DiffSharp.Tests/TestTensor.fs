@@ -284,7 +284,7 @@ type TestTensor () =
         let t6Values = [[[[[[1.; 2.]]]]]]
         let t6 = combo.tensor(t6Values)
         let t6ShapeCorrect = [|1; 1; 1; 1; 1; 2|]
-        let t6DimCorrect = 5
+        let t6DimCorrect = 6
         let t6ValuesCorrect = array6D (List.map (List.map (List.map (List.map (List.map (List.map float32))))) t6Values)
 
         Assert.CheckEqual(t6ShapeCorrect, t6.shape)
