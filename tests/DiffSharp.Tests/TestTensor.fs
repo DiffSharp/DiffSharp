@@ -266,6 +266,32 @@ type TestTensor () =
         Assert.CheckEqual(t4ValuesCorrect, t4.toArray() :?> float32[,,,])
 
     [<Test>]
+    member _.TestTensorCreate5 () =
+      for combo in Combos.AllDevicesAndBackendsFloat32 do
+        let t5Values = [[[[[1.; 2.]]]]]
+        let t5 = combo.tensor(t5Values)
+        let t5ShapeCorrect = [|1; 1; 1; 1; 2|]
+        let t5DimCorrect = 5
+        let t5ValuesCorrect = array5D (List.map (List.map (List.map (List.map (List.map float32)))) t5Values)
+
+        Assert.CheckEqual(t5ShapeCorrect, t5.shape)
+        Assert.CheckEqual(t5DimCorrect, t5.dim)
+        Assert.CheckEqual(t5ValuesCorrect, t5.toArray())
+
+    [<Test>]
+    member _.TestTensorCreate6 () =
+      for combo in Combos.AllDevicesAndBackendsFloat32 do
+        let t6Values = [[[[[[1.; 2.]]]]]]
+        let t6 = combo.tensor(t6Values)
+        let t6ShapeCorrect = [|1; 1; 1; 1; 1; 2|]
+        let t6DimCorrect = 5
+        let t6ValuesCorrect = array6D (List.map (List.map (List.map (List.map (List.map (List.map float32))))) t6Values)
+
+        Assert.CheckEqual(t6ShapeCorrect, t6.shape)
+        Assert.CheckEqual(t6DimCorrect, t6.dim)
+        Assert.CheckEqual(t6ValuesCorrect, t6.toArray())
+
+    [<Test>]
     member this.TestTensorCreateFromTensor4 () =
         let t4Values = [[[[dsharp.tensor 1.; dsharp.tensor 2.]]]]
         let t4 = dsharp.tensor(t4Values)
@@ -276,6 +302,30 @@ type TestTensor () =
         Assert.AreEqual(t4ShapeCorrect, t4.shape)
         Assert.AreEqual(t4DimCorrect, t4.dim)
         Assert.AreEqual(t4ValuesCorrect, t4.toArray())
+
+    [<Test>]
+    member this.TestTensorCreateFromTensor5 () =
+        let t5Values = [[[[[dsharp.tensor 1.; dsharp.tensor 2.]]]]]
+        let t5 = dsharp.tensor(t5Values)
+        let t5ShapeCorrect = [|1; 1; 1; 1; 2|]
+        let t5DimCorrect = 5
+        let t5ValuesCorrect = array5D (List.map (List.map (List.map (List.map (List.map float32)))) t5Values)
+
+        Assert.AreEqual(t5ShapeCorrect, t5.shape)
+        Assert.AreEqual(t5DimCorrect, t5.dim)
+        Assert.AreEqual(t5ValuesCorrect, t5.toArray())
+
+    [<Test>]
+    member this.TestTensorCreateFromTensor6 () =
+        let t6Values = [[[[[[dsharp.tensor 1.; dsharp.tensor 2.]]]]]]
+        let t6 = dsharp.tensor(t6Values)
+        let t6ShapeCorrect = [|1; 1; 1; 1; 1; 2|]
+        let t6DimCorrect = 6
+        let t6ValuesCorrect = array6D (List.map (List.map (List.map (List.map (List.map (List.map float32))))) t6Values)
+
+        Assert.AreEqual(t6ShapeCorrect, t6.shape)
+        Assert.AreEqual(t6DimCorrect, t6.dim)
+        Assert.AreEqual(t6ValuesCorrect, t6.toArray())
 
     [<Test>]
     member _.TestTensorToArray () =
@@ -425,6 +475,7 @@ type TestTensor () =
             let t4aBoolCorrect = a4 |> Array4D.map (fun v -> System.Convert.ToBoolean(v))
             Assert.AreEqual(t4aBoolCorrect, t4aBool)
 
+
             let a5 = array5D [[[[[0.; 1.; 0.]; [1.; 0.; 1.]]]]]
             let t5 = combo.tensor(a5)
             let t5aFloat32 = t5.toArray5D<float32>()
@@ -458,6 +509,7 @@ type TestTensor () =
             let t5aBool = t5.toArray5D<bool>()
             let t5aBoolCorrect = a5 |> Array5D.map (fun v -> System.Convert.ToBoolean(v))
             Assert.AreEqual(t5aBoolCorrect, t5aBool)
+
 
             let a6 = array6D [[[[[[0.; 1.; 0.]; [1.; 0.; 1.]]]]]]
             let t6 = combo.tensor(a6)
