@@ -459,6 +459,40 @@ type TestTensor () =
             let t5aBoolCorrect = a5 |> Array5D.map (fun v -> System.Convert.ToBoolean(v))
             Assert.AreEqual(t5aBoolCorrect, t5aBool)
 
+            let a6 = array6D [[[[[[0.; 1.; 0.]; [1.; 0.; 1.]]]]]]
+            let t6 = combo.tensor(a6)
+            let t6aFloat32 = t6.toArray6D<float32>()
+            let t6aFloat32Correct = a6 |> Array6D.map (fun v -> System.Convert.ToSingle(v))
+            Assert.AreEqual(t6aFloat32Correct, t6aFloat32)
+
+            let t6aFloat64 = t6.toArray6D<double>()
+            let t6aFloat64Correct = a6 |> Array6D.map (fun v -> System.Convert.ToDouble(v))
+            Assert.AreEqual(t6aFloat64Correct, t6aFloat64)
+
+            let t6aInt64 = t6.toArray6D<int64>()
+            let t6aInt64Correct = a6 |> Array6D.map (fun v -> System.Convert.ToInt64(v))
+            Assert.AreEqual(t6aInt64Correct, t6aInt64)
+
+            let t6aInt32 = t6.toArray6D<int32>()
+            let t6aInt32Correct = a6 |> Array6D.map (fun v -> System.Convert.ToInt32(v))
+            Assert.AreEqual(t6aInt32Correct, t6aInt32)
+
+            let t6aInt16 = t6.toArray6D<int16>()
+            let t6aInt16Correct = a6 |> Array6D.map (fun v -> System.Convert.ToInt16(v))
+            Assert.AreEqual(t6aInt16Correct, t6aInt16)
+
+            let t6aInt8 = t6.toArray6D<int8>()
+            let t6aInt8Correct = a6 |> Array6D.map (fun v -> System.Convert.ToSByte(v))
+            Assert.AreEqual(t6aInt8Correct, t6aInt8)
+
+            let t6aByte = t6.toArray6D<byte>()
+            let t6aByteCorrect = a6 |> Array6D.map (fun v -> System.Convert.ToByte(v))
+            Assert.AreEqual(t6aByteCorrect, t6aByte)
+
+            let t6aBool = t6.toArray6D<bool>()
+            let t6aBoolCorrect = a6 |> Array6D.map (fun v -> System.Convert.ToBoolean(v))
+            Assert.AreEqual(t6aBoolCorrect, t6aBool)
+
     [<Test>]
     member _.TestTensorSaveSaveAndLoadToSpecificConfiguration () =
         let fileName = System.IO.Path.GetTempFileName()
