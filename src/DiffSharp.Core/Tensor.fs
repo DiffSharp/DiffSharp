@@ -901,7 +901,7 @@ type Tensor =
         | (:? (int16[]) as arr), Dtype.Int16 -> TensorC(RawTensor.CreateFromFlatArray(arr, shape=[| arr.Length |], ?dtype=dtype, ?device=device, ?backend=backend))
         | (:? (int64[]) as arr), Dtype.Int64 -> TensorC(RawTensor.CreateFromFlatArray(arr, shape=[| arr.Length |], ?dtype=dtype, ?device=device, ?backend=backend))
         | _ -> 
-        let res = value |> DataConverter.tryFlatArrayAndShape<Tensor> // support creation of new Tensor from a structure holding scalar Tensors
+        let res = value |> DataConverter.tryFlatArrayAndShape<Tensor> // Support creation of new Tensor from a structure holding scalar Tensors. Maintains differentiability.
         match res with
         | Some (tensors, shape) -> 
             let allScalar = tensors |> Array.forall (fun t -> t.dim = 0)
