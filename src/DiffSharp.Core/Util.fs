@@ -256,14 +256,16 @@ module DataConverter =
         | SeqTy ety when ety = tgt -> Some (seqElements)
         | _ -> None
 
+    let typesMatch<'T> (array: System.Array) = (array.GetType().GetElementType() = typeof<'T>) 
+
     let rec tryFlatArrayAndShape<'T> (value:obj) : ('T[] * int[]) option =
 
         match value with
         | :? 'T as v -> Some ([|v|], [||])
-        | :? ('T[]) as v -> Some (flatArrayAndShape1D v)
-        | :? ('T[,]) as v -> Some (flatArrayAndShape2D<'T> v)
-        | :? ('T[,,]) as v -> Some (flatArrayAndShape3D<'T> v)
-        | :? ('T[,,,]) as v -> Some (flatArrayAndShape4D<'T> v)
+        | :? ('T[]) as v when typesMatch<'T> v -> Some (flatArrayAndShape1D v)
+        | :? ('T[,]) as v when typesMatch<'T> v -> Some (flatArrayAndShape2D<'T> v)
+        | :? ('T[,,]) as v when typesMatch<'T> v -> Some (flatArrayAndShape3D<'T> v)
+        | :? ('T[,,,]) as v when typesMatch<'T> v -> Some (flatArrayAndShape4D<'T> v)
         | :? seq<'T> as v -> Some (flatArrayAndShape1D (Seq.toArray v))
         | :? seq<seq<'T>> as v -> Some (flatArrayAndShape2D (array2D v))
         | :? seq<seq<seq<'T>>> as v -> Some (flatArrayAndShape3D (array3D v))
@@ -319,6 +321,8 @@ module DataConverter =
 
         // Matching of byte and int8 by type is problematic and not reliable, see https://github.com/dotnet/fsharp/issues/10202 and https://github.com/DiffSharp/DiffSharp/issues/203
         // TODO: implement some careful special treatment
+        //
+        // value: sbyte[]
         match value |> tryFlatArrayAndShape<byte>  with
         | Some (values, shape) -> (values |> Array.map ofByte, shape)
         | None -> 
