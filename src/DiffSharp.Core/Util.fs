@@ -237,7 +237,7 @@ module DataConverter =
                                 yield v.[i, j, k, m] |]
         arr, [| n1;n2;n3;n4 |]
 
-    let private flatArrayAndShape5D<'T> (v) =
+    let private flatArrayAndShape5D<'T> (v: 'T ``[,,,,]``) =
         let n1 = Array5D.length1 v
         let n2 = Array5D.length2 v
         let n3 = Array5D.length3 v
@@ -249,10 +249,10 @@ module DataConverter =
                         for i3=0 to n3-1 do
                             for i4=0 to n4-1 do
                                 for i5=0 to n5-1 do
-                                    yield Array5D.get v i1 i2 i3 i4 i5 :?> 'T|]
+                                    yield Array5D.get v i1 i2 i3 i4 i5|]
         arr, [| n1;n2;n3;n4;n5 |]
 
-    let private flatArrayAndShape6D<'T> (v) =
+    let private flatArrayAndShape6D<'T> (v: 'T ``[,,,,,]``) =
         let n1 = Array6D.length1 v
         let n2 = Array6D.length2 v
         let n3 = Array6D.length3 v
@@ -266,7 +266,7 @@ module DataConverter =
                             for i4=0 to n4-1 do
                                 for i5=0 to n5-1 do
                                     for i6=0 to n6-1 do
-                                        yield Array6D.get v i1 i2 i3 i4 i5 i6 :?> 'T|]
+                                        yield Array6D.get v i1 i2 i3 i4 i5 i6|]
         arr, [| n1;n2;n3;n4;n5;n6 |]
 
     let private seqTupleElements (els: obj) =
@@ -296,8 +296,8 @@ module DataConverter =
         | :? ('T[,]) as v -> Some (flatArrayAndShape2D<'T> v)
         | :? ('T[,,]) as v -> Some (flatArrayAndShape3D<'T> v)
         | :? ('T[,,,]) as v -> Some (flatArrayAndShape4D<'T> v)
-        | :? System.Array as v when v.Rank = 5 && (Array5D.get v 0 0 0 0 0).GetType() = typeof<'T> -> Some (flatArrayAndShape5D<'T> v)
-        | :? System.Array as v when v.Rank = 6 && (Array6D.get v 0 0 0 0 0 0).GetType() = typeof<'T> -> Some (flatArrayAndShape6D<'T> v)
+        | :? ('T ``[,,,,]``) as v -> Some (flatArrayAndShape5D<'T> v)
+        | :? ('T ``[,,,,,]``) as v -> Some (flatArrayAndShape6D<'T> v)
         | :? seq<'T> as v -> Some (flatArrayAndShape1D (Seq.toArray v))
         | :? seq<seq<'T>> as v -> Some (flatArrayAndShape2D (array2D v))
         | :? seq<seq<seq<'T>>> as v -> Some (flatArrayAndShape3D (array3D v))
