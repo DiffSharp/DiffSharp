@@ -256,6 +256,8 @@ module DataConverter =
         | SeqTy ety when ety = tgt -> Some (seqElements)
         | _ -> None
 
+    // An exact type-match test is needed because of https://github.com/DiffSharp/DiffSharp/issues/203
+    // That is in .NET and F#, a boxed "byte[]" can be unboxed to "int8[]" and vice-versa.
     let typesMatch<'T> (array: System.Array) = (array.GetType().GetElementType() = typeof<'T>) 
 
     let rec tryFlatArrayAndShape<'T> (value:obj) : ('T[] * int[]) option =
