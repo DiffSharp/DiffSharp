@@ -64,24 +64,23 @@ module Array4D =
 //type 'T array6d = 'T ``[,,,,,]``
 
 module Array5D =
-    let zeroCreate<'T> (length1:int) length2 length3 length4 length5 : 'T ``[,,,,]`` =
-        let result = System.Array.CreateInstance(typeof<'T>, [|length1;length2;length3;length4;length5|])
-        result :?> 'T ``[,,,,]``
+    /// <summary></summary> <exclude />
+    let zeroCreate<'T> (length1:int) length2 length3 length4 length5 : Array =
+        System.Array.CreateInstance(typeof<'T>, [|length1;length2;length3;length4;length5|])
 
-    let get (array:'T ``[,,,,]``) (index1:int) index2 index3 index4 index5 : 'T =
-        let result = array.GetValue([|index1;index2;index3;index4;index5|])
-        result :?> 'T
+    let get (array:Array) (index1:int) index2 index3 index4 index5 =
+        array.GetValue([|index1;index2;index3;index4;index5|])
 
-    let set (array:'T ``[,,,,]``) (index1:int) index2 index3 index4 index5 (value: 'T) =
-        array.SetValue(box value, [|index1;index2;index3;index4;index5|])
+    let set (array:Array) (index1:int) index2 index3 index4 index5 value =
+        array.SetValue(value, [|index1;index2;index3;index4;index5|])
    
-    let length1 (array: 'T ``[,,,,]``) = array.GetLength(0)
-    let length2 (array: 'T ``[,,,,]``) = array.GetLength(1)
-    let length3 (array: 'T ``[,,,,]``) = array.GetLength(2)
-    let length4 (array: 'T ``[,,,,]``) = array.GetLength(3)
-    let length5 (array: 'T ``[,,,,]``) = array.GetLength(4)
+    let length1 (array: Array) = array.GetLength(0)
+    let length2 (array: Array) = array.GetLength(1)
+    let length3 (array: Array) = array.GetLength(2)
+    let length4 (array: Array) = array.GetLength(3)
+    let length5 (array: Array) = array.GetLength(4)
 
-    let init<'T> (length1:int) length2 length3 length4 length5 (initializer:int->int->int->int->int->'T) : 'T ``[,,,,]`` =
+    let init<'T> (length1:int) length2 length3 length4 length5 (initializer:int->int->int->int->int->'T) : Array =
         let arr = zeroCreate<'T> length1 length2 length3 length4 length5
         for i1=0 to length1-1 do
             for i2=0 to length2-1 do
@@ -93,27 +92,25 @@ module Array5D =
 
     let create (length1:int) length2 length3 length4 length5 (initial:'T) = init length1 length2 length3 length4 length5 (fun _ _ _ _ _ -> initial)
 
-    let map mapping (array: 'T ``[,,,,]``) =
+    let map mapping (array: Array) =
         init (length1 array) (length2 array) (length3 array) (length4 array) (length5 array) (fun i1 i2 i3 i4 i5 -> mapping (get array i1 i2 i3 i4 i5))
 
 module Array6D =
-    let zeroCreate<'T> (length1:int) length2 length3 length4 length5 length6 : 'T ``[,,,,,]`` =
-        let result = System.Array.CreateInstance(typeof<'T>, [|length1;length2;length3;length4;length5;length6|])
-        result :?> 'T ``[,,,,,]``
+    let zeroCreate<'T> (length1:int) length2 length3 length4 length5 length6 : Array =
+        System.Array.CreateInstance(typeof<'T>, [|length1;length2;length3;length4;length5;length6|])
 
-    let get (array: 'T ``[,,,,,]``) (index1: int) index2 index3 index4 index5 index6 =
-        let result = array.GetValue([|index1;index2;index3;index4;index5;index6|])
-        result :?> 'T
+    let get (array: Array) (index1: int) index2 index3 index4 index5 index6 =
+        array.GetValue([|index1;index2;index3;index4;index5;index6|])
 
-    let set (array:'T ``[,,,,,]``) (index1: int) index2 index3 index4 index5 index6 value =
+    let set (array: Array) (index1: int) index2 index3 index4 index5 index6 value =
         array.SetValue(value, [|index1;index2;index3;index4;index5;index6|])
 
-    let length1 (array:'T ``[,,,,,]``) = array.GetLength(0)
-    let length2 (array:'T ``[,,,,,]``) = array.GetLength(1)
-    let length3 (array:'T ``[,,,,,]``) = array.GetLength(2)
-    let length4 (array:'T ``[,,,,,]``) = array.GetLength(3)
-    let length5 (array:'T ``[,,,,,]``) = array.GetLength(4)
-    let length6 (array:'T ``[,,,,,]``) = array.GetLength(5)
+    let length1 (array: Array) = array.GetLength(0)
+    let length2 (array: Array) = array.GetLength(1)
+    let length3 (array: Array) = array.GetLength(2)
+    let length4 (array: Array) = array.GetLength(3)
+    let length5 (array: Array) = array.GetLength(4)
+    let length6 (array: Array) = array.GetLength(5)
 
     let init<'T> (length1: int) length2 length3 length4 length5 length6 (initializer: int->int->int->int->int->int->'T) =
         let arr = zeroCreate<'T> length1 length2 length3 length4 length5 length6
@@ -129,7 +126,7 @@ module Array6D =
     let create (length1: int) length2 length3 length4 length5 length6 (initial:'T) =
         init length1 length2 length3 length4 length5 length6 (fun _ _ _ _ _ _ -> initial)
 
-    let map mapping (array: 'T ``[,,,,,]``) =
+    let map mapping (array: Array) =
         init (length1 array) (length2 array) (length3 array) (length4 array) (length5 array) (length6 array) (fun i1 i2 i3 i4 i5 i6 -> mapping (get array i1 i2 i3 i4 i5 i6))
 
 
@@ -170,8 +167,8 @@ module ArrayND =
         | [| d1; d2 |] -> Array2D.zeroCreate d1 d2 :> _
         | [| d1; d2; d3 |] -> Array3D.zeroCreate d1 d2 d3 :> _
         | [| d1; d2; d3; d4 |] -> Array4D.zeroCreate d1 d2 d3 d4 :> _
-        | [| d1; d2; d3; d4; d5 |] -> Array5D.zeroCreate d1 d2 d3 d4 d5 :> _
-        | [| d1; d2; d3; d4; d5; d6 |] -> Array6D.zeroCreate d1 d2 d3 d4 d5 d6 :> _
+        | [| d1; d2; d3; d4; d5 |] -> Array5D.zeroCreate d1 d2 d3 d4 d5
+        | [| d1; d2; d3; d4; d5; d6 |] -> Array6D.zeroCreate d1 d2 d3 d4 d5 d6
         | _ -> failwith "ArrayND.zeroCreate not supported for dim > 6"
 
 /// Contains extensions to the F# Seq module. 
