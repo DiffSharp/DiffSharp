@@ -276,7 +276,7 @@ type TestTensor () =
 
         Assert.CheckEqual(t5ShapeCorrect, t5.shape)
         Assert.CheckEqual(t5DimCorrect, t5.dim)
-        Assert.CheckEqual(t5ValuesCorrect, t5.toArray())
+        Assert.CheckEqual(t5ValuesCorrect, t5.toArray() :?> float32 ``[,,,,]``)
 
     [<Test>]
     member _.TestTensorCreate6 () =
@@ -289,7 +289,7 @@ type TestTensor () =
 
         Assert.CheckEqual(t6ShapeCorrect, t6.shape)
         Assert.CheckEqual(t6DimCorrect, t6.dim)
-        Assert.CheckEqual(t6ValuesCorrect, t6.toArray())
+        Assert.CheckEqual(t6ValuesCorrect, t6.toArray() :?> float32 ``[,,,,,]``)
 
     [<Test>]
     member this.TestTensorCreateFromTensor4 () =
