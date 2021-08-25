@@ -310,6 +310,16 @@ type Tensor =
         if t.dim <> 4 then failwithf "Cannot convert tensor with shape %A to 4D array" t.shape
         t.cast<'T>().toArray() :?> 'T[,,,]      
 
+    /// Returns the value of a 5D tensor as a 5D array
+    member t.toArray5D<'T>() = 
+        if t.dim <> 5 then failwithf "Cannot convert tensor with shape %A to 5D array" t.shape
+        t.cast<'T>().toArray()
+
+    /// Returns the value of a 6D tensor as a 6D array
+    member t.toArray6D<'T>() = 
+        if t.dim <> 6 then failwithf "Cannot convert tensor with shape %A to 6D array" t.shape
+        t.cast<'T>().toArray()
+
     /// Indicates if two tensors have the same differentiation type
     member t1.isSameDiffType(t2:Tensor) =
         match t1, t2 with
@@ -891,7 +901,7 @@ type Tensor =
         | (:? (int16[]) as arr), Dtype.Int16 -> TensorC(RawTensor.CreateFromFlatArray(arr, shape=[| arr.Length |], ?dtype=dtype, ?device=device, ?backend=backend))
         | (:? (int64[]) as arr), Dtype.Int64 -> TensorC(RawTensor.CreateFromFlatArray(arr, shape=[| arr.Length |], ?dtype=dtype, ?device=device, ?backend=backend))
         | _ -> 
-        let res = value |> DataConverter.tryFlatArrayAndShape<Tensor> // support creation of new Tensor from a structure holding scalar Tensors
+        let res = value |> DataConverter.tryFlatArrayAndShape<Tensor> // Support creation of new Tensor from a structure holding scalar Tensors. Maintains differentiability.
         match res with
         | Some (tensors, shape) -> 
             let allScalar = tensors |> Array.forall (fun t -> t.dim = 0)

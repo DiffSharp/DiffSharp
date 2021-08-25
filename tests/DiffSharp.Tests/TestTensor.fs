@@ -55,6 +55,22 @@ type TestTensor () =
         Assert.CheckEqual(t4DimCorrect, t4.dim)
         Assert.CheckEqual(combo.dtype, t4.dtype)
 
+        let t5 = combo.tensor([[[[[ofDouble 1.; ofDouble 2.]]]]])
+        let t5ShapeCorrect = [|1; 1; 1; 1; 2|]
+        let t5DimCorrect = 5
+
+        Assert.CheckEqual(t5ShapeCorrect, t5.shape)
+        Assert.CheckEqual(t5DimCorrect, t5.dim)
+        Assert.CheckEqual(combo.dtype, t5.dtype)
+
+        let t6 = combo.tensor([[[[[[ofDouble 1.; ofDouble 2.]]]]]])
+        let t6ShapeCorrect = [|1; 1; 1; 1; 1; 2|]
+        let t6DimCorrect = 6
+
+        Assert.CheckEqual(t6ShapeCorrect, t6.shape)
+        Assert.CheckEqual(t6DimCorrect, t6.dim)
+        Assert.CheckEqual(combo.dtype, t6.dtype)
+
     [<Test>]
     member this.TestTensorCreateAllTensorTypesFromFloat64Data() =
         this.TestTensorCreateAllTensorTypesGeneric id
@@ -250,6 +266,32 @@ type TestTensor () =
         Assert.CheckEqual(t4ValuesCorrect, t4.toArray() :?> float32[,,,])
 
     [<Test>]
+    member _.TestTensorCreate5 () =
+      for combo in Combos.AllDevicesAndBackendsFloat32 do
+        let t5Values = [[[[[1.; 2.]]]]]
+        let t5 = combo.tensor(t5Values)
+        let t5ShapeCorrect = [|1; 1; 1; 1; 2|]
+        let t5DimCorrect = 5
+        let t5ValuesCorrect = array5D (List.map (List.map (List.map (List.map (List.map float32)))) t5Values)
+
+        Assert.CheckEqual(t5ShapeCorrect, t5.shape)
+        Assert.CheckEqual(t5DimCorrect, t5.dim)
+        Assert.CheckEqual(t5ValuesCorrect, t5.toArray())
+
+    [<Test>]
+    member _.TestTensorCreate6 () =
+      for combo in Combos.AllDevicesAndBackendsFloat32 do
+        let t6Values = [[[[[[1.; 2.]]]]]]
+        let t6 = combo.tensor(t6Values)
+        let t6ShapeCorrect = [|1; 1; 1; 1; 1; 2|]
+        let t6DimCorrect = 6
+        let t6ValuesCorrect = array6D (List.map (List.map (List.map (List.map (List.map (List.map float32))))) t6Values)
+
+        Assert.CheckEqual(t6ShapeCorrect, t6.shape)
+        Assert.CheckEqual(t6DimCorrect, t6.dim)
+        Assert.CheckEqual(t6ValuesCorrect, t6.toArray())
+
+    [<Test>]
     member this.TestTensorCreateFromTensor4 () =
         let t4Values = [[[[dsharp.tensor 1.; dsharp.tensor 2.]]]]
         let t4 = dsharp.tensor(t4Values)
@@ -260,6 +302,30 @@ type TestTensor () =
         Assert.AreEqual(t4ShapeCorrect, t4.shape)
         Assert.AreEqual(t4DimCorrect, t4.dim)
         Assert.AreEqual(t4ValuesCorrect, t4.toArray())
+
+    [<Test>]
+    member this.TestTensorCreateFromTensor5 () =
+        let t5Values = [[[[[dsharp.tensor 1.; dsharp.tensor 2.]]]]]
+        let t5 = dsharp.tensor(t5Values)
+        let t5ShapeCorrect = [|1; 1; 1; 1; 2|]
+        let t5DimCorrect = 5
+        let t5ValuesCorrect = array5D (List.map (List.map (List.map (List.map (List.map float32)))) t5Values)
+
+        Assert.AreEqual(t5ShapeCorrect, t5.shape)
+        Assert.AreEqual(t5DimCorrect, t5.dim)
+        Assert.AreEqual(t5ValuesCorrect, t5.toArray())
+
+    [<Test>]
+    member this.TestTensorCreateFromTensor6 () =
+        let t6Values = [[[[[[dsharp.tensor 1.; dsharp.tensor 2.]]]]]]
+        let t6 = dsharp.tensor(t6Values)
+        let t6ShapeCorrect = [|1; 1; 1; 1; 1; 2|]
+        let t6DimCorrect = 6
+        let t6ValuesCorrect = array6D (List.map (List.map (List.map (List.map (List.map (List.map float32))))) t6Values)
+
+        Assert.AreEqual(t6ShapeCorrect, t6.shape)
+        Assert.AreEqual(t6DimCorrect, t6.dim)
+        Assert.AreEqual(t6ValuesCorrect, t6.toArray())
 
     [<Test>]
     member _.TestTensorToArray () =
@@ -408,6 +474,76 @@ type TestTensor () =
             let t4aBool = t4.toArray4D<bool>()
             let t4aBoolCorrect = a4 |> Array4D.map (fun v -> System.Convert.ToBoolean(v))
             Assert.AreEqual(t4aBoolCorrect, t4aBool)
+
+
+            let a5 = array5D [[[[[0.; 1.; 0.]; [1.; 0.; 1.]]]]]
+            let t5 = combo.tensor(a5)
+            let t5aFloat32 = t5.toArray5D<float32>()
+            let t5aFloat32Correct = a5 |> Array5D.map (fun v -> System.Convert.ToSingle(v))
+            Assert.AreEqual(t5aFloat32Correct, t5aFloat32)
+
+            let t5aFloat64 = t5.toArray5D<double>()
+            let t5aFloat64Correct = a5 |> Array5D.map (fun v -> System.Convert.ToDouble(v))
+            Assert.AreEqual(t5aFloat64Correct, t5aFloat64)
+
+            let t5aInt64 = t5.toArray5D<int64>()
+            let t5aInt64Correct = a5 |> Array5D.map (fun v -> System.Convert.ToInt64(v))
+            Assert.AreEqual(t5aInt64Correct, t5aInt64)
+
+            let t5aInt32 = t5.toArray5D<int32>()
+            let t5aInt32Correct = a5 |> Array5D.map (fun v -> System.Convert.ToInt32(v))
+            Assert.AreEqual(t5aInt32Correct, t5aInt32)
+
+            let t5aInt16 = t5.toArray5D<int16>()
+            let t5aInt16Correct = a5 |> Array5D.map (fun v -> System.Convert.ToInt16(v))
+            Assert.AreEqual(t5aInt16Correct, t5aInt16)
+
+            let t5aInt8 = t5.toArray5D<int8>()
+            let t5aInt8Correct = a5 |> Array5D.map (fun v -> System.Convert.ToSByte(v))
+            Assert.AreEqual(t5aInt8Correct, t5aInt8)
+
+            let t5aByte = t5.toArray5D<byte>()
+            let t5aByteCorrect = a5 |> Array5D.map (fun v -> System.Convert.ToByte(v))
+            Assert.AreEqual(t5aByteCorrect, t5aByte)
+
+            let t5aBool = t5.toArray5D<bool>()
+            let t5aBoolCorrect = a5 |> Array5D.map (fun v -> System.Convert.ToBoolean(v))
+            Assert.AreEqual(t5aBoolCorrect, t5aBool)
+
+
+            let a6 = array6D [[[[[[0.; 1.; 0.]; [1.; 0.; 1.]]]]]]
+            let t6 = combo.tensor(a6)
+            let t6aFloat32 = t6.toArray6D<float32>()
+            let t6aFloat32Correct = a6 |> Array6D.map (fun v -> System.Convert.ToSingle(v))
+            Assert.AreEqual(t6aFloat32Correct, t6aFloat32)
+
+            let t6aFloat64 = t6.toArray6D<double>()
+            let t6aFloat64Correct = a6 |> Array6D.map (fun v -> System.Convert.ToDouble(v))
+            Assert.AreEqual(t6aFloat64Correct, t6aFloat64)
+
+            let t6aInt64 = t6.toArray6D<int64>()
+            let t6aInt64Correct = a6 |> Array6D.map (fun v -> System.Convert.ToInt64(v))
+            Assert.AreEqual(t6aInt64Correct, t6aInt64)
+
+            let t6aInt32 = t6.toArray6D<int32>()
+            let t6aInt32Correct = a6 |> Array6D.map (fun v -> System.Convert.ToInt32(v))
+            Assert.AreEqual(t6aInt32Correct, t6aInt32)
+
+            let t6aInt16 = t6.toArray6D<int16>()
+            let t6aInt16Correct = a6 |> Array6D.map (fun v -> System.Convert.ToInt16(v))
+            Assert.AreEqual(t6aInt16Correct, t6aInt16)
+
+            let t6aInt8 = t6.toArray6D<int8>()
+            let t6aInt8Correct = a6 |> Array6D.map (fun v -> System.Convert.ToSByte(v))
+            Assert.AreEqual(t6aInt8Correct, t6aInt8)
+
+            let t6aByte = t6.toArray6D<byte>()
+            let t6aByteCorrect = a6 |> Array6D.map (fun v -> System.Convert.ToByte(v))
+            Assert.AreEqual(t6aByteCorrect, t6aByte)
+
+            let t6aBool = t6.toArray6D<bool>()
+            let t6aBoolCorrect = a6 |> Array6D.map (fun v -> System.Convert.ToBoolean(v))
+            Assert.AreEqual(t6aBoolCorrect, t6aBool)
 
     [<Test>]
     member _.TestTensorSaveSaveAndLoadToSpecificConfiguration () =

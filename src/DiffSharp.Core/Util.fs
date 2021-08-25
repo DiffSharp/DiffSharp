@@ -237,6 +237,38 @@ module DataConverter =
                                 yield v.[i, j, k, m] |]
         arr, [| n1;n2;n3;n4 |]
 
+    let private flatArrayAndShape5D<'T> (v: Array) =
+        let n1 = Array5D.length1 v
+        let n2 = Array5D.length2 v
+        let n3 = Array5D.length3 v
+        let n4 = Array5D.length4 v
+        let n5 = Array5D.length5 v
+        let arr =
+            [|  for i1=0 to n1-1 do
+                    for i2=0 to n2-1 do
+                        for i3=0 to n3-1 do
+                            for i4=0 to n4-1 do
+                                for i5=0 to n5-1 do
+                                    yield Array5D.get v i1 i2 i3 i4 i5 :?> 'T|]
+        arr, [| n1;n2;n3;n4;n5 |]
+
+    let private flatArrayAndShape6D<'T> (v: Array) =
+        let n1 = Array6D.length1 v
+        let n2 = Array6D.length2 v
+        let n3 = Array6D.length3 v
+        let n4 = Array6D.length4 v
+        let n5 = Array6D.length5 v
+        let n6 = Array6D.length6 v
+        let arr =
+            [|  for i1=0 to n1-1 do
+                    for i2=0 to n2-1 do
+                        for i3=0 to n3-1 do
+                            for i4=0 to n4-1 do
+                                for i5=0 to n5-1 do
+                                    for i6=0 to n6-1 do
+                                        yield Array6D.get v i1 i2 i3 i4 i5 i6 :?> 'T|]
+        arr, [| n1;n2;n3;n4;n5;n6 |]
+
     let private seqTupleElements (els: obj) =
         match seqElements els with 
         | [| el |] -> FSharpValue.GetTupleFields(el) 
@@ -264,10 +296,14 @@ module DataConverter =
         | :? ('T[,]) as v -> Some (flatArrayAndShape2D<'T> v)
         | :? ('T[,,]) as v -> Some (flatArrayAndShape3D<'T> v)
         | :? ('T[,,,]) as v -> Some (flatArrayAndShape4D<'T> v)
+        | :? System.Array as v when v.Rank = 5 && (Array5D.get v 0 0 0 0 0).GetType() = typeof<'T> -> Some (flatArrayAndShape5D<'T> v)
+        | :? System.Array as v when v.Rank = 6 && (Array6D.get v 0 0 0 0 0 0).GetType() = typeof<'T> -> Some (flatArrayAndShape6D<'T> v)
         | :? seq<'T> as v -> Some (flatArrayAndShape1D (Seq.toArray v))
         | :? seq<seq<'T>> as v -> Some (flatArrayAndShape2D (array2D v))
         | :? seq<seq<seq<'T>>> as v -> Some (flatArrayAndShape3D (array3D v))
         | :? seq<seq<seq<seq<'T>>>> as v -> Some (flatArrayAndShape4D (array4D v))
+        | :? seq<seq<seq<seq<seq<'T>>>>> as v -> Some (flatArrayAndShape5D (array5D v))
+        | :? seq<seq<seq<seq<seq<seq<'T>>>>>> as v -> Some (flatArrayAndShape6D (array6D v))
         | _ -> 
         let vty = value.GetType()
         let tgt = (typeof<'T>)
@@ -288,6 +324,14 @@ module DataConverter =
         | SeqOrSeqTupleTy (fetcher1, SeqOrSeqTupleTy (fetcher2, SeqOrSeqTupleTy (fetcher3, SeqOrSeqTupleLeafTy tgt fetcher4))) -> 
             let els = value |> fetcher1 |> Array.map (fetcher2 >> Array.map (fetcher3 >> Array.map (fetcher4 >> arrayCast<'T>))) |> array4D
             Some (flatArrayAndShape4D<'T> els)
+        // ... -> dim 5
+        | SeqOrSeqTupleTy (fetcher1, SeqOrSeqTupleTy (fetcher2, SeqOrSeqTupleTy (fetcher3, SeqOrSeqTupleTy (fetcher4, SeqOrSeqTupleLeafTy tgt fetcher5)))) -> 
+            let els = value |> fetcher1 |> Array.map (fetcher2 >> Array.map (fetcher3 >> Array.map (fetcher4 >> Array.map (fetcher5 >> arrayCast<'T>)))) |> array5D
+            Some (flatArrayAndShape5D<'T> els)
+        // ... -> dim 6
+        | SeqOrSeqTupleTy (fetcher1, SeqOrSeqTupleTy (fetcher2, SeqOrSeqTupleTy (fetcher3, SeqOrSeqTupleTy (fetcher4, SeqOrSeqTupleTy (fetcher5, SeqOrSeqTupleLeafTy tgt fetcher6))))) -> 
+            let els = value |> fetcher1 |> Array.map (fetcher2 >> Array.map (fetcher3 >> Array.map (fetcher4 >> Array.map (fetcher5 >> Array.map (fetcher6 >> arrayCast<'T>))))) |> array6D
+            Some (flatArrayAndShape6D<'T> els)
         | _ -> None
 
     [<ExcludeFromCodeCoverage>]
