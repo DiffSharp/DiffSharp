@@ -132,20 +132,21 @@ module Array6D =
     let map mapping (array: 'T ``[,,,,,]``) =
         init (length1 array) (length2 array) (length3 array) (length4 array) (length5 array) (length6 array) (fun i1 i2 i3 i4 i5 i6 -> mapping (get array i1 i2 i3 i4 i5 i6))
 
-#if SLICING
-[<AutoOpen>]
-module Array5DExtensions =
-    type ``[,,,,]``<'T> with
-        member t.GetSlice(i0min:int option, i0max:int option, i1min:int option, i1max:int option, i2min:int option, i2max:int option, i3min:int option, i3max:int option, i4min:int option, i4max:int option) : ``[,,,,]``<'T> =
-            failwith "tbd"
-        member t.GetSlice(i0:int, i1min:int option, i1max:int option, i2min:int option, i2max:int option, i3min:int option, i3max:int option, i4min:int option, i4max:int option) : 'T[,,,] =
-            failwith "tbd"
 
-
-let d = Array5D.zeroCreate<int> 2 2 2 2 2
-d.[0..0,0..0,0..0,0..0,0..0]
-d.[0,0..0,0..0,0..0,0..0]
-#endif
+// Notes about slicing 5d and 6d arrays if needed
+// #if SLICING
+// [<AutoOpen>]
+// module Array5DExtensions =
+//     type ``[,,,,]``<'T> with
+//         member t.GetSlice(i0min:int option, i0max:int option, i1min:int option, i1max:int option, i2min:int option, i2max:int option, i3min:int option, i3max:int option, i4min:int option, i4max:int option) : ``[,,,,]``<'T> =
+//             failwith "tbd"
+//         member t.GetSlice(i0:int, i1min:int option, i1max:int option, i2min:int option, i2max:int option, i3min:int option, i3max:int option, i4min:int option, i4max:int option) : 'T[,,,] =
+//             failwith "tbd"
+//
+// let d = Array5D.zeroCreate<int> 2 2 2 2 2
+// d.[0..0,0..0,0..0,0..0,0..0]
+// d.[0,0..0,0..0,0..0,0..0]
+// #endif
 
 
 module ArrayND = 
