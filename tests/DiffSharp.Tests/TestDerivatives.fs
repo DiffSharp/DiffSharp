@@ -1395,7 +1395,7 @@ type TestDerivatives () =
         let revzCorrect = dsharp.tensor([1,3,4])
         revz.reverse(dsharp.tensor([10,30,40]))
         let revxd = revx.derivative
-        let revxdCorrect = dsharp.tensor([10.,  0., 30., 40.,  0.])
+        let revxdCorrect = dsharp.tensor([10,  0, 30, 40,  0])
 
         Assert.CheckEqual(fwdzCorrect, fwdz)
         Assert.CheckEqual(fwdzdCorrect, fwdzd)

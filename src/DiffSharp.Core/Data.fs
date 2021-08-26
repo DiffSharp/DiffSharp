@@ -107,7 +107,7 @@ type TextDataset(text:string, seqLength, ?chars) =
     override d.length = sequences.Length
     override d.item(i) =
         let data = sequences.[i] |> indicesToTensor
-        let target = sequences.[i] |> dsharp.tensor
+        let target = sequences.[i] |> dsharp.tensor(dtype=Dtype.Default)
         data, target
 
 // More datasets (MNIST, CIFAR, etc.) are implemented in DiffSharp.Data project

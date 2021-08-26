@@ -56,7 +56,7 @@ type GenericModelIntString() =
     do base.add([fc1; fc2], ["fc1"; "fc2"])
     do base.init (fun (_, t) -> t.onesLike())
     override __.forward(x) =
-        x |> dsharp.tensor
+        x |> float32 |> dsharp.tensor
         |> dsharp.view([1; -1])
         |> fc1.forward
         |> fc2.forward
@@ -340,8 +340,8 @@ type TestModel () =
         let conv1 = Conv1d(cin, cout, k)
         let fcin = inputs.[0] --> dsharp.unsqueeze 0 --> conv1 --> dsharp.nelement
         let net = conv1 --> dsharp.relu --> dsharp.flatten 1 --> Linear(fcin, 2)
-        let targets = dsharp.tensor([0; 1])
-        let targetsp = dsharp.tensor([[1,0],[0,1]])
+        let targets = dsharp.tensor([0.; 1.])
+        let targetsp = dsharp.tensor([[1.,0.],[0.,1.]])
         let dataset = TensorDataset(inputs, targets)
         let dataloader = dataset.loader(8, shuffle=true)        
         let lr, iters = 1e-2, 250
@@ -357,8 +357,8 @@ type TestModel () =
         let conv1 = Conv2d(cin, cout, k)
         let fcin = inputs.[0] --> dsharp.unsqueeze 0 --> conv1 --> dsharp.nelement
         let net = conv1 --> dsharp.relu --> dsharp.flatten 1 --> Linear(fcin, 2)
-        let targets = dsharp.tensor([0; 1])
-        let targetsp = dsharp.tensor([[1,0],[0,1]])
+        let targets = dsharp.tensor([0.; 1.])
+        let targetsp = dsharp.tensor([[1.,0.],[0.,1.]])
         let dataset = TensorDataset(inputs, targets)
         let dataloader = dataset.loader(8, shuffle=true)        
         let lr, iters = 1e-2, 250
@@ -374,8 +374,8 @@ type TestModel () =
         let conv1 = Conv3d(cin, cout, k)
         let fcin = inputs.[0] --> dsharp.unsqueeze 0 --> conv1 --> dsharp.nelement
         let net = conv1 --> dsharp.relu --> dsharp.flatten 1 --> Linear(fcin, 2)
-        let targets = dsharp.tensor([0; 1])
-        let targetsp = dsharp.tensor([[1,0],[0,1]])
+        let targets = dsharp.tensor([0.; 1.])
+        let targetsp = dsharp.tensor([[1.,0.],[0.,1.]])
         let dataset = TensorDataset(inputs, targets)
         let dataloader = dataset.loader(8, shuffle=true)        
         let lr, iters = 1e-2, 250

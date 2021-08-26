@@ -14,7 +14,7 @@ module DiffSharp.Compose
 
 type dsharp with
     /// <summary>TBD</summary>
-    static member tensor(?dtype:Dtype, ?device:Device, ?backend:Backend) = fun (value:obj) -> Tensor.create(value=value, ?dtype=dtype, ?device=device, ?backend=backend)
+    static member inline tensor(?dtype:Dtype, ?device:Device, ?backend:Backend) = fun value -> Tensor.create(value=value, ?dtype=dtype, ?device=device, ?backend=backend)
     
     /// <summary>TBD</summary>
     /// <summary>Returns a tensor where each row contains <paramref name="numSamples"/> indices sampled from the multinomial probability distribution located in the corresponding row of tensor input.</summary>

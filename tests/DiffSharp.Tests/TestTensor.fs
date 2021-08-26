@@ -112,6 +112,42 @@ type TestTensor () =
         Assert.CheckEqual(Dtype.Float32, t4.dtype)
 
     [<Test>]
+    member _.TestTensorCreateDtypeInferredFromData () =
+        for combo in Combos.AllDevicesAndBackendsFloat32 do
+            let dataFloat32 = [1.f;2.f;3.f]
+            let tensorFloat32 = dsharp.tensor(dataFloat32, ?dtype=None, device=combo.device, backend=combo.backend)
+            Assert.AreEqual(tensorFloat32.dtype, Dtype.Float32)
+
+            // Exception: If data is double and no dtype is given by the user, prefer a Float32 tensor
+            let dataFloat64 = [1.;2.;3.]
+            let tensorFloat64 = dsharp.tensor(dataFloat64, ?dtype=None, device=combo.device, backend=combo.backend)
+            Assert.AreEqual(tensorFloat64.dtype, Dtype.Float32)
+
+            let dataInt64 = [1L;2L;3L]
+            let tensorInt64 = dsharp.tensor(dataInt64, ?dtype=None, device=combo.device, backend=combo.backend)
+            Assert.AreEqual(tensorInt64.dtype, Dtype.Int64)
+
+            let dataInt32 = [1;2;3]
+            let tensorInt32 = dsharp.tensor(dataInt32, ?dtype=None, device=combo.device, backend=combo.backend)
+            Assert.AreEqual(tensorInt32.dtype, Dtype.Int32)
+
+            let dataInt16 = [1s;2s;3s]
+            let tensorInt16 = dsharp.tensor(dataInt16, ?dtype=None, device=combo.device, backend=combo.backend)
+            Assert.AreEqual(tensorInt16.dtype, Dtype.Int16)
+
+            let dataInt8 = [1y;2y;3y]
+            let tensorInt8 = dsharp.tensor(dataInt8, ?dtype=None, device=combo.device, backend=combo.backend)
+            Assert.AreEqual(tensorInt8.dtype, Dtype.Int8)
+
+            let dataByte = [1uy;2uy;3uy]
+            let tensorByte = dsharp.tensor(dataByte, ?dtype=None, device=combo.device, backend=combo.backend)
+            Assert.AreEqual(tensorByte.dtype, Dtype.Byte)
+
+            let dataBool = [true;true;false]
+            let tensorBool = dsharp.tensor(dataBool, ?dtype=None, device=combo.device, backend=combo.backend)
+            Assert.AreEqual(tensorBool.dtype, Dtype.Bool)
+
+    [<Test>]
     member _.TestTensorHandle () =
         for combo in Combos.Float32 do
            if combo.backend = Backend.Reference then
@@ -326,6 +362,20 @@ type TestTensor () =
         Assert.AreEqual(t6ShapeCorrect, t6.shape)
         Assert.AreEqual(t6DimCorrect, t6.dim)
         Assert.AreEqual(t6ValuesCorrect, t6.toArray())
+
+    [<Test>]
+    member _.TensorCreateDistinguishByteAndInt8 () =
+        let v1 = [|10uy; 25uy; 125uy; 220uy|] // Byte
+        let t1 = dsharp.tensor(v1, dtype=Dtype.Float32)
+        let a1 = t1.toArray1D<float32>()
+        let a1Correct = [|10.; 25.; 125.; 220.|]
+        Assert.AreEqual(a1Correct, a1)
+
+        let v2 = [|10y; 25y; 125y; -20y|] // Int8
+        let t2 = dsharp.tensor(v2, dtype=Dtype.Float32)
+        let a2 = t2.toArray1D<float32>() // The result becomes [|10.; 25.; 125.; 236.|] when Int8 is confused with Byte
+        let a2Correct = [|10.; 25.; 125.; -20.|]
+        Assert.AreEqual(a2Correct, a2)
 
     [<Test>]
     member _.TestTensorToArray () =
