@@ -237,6 +237,38 @@ module DataConverter =
                                 yield v.[i, j, k, m] |]
         arr, [| n1;n2;n3;n4 |]
 
+    let private flatArrayAndShape5D<'T> (v: Array) =
+        let n1 = Array5D.length1 v
+        let n2 = Array5D.length2 v
+        let n3 = Array5D.length3 v
+        let n4 = Array5D.length4 v
+        let n5 = Array5D.length5 v
+        let arr =
+            [|  for i1=0 to n1-1 do
+                    for i2=0 to n2-1 do
+                        for i3=0 to n3-1 do
+                            for i4=0 to n4-1 do
+                                for i5=0 to n5-1 do
+                                    yield Array5D.get v i1 i2 i3 i4 i5 :?> 'T|]
+        arr, [| n1;n2;n3;n4;n5 |]
+
+    let private flatArrayAndShape6D<'T> (v: Array) =
+        let n1 = Array6D.length1 v
+        let n2 = Array6D.length2 v
+        let n3 = Array6D.length3 v
+        let n4 = Array6D.length4 v
+        let n5 = Array6D.length5 v
+        let n6 = Array6D.length6 v
+        let arr =
+            [|  for i1=0 to n1-1 do
+                    for i2=0 to n2-1 do
+                        for i3=0 to n3-1 do
+                            for i4=0 to n4-1 do
+                                for i5=0 to n5-1 do
+                                    for i6=0 to n6-1 do
+                                        yield Array6D.get v i1 i2 i3 i4 i5 i6 :?> 'T|]
+        arr, [| n1;n2;n3;n4;n5;n6 |]
+
     let private seqTupleElements (els: obj) =
         match seqElements els with 
         | [| el |] -> FSharpValue.GetTupleFields(el) 
@@ -256,22 +288,26 @@ module DataConverter =
         | SeqTy ety when ety = tgt -> Some (seqElements)
         | _ -> None
 
-    // An exact type-match test is needed because of https://github.com/DiffSharp/DiffSharp/issues/203
+    // An exact type-match test is needed because of https://github.com/DiffSharp/DiffSharp/issues/203 and https://github.com/dotnet/fsharp/issues/10202
     // That is in .NET and F#, a boxed "byte[]" can be unboxed to "int8[]" and vice-versa.
-    let typesMatch<'T> (array: System.Array) = (array.GetType().GetElementType() = typeof<'T>) 
+    // This also affects pattern matches of the element types of sequences as well
+    let typesMatch<'T> (array: System.Array) = (array.GetType().GetElementType() = typeof<'T>)
 
     let rec tryFlatArrayAndShape<'T> (value:obj) : ('T[] * int[]) option =
-
         match value with
         | :? 'T as v -> Some ([|v|], [||])
         | :? ('T[]) as v when typesMatch<'T> v -> Some (flatArrayAndShape1D v)
         | :? ('T[,]) as v when typesMatch<'T> v -> Some (flatArrayAndShape2D<'T> v)
         | :? ('T[,,]) as v when typesMatch<'T> v -> Some (flatArrayAndShape3D<'T> v)
         | :? ('T[,,,]) as v when typesMatch<'T> v -> Some (flatArrayAndShape4D<'T> v)
-        | :? seq<'T> as v -> Some (flatArrayAndShape1D (Seq.toArray v))
-        | :? seq<seq<'T>> as v -> Some (flatArrayAndShape2D (array2D v))
-        | :? seq<seq<seq<'T>>> as v -> Some (flatArrayAndShape3D (array3D v))
-        | :? seq<seq<seq<seq<'T>>>> as v -> Some (flatArrayAndShape4D (array4D v))
+        | :? System.Array as v when v.Rank = 5 && typesMatch<'T> v -> Some (flatArrayAndShape5D<'T> v)
+        | :? System.Array as v when v.Rank = 6 && typesMatch<'T> v -> Some (flatArrayAndShape6D<'T> v)
+        | :? seq<'T> as v when typesMatch<'T> (Seq.toArray v) -> Some (flatArrayAndShape1D (Seq.toArray v))
+        | :? seq<seq<'T>> as v when typesMatch<'T> (array2D v) -> Some (flatArrayAndShape2D (array2D v))
+        | :? seq<seq<seq<'T>>> as v when typesMatch<'T> (array3D v) -> Some (flatArrayAndShape3D (array3D v))
+        | :? seq<seq<seq<seq<'T>>>> as v when typesMatch<'T> (array4D v) -> Some (flatArrayAndShape4D (array4D v))
+        | :? seq<seq<seq<seq<seq<'T>>>>> as v when typesMatch<'T> (array5D v) -> Some (flatArrayAndShape5D (array5D v))
+        | :? seq<seq<seq<seq<seq<seq<'T>>>>>> as v when typesMatch<'T> (array6D v) -> Some (flatArrayAndShape6D (array6D v))
         | _ -> 
         let vty = value.GetType()
         let tgt = (typeof<'T>)
@@ -292,7 +328,16 @@ module DataConverter =
         | SeqOrSeqTupleTy (fetcher1, SeqOrSeqTupleTy (fetcher2, SeqOrSeqTupleTy (fetcher3, SeqOrSeqTupleLeafTy tgt fetcher4))) -> 
             let els = value |> fetcher1 |> Array.map (fetcher2 >> Array.map (fetcher3 >> Array.map (fetcher4 >> arrayCast<'T>))) |> array4D
             Some (flatArrayAndShape4D<'T> els)
+        // ... -> dim 5
+        | SeqOrSeqTupleTy (fetcher1, SeqOrSeqTupleTy (fetcher2, SeqOrSeqTupleTy (fetcher3, SeqOrSeqTupleTy (fetcher4, SeqOrSeqTupleLeafTy tgt fetcher5)))) -> 
+            let els = value |> fetcher1 |> Array.map (fetcher2 >> Array.map (fetcher3 >> Array.map (fetcher4 >> Array.map (fetcher5 >> arrayCast<'T>)))) |> array5D
+            Some (flatArrayAndShape5D<'T> els)
+        // ... -> dim 6
+        | SeqOrSeqTupleTy (fetcher1, SeqOrSeqTupleTy (fetcher2, SeqOrSeqTupleTy (fetcher3, SeqOrSeqTupleTy (fetcher4, SeqOrSeqTupleTy (fetcher5, SeqOrSeqTupleLeafTy tgt fetcher6))))) -> 
+            let els = value |> fetcher1 |> Array.map (fetcher2 >> Array.map (fetcher3 >> Array.map (fetcher4 >> Array.map (fetcher5 >> Array.map (fetcher6 >> arrayCast<'T>))))) |> array6D
+            Some (flatArrayAndShape6D<'T> els)
         | _ -> None
+
 
     [<ExcludeFromCodeCoverage>]
     let inline dataOfValues ofFloat32 ofFloat64 ofInt8 ofInt16 ofInt32 ofInt64 ofBool ofByte (value:obj) : (^T[] * int[]) = 
@@ -314,24 +359,17 @@ module DataConverter =
         match value |> tryFlatArrayAndShape<bool> with
         | Some (values, shape) -> (values |> Array.map ofBool, shape) 
         | None -> 
-
-        // Handles empty tensors
-        match value with
-        | :? (obj[]) as v when Array.isEmpty v -> ([||] |> Array.map ofFloat32, [|0|])
-        | :? (seq<obj>) as v when Seq.isEmpty v -> ([||] |> Array.map ofFloat32, [|0|])
-        | _ ->
-
-        // Matching of byte and int8 by type is problematic and not reliable, see https://github.com/dotnet/fsharp/issues/10202 and https://github.com/DiffSharp/DiffSharp/issues/203
-        // TODO: implement some careful special treatment
-        //
-        // value: sbyte[]
         match value |> tryFlatArrayAndShape<byte>  with
         | Some (values, shape) -> (values |> Array.map ofByte, shape)
         | None -> 
         match value |> tryFlatArrayAndShape<int8>  with
         | Some (values, shape) -> (values |> Array.map ofInt8, shape)
-        | None -> failwithf "Cannot convert from value of type %A" (value.GetType())
-
+        | None -> 
+        // Empty tensor (no data, shape: [0])
+        match value with
+        | :? (seq<obj>) as v when Seq.isEmpty v -> ([||] |> Array.map ofFloat32, [|0|])
+        | _ ->
+        failwithf "Cannot convert from value of type %A" (value.GetType())
 
     let dataOfValuesForFloat32 (value:obj) =
         dataOfValues float32 float32 float32 float32 float32 float32 (fun x -> if x then 1.0f else 0.0f) float32 value 

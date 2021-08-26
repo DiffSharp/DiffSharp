@@ -76,7 +76,7 @@ type Tensor =
         | :? int8 -> t.cast(Dtype.Int8)
         | :? byte -> t.cast(Dtype.Byte)
         | :? bool -> t.cast(Dtype.Bool)
-        | _ -> failwith "Cannot cast tensor to given type"
+        | _ -> failwithf "Cannot cast tensor with type %A to given type %A" t.dtype typeof<'T>
 
     /// Returns a new tensor with the same contents moved to the given backend
     member t.move(backend: Backend) =
@@ -309,6 +309,16 @@ type Tensor =
     member t.toArray4D<'T>() = 
         if t.dim <> 4 then failwithf "Cannot convert tensor with shape %A to 4D array" t.shape
         t.cast<'T>().toArray() :?> 'T[,,,]      
+
+    /// Returns the value of a 5D tensor as a 5D array
+    member t.toArray5D<'T>() = 
+        if t.dim <> 5 then failwithf "Cannot convert tensor with shape %A to 5D array" t.shape
+        t.cast<'T>().toArray()
+
+    /// Returns the value of a 6D tensor as a 6D array
+    member t.toArray6D<'T>() = 
+        if t.dim <> 6 then failwithf "Cannot convert tensor with shape %A to 6D array" t.shape
+        t.cast<'T>().toArray()
 
     /// Indicates if two tensors have the same differentiation type
     member t1.isSameDiffType(t2:Tensor) =
@@ -886,19 +896,29 @@ type Tensor =
         | (:? (int32[]) as arr), Dtype.Int32 -> TensorC(RawTensor.CreateFromFlatArray(arr, shape=[| arr.Length |], ?dtype=dtype, ?device=device, ?backend=backend))
         | (:? (single[]) as arr), Dtype.Float32 -> TensorC(RawTensor.CreateFromFlatArray(arr, shape=[| arr.Length |], ?dtype=dtype, ?device=device, ?backend=backend))
         | (:? (double[]) as arr), Dtype.Float64 -> TensorC(RawTensor.CreateFromFlatArray(arr, shape=[| arr.Length |], ?dtype=dtype, ?device=device, ?backend=backend))
-        | (:? (byte[]) as arr), Dtype.Byte -> TensorC(RawTensor.CreateFromFlatArray(arr, shape=[| arr.Length |], ?dtype=dtype, ?device=device, ?backend=backend))
-        | (:? (int8[]) as arr), Dtype.Int8 -> TensorC(RawTensor.CreateFromFlatArray(arr, shape=[| arr.Length |], ?dtype=dtype, ?device=device, ?backend=backend))
         | (:? (int16[]) as arr), Dtype.Int16 -> TensorC(RawTensor.CreateFromFlatArray(arr, shape=[| arr.Length |], ?dtype=dtype, ?device=device, ?backend=backend))
         | (:? (int64[]) as arr), Dtype.Int64 -> TensorC(RawTensor.CreateFromFlatArray(arr, shape=[| arr.Length |], ?dtype=dtype, ?device=device, ?backend=backend))
+        // Extra type match check is needed to distinguish between arrays holding byte and int8, see https://github.com/dotnet/fsharp/issues/10202
+        | (:? (byte[]) as arr), Dtype.Byte when DataConverter.typesMatch<byte> arr -> TensorC(RawTensor.CreateFromFlatArray(arr, shape=[| arr.Length |], ?dtype=dtype, ?device=device, ?backend=backend))
+        | (:? (int8[]) as arr), Dtype.Int8 when DataConverter.typesMatch<int8> arr -> TensorC(RawTensor.CreateFromFlatArray(arr, shape=[| arr.Length |], ?dtype=dtype, ?device=device, ?backend=backend))
         | _ -> 
-        let res = value |> DataConverter.tryFlatArrayAndShape<Tensor> // support creation of new Tensor from a structure holding scalar Tensors
+        // Empty tensor (no data, shape: [0])
+        match value with
+        | :? (seq<obj>) as v when Seq.isEmpty v -> 
+            let result = TensorC(RawTensor.CreateFromFlatArray(Array.zeroCreate<float32> 0, shape=[|0|], dtype=Dtype.Float32, ?device=device, ?backend=backend))
+            let dtype2 = defaultArg dtype Dtype.Default
+            result.cast(dtype=dtype2)
+        | _ ->
+        // Create a new Tensor from a structure holding scalar Tensors. Maintains differentiability.
+        let res = value |> DataConverter.tryFlatArrayAndShape<Tensor> 
         match res with
         | Some (tensors, shape) -> 
             let allScalar = tensors |> Array.forall (fun t -> t.dim = 0)
             if not allScalar then failwithf "Combining tensors in an array is only supported where all tensors in the array are scalar (zero-dimensional). Check other operations like stack, cat to combine tensors."
             Tensor.stack(tensors).view(shape)
         | None ->
-            TensorC(RawTensor.Create(value, ?dtype=dtype, ?device=device, ?backend=backend))        
+        // General constant tensor
+        TensorC(RawTensor.Create(value, ?dtype=dtype, ?device=device, ?backend=backend))        
 
     /// <summary>Returns a 2-D tensor with ones on the diagonal and zeros elsewhere.</summary>
     static member eye(rows:int, ?cols:int, ?dtype:Dtype, ?device:Device, ?backend:Backend) =

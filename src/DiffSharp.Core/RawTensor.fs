@@ -216,14 +216,34 @@ type RawTensor() =
             | Some Dtype.BFloat16 ->
                 let a,s = DataConverter.dataOfValuesForFloat32 values
                 (a :> Array), s, Dtype.BFloat16
+            // If no dtype is given, use a dtype inferred from the given data. This is consistent with PyTorch's behavior.
             | None ->
-                // Prefer Bool tensor if all bool
+                match values |> DataConverter.tryFlatArrayAndShape<float32> with
+                | Some (values, shape) -> ((values :> Array), shape, Dtype.Float32)
+                | _ ->
+                // Exception: If data is double and no dtype is given by the user, prefer a Float32 tensor
+                match values |> DataConverter.tryFlatArrayAndShape<double> with
+                | Some (values, shape) -> ((values |> Array.map float32 :> Array), shape, Dtype.Float32)
+                | _ ->
+                match values |> DataConverter.tryFlatArrayAndShape<int64> with
+                | Some (values, shape) -> ((values :> Array), shape, Dtype.Int64)
+                | _ ->
+                match values |> DataConverter.tryFlatArrayAndShape<int32> with
+                | Some (values, shape) -> ((values :> Array), shape, Dtype.Int32)
+                | _ ->
+                match values |> DataConverter.tryFlatArrayAndShape<int16> with
+                | Some (values, shape) -> ((values :> Array), shape, Dtype.Int16)
+                | _ ->
                 match values |> DataConverter.tryFlatArrayAndShape<bool> with
                 | Some (values, shape) -> ((values :> Array), shape, Dtype.Bool)
                 | _ ->
-                // Otherwise prefer float32
-                let a,s = DataConverter.dataOfValuesForFloat32 values 
-                (a :> Array), s, Dtype.Float32
+                match values |> DataConverter.tryFlatArrayAndShape<byte> with
+                | Some (values, shape) -> ((values :> Array), shape, Dtype.Byte)
+                | _ ->
+                match values |> DataConverter.tryFlatArrayAndShape<int8> with
+                | Some (values, shape) -> ((values :> Array), shape, Dtype.Int8)
+                | _ ->
+                failwithf "Cannot create tensor from data: %A" values
 
         let statics = BackendTensorStatics.Get(?backend=backend)
         let device = defaultArg device Device.Default

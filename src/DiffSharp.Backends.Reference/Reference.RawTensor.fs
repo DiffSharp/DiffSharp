@@ -130,6 +130,8 @@ type RawTensorCPU<'T when 'T : equality and 'T :> scalar>(values: 'T[], shape: S
         | 2 -> upcast Array2D.init shape.[0] shape.[1] (fun i j -> t.[i, j])
         | 3 -> upcast Array3D.init shape.[0] shape.[1] shape.[2] (fun i j k -> t.[i, j, k])
         | 4 -> upcast Array4D.init shape.[0] shape.[1] shape.[2] shape.[3] (fun i j k l -> t.[i, j, k, l])
+        | 5 -> upcast Array5D.init shape.[0] shape.[1] shape.[2] shape.[3] shape.[4] (fun i j k l m -> t.[i, j, k, l, m])
+        | 6 -> upcast Array6D.init shape.[0] shape.[1] shape.[2] shape.[3] shape.[4] shape.[5] (fun i j k l m n -> t.[i, j, k, l, m, n])
         | _ -> ArrayND.init shape (fun idxs -> t.[idxs])
 
     override _.StackTs(tensors, dim) =

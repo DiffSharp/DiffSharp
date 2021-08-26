@@ -213,7 +213,9 @@ type TorchRawTensor(tt: torch.Tensor, shape: Shape, dtype: Dtype, device: Device
         | [| d0; d1 |] -> upcast Array2D.init<'T> d0 d1 (fun i j -> tt.[int64 i, int64 j] |> conv)
         | [| d0; d1; d2 |]  -> upcast Array3D.init<'T> d0 d1 d2 (fun i j k -> tt.[int64 i, int64 j, int64 k] |> conv)
         | [| d0; d1; d2; d3 |]  -> upcast Array4D.init<'T> d0 d1 d2 d3 (fun i j k l -> tt.[int64 i, int64 j, int64 k, int64 l] |> conv)
-        | _ -> failwithf "Cannot get array for Tensor dimensions > 4. Consider slicing the Tensor. Shape: %A" t.Shape
+        | [| d0; d1; d2; d3; d4 |]  -> upcast Array5D.init<'T> d0 d1 d2 d3 d4 (fun i j k l m -> tt.[int64 i, int64 j, int64 k, int64 l, int64 m] |> conv)
+        | [| d0; d1; d2; d3; d4; d5 |]  -> upcast Array6D.init<'T> d0 d1 d2 d3 d4 d5 (fun i j k l m n -> tt.[int64 i, int64 j, int64 k, int64 l, int64 m, int64 n] |> conv)
+        | _ -> failwithf "Cannot get array for Tensor dimensions > 6. Consider slicing the Tensor. Shape: %A" t.Shape
 
     override t.ToValues() =
         match dtype with 

@@ -67,25 +67,25 @@ type TestDiffSharp () =
 
     [<Test>]
     member this.TestZero () =
-        let t = dsharp.zero()
+        let t = dsharp.zero(dtype=Int32)
         let tCorrect = dsharp.tensor(0)
         Assert.CheckEqual(tCorrect, t)
 
     [<Test>]
     member this.TestZeros () =
-        let t = dsharp.zeros([2;3])
+        let t = dsharp.zeros([2;3], dtype=Int32)
         let tCorrect = dsharp.tensor([[0,0,0],[0,0,0]])
         Assert.CheckEqual(tCorrect, t)
 
     [<Test>]
     member this.TestOne () =
-        let t = dsharp.one()
+        let t = dsharp.one(dtype=Int32)
         let tCorrect = dsharp.tensor(1)
         Assert.CheckEqual(tCorrect, t)
 
     [<Test>]
     member this.TestOnes () =
-        let t = dsharp.ones([2;3])
+        let t = dsharp.ones([2;3], dtype=Int32)
         let tCorrect = dsharp.tensor([[1,1,1],[1,1,1]])
         Assert.CheckEqual(tCorrect, t)
 

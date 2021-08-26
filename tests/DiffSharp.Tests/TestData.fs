@@ -147,8 +147,8 @@ type TestData () =
 
     [<Test>]
     member _.TestDatasetSlice () =
-        let x = dsharp.tensor([[1,2,3], [4,5,6], [7,8,9], [10,11,12], [13,14,15], [16,17,18]])
-        let y = dsharp.tensor([1,0,1,1,2,3])
+        let x = dsharp.tensor([[1,2,3], [4,5,6], [7,8,9], [10,11,12], [13,14,15], [16,17,18]]).float32()
+        let y = dsharp.tensor([1,0,1,1,2,3]).float32()
         let dataset = TensorDataset(x, y)
         let dataset2 = dataset.[1..2]
         let dataset2Length = dataset2.length
@@ -162,8 +162,8 @@ type TestData () =
   
     [<Test>]
     member _.TestDatasetFilter () =
-        let x = dsharp.tensor([[1,2,3], [4,5,6], [7,8,9], [10,11,12], [13,14,15], [16,17,18]])
-        let y = dsharp.tensor([1,0,1,1,2,3])
+        let x = dsharp.tensor([[1,2,3], [4,5,6], [7,8,9], [10,11,12], [13,14,15], [16,17,18]]).float32()
+        let y = dsharp.tensor([1,0,1,1,2,3]).float32()
         let dataset = TensorDataset(x, y)
         let dataset2 = dataset.filter(fun _ t -> (int t) = 1)
         let dataset2Length = dataset2.length
@@ -172,8 +172,8 @@ type TestData () =
 
         let loader = dataset2.loader(batchSize=dataset2.length)
         let bx, by = loader.batch()
-        let bxCorrect = dsharp.tensor([[1,2,3], [7,8,9], [10,11,12]])
-        let byCorrect = dsharp.tensor([1,1,1])
+        let bxCorrect = dsharp.tensor([[1,2,3], [7,8,9], [10,11,12]]).float32()
+        let byCorrect = dsharp.tensor([1,1,1]).float32()
         Assert.True(bxCorrect.allclose(bx))
         Assert.True(byCorrect.allclose(by))
 
