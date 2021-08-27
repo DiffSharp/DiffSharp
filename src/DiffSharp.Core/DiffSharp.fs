@@ -1200,6 +1200,8 @@ type dsharp =
     /// <param name="device">The new default device.</param>
     /// <param name="backend">The new default backend.</param>
     static member config(?dtype: Dtype, ?device: Device, ?backend: Backend) = 
+        if dtype.IsSome then 
+            if not dtype.Value.IsFloatingPoint then failwithf "Only floating point types are supported as the default type."
         dtype |> Option.iter (fun d -> Dtype.Default <- d)
         device |> Option.iter (fun d -> Device.Default <- d)
         backend |> Option.iter (fun d -> Backend.Default <- d)
