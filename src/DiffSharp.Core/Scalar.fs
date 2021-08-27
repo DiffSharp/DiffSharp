@@ -51,24 +51,20 @@ module ScalarExtensions =
             | Dtype.Int16 -> x.toInt16() :> scalar
             | Dtype.Bool -> x.toBool() :> scalar
 
-    // Floating point scalars force integers to widen to float32
-    //
-    // Double scalars don't force widen to float64
-    // Int64 scalars don't force integers to widen to int64
-    // Int32 scalars don't force integers to widen to int32 etc.
-    //
-    // This is deliberate, scalars never force widening to
-    // float64, but may force widening to float32
+    // Floating point scalars force integers to widen to the default floating point type
     //
     // For example:
     //  >>> import torch
     //  >>> (torch.tensor([1], dtype=torch.int32) * 2.5).dtype
     //  torch.float32
+    //  >>> torch.set_default_dtype(torch.float16)
+    //  >>> (torch.tensor([1], dtype=torch.int32) * 2.5).dtype
+    //  torch.float16
     //  >>> (torch.tensor([1], dtype=torch.int32) * 2).dtype
     //  torch.int32
     let tryWidenScalar (tensorDtype: Dtype) (scalar: scalar) =
         match tensorDtype, scalar.GetTypeCode() with 
-        | Dtype.Integral, (TypeCode.Double | TypeCode.Single) -> ValueSome Dtype.Float32
+        | Dtype.Integral, (TypeCode.Double | TypeCode.Single) -> ValueSome Dtype.Default
         | _, _ -> ValueNone
         
         
