@@ -1294,13 +1294,14 @@ type TestTensor () =
             let t2b = combo.tensor([ 1.] )
             Assert.CheckEqual(t2a.GetHashCode(), t2b.GetHashCode())
 
-            // Check adding `ForwardDiff` doesn't change the hash or equality
-            Assert.CheckEqual(t2a.forwardDiff(combo.tensor([1.])).GetHashCode(), t2a.GetHashCode())
-            Assert.CheckEqual(true, (t2a.forwardDiff(combo.tensor([1.]))) = t2a)
+            if combo.dtype.IsFloatingPoint then
+                // Check adding `ForwardDiff` doesn't change the hash or equality
+                Assert.CheckEqual(t2a.forwardDiff(combo.tensor([1.])).GetHashCode(), t2a.GetHashCode())
+                Assert.CheckEqual(true, (t2a.forwardDiff(combo.tensor([1.]))) = t2a)
 
-            // Check adding `ReverseDiff` doesn't change the hash or equality
-            Assert.CheckEqual(t2a.reverseDiff().GetHashCode(), t2a.GetHashCode())
-            Assert.CheckEqual(true, (t2a.reverseDiff()) = t2a)
+                // Check adding `ReverseDiff` doesn't change the hash or equality
+                Assert.CheckEqual(t2a.reverseDiff().GetHashCode(), t2a.GetHashCode())
+                Assert.CheckEqual(true, (t2a.reverseDiff()) = t2a)
 
     [<Test>]
     member _.TestTensorCompare () =
@@ -5045,7 +5046,7 @@ type TestTensor () =
 
     [<Test>]
     member _.TestTensorDepth () =
-        for combo in Combos.All do 
+        for combo in Combos.FloatingPoint do 
             let t0 = combo.tensor([1.;2.])
             let t0Depth = t0.depth
             let t0DepthCorrect = 0

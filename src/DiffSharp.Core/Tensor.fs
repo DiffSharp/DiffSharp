@@ -234,6 +234,7 @@ type Tensor =
     ///  The current global nesting level is used for nested differentiation.
     /// </remarks>
     member t.forwardDiff(derivative:Tensor, ?tag:uint32) = 
+        if not t.dtype.IsFloatingPoint then failwithf "Only tensors with floating dtype can be differentiated. Tensor has dtype %A." t.dtype
         let tag = defaultArg tag GlobalNestingLevel.Current
         if t.shape <> derivative.shape then
             failwithf "Expecting derivative of same shape with primal. primal: %A, derivative: %A" t derivative
@@ -248,7 +249,8 @@ type Tensor =
     ///  of the corresponding <c>reverse</c> operation on the overall result tensor, the computed derivative
     ///  will be available. 
     /// </remarks>
-    member t.reverseDiff(?tag:uint32) = 
+    member t.reverseDiff(?tag:uint32) =
+        if not t.dtype.IsFloatingPoint then failwithf "Only tensors with floating dtype can be differentiated. Tensor has dtype %A." t.dtype
         let tag = defaultArg tag GlobalNestingLevel.Current
         TensorR(t, ref (t.zerosLike([0])), NewT, ref 0u, tag)
 
