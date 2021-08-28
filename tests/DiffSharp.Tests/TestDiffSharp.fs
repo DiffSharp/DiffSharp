@@ -124,7 +124,7 @@ type TestDiffSharp () =
 
     [<Test>]
     member this.TestSeed () =
-        for combo in Combos.All do
+        for combo in Combos.FloatingPointExcept16s do
             use _holder = dsharp.useConfig(combo.dtype, combo.device, combo.backend)
             dsharp.seed(123)
             let t = combo.randint(0,10,[25])
@@ -622,8 +622,8 @@ type TestDiffSharp () =
 
         // Default reference backend with "int32"
         let dtype = Dtype.Default
-        dsharp.config(dtype=Dtype.Int32)
-        Assert.CheckEqual(Dtype.Int32, Dtype.Default)
+        dsharp.config(dtype=Dtype.Float64)
+        Assert.CheckEqual(Dtype.Float64, Dtype.Default)
         dsharp.config(dtype=dtype)
 
     [<Test>]

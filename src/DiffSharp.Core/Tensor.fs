@@ -715,13 +715,17 @@ type Tensor =
     member a.max() = if a.dim = 0 then a else a.[a.argmax()]
 
     /// Returns the element-wise maximum of the elements in the two tensors.
-    member a.max(b:Tensor) = ((a + b) + Tensor.Abs(b - a)) / 2
+    member a.max(b:Tensor) = 
+        let result:Tensor = ((a + b) + Tensor.Abs(b - a)) / 2
+        result.cast(a.dtype)
 
     /// Returns the minimum value of all elements in the input tensor.
     member a.min() = if a.dim = 0 then a else a.[a.argmin()]
 
     /// Returns the element-wise minimum of the elements in the two tensors.
-    member a.min(b:Tensor) = ((a + b) - Tensor.Abs(a - b)) / 2
+    member a.min(b:Tensor) = 
+        let result:Tensor = ((a + b) - Tensor.Abs(a - b)) / 2
+        result.cast(a.dtype)
 
     /// <summary>
     ///  Returns a tensor with the diagonal elements with respect to <c>dim1</c> and <c>dim2</c>.
@@ -1203,6 +1207,10 @@ type Tensor =
                 let bCast = b.cast(tnew)
                 aCast / bCast
         elif a.shape = b.shape then
+            let outtype = Dtype.divisionType a.dtype b.dtype
+            let a = a.cast(outtype)
+            let b = b.cast(outtype)
+
             let inline fRaw(a:RawTensor,b) = a.DivTT(b)
             let inline fTensor(a,b) = a / b
             let inline dfFwdTT(ap:Tensor,ad:Tensor,bp:Tensor,bd:Tensor,fp:Tensor) = (ad - bd * fp) / bp
@@ -1220,31 +1228,27 @@ type Tensor =
 
     /// <summary>Divides each element of the tensor <paramref name="a" /> by the scalar <paramref name="b" />. The resulting tensor is returned.</summary>
     static member (/) (a:Tensor, b:scalar) =
-        match tryWidenScalar a.dtype b with
-        | ValueSome tnew ->
-            let aCast = a.cast(tnew)
-            let bCast = b.cast(tnew)
-            aCast / bCast
-        | ValueNone ->
-            let inline fRaw(a:RawTensor) = a.DivTT0(b)
-            let inline fTensor(a) = a / b
-            let inline dfFwd(ap,ad,fp) = ad / b
-            let inline dfRev(a) = DivTT0Const(a,b)
-            Tensor.OpUnary(a, fRaw, fTensor, dfFwd, dfRev)
+        let outtype = widenScalarForDivision a.dtype b.dtype
+        let a = a.cast(outtype)
+        let b = b.cast(outtype)
+
+        let inline fRaw(a:RawTensor) = a.DivTT0(b)
+        let inline fTensor(a) = a / b
+        let inline dfFwd(ap,ad,fp) = ad / b
+        let inline dfRev(a) = DivTT0Const(a,b)
+        Tensor.OpUnary(a, fRaw, fTensor, dfFwd, dfRev)
 
     /// <summary>Divides the scalar <paramref name="a" /> by the each element of the tensor <paramref name="b" />. The resulting tensor is returned.</summary>
     static member (/) (a:scalar, b:Tensor) =
-        match tryWidenScalar b.dtype a with
-        | ValueSome tnew ->
-            let aCast = a.cast(tnew)
-            let bCast = b.cast(tnew)
-            aCast / bCast
-        | ValueNone ->
-            let inline fRaw(b:RawTensor) = b.DivFromT0T(a)
-            let inline fTensor(b) = a / b
-            let inline dfFwd(bp,bd,fp) = -bd * fp / bp
-            let inline dfRev(b) = DivT0ConstT(a,b)
-            Tensor.OpUnary(b, fRaw, fTensor, dfFwd, dfRev)
+        let outtype = widenScalarForDivision b.dtype a.dtype
+        let a = a.cast(outtype)
+        let b = b.cast(outtype)
+
+        let inline fRaw(b:RawTensor) = b.DivFromT0T(a)
+        let inline fTensor(b) = a / b
+        let inline dfFwd(bp,bd,fp) = -bd * fp / bp
+        let inline dfRev(b) = DivT0ConstT(a,b)
+        Tensor.OpUnary(b, fRaw, fTensor, dfFwd, dfRev)
 
     /// <summary>Divides each element of the object tensor by the corresponding element of the tensor <paramref name="b" />. The resulting tensor is returned.</summary>
     /// <remarks>The shapes of the two tensors must be broadcastable.</remarks>

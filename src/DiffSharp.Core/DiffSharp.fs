@@ -1196,10 +1196,12 @@ type dsharp =
         input.move(?dtype=dtype, ?device=device, ?backend=backend)
 
     /// <summary>Configure the default element type, device and/or backend.</summary>
-    /// <param name="dtype">The new default element type.</param>
+    /// <param name="dtype">The new default element type. Only floating point types are supported as the default.</param>
     /// <param name="device">The new default device.</param>
     /// <param name="backend">The new default backend.</param>
     static member config(?dtype: Dtype, ?device: Device, ?backend: Backend) = 
+        if dtype.IsSome then 
+            if not dtype.Value.IsFloatingPoint then failwithf "Only floating point types are supported as the default type."
         dtype |> Option.iter (fun d -> Dtype.Default <- d)
         device |> Option.iter (fun d -> Device.Default <- d)
         backend |> Option.iter (fun d -> Backend.Default <- d)
@@ -1208,7 +1210,7 @@ type dsharp =
     /// <summary>Return the current default element type, device and backend.</summary>
     static member config() = Dtype.Default, Device.Default, Backend.Default
 
-    /// <summary>Configure the default element type, device and/or backend.</summary>
+    /// <summary>Configure the default element type, device and/or backend. Only floating point types are supported as the default.</summary>
     /// <param name="configuration">A tuple of the new default element type, default device and default backend.</param>
     static member config(configuration: (Dtype * Device * Backend)) =
         let (dtype,device,backend) = configuration

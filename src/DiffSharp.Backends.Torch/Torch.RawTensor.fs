@@ -32,17 +32,20 @@ module internal Utils =
         | Dtype.Float32 -> torch.ScalarType.Float32
         | Dtype.Float64 -> torch.ScalarType.Float64
 
+    /// WARNING: TorchSharp Scalar creation is buggy and doesn't preserve types: https://github.com/xamarin/TorchSharp/issues/331
     let toTorchScalar (x: scalar) =
-        match x.GetTypeCode() with 
-        | TypeCode.Single -> Scalar.op_Implicit (x.toSingle())
-        | TypeCode.Double -> Scalar.op_Implicit (x.toDouble())
-        | TypeCode.Int32 -> Scalar.op_Implicit (x.toInt32())
-        | TypeCode.Int64 -> Scalar.op_Implicit (x.toInt64())
-        | TypeCode.Byte -> Scalar.op_Implicit (x.toByte())
-        | TypeCode.SByte -> Scalar.op_Implicit (x.toSByte())
-        | TypeCode.Int16 -> Scalar.op_Implicit (x.toInt16())
-        | TypeCode.Boolean -> Scalar.op_Implicit (x.toBool())
-        | t -> failwithf "unknown scalar type '%A'" t
+        let res = 
+            match x.GetTypeCode() with 
+            | TypeCode.Single -> Scalar.op_Implicit (x.toSingle())
+            | TypeCode.Double -> Scalar.op_Implicit (x.toDouble())
+            | TypeCode.Int32 -> Scalar.op_Implicit (x.toInt32())
+            | TypeCode.Int64 -> Scalar.op_Implicit (x.toInt64())
+            | TypeCode.Byte -> Scalar.op_Implicit (x.toByte())
+            | TypeCode.SByte -> Scalar.op_Implicit (x.toSByte())
+            | TypeCode.Int16 -> Scalar.op_Implicit (x.toInt16())
+            | TypeCode.Boolean -> Scalar.op_Implicit (x.toBool())
+            | t -> failwithf "unknown scalar type '%A'" t
+        res
 
     let fromTorchType ttype =
         match ttype with 
@@ -579,28 +582,39 @@ type TorchRawTensor(tt: torch.Tensor, shape: Shape, dtype: Dtype, device: Device
         | Dtype.Bool -> opNotSupported2 "DivTT" dtype t2.Dtype
         | _ ->
         let result = tt.div(t2.TorchTensor)
-        // see https://github.com/DiffSharp/DiffSharp/issues/239
-        let result = if dtype.IsIntegral then result.to_type(torch.ScalarType.Int32).to_type(toTorchType dtype) else result
-        t1.MakeLike(result)
+        // Torch uses "true division" mirroring Python 3
+        // https://www.python.org/dev/peps/pep-0238/
+        // https://pytorch.org/docs/stable/generated/torch.div.html
+        // also see https://github.com/DiffSharp/DiffSharp/issues/239
+        let outtype = Dtype.divisionType t1.Dtype t2.Dtype
+        t1.MakeLike(result.to_type(toTorchType outtype), dtype=outtype)
 
     override t2.DivFromT0T(t1: scalar) =
         match dtype with 
         | Dtype.Bool -> opNotSupported "DivT0T" dtype
         | _ ->
-        let t1 = t2.FullLike(Shape.scalar, t1)
+        let t1 = t2.FullLike(Shape.scalar, t1, dtype=t1.dtype)
         let result = t1.TorchTensor.div(t2.TorchTensor)
-        // see https://github.com/DiffSharp/DiffSharp/issues/239
-        let result = if dtype.IsIntegral then result.to_type(torch.ScalarType.Int32).to_type(toTorchType dtype) else result
-        t2.MakeLike(result)
+        // Torch uses "true division" mirroring Python 3
+        // https://www.python.org/dev/peps/pep-0238/
+        // https://pytorch.org/docs/stable/generated/torch.div.html
+        // also see https://github.com/DiffSharp/DiffSharp/issues/239
+        let outtype = widenScalarForDivision t2.Dtype t1.Dtype
+        t2.MakeLike(result.to_type(toTorchType outtype), dtype=outtype)
 
     override t1.DivTT0(t2) = 
         match dtype with 
         | Dtype.Bool -> opNotSupported "DivTT0" dtype
         | _ ->
-        let result = tt.div(toTorchScalar t2)
-        // see https://github.com/DiffSharp/DiffSharp/issues/239
-        let result = if dtype.IsIntegral then result.to_type(toTorchType dtype) else result
-        t1.MakeLike(result)
+        let t2 = toTorchScalar t2
+        // let t2 = t1.FullLike(Shape.scalar, t2, dtype=t1.Dtype)
+        let result = tt.div(t2)
+        // Torch uses "true division" mirroring Python 3
+        // https://www.python.org/dev/peps/pep-0238/
+        // https://pytorch.org/docs/stable/generated/torch.div.html
+        // also see https://github.com/DiffSharp/DiffSharp/issues/239
+        let outtype = widenScalarForDivision t1.Dtype (fromTorchType t2.Type)
+        t1.MakeLike(result.to_type(toTorchType outtype), dtype=outtype)
 
     override t1.PowTT(t2) =
         match dtype with 

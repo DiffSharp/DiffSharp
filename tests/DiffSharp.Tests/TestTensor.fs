@@ -1038,7 +1038,10 @@ type TestTensor () =
             Assert.CheckEqual(tSubCorrect, tSub)
 
             let tDiv = t / 2
-            let tDivCorrect = t
+            printfn "%A" combo.backend
+            printfn "tt tdiv    %A %A" t.dtype tDiv.dtype
+            printfn "tt outtype %A" (Dtype.divisionType t.dtype t.dtype)
+            let tDivCorrect = t.cast(Dtype.divisionType t.dtype t.dtype)
             Assert.CheckEqual(tDivCorrect, tDiv)
 
             let tNeg = -t
@@ -2275,34 +2278,25 @@ type TestTensor () =
             Assert.CheckEqual(t3.dtype, combo.dtype)
             Assert.CheckEqual(t4.dtype, combo.dtype)
 
-        // Integer tensors support integer division
-        for combo in Combos.Integral do 
+        // Integer and bool tensors get cast to the default floating point type for division
+        for combo in Combos.IntegralAndBool do 
             let t1a = combo.tensor([2; 3; 4])
             let t1b = combo.tensor([1; 2; 3])
             let i1 = t1a / t1b
-            let i1Correct = combo.tensor([2; 1; 1])
-            Assert.CheckEqual(i1Correct, i1)
+            let i1Correct = t1a.cast(Dtype.Default) / t1b.cast(Dtype.Default)
+            Assert.True(i1Correct.allclose(i1, 0.01))
 
             let t2a = combo.tensor(6)
             let t2b = combo.tensor([1; 2; 3])
             let i2 = t2a / t2b
-            let i2Correct = combo.tensor([6; 3; 2])
-            Assert.CheckEqual(i2Correct, i2)
+            let i2Correct = t2a.cast(Dtype.Default) / t2b.cast(Dtype.Default)
+            Assert.True(i2Correct.allclose(i2, 0.01))
 
             let t3a = combo.tensor([6; 12; 18])
             let t3b = combo.tensor(3)
             let i3 = t3a / t3b
-            let i3Correct = combo.tensor([2; 4; 6])
-            Assert.CheckEqual(i3Correct, i3)
-
-        // Bool tensors don't support /
-        //
-        //    torch.ones(10, dtype=torch.bool) / torch.ones(10, dtype=torch.bool)
-        //
-        //    RuntimeError: "div_cpu" not implemented for 'Bool'
-        for combo in Combos.Bool do 
-            let t2 = combo.tensor([true; false])
-            isInvalidOp(fun () -> t2 / t2)
+            let i3Correct = t3a.cast(Dtype.Default) / t3b.cast(Dtype.Default)
+            Assert.True(i3Correct.allclose(i3, 0.01))
 
     [<Test>]
     member _.TestTensorPowTT () =
