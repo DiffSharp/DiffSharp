@@ -4081,8 +4081,7 @@ type TestTensor () =
 
     [<Test>]
     member _.TestTensorMaxElementwise () =
-        // For problem with Bool and Unsigned see https://github.com/DiffSharp/DiffSharp/issues/267
-        for combo in Combos.SignedIntegralAndFloatingPoint do 
+        for combo in Combos.All do 
             let t1 = combo.tensor([4.;1.;20.;3.])
             let t2 = combo.tensor([1.;3.;21.;2.])
             let t1Max = t1.max(t2)
@@ -4091,28 +4090,27 @@ type TestTensor () =
             Assert.CheckEqual(t1MaxCorrect, t1Max)
             Assert.CheckEqual(combo.dtype, t1Max.dtype)
 
-            let t2 = combo.tensor([4.;1.;-20.;3.])
-            let t2Max = t2.max(t2.scalarLike(0))
-            let t2MaxCorrect = combo.tensor([4.;1.;0.;3.])
+            let t2 = combo.tensor([4.;1.;0.;3.])
+            let t2Max = t2.max(t2.scalarLike(2))
+            let t2MaxCorrect = combo.tensor([4.;2.;2.;3.])
 
             Assert.CheckEqual(t2MaxCorrect, t2Max)
             Assert.CheckEqual(combo.dtype, t2Max.dtype)
 
     [<Test>]
     member _.TestTensorMinElementwise () =
-        // For problem with Bool and Unsigned see https://github.com/DiffSharp/DiffSharp/issues/267
-        for combo in Combos.SignedIntegralAndFloatingPoint do 
-            let t1 = combo.tensor([4.;1.;20.;-3.])
+        for combo in Combos.All do 
+            let t1 = combo.tensor([4.;1.;20.;3.])
             let t2 = combo.tensor([1.;3.;21.;2.])
             let t1Min = t1.min(t2)
-            let t1MinCorrect = combo.tensor([1.;1.;20.;-3.])
+            let t1MinCorrect = combo.tensor([1.;1.;20.;2.])
 
             Assert.CheckEqual(t1MinCorrect, t1Min)
             Assert.CheckEqual(combo.dtype, t1Min.dtype)
 
-            let t2 = combo.tensor([4.;1.;-20.;3.])
-            let t2Min = t2.min(t2.scalarLike(-1))
-            let t2MinCorrect = combo.tensor([-1.;-1.;-20.;-1.])
+            let t2 = combo.tensor([4.;1.;0.;3.])
+            let t2Min = t2.min(t2.scalarLike(1))
+            let t2MinCorrect = combo.tensor([1.;1.;0.;1.])
 
             Assert.CheckEqual(t2MinCorrect, t2Min)
             Assert.CheckEqual(combo.dtype, t2Min.dtype)
