@@ -67,5 +67,11 @@ module ScalarExtensions =
         | Dtype.Integral, (TypeCode.Double | TypeCode.Single) -> ValueSome Dtype.Default
         | _, _ -> ValueNone
         
-        
+    let widenScalarForDivision (tensorDtype: Dtype) (scalarDtype: Dtype) =
+        match tensorDtype.IsFloatingPoint, scalarDtype.IsFloatingPoint with
+        | false, false -> Dtype.Default
+        | false, true -> Dtype.Default
+        | true, false -> tensorDtype
+        | true, true -> tensorDtype
+
         

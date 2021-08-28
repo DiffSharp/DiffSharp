@@ -115,6 +115,15 @@ module Dtype =
             | Bool, Bool -> Some Bool
             | Int8, Byte | Byte, Int8  -> None
 
-    /// Get or set the default element type used when creating tensors. Note, use <c>dsharp.config(...)</c> instead.
+    /// Get or set the default element type used when creating tensors. Only floating point types are supported as the default type. Note, use <c>dsharp.config(...)</c> instead.
     let mutable Default = Dtype.Float32
+
+    /// Find the Dtype which would result from dividing tensors with dtype1 and dtype2
+    let divisionType (dtype1: Dtype) (dtype2: Dtype) =
+        match dtype1.IsFloatingPoint, dtype2.IsFloatingPoint with
+        | false, false -> Default
+        | false, true -> dtype2
+        | true, false -> dtype1
+        | true, true -> (widen dtype1 dtype2).Value
+
 
