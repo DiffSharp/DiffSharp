@@ -34,18 +34,16 @@ module internal Utils =
 
     /// WARNING: TorchSharp Scalar creation is buggy and doesn't preserve types: https://github.com/xamarin/TorchSharp/issues/331
     let toTorchScalar (x: scalar) =
-        let res = 
-            match x.GetTypeCode() with 
-            | TypeCode.Single -> Scalar.op_Implicit (x.toSingle())
-            | TypeCode.Double -> Scalar.op_Implicit (x.toDouble())
-            | TypeCode.Int32 -> Scalar.op_Implicit (x.toInt32())
-            | TypeCode.Int64 -> Scalar.op_Implicit (x.toInt64())
-            | TypeCode.Byte -> Scalar.op_Implicit (x.toByte())
-            | TypeCode.SByte -> Scalar.op_Implicit (x.toSByte())
-            | TypeCode.Int16 -> Scalar.op_Implicit (x.toInt16())
-            | TypeCode.Boolean -> Scalar.op_Implicit (x.toBool())
-            | t -> failwithf "unknown scalar type '%A'" t
-        res
+        match x.GetTypeCode() with 
+        | TypeCode.Single -> Scalar.op_Implicit (x.toSingle())
+        | TypeCode.Double -> Scalar.op_Implicit (x.toDouble())
+        | TypeCode.Int32 -> Scalar.op_Implicit (x.toInt32())
+        | TypeCode.Int64 -> Scalar.op_Implicit (x.toInt64())
+        | TypeCode.Byte -> Scalar.op_Implicit (x.toByte())
+        | TypeCode.SByte -> Scalar.op_Implicit (x.toSByte())
+        | TypeCode.Int16 -> Scalar.op_Implicit (x.toInt16())
+        | TypeCode.Boolean -> Scalar.op_Implicit (x.toBool())
+        | t -> failwithf "unknown scalar type '%A'" t
 
     let fromTorchType ttype =
         match ttype with 
