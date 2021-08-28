@@ -1038,9 +1038,6 @@ type TestTensor () =
             Assert.CheckEqual(tSubCorrect, tSub)
 
             let tDiv = t / 2
-            printfn "%A" combo.backend
-            printfn "tt tdiv    %A %A" t.dtype tDiv.dtype
-            printfn "tt outtype %A" (Dtype.divisionType t.dtype t.dtype)
             let tDivCorrect = t.cast(Dtype.divisionType t.dtype t.dtype)
             Assert.CheckEqual(tDivCorrect, tDiv)
 
