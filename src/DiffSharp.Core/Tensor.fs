@@ -234,6 +234,7 @@ type Tensor =
     ///  The current global nesting level is used for nested differentiation.
     /// </remarks>
     member t.forwardDiff(derivative:Tensor, ?tag:uint32) = 
+        if not t.dtype.IsFloatingPoint then failwithf "Only tensors with floating dtype can be differentiated. Tensor has dtype %A." t.dtype
         let tag = defaultArg tag GlobalNestingLevel.Current
         if t.shape <> derivative.shape then
             failwithf "Expecting derivative of same shape with primal. primal: %A, derivative: %A" t derivative
@@ -248,7 +249,8 @@ type Tensor =
     ///  of the corresponding <c>reverse</c> operation on the overall result tensor, the computed derivative
     ///  will be available. 
     /// </remarks>
-    member t.reverseDiff(?tag:uint32) = 
+    member t.reverseDiff(?tag:uint32) =
+        if not t.dtype.IsFloatingPoint then failwithf "Only tensors with floating dtype can be differentiated. Tensor has dtype %A." t.dtype
         let tag = defaultArg tag GlobalNestingLevel.Current
         TensorR(t, ref (t.zerosLike([0])), NewT, ref 0u, tag)
 
@@ -714,18 +716,40 @@ type Tensor =
     /// Returns the maximum value of all elements in the input tensor.
     member a.max() = if a.dim = 0 then a else a.[a.argmax()]
 
-    /// Returns the element-wise maximum of the elements in the two tensors.
-    member a.max(b:Tensor) = 
-        let result:Tensor = ((a + b) + Tensor.Abs(b - a)) / 2
-        result.cast(a.dtype)
-
     /// Returns the minimum value of all elements in the input tensor.
     member a.min() = if a.dim = 0 then a else a.[a.argmin()]
 
+    /// Returns the element-wise maximum of the elements in the two tensors.
+    member a.max(b:Tensor) = 
+        if a.dtype <> b.dtype then
+            match Dtype.widen a.dtype b.dtype with
+            | None -> opNotSupported "max" a.dtype b.dtype 
+            | Some tnew ->
+                let aCast = a.cast(tnew)
+                let bCast = b.cast(tnew)
+                aCast.max(bCast)
+        elif a.dtype = Dtype.Byte || a.dtype = Dtype.Bool then
+            let result:Tensor = a.cast(Dtype.Int16).max(b.cast(Dtype.Int16))
+            result.cast(a.dtype)
+        else
+            let result:Tensor = ((a + b) + Tensor.Abs(b - a)) / 2
+            if result.dtype <> a.dtype then result.cast(a.dtype) else result
+
     /// Returns the element-wise minimum of the elements in the two tensors.
     member a.min(b:Tensor) = 
-        let result:Tensor = ((a + b) - Tensor.Abs(a - b)) / 2
-        result.cast(a.dtype)
+        if a.dtype <> b.dtype then
+            match Dtype.widen a.dtype b.dtype with
+            | None -> opNotSupported "min" a.dtype b.dtype 
+            | Some tnew ->
+                let aCast = a.cast(tnew)
+                let bCast = b.cast(tnew)
+                aCast.min(bCast)
+        elif a.dtype = Dtype.Byte || a.dtype = Dtype.Bool then
+            let result:Tensor = a.cast(Dtype.Int16).min(b.cast(Dtype.Int16))
+            result.cast(a.dtype)
+        else
+            let result:Tensor = ((a + b) - Tensor.Abs(a - b)) / 2
+            if result.dtype <> a.dtype then result.cast(a.dtype) else result
 
     /// <summary>
     ///  Returns a tensor with the diagonal elements with respect to <c>dim1</c> and <c>dim2</c>.

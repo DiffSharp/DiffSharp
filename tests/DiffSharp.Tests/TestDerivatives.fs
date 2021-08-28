@@ -1384,59 +1384,60 @@ type TestDerivatives () =
 
     [<Test>]
     member _.TestDerivativeGather () =
-        let fwdx = dsharp.tensor([1,2,3,4,5]).forwardDiff(dsharp.tensor([10,20,30,40,50]))
-        let fwdz = dsharp.gather(fwdx, 0, dsharp.tensor([0,2,3], dtype=Dtype.Int32))
-        let fwdzCorrect = dsharp.tensor([1,3,4])
-        let fwdzd = fwdz.derivative
-        let fwdzdCorrect = dsharp.tensor([10,30,40])
+        for combo in Combos.FloatingPoint do
+            let fwdx = combo.tensor([1,2,3,4,5]).forwardDiff(combo.tensor([10,20,30,40,50]))
+            let fwdz = dsharp.gather(fwdx, 0, combo.tensor([0,2,3], dtype=Dtype.Int32))
+            let fwdzCorrect = combo.tensor([1,3,4])
+            let fwdzd = fwdz.derivative
+            let fwdzdCorrect = combo.tensor([10,30,40])
 
-        let revx = dsharp.tensor([1,2,3,4,5]).reverseDiff()
-        let revz = dsharp.gather(revx, 0, dsharp.tensor([0,2,3], dtype=Dtype.Int32))
-        let revzCorrect = dsharp.tensor([1,3,4])
-        revz.reverse(dsharp.tensor([10,30,40]))
-        let revxd = revx.derivative
-        let revxdCorrect = dsharp.tensor([10,  0, 30, 40,  0])
+            let revx = combo.tensor([1,2,3,4,5]).reverseDiff()
+            let revz = dsharp.gather(revx, 0, combo.tensor([0,2,3], dtype=Dtype.Int32))
+            let revzCorrect = combo.tensor([1,3,4])
+            revz.reverse(combo.tensor([10,30,40]))
+            let revxd = revx.derivative
+            let revxdCorrect = combo.tensor([10,  0, 30, 40,  0])
 
-        Assert.CheckEqual(fwdzCorrect, fwdz)
-        Assert.CheckEqual(fwdzdCorrect, fwdzd)
-        Assert.CheckEqual(revzCorrect, revz)
-        Assert.CheckEqual(revxdCorrect, revxd)
+            Assert.CheckEqual(fwdzCorrect, fwdz)
+            Assert.CheckEqual(fwdzdCorrect, fwdzd)
+            Assert.CheckEqual(revzCorrect, revz)
+            Assert.CheckEqual(revxdCorrect, revxd)
 
-        let fwdx = dsharp.tensor([[1,2,3],[4,5,6]]).forwardDiff(dsharp.tensor([[10,20,30],[40,50,60]]))
-        let fwdz = dsharp.gather(fwdx, 0, dsharp.tensor([[1,0,1],[0,1,1]], dtype=Dtype.Int32))
-        let fwdzCorrect = dsharp.tensor([[4,2,6],[1,5,6]])
-        let fwdzd = fwdz.derivative
-        let fwdzdCorrect = dsharp.tensor([[40,20,60],[10,50,60]])
+            let fwdx = combo.tensor([[1,2,3],[4,5,6]]).forwardDiff(combo.tensor([[10,20,30],[40,50,60]]))
+            let fwdz = dsharp.gather(fwdx, 0, combo.tensor([[1,0,1],[0,1,1]], dtype=Dtype.Int32))
+            let fwdzCorrect = combo.tensor([[4,2,6],[1,5,6]])
+            let fwdzd = fwdz.derivative
+            let fwdzdCorrect = combo.tensor([[40,20,60],[10,50,60]])
 
-        let revx = dsharp.tensor([[1,2,3],[4,5,6]]).reverseDiff()
-        let revz = dsharp.gather(revx, 0, dsharp.tensor([[1,0,1],[0,1,1]], dtype=Dtype.Int32))
-        let revzCorrect = dsharp.tensor([[4,2,6],[1,5,6]])
-        revz.reverse(dsharp.tensor([[40,20,60],[10,50,60]]))
-        let revxd = revx.derivative
-        let revxdCorrect = dsharp.tensor([[10,20,0],[40,50,120]])
+            let revx = combo.tensor([[1,2,3],[4,5,6]]).reverseDiff()
+            let revz = dsharp.gather(revx, 0, combo.tensor([[1,0,1],[0,1,1]], dtype=Dtype.Int32))
+            let revzCorrect = combo.tensor([[4,2,6],[1,5,6]])
+            revz.reverse(combo.tensor([[40,20,60],[10,50,60]]))
+            let revxd = revx.derivative
+            let revxdCorrect = combo.tensor([[10,20,0],[40,50,120]])
 
-        Assert.CheckEqual(fwdzCorrect, fwdz)
-        Assert.CheckEqual(fwdzdCorrect, fwdzd)
-        Assert.CheckEqual(revzCorrect, revz)
-        Assert.CheckEqual(revxdCorrect, revxd)
+            Assert.CheckEqual(fwdzCorrect, fwdz)
+            Assert.CheckEqual(fwdzdCorrect, fwdzd)
+            Assert.CheckEqual(revzCorrect, revz)
+            Assert.CheckEqual(revxdCorrect, revxd)
 
-        let fwdx = dsharp.tensor([[1,2,3],[4,5,6]]).forwardDiff(dsharp.tensor([[10,20,30],[40,50,60]]))
-        let fwdz = dsharp.gather(fwdx, 1, dsharp.tensor([[1,0,1],[0,1,1]], dtype=Dtype.Int32))
-        let fwdzCorrect = dsharp.tensor([[2,1,2],[4,5,5]])
-        let fwdzd = fwdz.derivative
-        let fwdzdCorrect = dsharp.tensor([[20,10,20],[40,50,50]])
+            let fwdx = combo.tensor([[1,2,3],[4,5,6]]).forwardDiff(combo.tensor([[10,20,30],[40,50,60]]))
+            let fwdz = dsharp.gather(fwdx, 1, combo.tensor([[1,0,1],[0,1,1]], dtype=Dtype.Int32))
+            let fwdzCorrect = combo.tensor([[2,1,2],[4,5,5]])
+            let fwdzd = fwdz.derivative
+            let fwdzdCorrect = combo.tensor([[20,10,20],[40,50,50]])
 
-        let revx = dsharp.tensor([[1,2,3],[4,5,6]]).reverseDiff()
-        let revz = dsharp.gather(revx, 1, dsharp.tensor([[1,0,1],[0,1,1]], dtype=Dtype.Int32))
-        let revzCorrect = dsharp.tensor([[2,1,2],[4,5,5]])
-        revz.reverse(dsharp.tensor([[20,10,20],[40,50,50]]))
-        let revxd = revx.derivative
-        let revxdCorrect = dsharp.tensor([[10,40,0],[40,100,0]])
+            let revx = combo.tensor([[1,2,3],[4,5,6]]).reverseDiff()
+            let revz = dsharp.gather(revx, 1, combo.tensor([[1,0,1],[0,1,1]], dtype=Dtype.Int32))
+            let revzCorrect = combo.tensor([[2,1,2],[4,5,5]])
+            revz.reverse(combo.tensor([[20,10,20],[40,50,50]]))
+            let revxd = revx.derivative
+            let revxdCorrect = combo.tensor([[10,40,0],[40,100,0]])
 
-        Assert.CheckEqual(fwdzCorrect, fwdz)
-        Assert.CheckEqual(fwdzdCorrect, fwdzd)
-        Assert.CheckEqual(revzCorrect, revz)
-        Assert.CheckEqual(revxdCorrect, revxd)
+            Assert.CheckEqual(fwdzCorrect, fwdz)
+            Assert.CheckEqual(fwdzdCorrect, fwdzd)
+            Assert.CheckEqual(revzCorrect, revz)
+            Assert.CheckEqual(revxdCorrect, revxd)
 
     [<Test>]
     member _.TestDerivativeSum () =
@@ -2823,7 +2824,7 @@ type TestDerivatives () =
 
     [<Test>]
     member _.TestDerivativeClampT () =
-        for combo in Combos.SignedIntegralAndFloatingPointExcept16s do 
+        for combo in Combos.FloatingPointExcept16s do 
             let fwdx = combo.tensor([-4,-3,-2,-1,0,1,2,3,4]).forwardDiff(combo.tensor([10, 20, 30, 40, 50, 60, 70, 80, 90]))
             let fwdz = fwdx.clamp(-2, 3)
             let fwdzCorrect = combo.tensor([-2, -2, -2, -1,  0,  1,  2,  3,  3])
