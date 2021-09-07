@@ -63,7 +63,7 @@ module ImageExtensions =
     type Tensor with
         /// <summary>Save tensor to an image file using png or jpg format</summary>
         member t.saveImage(fileName:string, ?pixelMin:double, ?pixelMax:double, ?normalize:bool, ?resize:int*int, ?gridCols:int) =
-            let pixels:Tensor = t.toImage(?pixelMin=pixelMin, ?pixelMax=pixelMax, ?normalize=normalize, ?gridCols=gridCols)
+            let pixels:Tensor = t.move(Device.CPU).toImage(?pixelMin=pixelMin, ?pixelMax=pixelMax, ?normalize=normalize, ?gridCols=gridCols)
             saveImage (pixels.float32().toArray() :?> float32[,,]) fileName resize
 
         /// <summary>Load an image file and return it as a tensor</summary>
