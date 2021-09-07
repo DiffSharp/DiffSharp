@@ -45,7 +45,7 @@ type Parameter =
     member p.noDiff() = p.value <- p.value.noDiff()
 
     /// <summary>TBD</summary>
-    member p.move(?dtype, ?device, ?backend) = p.value <- p.value.move(?dtype=dtype, ?device=device, ?backend=backend)
+    member p.move(?device, ?dtype, ?backend) = p.value <- p.value.move(?device=device, ?dtype=dtype, ?backend=backend)
 
     /// <summary>TBD</summary>
     override p.ToString() = sprintf "Parameter(shape:%A, value:%A)" p.value.shape p.value
@@ -128,9 +128,9 @@ type ParameterDict() =
     member d.noDiff() = d.iter(fun (_, p) -> p.noDiff())
 
     /// <summary>TBD</summary>
-    member d.move(?dtype, ?device, ?backend) = 
-        dummy <- dummy.move(?dtype=dtype, ?device=device, ?backend=backend)
-        d.iter (fun (_, p) -> p.move(?dtype=dtype, ?device=device, ?backend=backend))
+    member d.move(?device, ?dtype, ?backend) =
+        dummy <- dummy.move(?device=device, ?dtype=dtype, ?backend=backend)
+        d.iter (fun (_, p) -> p.move(?device=device, ?dtype=dtype, ?backend=backend))
 
     /// <summary>TBD</summary>
     member d.primal with get() = d.map(fun (t:Tensor)->t.primal)
@@ -274,7 +274,7 @@ type BaseModel() =
     member m.noDiff() = m.parameters.noDiff()
 
     /// <summary>Moves the parameters of the model to the given configuration</summary>
-    member m.move(?dtype, ?device, ?backend) = m.parameters.move(?dtype=dtype, ?device=device, ?backend=backend)
+    member m.move(?device, ?dtype, ?backend) = m.parameters.move(?device=device, ?dtype=dtype, ?backend=backend)
 
     /// <summary>Gets the number of parameters of the model</summary>
     member m.nparameters = m.parameters.nelement

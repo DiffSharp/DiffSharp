@@ -67,10 +67,10 @@ module ImageExtensions =
             saveImage (pixels.float32().toArray() :?> float32[,,]) fileName resize
 
         /// <summary>Load an image file and return it as a tensor</summary>
-        static member loadImage(fileName:string, ?normalize:bool, ?resize:int*int, ?dtype: Dtype, ?device: Device, ?backend: Backend) =
+        static member loadImage(fileName:string, ?normalize:bool, ?resize:int*int, ?device: Device, ?dtype: Dtype, ?backend: Backend) =
             let normalize = defaultArg normalize false
             let pixels = loadImage fileName resize
-            let pixels:Tensor = Tensor.create(pixels, ?dtype=dtype, ?device=device, ?backend=backend)
+            let pixels:Tensor = Tensor.create(pixels, ?device=device, ?dtype=dtype, ?backend=backend)
             if normalize then pixels.normalize() else pixels
 
 
@@ -79,11 +79,11 @@ module ImageExtensions =
         /// <param name="fileName">The file name of the image to load.</param>
         /// <param name="normalize">If True, shift the image to the range (0, 1).</param>
         /// <param name="resize">An optional new size for the image.</param>
-        /// <param name="dtype">The desired element type of returned tensor. Default: if None, uses Dtype.Default.</param>
         /// <param name="device">The desired device of returned tensor. Default: if None, uses Device.Default.</param>
+        /// <param name="dtype">The desired element type of returned tensor. Default: if None, uses Dtype.Default.</param>
         /// <param name="backend">The desired backend of returned tensor. Default: if None, uses Backend.Default.</param>
-        static member loadImage(fileName:string, ?normalize:bool, ?resize:int*int, ?dtype: Dtype, ?device: Device, ?backend: Backend) =
-            Tensor.loadImage(fileName=fileName, ?normalize=normalize, ?resize=resize, ?dtype=dtype, ?device=device, ?backend=backend)
+        static member loadImage(fileName:string, ?normalize:bool, ?resize:int*int, ?device: Device, ?dtype: Dtype, ?backend: Backend) =
+            Tensor.loadImage(fileName=fileName, ?normalize=normalize, ?resize=resize, ?device=device, ?dtype=dtype, ?backend=backend)
 
         /// <summary>Save a given Tensor into an image file.</summary>
         /// <remarks>If the input tensor has 4 dimensions, then make a single image grid.</remarks>

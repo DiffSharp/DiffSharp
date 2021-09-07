@@ -1326,10 +1326,9 @@ type TestTensor () =
     member _.TestTensorMove () =
         for combo1 in Combos.All do
             for combo2 in Combos.All do
-                // printfn "%A %A" (combo1.dtype, combo1.device, combo1.backend) (combo2.dtype, combo2.device, combo2.backend)
                 let t1 = combo1.tensor([0, 1, 2, 3])
-                let t2 = t1.move(combo2.dtype, combo2.device, combo2.backend)
-                let t2b = t2.move(combo1.dtype, combo1.device, combo1.backend)
+                let t2 = t1.move(combo2.device, combo2.dtype, combo2.backend)
+                let t2b = t2.move(combo1.device, combo1.dtype, combo1.backend)
                 Assert.CheckEqual(combo2.dtype, t2.dtype)
                 Assert.CheckEqual(combo2.device, t2.device)
                 Assert.CheckEqual(combo2.backend, t2.backend)
@@ -1341,7 +1340,7 @@ type TestTensor () =
         // Check that device and backend are not changed if not specified in move
         for combo1 in Combos.All do
             let t1 = combo1.tensor([0, 1, 2, 3])
-            let t1b = t1.move(combo1.dtype, ?backend=None, ?device=None)
+            let t1b = t1.move(?device=None, dtype=combo1.dtype, ?backend=None)
             Assert.CheckEqual(combo1.backend, t1b.backend)
             Assert.CheckEqual(combo1.device, t1b.device)
 

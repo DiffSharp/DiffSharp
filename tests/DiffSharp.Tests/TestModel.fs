@@ -258,14 +258,13 @@ type TestModel () =
         for combo1 in Combos.FloatingPointExcept16s do
             use _holder = dsharp.useConfig(combo1.dtype, combo1.device, combo1.backend)
             let net = dsharp.view [-1; 2] --> Linear(2, 4) --> dsharp.relu --> Linear(4, 1)
-            Assert.CheckEqual(combo1.dtype, net.parametersVector.dtype)
             Assert.CheckEqual(combo1.device, net.parametersVector.device)
+            Assert.CheckEqual(combo1.dtype, net.parametersVector.dtype)
             Assert.CheckEqual(combo1.backend, net.parametersVector.backend)
             for combo2 in Combos.FloatingPointExcept16s do
-                // printfn "\n%A %A" (combo1.dtype, combo1.device, combo1.backend) (combo2.dtype, combo2.device, combo2.backend)
-                net.move(combo2.dtype, combo2.device, combo2.backend)
-                Assert.CheckEqual(combo2.dtype, net.parametersVector.dtype)
+                net.move(combo2.device, combo2.dtype, combo2.backend)
                 Assert.CheckEqual(combo2.device, net.parametersVector.device)
+                Assert.CheckEqual(combo2.dtype, net.parametersVector.dtype)
                 Assert.CheckEqual(combo2.backend, net.parametersVector.backend)
 
     [<Test>]
