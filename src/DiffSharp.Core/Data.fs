@@ -85,7 +85,7 @@ type TextDataset(text:string, seqLength, ?chars) =
     inherit Dataset()
     // """0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ!"#$%&\'()*+,-./:;?@[\\]^_`{|}~ """
     let _chars = (defaultArg chars text) |> Seq.distinct |> Seq.toArray |> Array.sort
-    let onehot = memoize dsharp.onehot
+    let onehot = memoize (fun (length, hot) -> dsharp.onehot(length, hot, device=Device.CPU))
     let _charToIndex = memoize (fun c -> try Array.findIndex ((=) c) _chars with _ -> failwithf "Character %A not found in this TextDataset (chars: %A)" c _chars)
     let _indexToChar(index) = _chars.[index]
     let textToIndices(text:string) = text |> Seq.map _charToIndex |> Seq.toArray
@@ -107,7 +107,7 @@ type TextDataset(text:string, seqLength, ?chars) =
     override d.length = sequences.Length
     override d.item(i) =
         let data = sequences.[i] |> indicesToTensor
-        let target = sequences.[i] |> dsharp.tensor(dtype=Dtype.Default)
+        let target = sequences.[i] |> dsharp.tensor(dtype=Dtype.Default, device=Device.CPU)
         data, target
 
 // More datasets (MNIST, CIFAR, etc.) are implemented in DiffSharp.Data project
