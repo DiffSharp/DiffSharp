@@ -1725,6 +1725,15 @@ type Tensor =
         let inline dfRev(a) = UnsqueezeT(a)
         Tensor.OpUnary(a, fRaw, fTensor, dfFwd, dfRev)
 
+    /// <summary>Returns a new tensor with dimensions of size one appended to the end until the number of dimensions is the same as the other tensor.</summary>
+    /// <param name="other">The other tensor.</param>
+    member a.unsqueezeAs(other:Tensor) =
+        if a.dim >= other.dim then a
+        else
+            let newShape = Array.create other.dim 1
+            System.Array.Copy(a.shape, newShape, a.shape.Length)
+            a.view(newShape)
+
     /// <summary>Reverse the order of a n-D tensor along given axis in dims</summary>
     /// <param name="dims">The axis to flip on.</param>
     member a.flip(dims:seq<int>) =
@@ -2178,7 +2187,7 @@ type Tensor =
         if not (reduction = "none" || reduction = "mean" || reduction = "sum") then failwithf "Expecting reduction (%A) to be one of (none, mean, sum)" reduction
         let epsilon = 1e-12
         let clampLog = -100
-        let l = -weight.unsqueeze(1)*(target * input.safelog(epsilon).clamp(low=clampLog) + (1.-target) * (1.-input).safelog(epsilon).clamp(low=clampLog))
+        let l = -weight.unsqueezeAs(input)*(target * input.safelog(epsilon).clamp(low=clampLog) + (1.-target) * (1.-input).safelog(epsilon).clamp(low=clampLog))
         if reduction = "none" then
             l
         elif reduction = "mean" then

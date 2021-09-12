@@ -774,6 +774,11 @@ type dsharp =
     /// <param name="dim">The index at which to insert the singleton dimension.</param>
     static member unsqueeze(input:Tensor, dim:int) = input.unsqueeze(dim)
 
+    /// <summary>Returns a new tensor with dimensions of size one appended to the end until the number of dimensions is the same as the other tensor.</summary>
+    /// <param name="input">The input tensor.</param>
+    /// <param name="other">The other tensor.</param>
+    static member unsqueezeAs(input:Tensor, other:Tensor) = input.unsqueezeAs(other)
+
     /// <summary>Reverse the order of a n-D tensor along given axis in dims</summary>
     /// <param name="input">The input tensor.</param>
     /// <param name="dims">The axis to flip on.</param>

@@ -170,6 +170,9 @@ type dsharp with
     static member unsqueeze(dim:int) = fun (a:Tensor) -> a.unsqueeze(dim)
 
     /// <summary>TBD</summary>
+    static member unsqueezeAs(other:Tensor) = fun (a:Tensor) -> a.unsqueezeAs(other)
+
+    /// <summary>TBD</summary>
     static member flip(dims:seq<int>) = fun (a:Tensor) -> a.flip(dims)
 
     /// <summary>TBD</summary>
