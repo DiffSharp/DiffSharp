@@ -839,6 +839,12 @@ type dsharp =
     /// <param name="endDim">The last dim to flatten.</param>
     static member flatten(input:Tensor, ?startDim:int, ?endDim:int) = input.flatten(?startDim=startDim, ?endDim=endDim)
 
+    /// <summary>Unflattens a tensor dimension by expanding it to the given shape.</summary>
+    /// <param name="input">The input tensor.</param>
+    /// <param name="dim">The dimension to unflatten.</param>
+    /// <param name="unflattenedShape">New shape of the unflattened dimenension.</param>
+    static member unflatten(input:Tensor, dim:int, unflattenedShape:seq<int>) = input.unflatten(dim, unflattenedShape)
+
     /// <summary>Returns a new tensor with the signs of the elements of input.</summary>
     /// <remarks>The tensor will have the same element type as the input tensor.</remarks>
     /// <param name="input">The input tensor.</param>

@@ -4056,6 +4056,20 @@ type TestTensor () =
             Assert.CheckEqual(t3fshapeCorrect, t3fshape)
 
     [<Test>]
+    member _.TestTensorUnflatten () =
+        for combo in Combos.All do
+            let t1 = combo.randint(0, 2, [20; 20])
+
+            let t1f1shape = dsharp.unflatten(t1, 0, [2;10]).shape
+            let t1f1shapeCorrect = [|2;10;20|]
+
+            let t1f2shape = dsharp.unflatten(t1, 1, [2;10]).shape
+            let t1f2shapeCorrect = [|20;2;10|]
+
+            Assert.CheckEqual(t1f1shapeCorrect, t1f1shape)
+            Assert.CheckEqual(t1f2shapeCorrect, t1f2shape)
+
+    [<Test>]
     member _.TestTensorGather () =
         for combo in Combos.All do 
             let t1 = combo.tensor([1,2,3,4,5])

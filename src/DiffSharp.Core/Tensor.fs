@@ -1833,6 +1833,15 @@ type Tensor =
             Shape.checkCanFlatten a.shape startDim endDim
             a.view(a.shape |> Shape.flatten startDim endDim)
 
+    /// <summary>Unflattens a tensor dimension by expanding it to the given shape.</summary>
+    /// <param name="dim">The dimension to unflatten.</param>
+    /// <param name="unflattenedShape">New shape of the unflattened dimenension.</param>
+    member a.unflatten(dim:int, unflattenedShape:seq<int>) =
+        let dim = Shape.completeDim a.dim dim
+        if Shape.nelement (unflattenedShape |> Array.ofSeq) <> a.shape.[dim] then failwithf "Expecting unflattenedShape (%A) to have the same number of elements with tensor's shape (%A) at given dim (%A)" unflattenedShape a.shape dim
+        let newShape = a.shape |> Array.removeAt dim |> Array.insertManyAt dim unflattenedShape
+        a.view(newShape)
+
     member internal a.clampWithMask(?low:scalar, ?high:scalar) =
         let lowTensor, highTensor = 
             match low, high with
