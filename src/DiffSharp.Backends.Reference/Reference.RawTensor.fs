@@ -2166,7 +2166,7 @@ type ReferenceBackendTensorStatics() =
         //| Some DeviceType.CUDA -> [ Device.GPU ]
         | Some _ -> []
 
-    override _.IsDeviceTypeSupported (deviceType) = (match deviceType with DeviceType.CPU | DeviceType.CUDA -> true | _ -> false)
+    override _.IsDeviceTypeAvailable (deviceType) = (match deviceType with DeviceType.CPU | DeviceType.CUDA -> true | _ -> false)
     override _.Seed(seed) = Random.Seed(seed)
     override _.Zero(dtype, device) =
         match dtype with 

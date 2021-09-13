@@ -1235,11 +1235,11 @@ type dsharp =
     /// <summary>Indicates if the given device type is supported.</summary>
     /// <param name="deviceType">The requested device type.</param>
     /// <param name="backend">Return information for this backend. Defaults to Backend.Default.</param>
-    static member isDeviceTypeSupported(deviceType, ?backend) = BackendTensorStatics.Get(?backend=backend).IsDeviceTypeSupported(deviceType)
+    static member isDeviceTypeAvailable(deviceType, ?backend) = BackendTensorStatics.Get(?backend=backend).IsDeviceTypeAvailable(deviceType)
 
     /// <summary>Indicates if CUDA is supported.</summary>
     /// <param name="backend">Return information for this backend. Defaults to Backend.Default.</param>
-    static member isCudaSupported(?backend) = BackendTensorStatics.Get(?backend=backend).IsDeviceTypeSupported(DeviceType.CUDA)
+    static member isCudaAvailable(?backend) = BackendTensorStatics.Get(?backend=backend).IsDeviceTypeAvailable(DeviceType.CUDA)
 
 
 // Differentiable methods mirroring F# collection modules
