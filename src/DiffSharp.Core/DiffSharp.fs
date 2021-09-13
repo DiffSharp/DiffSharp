@@ -1216,7 +1216,7 @@ type dsharp =
         device |> Option.iter (fun d -> Device.Default <- d)
         dtype |> Option.iter (fun d -> Dtype.Default <- d)
         backend |> Option.iter (fun d -> Backend.Default <- d)
-        dsharp.tensor(0.) |> ignore // We need this to ensure the backend assemblies are loaded and backend is ready to set the random seed immediately after config
+        dsharp.tensor([0f], Device.Default, Dtype.Default, Backend.Default) |> ignore // We need this to ensure the backend assemblies are loaded and backend is ready to set the random seed immediately after config
 
     /// <summary>Return the current default element type, device and backend.</summary>
     static member config() = Device.Default, Dtype.Default, Backend.Default
