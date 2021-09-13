@@ -55,7 +55,7 @@ let decoder =
     --> ConvTranspose2d(32, 1, 4, 2)
     --> dsharp.sigmoid
 
-let model = VAE([1;28;28], 1024, encoder, decoder)
+let model = VAE([1;28;28], 64, encoder, decoder)
 
 printfn "Model: %A" model
 
