@@ -186,7 +186,7 @@ type Mode =
 
 /// <summary>Represents a model, primarily a collection of named parameters and sub-models and a function governed by them.</summary>
 [<AbstractClass>]
-type BaseModel() =
+type ModelBase() =
     [<DefaultValue>]
     val mutable mode: Mode
 
@@ -195,17 +195,17 @@ type BaseModel() =
     let parameterPrefixes = Dictionary<string, int>()
 
     /// <summary>TBD</summary>
-    member val subModels = Dictionary<string, BaseModel>()
+    member val subModels = Dictionary<string, ModelBase>()
 
     /// <summary>TBD</summary>
     member m.train() = 
         m.mode <- Mode.Train
-        for model:BaseModel in m.allModels do model.mode <- Mode.Train
+        for model:ModelBase in m.allModels do model.mode <- Mode.Train
 
     /// <summary>TBD</summary>
     member m.eval() = 
         m.mode <- Mode.Eval
-        for model:BaseModel in m.allModels do model.mode <- Mode.Eval
+        for model:ModelBase in m.allModels do model.mode <- Mode.Eval
 
     /// <summary>TBD</summary>
     member m.parameters
@@ -303,7 +303,7 @@ type BaseModel() =
 
 [<AbstractClass>]
 type Model<'In, 'Out>() =
-    inherit BaseModel()
+    inherit ModelBase()
 
     /// <summary>TBD</summary>
     abstract member forward: 'In -> 'Out
