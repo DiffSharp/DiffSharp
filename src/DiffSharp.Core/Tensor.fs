@@ -104,7 +104,7 @@ type Tensor =
         | TensorR(_) -> failwith "Cannot move TensorR - do not move during differentiation"
 
     /// Returns a new tensor with the same contents moved to the given configuration
-    member t.move(?dtype:Dtype, ?device:Device, ?backend:Backend) =
+    member t.move(?device:Device, ?dtype:Dtype, ?backend:Backend) =
         let t = match backend with None -> t | Some backend -> t.move(backend)
         let t = match dtype with None -> t | Some dtype -> t.cast(dtype)
         let t = match device with None -> t | Some device -> t.move(device)
@@ -345,8 +345,8 @@ type Tensor =
     /// <summary>Loads the tensor from the given file using the given element type and configuration.</summary>
     ///
     /// <param name="fileName">The file from which to load the tensor.</param>
-    /// <param name="dtype">The element type of the resulting tensor. Defaults to the element type of the saved tensor.</param>
     /// <param name="device">The device of the resulting tensor. Defaults to the current default device.</param>
+    /// <param name="dtype">The element type of the resulting tensor. Defaults to the element type of the saved tensor.</param>
     /// <param name="backend">The device of the resulting tensor. Defaults to the current default backend.</param>
     ///
     /// <remarks>
@@ -354,12 +354,12 @@ type Tensor =
     ///    The tensor is first loaded into that backend and then moved. As a result, intermediate tensors may be created
     ///    in the process of reloading.
     /// </remarks>
-    static member load(fileName:string, ?dtype: Dtype, ?device: Device, ?backend: Backend):Tensor =
+    static member load(fileName:string, ?device: Device, ?dtype: Dtype, ?backend: Backend):Tensor =
         let t : Tensor = loadBinary fileName
-        let dtype = defaultArg dtype t.dtype
         let device = defaultArg device Device.Default
+        let dtype = defaultArg dtype t.dtype
         let backend = defaultArg backend Backend.Default
-        t.move(dtype=dtype, device=device, backend=backend)
+        t.move(device=device, dtype=dtype, backend=backend)
 
     /// Returns the tensor after min-max scaling
     member t.normalize() =
@@ -539,110 +539,110 @@ type Tensor =
 
     /// Returns a new tensor filled with '0' values for the given shape, element type and configuration, defaulting to the 
     /// shape and configuration of the input tensor.
-    member a.zerosLike(?shape:seq<int>, ?dtype, ?device, ?backend) = 
+    member a.zerosLike(?shape:seq<int>, ?device, ?dtype, ?backend) = 
         let shape = defaultArg shape (a.shape |> Array.toSeq)
-        TensorC(a.primalRaw.ZerosLike(shape |> Array.ofSeq, ?dtype=dtype, ?device=device, ?backend=backend))
+        TensorC(a.primalRaw.ZerosLike(shape |> Array.ofSeq, ?device=device, ?dtype=dtype, ?backend=backend))
 
     /// Returns a new tensor filled with '1' values for the given shape, element type and configuration, defaulting to the 
     /// shape and configuration of the input tensor.
-    member a.onesLike(?shape:seq<int>, ?dtype, ?device, ?backend) = 
+    member a.onesLike(?shape:seq<int>, ?device, ?dtype, ?backend) = 
         let shape = defaultArg shape (a.shape |> Array.toSeq)
-        TensorC(a.primalRaw.OnesLike(shape |> Array.ofSeq, ?dtype=dtype, ?device=device, ?backend=backend))
+        TensorC(a.primalRaw.OnesLike(shape |> Array.ofSeq, ?device=device, ?dtype=dtype, ?backend=backend))
 
     /// Returns a new tensor filled with the given scalar value for the given shape, element type and configuration, defaulting to the 
     /// shape and configuration of the input tensor.
-    member a.fullLike(value:scalar, ?shape:seq<int>, ?dtype, ?device, ?backend) = 
+    member a.fullLike(value:scalar, ?shape:seq<int>, ?device, ?dtype, ?backend) = 
         let shape = defaultArg shape (a.shape |> Array.toSeq)
-        TensorC(a.primalRaw.FullLike(shape |> Array.ofSeq, value, ?dtype=dtype, ?device=device, ?backend=backend))
+        TensorC(a.primalRaw.FullLike(shape |> Array.ofSeq, value, ?device=device, ?dtype=dtype, ?backend=backend))
 
     /// Returns a new scalar tensor for the given shape, element type and configuration, defaulting to the 
     /// shape and configuration of the input tensor.
-    member a.scalarLike(scalar:scalar, ?dtype, ?device, ?backend) = 
-        a.fullLike(scalar, [], ?dtype=dtype, ?device=device, ?backend=backend)
+    member a.scalarLike(scalar:scalar, ?device, ?dtype, ?backend) = 
+        a.fullLike(scalar, [], ?device=device, ?dtype=dtype, ?backend=backend)
 
     /// Returns a new tensor with random values drawn from the uniform distribution [0,1) for the
     /// given shape, element type and configuration, defaulting to the shape and configuration of the input tensor.
-    member a.randLike(?shape:seq<int>, ?dtype, ?device, ?backend) = 
+    member a.randLike(?shape:seq<int>, ?device, ?dtype, ?backend) = 
         let shape = defaultArg shape (a.shape |> Array.toSeq)
-        TensorC(a.primalRaw.RandomLike((shape |> Array.ofSeq), ?dtype=dtype, ?device=device, ?backend=backend))
+        TensorC(a.primalRaw.RandomLike((shape |> Array.ofSeq), ?device=device, ?dtype=dtype, ?backend=backend))
 
     /// Returns a new tensor with random values drawn from the standard normal distribution, for the
 
     /// given shape, element type and configuration, defaulting to the shape and configuration of the input tensor.
-    member a.randnLike(?shape:seq<int>, ?dtype, ?device, ?backend) = 
+    member a.randnLike(?shape:seq<int>, ?device, ?dtype, ?backend) = 
         let shape = defaultArg shape (a.shape |> Array.toSeq)
-        TensorC(a.primalRaw.RandomNormalLike(shape |> Array.ofSeq, ?dtype=dtype, ?device=device, ?backend=backend))
+        TensorC(a.primalRaw.RandomNormalLike(shape |> Array.ofSeq, ?device=device, ?dtype=dtype, ?backend=backend))
 
     /// Returns a new tensor with random integer values drawn from the given range, for the
     /// given shape, element type and configuration, defaulting to the shape and configuration of the input tensor.
-    member a.randintLike(low:int, high:int, ?shape:seq<int>, ?dtype, ?device, ?backend) = 
+    member a.randintLike(low:int, high:int, ?shape:seq<int>, ?device, ?dtype, ?backend) = 
         let shape = defaultArg shape (a.shape |> Array.toSeq)
-        TensorC(a.primalRaw.RandomIntLike(shape |> Array.ofSeq, low, high, ?dtype=dtype, ?device=device, ?backend=backend))
+        TensorC(a.primalRaw.RandomIntLike(shape |> Array.ofSeq, low, high, ?device=device, ?dtype=dtype, ?backend=backend))
 
     /// Returns a scalar '0' tensor for the given element type and configuration, defaulting to
     /// the element type and configuration of the input tensor.
-    member a.zeroLike(?dtype, ?device, ?backend) = TensorC(a.primalRaw.ZeroLike(?dtype=dtype, ?device=device, ?backend=backend))
+    member a.zeroLike(?device, ?dtype, ?backend) = TensorC(a.primalRaw.ZeroLike(?device=device, ?dtype=dtype, ?backend=backend))
 
     /// Returns a scalar '1' tensor for the given element type and configuration, defaulting to
     /// the element type and configuration of the input tensor.
-    member a.oneLike(?dtype, ?device, ?backend) = TensorC(a.primalRaw.OneLike(?dtype=dtype, ?device=device, ?backend=backend))
+    member a.oneLike(?device, ?dtype, ?backend) = TensorC(a.primalRaw.OneLike(?device=device, ?dtype=dtype, ?backend=backend))
 
     /// Returns a tensor in the manner of <see cref="M:DiffSharp.dsharp.arange"/> for the given element type and configuration, defaulting to
     /// the element type and configuration of the input tensor.
-    member a.arangeLike(endVal:float, ?startVal:float, ?step:float, ?dtype, ?device, ?backend) =
+    member a.arangeLike(endVal:float, ?startVal:float, ?step:float, ?device, ?dtype, ?backend) =
         let startVal = defaultArg startVal 0.
         let step = defaultArg step 1.
         let length = (endVal - startVal) / step |> ceil |> int
         let v = Array.init length (fun i -> startVal + float(i) * step)
-        a.like(box v, ?dtype=dtype, ?device=device, ?backend=backend)
+        a.like(box v, ?device=device, ?dtype=dtype, ?backend=backend)
 
     /// Returns a tensor in the manner of <see cref="M:DiffSharp.dsharp.arange"/> for the given element type and configuration, defaulting to
     /// the element type and configuration of the input tensor.
-    member a.arangeLike(endVal:int, ?startVal:int, ?step:int, ?dtype, ?device, ?backend) =
+    member a.arangeLike(endVal:int, ?startVal:int, ?step:int, ?device, ?dtype, ?backend) =
         let endVal = endVal |> float
         let startVal = defaultArg startVal 0 |> float
         let step = defaultArg step 1 |> float
         let dtype = defaultArg dtype Dtype.Int32
-        a.arangeLike(endVal=endVal, startVal=startVal, step=step, dtype=dtype, ?device=device, ?backend=backend)
+        a.arangeLike(endVal=endVal, startVal=startVal, step=step, ?device=device, dtype=dtype, ?backend=backend)
 
     /// Returns a tensor in the manner of <see cref="M:DiffSharp.dsharp.linspace"/> for the given element type and configuration, defaulting to
     /// the element type and configuration of the input tensor.
-    member a.linspaceLike(startVal:float, endVal:float, steps:int, ?dtype, ?device, ?backend) =
+    member a.linspaceLike(startVal:float, endVal:float, steps:int, ?device, ?dtype, ?backend) =
         let stepVal = (endVal - startVal) / (float (steps - 1))
         let v = Array.init steps (fun i -> startVal + (float i) * stepVal)
-        a.like(box v, ?dtype=dtype, ?device=device, ?backend=backend)
+        a.like(box v, ?device=device, ?dtype=dtype, ?backend=backend)
 
     /// Returns a tensor in the manner of <see cref="M:DiffSharp.dsharp.linspace"/> for the given element type and configuration, defaulting to
     /// the element type and configuration of the input tensor.
-    member a.linspaceLike(startVal:int, endVal:int, steps:int, ?dtype, ?device, ?backend) =
-        a.linspaceLike(startVal |> float, endVal |> float, steps, ?dtype=dtype, ?device=device, ?backend=backend)
+    member a.linspaceLike(startVal:int, endVal:int, steps:int, ?device, ?dtype, ?backend) =
+        a.linspaceLike(startVal |> float, endVal |> float, steps, ?device=device, ?dtype=dtype, ?backend=backend)
 
     /// Returns a tensor in the manner of <see cref="M:DiffSharp.dsharp.logspace"/> for the given element type and configuration, defaulting to
     /// the element type and configuration of the input tensor.
-    member a.logspaceLike(startVal:float, endVal:float, steps:int, ?baseVal:float, ?dtype, ?device, ?backend) =
+    member a.logspaceLike(startVal:float, endVal:float, steps:int, ?baseVal:float, ?device, ?dtype, ?backend) =
         let baseVal = defaultArg baseVal 10.
-        a.scalarLike(baseVal, ?dtype=dtype, ?device=device, ?backend=backend).pow(a.linspaceLike(startVal, endVal, steps, ?dtype=dtype, ?device=device, ?backend=backend))
+        a.scalarLike(baseVal, ?device=device, ?dtype=dtype, ?backend=backend).pow(a.linspaceLike(startVal, endVal, steps, ?device=device, ?dtype=dtype, ?backend=backend))
 
     /// Returns a tensor in the manner of <see cref="M:DiffSharp.dsharp.logspace"/> for the given element type and configuration, defaulting to
     /// the element type and configuration of the input tensor.
-    member a.logspaceLike(startVal:int, endVal:int, steps:int, ?baseVal:int, ?dtype, ?device, ?backend) =
+    member a.logspaceLike(startVal:int, endVal:int, steps:int, ?baseVal:int, ?device, ?dtype, ?backend) =
         let baseVal = defaultArg baseVal 10
-        a.logspaceLike(startVal |> float, endVal |> float, steps, baseVal |> float, ?dtype=dtype, ?device=device, ?backend=backend)
+        a.logspaceLike(startVal |> float, endVal |> float, steps, baseVal |> float, ?device=device, ?dtype=dtype, ?backend=backend)
 
     /// <summary>
     ///  Returns a tensor from the .NET data in <c>value</c> for the given element type and configuration, defaulting to
     ///  the element type and configuration of the input tensor.
     /// </summary>
-    member a.like(value, ?dtype, ?device, ?backend) = TensorC(a.primalRaw.CreateLike(value, ?dtype=dtype, ?device=device, ?backend=backend))
+    member a.like(value, ?device, ?dtype, ?backend) = TensorC(a.primalRaw.CreateLike(value, ?device=device, ?dtype=dtype, ?backend=backend))
 
     /// Returns a new tensor with underlying storage copied.
     member a.clone() = TensorC(a.primalRaw.Clone())
 
     /// Returns a tensor in the manner of <see cref="M:DiffSharp.dsharp.onehot"/> for the given element type and configuration, defaulting to
     /// the element type and configuration of the input tensor.
-    member a.onehotLike(length:int, hot:int, ?dtype, ?device, ?backend) =
+    member a.onehotLike(length:int, hot:int, ?device, ?dtype, ?backend) =
         if hot < 0 || hot >= length then failwithf "Expecting 0 <= hot < length"
-        a.zerosLike([|length|], ?dtype=dtype, ?device=device, ?backend=backend).addSlice([|hot|], a.onesLike([|1|], ?dtype=dtype, ?device=device, ?backend=backend))
+        a.zerosLike([|length|], ?device=device, ?dtype=dtype, ?backend=backend).addSlice([|hot|], a.onesLike([|1|], ?device=device, ?dtype=dtype, ?backend=backend))
 
     /// <summary>Computes element-wise \(a &lt; b\), returning a boolean tensor containing a <c>true</c> at each location where the comparison is true</summary>
     member a.lt(b:Tensor) = TensorC(a.primalRaw.LtTT(b.primalRaw))
@@ -889,7 +889,6 @@ type Tensor =
         sb.ToString()
 
     member t.GetSlice(bounds:int[,]) =
-        // printfn "t.GetSlice bounds\n %A" bounds
         if t.dim = 0 then failwith "Cannot slice a scalar Tensor"
         let fullBounds = t.shapeFullBounds |> Array2D.copy
         bounds |> Array2D.iteri (fun i j v -> 
@@ -914,26 +913,26 @@ type Tensor =
     /// Creates a new tensor from the given data, using the given element type and configuration.
     /// </summary>
     /// <param name="value">The .NET object used to form the initial values for the tensor.</param>
-    /// <param name="dtype">The desired element type of returned tensor. Default: if None, uses Dtype.Default.</param>
     /// <param name="device">The desired device of returned tensor. Default: if None, uses Device.Default.</param>
+    /// <param name="dtype">The desired element type of returned tensor. Default: if None, uses Dtype.Default.</param>
     /// <param name="backend">The desired backend of returned tensor. Default: if None, uses Backend.Default.</param>
     /// <remarks>The fastest creation technique is a one dimensional array matching the desired dtype. Then use 'view' to reshape.</remarks>
-    static member create(value:obj, ?dtype:Dtype, ?device:Device, ?backend:Backend) =
+    static member create(value:obj, ?device:Device, ?dtype:Dtype, ?backend:Backend) =
         // Fast paths to create directly from 1D array matching the dtype
         match value, defaultArg dtype Dtype.Default with
-        | (:? (int32[]) as arr), Dtype.Int32 -> TensorC(RawTensor.CreateFromFlatArray(arr, shape=[| arr.Length |], ?dtype=dtype, ?device=device, ?backend=backend))
-        | (:? (single[]) as arr), Dtype.Float32 -> TensorC(RawTensor.CreateFromFlatArray(arr, shape=[| arr.Length |], ?dtype=dtype, ?device=device, ?backend=backend))
-        | (:? (double[]) as arr), Dtype.Float64 -> TensorC(RawTensor.CreateFromFlatArray(arr, shape=[| arr.Length |], ?dtype=dtype, ?device=device, ?backend=backend))
-        | (:? (int16[]) as arr), Dtype.Int16 -> TensorC(RawTensor.CreateFromFlatArray(arr, shape=[| arr.Length |], ?dtype=dtype, ?device=device, ?backend=backend))
-        | (:? (int64[]) as arr), Dtype.Int64 -> TensorC(RawTensor.CreateFromFlatArray(arr, shape=[| arr.Length |], ?dtype=dtype, ?device=device, ?backend=backend))
+        | (:? (int32[]) as arr), Dtype.Int32 -> TensorC(RawTensor.CreateFromFlatArray(arr, shape=[| arr.Length |], ?device=device, ?dtype=dtype, ?backend=backend))
+        | (:? (single[]) as arr), Dtype.Float32 -> TensorC(RawTensor.CreateFromFlatArray(arr, shape=[| arr.Length |], ?device=device, ?dtype=dtype, ?backend=backend))
+        | (:? (double[]) as arr), Dtype.Float64 -> TensorC(RawTensor.CreateFromFlatArray(arr, shape=[| arr.Length |], ?device=device, ?dtype=dtype, ?backend=backend))
+        | (:? (int16[]) as arr), Dtype.Int16 -> TensorC(RawTensor.CreateFromFlatArray(arr, shape=[| arr.Length |], ?device=device, ?dtype=dtype, ?backend=backend))
+        | (:? (int64[]) as arr), Dtype.Int64 -> TensorC(RawTensor.CreateFromFlatArray(arr, shape=[| arr.Length |], ?device=device, ?dtype=dtype, ?backend=backend))
         // Extra type match check is needed to distinguish between arrays holding byte and int8, see https://github.com/dotnet/fsharp/issues/10202
-        | (:? (byte[]) as arr), Dtype.Byte when DataConverter.typesMatch<byte> arr -> TensorC(RawTensor.CreateFromFlatArray(arr, shape=[| arr.Length |], ?dtype=dtype, ?device=device, ?backend=backend))
-        | (:? (int8[]) as arr), Dtype.Int8 when DataConverter.typesMatch<int8> arr -> TensorC(RawTensor.CreateFromFlatArray(arr, shape=[| arr.Length |], ?dtype=dtype, ?device=device, ?backend=backend))
+        | (:? (byte[]) as arr), Dtype.Byte when DataConverter.typesMatch<byte> arr -> TensorC(RawTensor.CreateFromFlatArray(arr, shape=[| arr.Length |], ?device=device, ?dtype=dtype, ?backend=backend))
+        | (:? (int8[]) as arr), Dtype.Int8 when DataConverter.typesMatch<int8> arr -> TensorC(RawTensor.CreateFromFlatArray(arr, shape=[| arr.Length |], ?device=device, ?dtype=dtype, ?backend=backend))
         | _ -> 
         // Empty tensor (no data, shape: [0])
         match value with
         | :? (seq<obj>) as v when Seq.isEmpty v -> 
-            let result = TensorC(RawTensor.CreateFromFlatArray(Array.zeroCreate<float32> 0, shape=[|0|], dtype=Dtype.Float32, ?device=device, ?backend=backend))
+            let result = TensorC(RawTensor.CreateFromFlatArray(Array.zeroCreate<float32> 0, shape=[|0|], ?device=device, dtype=Dtype.Float32, ?backend=backend))
             let dtype2 = defaultArg dtype Dtype.Default
             result.cast(dtype=dtype2)
         | _ ->
@@ -946,15 +945,15 @@ type Tensor =
             Tensor.stack(tensors).view(shape)
         | None ->
         // General constant tensor
-        TensorC(RawTensor.Create(value, ?dtype=dtype, ?device=device, ?backend=backend))        
+        TensorC(RawTensor.Create(value, ?device=device, ?dtype=dtype, ?backend=backend))        
 
     /// <summary>Returns a 2-D tensor with ones on the diagonal and zeros elsewhere.</summary>
-    static member eye(rows:int, ?cols:int, ?dtype:Dtype, ?device:Device, ?backend:Backend) =
+    static member eye(rows:int, ?cols:int, ?device:Device, ?dtype:Dtype, ?backend:Backend) =
         let cols = defaultArg cols rows
-        if rows <= 0 || cols <= 0 then Tensor.create([], ?dtype=dtype, ?device=device, ?backend=backend)
+        if rows <= 0 || cols <= 0 then Tensor.create([], ?device=device, ?dtype=dtype, ?backend=backend)
         else
             let vals = Array2D.init rows cols (fun i j -> if i = j then 1 else 0)
-            Tensor.create(vals, ?dtype=dtype, ?device=device, ?backend=backend)
+            Tensor.create(vals, ?device=device, ?dtype=dtype, ?backend=backend)
 
     /// <summary>Concatenates sequence of tensors along a new dimension.</summary>
     /// <remarks>All tensors need to be of the same shape.</remarks>
@@ -1569,15 +1568,15 @@ type Tensor =
 
     /// <summary>Returns a tensor where each row contains numSamples indices sampled from the multinomial probability distribution located in the corresponding row of tensor input.</summary>
     /// <param name="numSamples">The number of samples to draw.</param>
-    /// <param name="dtype">The desired element type of returned tensor. Default: if None, uses Dtype.Default.</param>
     /// <param name="device">The desired device of returned tensor. Default: if None, uses Device.Default.</param>
+    /// <param name="dtype">The desired element type of returned tensor. Default: if None, uses Dtype.Default.</param>
     /// <param name="backend">The desired backend of returned tensor. Default: if None, uses Backend.Default.</param>
     /// <param name="normalize">Indicates where the probabilities should first be normalized by their sum.</param>
-    member probs.multinomial(numSamples:int, ?normalize:bool, ?dtype:Dtype, ?device:Device, ?backend:Backend) =
+    member probs.multinomial(numSamples:int, ?normalize:bool, ?device:Device, ?dtype:Dtype, ?backend:Backend) =
         // TODO: the following may be implemented by RawTensor at a later point
         if probs.dim < 1 || probs.dim > 2 then failwithf "Expecting 1d or 2d probs, received shape %A" probs.shape
-        let dtype = defaultArg dtype Dtype.Int32
         let device = defaultArg device probs.device
+        let dtype = defaultArg dtype Dtype.Int32
         let backend = defaultArg backend probs.backend
         let normalize = defaultArg normalize false
         let mutable probs = probs
@@ -1590,7 +1589,7 @@ type Tensor =
                 | Dtype.Float32 -> probs.toArray() :?> float32[] |> Array.map Convert.ToDouble
                 | Dtype.Float64 -> probs.toArray() :?> float[]
                 | _ -> failwithf "Expecting probs to have dtype Float32 or Float64, received %A" probs.dtype
-            Tensor.create(Random.Multinomial(p, numSamples), dtype=dtype, device=device, backend=backend)
+            Tensor.create(Random.Multinomial(p, numSamples), device=device, dtype=dtype, backend=backend)
         else
             let p = 
                 match probs.dtype with
@@ -1599,25 +1598,25 @@ type Tensor =
                 | Dtype.Float32 -> probs.toArray() :?> float32[,] |> Array2D.map Convert.ToDouble
                 | Dtype.Float64 -> probs.toArray() :?> float[,]
                 | _ -> failwithf "Expecting probs to be floating point, received %A" probs.dtype
-            Tensor.create(Random.Multinomial(p, numSamples), dtype=dtype, device=device, backend=backend)
+            Tensor.create(Random.Multinomial(p, numSamples), device=device, dtype=dtype, backend=backend)
 
     /// <summary>Draws binary random numbers (0 or 1) from a Bernoulli distribution</summary>
-    /// <param name="dtype">The desired element type of returned tensor. Default: if None, uses Dtype.Default.</param>
     /// <param name="device">The desired device of returned tensor. Default: if None, uses Device.Default.</param>
+    /// <param name="dtype">The desired element type of returned tensor. Default: if None, uses Dtype.Default.</param>
     /// <param name="backend">The desired backend of returned tensor. Default: if None, uses Backend.Default.</param>
-    member probs.bernoulli(?dtype:Dtype, ?device:Device, ?backend:Backend) =
+    member probs.bernoulli(?device:Device, ?dtype:Dtype, ?backend:Backend) =
         // TODO: the following may be implemented by RawTensor at a later point
         if not probs.dtype.IsFloatingPoint then failwithf "Expecting probs to be floating point, received %A" probs.dtype
-        let dtype = defaultArg dtype probs.dtype
         let device = defaultArg device probs.device
+        let dtype = defaultArg dtype probs.dtype
         let backend = defaultArg backend probs.backend
         if probs.dim = 0 then
             let b = Random.Bernoulli (float probs)
-            Tensor.create(b, dtype=dtype, device=device, backend=backend).view(probs.shape)
+            Tensor.create(b, device=device, dtype=dtype, backend=backend).view(probs.shape)
         else
             let p:Tensor = probs.float().flatten()
             let b = p.toArray() :?> float[] |> Array.map Random.Bernoulli
-            Tensor.create(b, dtype=dtype, device=device, backend=backend).view(probs.shape)
+            Tensor.create(b, device=device, dtype=dtype, backend=backend).view(probs.shape)
 
     /// <summary>Randomly zeroes some of the elements of the input tensor with probability p using samples from a Bernoulli distribution</summary>
     /// <param name="p">The probability of an element to be zeroed. Default: 0.5.</param>
@@ -1726,6 +1725,15 @@ type Tensor =
         let inline dfRev(a) = UnsqueezeT(a)
         Tensor.OpUnary(a, fRaw, fTensor, dfFwd, dfRev)
 
+    /// <summary>Returns a new tensor with dimensions of size one appended to the end until the number of dimensions is the same as the other tensor.</summary>
+    /// <param name="other">The other tensor.</param>
+    member a.unsqueezeAs(other:Tensor) =
+        if a.dim >= other.dim then a
+        else
+            let newShape = Array.create other.dim 1
+            System.Array.Copy(a.shape, newShape, a.shape.Length)
+            a.view(newShape)
+
     /// <summary>Reverse the order of a n-D tensor along given axis in dims</summary>
     /// <param name="dims">The axis to flip on.</param>
     member a.flip(dims:seq<int>) =
@@ -1833,6 +1841,15 @@ type Tensor =
             let endDim = defaultArg endDim (a.dim - 1)
             Shape.checkCanFlatten a.shape startDim endDim
             a.view(a.shape |> Shape.flatten startDim endDim)
+
+    /// <summary>Unflattens a tensor dimension by expanding it to the given shape.</summary>
+    /// <param name="dim">The dimension to unflatten.</param>
+    /// <param name="unflattenedShape">New shape of the unflattened dimenension.</param>
+    member a.unflatten(dim:int, unflattenedShape:seq<int>) =
+        let dim = Shape.completeDim a.dim dim
+        if Shape.nelement (unflattenedShape |> Array.ofSeq) <> a.shape.[dim] then failwithf "Expecting unflattenedShape (%A) to have the same number of elements with tensor's shape (%A) at given dim (%A)" unflattenedShape a.shape dim
+        let newShape = a.shape |> Array.removeAt dim |> Array.insertManyAt dim unflattenedShape
+        a.view(newShape)
 
     member internal a.clampWithMask(?low:scalar, ?high:scalar) =
         let lowTensor, highTensor = 
@@ -2170,7 +2187,7 @@ type Tensor =
         if not (reduction = "none" || reduction = "mean" || reduction = "sum") then failwithf "Expecting reduction (%A) to be one of (none, mean, sum)" reduction
         let epsilon = 1e-12
         let clampLog = -100
-        let l = -weight.unsqueeze(1)*(target * input.safelog(epsilon).clamp(low=clampLog) + (1.-target) * (1.-input).safelog(epsilon).clamp(low=clampLog))
+        let l = -weight.unsqueezeAs(input)*(target * input.safelog(epsilon).clamp(low=clampLog) + (1.-target) * (1.-input).safelog(epsilon).clamp(low=clampLog))
         if reduction = "none" then
             l
         elif reduction = "mean" then

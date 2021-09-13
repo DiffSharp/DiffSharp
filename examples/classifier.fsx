@@ -8,9 +8,9 @@
 // Libtorch binaries
 // Option A: you can use a platform-specific nuget package
 // #r "nuget: libtorch-cuda-11.1-win-x64, 1.8.0.7"
-#r "nuget: libtorch-cuda-11.1-linux-x64, 1.8.0.7"
+// #r "nuget: libtorch-cuda-11.1-linux-x64, 1.9.0.10"
 // Option B: you can use a local libtorch installation
-// System.Runtime.InteropServices.NativeLibrary.Load("/home/gunes/anaconda3/lib/python3.8/site-packages/torch/lib/libtorch.so")
+System.Runtime.InteropServices.NativeLibrary.Load("/home/gunes/anaconda3/lib/python3.8/site-packages/torch/lib/libtorch.so")
 
 
 open DiffSharp
@@ -23,7 +23,31 @@ open DiffSharp.Util
 dsharp.config(backend=Backend.Torch, device=Device.CPU)
 dsharp.seed(0)
 
+// PyTorch style
+// type Classifier() =
+//     inherit Model()
+//     let conv1 = Conv2d(1, 32, 3, 2)
+//     let conv2 = Conv2d(32, 64, 3, 2)
+//     let fc1 = Linear(576, 128)
+//     let fc2 = Linear(128, 10)
+//     do base.add([conv1; conv2; fc1; fc2])
+//     override self.forward(x) =
+//         x
+//         |> conv1.forward
+//         |> dsharp.relu
+//         |> conv2.forward
+//         |> dsharp.relu
+//         |> dsharp.maxpool2d(2)
+//         |> dsharp.dropout(0.25)
+//         |> dsharp.flatten(1)
+//         |> fc1.forward
+//         |> dsharp.relu
+//         |> dsharp.dropout(0.5)
+//         |> fc2.forward
+//         |> dsharp.logsoftmax(dim=1)
+// let classifier = Classifier()
 
+// DiffSharp compositional style
 let classifier =
     Conv2d(1, 32, 3, 2)
     --> dsharp.relu

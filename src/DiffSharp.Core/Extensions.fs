@@ -54,6 +54,33 @@ module Array =
             i <- i + 1
         (i = n)
 
+    // Copied from https://github.com/dotnet/fsharp/pull/11888 contributed by Jan Dryk (uxsoft)
+    let insertManyAt (index: int) (values: seq<'T>) (source: 'T[]) : 'T[] =
+        if index < 0 || index > source.Length then invalidArg "index" "index must be within bounds of the array"
+
+        let valuesArray = Seq.toArray values
+        if valuesArray.Length = 0 then source
+        else
+            let length = source.Length + valuesArray.Length
+            let result = Array.zeroCreate length
+            if index > 0 then
+                Array.Copy(source, result, index)
+            Array.Copy(valuesArray, 0, result, index, valuesArray.Length)
+            if source.Length - index > 0 then
+                Array.Copy(source, index, result, index + valuesArray.Length, source.Length - index)
+            result
+
+    // Copied from https://github.com/dotnet/fsharp/pull/11888 contributed by Jan Dryk (uxsoft)
+    let removeAt (index: int) (source: 'T[]) : 'T[] =
+        if index < 0 || index >= source.Length then invalidArg "index" "index must be within bounds of the array"
+        let length = source.Length - 1
+        let result = Array.zeroCreate length
+        if index > 0 then 
+            Array.Copy(source, result, index)
+        if length - index > 0 then
+            Array.Copy(source, index + 1, result, index, length - index)
+        result
+
 module Array4D =
     /// Builds a new array whose elements are the results of applying the given function to each of the elements of the array.
     let map mapping (array:'a[,,,]) =

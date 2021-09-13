@@ -14,13 +14,13 @@ module DiffSharp.Compose
 
 type dsharp with
     /// <summary>TBD</summary>
-    static member inline tensor(?dtype:Dtype, ?device:Device, ?backend:Backend) = fun value -> Tensor.create(value=value, ?dtype=dtype, ?device=device, ?backend=backend)
+    static member inline tensor(?device:Device, ?dtype:Dtype, ?backend:Backend) = fun value -> Tensor.create(value=value, ?device=device, ?dtype=dtype, ?backend=backend)
     
     /// <summary>TBD</summary>
     /// <summary>Returns a tensor where each row contains <paramref name="numSamples"/> indices sampled from the multinomial probability distribution located in the corresponding row of tensor input.</summary>
     /// <param name="numSamples">Number of samples to draw</param>
-    /// <param name="dtype">The desired element type of returned tensor. Default: if None, uses Dtype.Default.</param>
     /// <param name="device">The desired device of returned tensor. Default: if None, uses Device.Default.</param>
+    /// <param name="dtype">The desired element type of returned tensor. Default: if None, uses Dtype.Default.</param>
     /// <param name="backend">The desired backend of returned tensor. Default: if None, uses Backend.Default.</param>
     /// <remarks>
     /// Indices are ordered from left to right according to when each was sampled (first samples are placed in first column).
@@ -29,10 +29,10 @@ type dsharp with
     /// 
     /// If input is a matrix with m rows, the result is an matrix of shape (m × numSamples)
     /// </remarks>
-    static member multinomial(numSamples:int, ?dtype:Dtype, ?device:Device, ?backend:Backend) = fun (probs:Tensor) -> probs.multinomial(numSamples, ?dtype=dtype, ?device=device, ?backend=backend)
+    static member multinomial(numSamples:int, ?device:Device, ?dtype:Dtype, ?backend:Backend) = fun (probs:Tensor) -> probs.multinomial(numSamples, ?device=device, ?dtype=dtype, ?backend=backend)
 
     /// <summary>TBD</summary>
-    static member bernoulli(?dtype:Dtype, ?device:Device, ?backend:Backend) = fun (probs:Tensor) -> probs.bernoulli(?dtype=dtype, ?device=device, ?backend=backend)
+    static member bernoulli(?device:Device, ?dtype:Dtype, ?backend:Backend) = fun (probs:Tensor) -> probs.bernoulli(?device=device, ?dtype=dtype, ?backend=backend)
 
     /// <summary>TBD</summary>
     static member dropout(?p:double) = fun (a:Tensor) -> a.dropout(?p=p)
@@ -44,46 +44,46 @@ type dsharp with
     static member dropout3d(?p:double) = fun (a:Tensor) -> a.dropout3d(?p=p)
 
     /// <summary>TBD</summary>
-    static member zerosLike(shape:seq<int>, ?dtype, ?device, ?backend) = fun (a:Tensor) -> a.zerosLike(shape=shape, ?dtype=dtype, ?device=device, ?backend=backend)
+    static member zerosLike(shape:seq<int>, ?device, ?dtype, ?backend) = fun (a:Tensor) -> a.zerosLike(shape=shape, ?device=device, ?dtype=dtype, ?backend=backend)
 
     /// <summary>TBD</summary>
-    static member onesLike(shape:seq<int>, ?dtype, ?device, ?backend) = fun (a:Tensor) -> a.onesLike(shape=shape, ?dtype=dtype, ?device=device, ?backend=backend)
+    static member onesLike(shape:seq<int>, ?device, ?dtype, ?backend) = fun (a:Tensor) -> a.onesLike(shape=shape, ?device=device, ?dtype=dtype, ?backend=backend)
 
     /// <summary>TBD</summary>
-    static member fullLike(value:scalar, ?shape, ?dtype, ?device, ?backend) = fun (a:Tensor) -> a.fullLike(value, ?shape=shape, ?dtype=dtype, ?device=device, ?backend=backend)
+    static member fullLike(value:scalar, ?shape, ?device, ?dtype, ?backend) = fun (a:Tensor) -> a.fullLike(value, ?shape=shape, ?device=device, ?dtype=dtype, ?backend=backend)
 
     /// <summary>TBD</summary>
-    static member arangeLike(endVal:float, ?startVal:float, ?step:float, ?dtype:Dtype, ?device:Device, ?backend:Backend) = fun (a:Tensor) -> a.arangeLike(endVal=endVal, ?startVal=startVal, ?step=step, ?dtype=dtype, ?device=device, ?backend=backend)
+    static member arangeLike(endVal:float, ?startVal:float, ?step:float, ?device:Device, ?dtype:Dtype, ?backend:Backend) = fun (a:Tensor) -> a.arangeLike(endVal=endVal, ?startVal=startVal, ?step=step, ?device=device, ?dtype=dtype, ?backend=backend)
 
     /// <summary>TBD</summary>
-    static member arangeLike(endVal:int, ?startVal:int, ?step:int, ?dtype:Dtype, ?device:Device, ?backend:Backend) = fun (a:Tensor) -> a.arangeLike(endVal=endVal, ?startVal=startVal, ?step=step, ?dtype=dtype, ?device=device, ?backend=backend)
+    static member arangeLike(endVal:int, ?startVal:int, ?step:int, ?device:Device, ?dtype:Dtype, ?backend:Backend) = fun (a:Tensor) -> a.arangeLike(endVal=endVal, ?startVal=startVal, ?step=step, ?device=device, ?dtype=dtype, ?backend=backend)
 
     /// <summary>TBD</summary>
-    static member linspaceLike(startVal:float, endVal:float, steps:int, ?dtype:Dtype, ?device:Device, ?backend:Backend) = fun (a:Tensor) -> a.linspaceLike(startVal=startVal, endVal=endVal, steps=steps, ?dtype=dtype, ?device=device, ?backend=backend)
+    static member linspaceLike(startVal:float, endVal:float, steps:int, ?device:Device, ?dtype:Dtype, ?backend:Backend) = fun (a:Tensor) -> a.linspaceLike(startVal=startVal, endVal=endVal, steps=steps, ?device=device, ?dtype=dtype, ?backend=backend)
 
     /// <summary>TBD</summary>
-    static member linspaceLike(startVal:int, endVal:int, steps:int, ?dtype:Dtype, ?device:Device, ?backend:Backend) = fun (a:Tensor) -> a.linspaceLike(startVal=startVal, endVal=endVal, steps=steps, ?dtype=dtype, ?device=device, ?backend=backend)
+    static member linspaceLike(startVal:int, endVal:int, steps:int, ?device:Device, ?dtype:Dtype, ?backend:Backend) = fun (a:Tensor) -> a.linspaceLike(startVal=startVal, endVal=endVal, steps=steps, ?device=device, ?dtype=dtype, ?backend=backend)
 
     /// <summary>TBD</summary>
-    static member logspaceLike(startVal:float, endVal:float, steps:int, ?baseVal:float, ?dtype:Dtype, ?device:Device, ?backend:Backend) = fun (a:Tensor) -> a.logspaceLike(startVal=startVal, endVal=endVal, steps=steps, ?baseVal=baseVal, ?dtype=dtype, ?device=device, ?backend=backend)
+    static member logspaceLike(startVal:float, endVal:float, steps:int, ?baseVal:float, ?device:Device, ?dtype:Dtype, ?backend:Backend) = fun (a:Tensor) -> a.logspaceLike(startVal=startVal, endVal=endVal, steps=steps, ?baseVal=baseVal, ?device=device, ?dtype=dtype, ?backend=backend)
 
     /// <summary>TBD</summary>
-    static member logspaceLike(startVal:int, endVal:int, steps:int, ?baseVal:int, ?dtype:Dtype, ?device:Device, ?backend:Backend) = fun (a:Tensor) -> a.logspaceLike(startVal=startVal, endVal=endVal, steps=steps, ?baseVal=baseVal, ?dtype=dtype, ?device=device, ?backend=backend)
+    static member logspaceLike(startVal:int, endVal:int, steps:int, ?baseVal:int, ?device:Device, ?dtype:Dtype, ?backend:Backend) = fun (a:Tensor) -> a.logspaceLike(startVal=startVal, endVal=endVal, steps=steps, ?baseVal=baseVal, ?device=device, ?dtype=dtype, ?backend=backend)
 
     /// <summary>TBD</summary>
-    static member onehotLike(length:int, hot:int, ?dtype, ?device, ?backend) = fun (a:Tensor) -> a.onehotLike(length, hot, ?dtype=dtype, ?device=device, ?backend=backend)
+    static member onehotLike(length:int, hot:int, ?device, ?dtype, ?backend) = fun (a:Tensor) -> a.onehotLike(length, hot, ?device=device, ?dtype=dtype, ?backend=backend)
 
     /// <summary>TBD</summary>
-    static member randLike(shape:seq<int>, ?dtype, ?device, ?backend) = fun (a:Tensor) -> a.randLike(shape=shape, ?dtype=dtype, ?device=device, ?backend=backend)
+    static member randLike(shape:seq<int>, ?device, ?dtype, ?backend) = fun (a:Tensor) -> a.randLike(shape=shape, ?device=device, ?dtype=dtype, ?backend=backend)
 
     /// <summary>TBD</summary>
-    static member randnLike(shape:seq<int>, ?dtype, ?device, ?backend) = fun (a:Tensor) -> a.randnLike(shape=shape, ?dtype=dtype, ?device=device, ?backend=backend)
+    static member randnLike(shape:seq<int>, ?device, ?dtype, ?backend) = fun (a:Tensor) -> a.randnLike(shape=shape, ?device=device, ?dtype=dtype, ?backend=backend)
 
     /// <summary>TBD</summary>
-    static member randintLike(low:int, high:int, ?shape:seq<int>, ?dtype, ?device, ?backend) = fun (a:Tensor) -> a.randintLike(low=low, high=high, ?shape=shape, ?dtype=dtype, ?device=device, ?backend=backend)
+    static member randintLike(low:int, high:int, ?shape:seq<int>, ?device, ?dtype, ?backend) = fun (a:Tensor) -> a.randintLike(low=low, high=high, ?shape=shape, ?device=device, ?dtype=dtype, ?backend=backend)
 
     /// <summary>TBD</summary>
-    static member like(value:obj, ?dtype, ?device, ?backend) = fun (a:Tensor) -> a.like(value, ?dtype=dtype, ?device=device, ?backend=backend)
+    static member like(value:obj, ?device, ?dtype, ?backend) = fun (a:Tensor) -> a.like(value, ?device=device, ?dtype=dtype, ?backend=backend)
 
     /// <summary>TBD</summary>
     static member lt(b:Tensor) = fun (a:Tensor) -> a.lt(b)
@@ -170,6 +170,9 @@ type dsharp with
     static member unsqueeze(dim:int) = fun (a:Tensor) -> a.unsqueeze(dim)
 
     /// <summary>TBD</summary>
+    static member unsqueezeAs(other:Tensor) = fun (a:Tensor) -> a.unsqueezeAs(other)
+
+    /// <summary>TBD</summary>
     static member flip(dims:seq<int>) = fun (a:Tensor) -> a.flip(dims)
 
     /// <summary>TBD</summary>
@@ -195,6 +198,9 @@ type dsharp with
 
     /// <summary>TBD</summary>
     static member flatten(startDim:int, ?endDim:int) = fun (a:Tensor) -> a.flatten(startDim=startDim, ?endDim=endDim)
+
+    /// <summary>TBD</summary>
+    static member unflatten(dim:int, unflattenedShape:seq<int>) = fun (a:Tensor) -> a.unflatten(dim, unflattenedShape)
 
     /// <summary>TBD</summary>
     static member leakyRelu(?negativeSlope:float) = fun (a:Tensor) -> a.leakyRelu(?negativeSlope=negativeSlope)
@@ -269,4 +275,4 @@ type dsharp with
     static member cast(dtype:Dtype) = fun (a:Tensor) -> a.cast(dtype)
 
     /// <summary>TBD</summary>
-    static member move(?dtype, ?device, ?backend) = fun (a:Tensor) -> a.move(?dtype=dtype, ?device=device, ?backend=backend)
+    static member move(?device, ?dtype, ?backend) = fun (a:Tensor) -> a.move(?device=device, ?dtype=dtype, ?backend=backend)

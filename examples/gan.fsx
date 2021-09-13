@@ -8,9 +8,9 @@
 // Libtorch binaries
 // Option A: you can use a platform-specific nuget package
 // #r "nuget: libtorch-cuda-11.1-win-x64, 1.8.0.7"
-#r "nuget: libtorch-cuda-11.1-linux-x64, 1.8.0.7"
+// #r "nuget: libtorch-cuda-11.1-linux-x64, 1.8.0.7"
 // Option B: you can use a local libtorch installation
-// System.Runtime.InteropServices.NativeLibrary.Load("/home/gunes/anaconda3/lib/python3.8/site-packages/torch/lib/libtorch.so")
+System.Runtime.InteropServices.NativeLibrary.Load("/home/gunes/anaconda3/lib/python3.8/site-packages/torch/lib/libtorch.so")
 
 
 open DiffSharp
@@ -25,6 +25,50 @@ dsharp.seed(4)
 
 let nz = 128
 
+// PyTorch style
+// type Generator(nz:int) =
+//     inherit Model()
+//     let fc1 = Linear(nz, 256)
+//     let fc2 = Linear(256, 512)
+//     let fc3 = Linear(512, 1024)
+//     let fc4 = Linear(1024, 28*28)
+//     do base.add([fc1; fc2; fc3; fc4])
+//     override self.forward(x) =
+//         x
+//         |> dsharp.view([-1;nz])
+//         |> fc1.forward
+//         |> dsharp.leakyRelu(0.2)
+//         |> fc2.forward
+//         |> dsharp.leakyRelu(0.2)
+//         |> fc3.forward
+//         |> dsharp.leakyRelu(0.2)
+//         |> fc4.forward
+//         |> dsharp.tanh
+// type Discriminator(nz:int) =
+//     inherit Model()
+//     let fc1 = Linear(28*28, 1024)
+//     let fc2 = Linear(1024, 512)
+//     let fc3 = Linear(512, 256)
+//     let fc4 = Linear(256, 1)
+//     do base.add([fc1; fc2; fc3; fc4])
+//     override self.forward(x) =
+//         x
+//         |> dsharp.view([-1;28*28])
+//         |> fc1.forward
+//         |> dsharp.leakyRelu(0.2)
+//         |> dsharp.dropout(0.3)
+//         |> fc2.forward
+//         |> dsharp.leakyRelu(0.2)
+//         |> dsharp.dropout(0.3)
+//         |> fc3.forward
+//         |> dsharp.leakyRelu(0.2)
+//         |> dsharp.dropout(0.3)
+//         |> fc4.forward
+//         |> dsharp.sigmoid
+// let generator = Generator(nz)
+// let discriminator = Discriminator(nz)
+
+// DiffSharp compositional style
 let generator =
     dsharp.view([-1;nz])
     --> Linear(nz, 256)

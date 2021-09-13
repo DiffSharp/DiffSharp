@@ -258,14 +258,13 @@ type TestModel () =
         for combo1 in Combos.FloatingPointExcept16s do
             use _holder = dsharp.useConfig(combo1.dtype, combo1.device, combo1.backend)
             let net = dsharp.view [-1; 2] --> Linear(2, 4) --> dsharp.relu --> Linear(4, 1)
-            Assert.CheckEqual(combo1.dtype, net.parametersVector.dtype)
             Assert.CheckEqual(combo1.device, net.parametersVector.device)
+            Assert.CheckEqual(combo1.dtype, net.parametersVector.dtype)
             Assert.CheckEqual(combo1.backend, net.parametersVector.backend)
             for combo2 in Combos.FloatingPointExcept16s do
-                // printfn "\n%A %A" (combo1.dtype, combo1.device, combo1.backend) (combo2.dtype, combo2.device, combo2.backend)
-                net.move(combo2.dtype, combo2.device, combo2.backend)
-                Assert.CheckEqual(combo2.dtype, net.parametersVector.dtype)
+                net.move(combo2.device, combo2.dtype, combo2.backend)
                 Assert.CheckEqual(combo2.device, net.parametersVector.device)
+                Assert.CheckEqual(combo2.dtype, net.parametersVector.dtype)
                 Assert.CheckEqual(combo2.backend, net.parametersVector.backend)
 
     [<Test>]
@@ -936,13 +935,36 @@ type TestModel () =
         Assert.True(zEvalCorrect.allclose(zEval, 0.1, 0.1))
     
     [<Test>]
-    member _.TestModelVAE () =
-        // Fits a little VAE to structured noise
+    member _.TestModelVAEMLP () =
+        // Fits a little VAEMLP to structured noise
         let xdim, zdim, n = 8, 4, 16
-        let m = VAE(xdim*xdim, zdim)
+        let m = VAEMLP(xdim*xdim, zdim)
         let x = dsharp.stack(Array.init n (fun _ -> dsharp.eye(xdim)*dsharp.rand([xdim;xdim])))
 
         let lr, steps = 1e-2, 50
+        let optimizer = Adam(m, lr=dsharp.tensor(lr))
+        let loss0 = float <| m.loss(x)
+        let mutable loss = loss0
+        for _ in 0..steps do
+            m.reverseDiff()
+            let l = m.loss(x)
+            l.reverse()
+            optimizer.step()
+            loss <- float l
+
+        Assert.Less(loss, loss0/2.)
+    
+    [<Test>]
+    member _.TestModelVAE () =
+        // Fits a little VAE to structured noise
+        let xdim, zdim, n = 28, 4, 16
+        let encoder = dsharp.flatten(1) --> Linear(xdim*xdim, 8) --> dsharp.relu
+        let decoder = Linear(8, xdim*xdim) --> dsharp.sigmoid
+
+        let m = VAE([xdim;xdim], zdim, encoder, decoder)
+        let x = dsharp.stack(Array.init n (fun _ -> dsharp.eye(xdim)*dsharp.rand([xdim;xdim])))
+
+        let lr, steps = 1e-2, 25
         let optimizer = Adam(m, lr=dsharp.tensor(lr))
         let loss0 = float <| m.loss(x)
         let mutable loss = loss0

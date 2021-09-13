@@ -19,7 +19,7 @@ open DiffSharp.Util
 type Dataset() =
     abstract member length: int
     abstract member item: int -> Tensor * Tensor
-    member d.loader(batchSize:int, ?shuffle:bool, ?dropLast:bool, ?dtype:Dtype, ?device:Device, ?backend:Backend, ?targetDtype:Dtype, ?targetDevice:Device, ?targetBackend:Backend) = DataLoader(d, batchSize=batchSize, ?shuffle=shuffle, ?dropLast=dropLast, ?dtype=dtype, ?device=device, ?backend=backend, ?targetDtype=targetDtype, ?targetDevice=targetDevice, ?targetBackend=targetBackend)
+    member d.loader(batchSize:int, ?shuffle:bool, ?dropLast:bool, ?device:Device, ?dtype:Dtype, ?backend:Backend, ?targetDevice:Device, ?targetDtype:Dtype, ?targetBackend:Backend) = DataLoader(d, batchSize=batchSize, ?shuffle=shuffle, ?dropLast=dropLast, ?device=device, ?dtype=dtype, ?backend=backend, ?targetDevice=targetDevice, ?targetDtype=targetDtype, ?targetBackend=targetBackend)
     override d.ToString() = sprintf "Dataset(%A)" d.length
     member d.Item
         with get(i:int) =
@@ -45,15 +45,15 @@ type DatasetSubset(dataset:Dataset, indices:int[]) =
     override d.item(i) = dataset.item(indices.[i])
 
 
-type DataLoader(dataset:Dataset, batchSize:int, ?shuffle:bool, ?dropLast:bool, ?dtype:Dtype, ?device:Device, ?backend:Backend, ?targetDtype:Dtype, ?targetDevice:Device, ?targetBackend:Backend) =
+type DataLoader(dataset:Dataset, batchSize:int, ?shuffle:bool, ?dropLast:bool, ?device:Device, ?dtype:Dtype, ?backend:Backend, ?targetDevice:Device, ?targetDtype:Dtype, ?targetBackend:Backend) =
     let batchSize = min batchSize dataset.length
     let shuffle = defaultArg shuffle false
     let dropLast = defaultArg dropLast true
-    let dtype = defaultArg dtype Dtype.Default
     let device = defaultArg device Device.Default
+    let dtype = defaultArg dtype Dtype.Default
     let backend = defaultArg backend Backend.Default
-    let targetDtype = defaultArg targetDtype dtype
     let targetDevice = defaultArg targetDevice device
+    let targetDtype = defaultArg targetDtype dtype
     let targetBackend = defaultArg targetBackend backend
     let datalength = if dropLast then batchSize*(dataset.length/batchSize) else dataset.length
     member d.length = ((float datalength)/(float batchSize)) |> ceil |> int
@@ -64,7 +64,7 @@ type DataLoader(dataset:Dataset, batchSize:int, ?shuffle:bool, ?dropLast:bool, ?
         let indices = Seq.init datalength id |> Seq.map indexer
         let batchIndices = indices |> Seq.chunkBySize batchSize
         let batches = batchIndices |> Seq.map (Array.map dataset.item >> Array.unzip)
-        batches |> Seq.mapi (fun i (data, target) -> i, data |> dsharp.stack |> dsharp.move(dtype, device, backend), target |> dsharp.stack |> dsharp.move(targetDtype, targetDevice, targetBackend))
+        batches |> Seq.mapi (fun i (data, target) -> i, data |> dsharp.stack |> dsharp.move(device, dtype, backend), target |> dsharp.stack |> dsharp.move(targetDevice, targetDtype, targetBackend))
         |> Seq.truncate numBatches
     member d.batch(?batchSize:int) = 
         let _, data, target = d.epoch() |> Seq.head
@@ -85,7 +85,7 @@ type TextDataset(text:string, seqLength, ?chars) =
     inherit Dataset()
     // """0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ!"#$%&\'()*+,-./:;?@[\\]^_`{|}~ """
     let _chars = (defaultArg chars text) |> Seq.distinct |> Seq.toArray |> Array.sort
-    let onehot = memoize dsharp.onehot
+    let onehot = memoize (fun (length, hot) -> dsharp.onehot(length, hot, device=Device.CPU))
     let _charToIndex = memoize (fun c -> try Array.findIndex ((=) c) _chars with _ -> failwithf "Character %A not found in this TextDataset (chars: %A)" c _chars)
     let _indexToChar(index) = _chars.[index]
     let textToIndices(text:string) = text |> Seq.map _charToIndex |> Seq.toArray
@@ -107,7 +107,7 @@ type TextDataset(text:string, seqLength, ?chars) =
     override d.length = sequences.Length
     override d.item(i) =
         let data = sequences.[i] |> indicesToTensor
-        let target = sequences.[i] |> dsharp.tensor(dtype=Dtype.Default)
+        let target = sequences.[i] |> dsharp.tensor(dtype=Dtype.Default, device=Device.CPU)
         data, target
 
 // More datasets (MNIST, CIFAR, etc.) are implemented in DiffSharp.Data project

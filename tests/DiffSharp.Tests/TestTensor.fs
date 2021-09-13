@@ -1326,10 +1326,9 @@ type TestTensor () =
     member _.TestTensorMove () =
         for combo1 in Combos.All do
             for combo2 in Combos.All do
-                // printfn "%A %A" (combo1.dtype, combo1.device, combo1.backend) (combo2.dtype, combo2.device, combo2.backend)
                 let t1 = combo1.tensor([0, 1, 2, 3])
-                let t2 = t1.move(combo2.dtype, combo2.device, combo2.backend)
-                let t2b = t2.move(combo1.dtype, combo1.device, combo1.backend)
+                let t2 = t1.move(combo2.device, combo2.dtype, combo2.backend)
+                let t2b = t2.move(combo1.device, combo1.dtype, combo1.backend)
                 Assert.CheckEqual(combo2.dtype, t2.dtype)
                 Assert.CheckEqual(combo2.device, t2.device)
                 Assert.CheckEqual(combo2.backend, t2.backend)
@@ -1341,7 +1340,7 @@ type TestTensor () =
         // Check that device and backend are not changed if not specified in move
         for combo1 in Combos.All do
             let t1 = combo1.tensor([0, 1, 2, 3])
-            let t1b = t1.move(combo1.dtype, ?backend=None, ?device=None)
+            let t1b = t1.move(?device=None, dtype=combo1.dtype, ?backend=None)
             Assert.CheckEqual(combo1.backend, t1b.backend)
             Assert.CheckEqual(combo1.device, t1b.device)
 
@@ -3885,6 +3884,31 @@ type TestTensor () =
             Assert.True(tUnsqueeze1Correct.allclose(tUnsqueeze1, 0.01))
 
     [<Test>]
+    member _.TestTensorUnsqueezeAs () =
+        for combo in Combos.All do
+            let t1 = combo.ones(3)
+            let t2 = combo.ones([3;4])
+            let t3 = combo.ones([3;4;2])
+
+            let t1u1 = t1.unsqueezeAs(t1)
+            let t1u1Shape = t1u1.shape
+            let t1u1ShapeCorrect = t1.shape
+            let t1u2 = t1.unsqueezeAs(t2)
+            let t1u2Shape = t1u2.shape
+            let t1u2ShapeCorrect = [|3;1|]
+            let t1u3 = t1.unsqueezeAs(t3)
+            let t1u3Shape = t1u3.shape
+            let t1u3ShapeCorrect = [|3;1;1|]
+            let t3u1 = t3.unsqueezeAs(t1)
+            let t3u1Shape = t3u1.shape
+            let t3u1ShapeCorrect = [|3;4;2|]
+
+            Assert.AreEqual(t1u1ShapeCorrect, t1u1Shape)
+            Assert.AreEqual(t1u2ShapeCorrect, t1u2Shape)
+            Assert.AreEqual(t1u3ShapeCorrect, t1u3Shape)
+            Assert.AreEqual(t3u1ShapeCorrect, t3u1Shape)
+
+    [<Test>]
     member _.TestTensorFlipT () =
         for combo in Combos.All do 
             let t1 = combo.tensor([[1.;2.];[3.;4.]])
@@ -4055,6 +4079,20 @@ type TestTensor () =
             Assert.CheckEqual(t1f3shapeCorrect, t1f3shape)
             Assert.CheckEqual(t2fshapeCorrect, t2fshape)
             Assert.CheckEqual(t3fshapeCorrect, t3fshape)
+
+    [<Test>]
+    member _.TestTensorUnflatten () =
+        for combo in Combos.All do
+            let t1 = combo.randint(0, 2, [20; 20])
+
+            let t1f1shape = dsharp.unflatten(t1, 0, [2;10]).shape
+            let t1f1shapeCorrect = [|2;10;20|]
+
+            let t1f2shape = dsharp.unflatten(t1, 1, [2;10]).shape
+            let t1f2shapeCorrect = [|20;2;10|]
+
+            Assert.CheckEqual(t1f1shapeCorrect, t1f1shape)
+            Assert.CheckEqual(t1f2shapeCorrect, t1f2shape)
 
     [<Test>]
     member _.TestTensorGather () =
@@ -4981,6 +5019,70 @@ type TestTensor () =
             Assert.True(l4Correct.allclose(l4, 0.01, 0.01))
             Assert.True(l5Correct.allclose(l5, 0.01, 0.01))
             Assert.True(l6Correct.allclose(l6, 0.01, 0.01))
+
+            let t2a = combo.tensor([[[[0.2059, 0.2048],
+                                       [0.4209, 0.4259],
+                                       [0.7000, 0.0548],
+                                       [0.8414, 0.4659]],
+                             
+                                      [[0.5841, 0.3222],
+                                       [0.3938, 0.6895],
+                                       [0.9694, 0.9424],
+                                       [0.1203, 0.3375]],
+                             
+                                      [[0.8713, 0.6122],
+                                       [0.1029, 0.6634],
+                                       [0.2255, 0.0801],
+                                       [0.7698, 0.8014]]],
+                             
+                             
+                                     [[[0.5361, 0.2349],
+                                       [0.9668, 0.7860],
+                                       [0.8522, 0.2324],
+                                       [0.3445, 0.2305]],
+                             
+                                      [[0.8407, 0.0118],
+                                       [0.5815, 0.7817],
+                                       [0.3957, 0.3336],
+                                       [0.3524, 0.2699]],
+                             
+                                      [[0.4809, 0.0975],
+                                       [0.9397, 0.7868],
+                                       [0.0906, 0.2595],
+                                       [0.7253, 0.7387]]]])
+            let t2b = combo.tensor([[[[0.2288, 0.7639],
+                                       [0.6365, 0.8856],
+                                       [0.4637, 0.6467],
+                                       [0.2029, 0.7676]],
+                             
+                                      [[0.8061, 0.7229],
+                                       [0.8075, 0.6854],
+                                       [0.4748, 0.9848],
+                                       [0.6456, 0.3080]],
+                             
+                                      [[0.5581, 0.5572],
+                                       [0.0235, 0.9419],
+                                       [0.1633, 0.3299],
+                                       [0.9430, 0.8501]]],
+                             
+                             
+                                     [[[0.5505, 0.8364],
+                                       [0.8939, 0.3968],
+                                       [0.5038, 0.3390],
+                                       [0.4534, 0.2653]],
+                             
+                                      [[0.5895, 0.2453],
+                                       [0.1937, 0.5779],
+                                       [0.2846, 0.4662],
+                                       [0.6777, 0.2539]],
+                             
+                                      [[0.9834, 0.2274],
+                                       [0.7440, 0.5305],
+                                       [0.4400, 0.0725],
+                                       [0.7565, 0.9452]]]])
+            let l7 = dsharp.bceLoss(t2a, t2b)
+            let l7Correct = combo.tensor(0.7858)
+            Assert.True(l7Correct.allclose(l7, 0.01, 0.01))
 
     [<Test>]
     member _.TestTensorNormalize () =
