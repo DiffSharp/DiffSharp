@@ -608,10 +608,13 @@ type TestDiffSharp () =
     [<Test>]
     member _.TestCanConfigure () =
         
-        // Default reference backend with "GPU" (faked)
+        // Backup the current config before the test to restore in the end
+        let configBefore = dsharp.config()
+
+        // Default reference backend with CPU
         let device = Device.Default
-        dsharp.config(device=Device.GPU)
-        Assert.CheckEqual(Device.GPU, Device.Default)
+        dsharp.config(device=Device.CPU)
+        Assert.CheckEqual(Device.CPU, Device.Default)
         dsharp.config(device=device)
 
         // Torch with default backend (CPU)
@@ -625,6 +628,9 @@ type TestDiffSharp () =
         dsharp.config(dtype=Dtype.Float64)
         Assert.CheckEqual(Dtype.Float64, Dtype.Default)
         dsharp.config(dtype=dtype)
+
+        // Restore the config before the test
+        dsharp.config(configBefore)
 
     [<Test>]
     member _.TestBackends () =
@@ -660,9 +666,9 @@ type TestDiffSharp () =
     [<Test>]
     member _.TestIsDeviceTypeAvailable () =
         Assert.True(dsharp.isDeviceTypeAvailable(DeviceType.CPU))
-        Assert.True(dsharp.isDeviceTypeAvailable(DeviceType.CUDA)) 
+
         Assert.True(dsharp.isDeviceTypeAvailable(DeviceType.CPU, Backend.Reference))
-        Assert.True(dsharp.isDeviceTypeAvailable(DeviceType.CUDA, Backend.Reference))
+        Assert.False(dsharp.isDeviceTypeAvailable(DeviceType.CUDA, Backend.Reference))
 
         Assert.True(dsharp.isDeviceTypeAvailable(DeviceType.CPU, Backend.Torch))
 
