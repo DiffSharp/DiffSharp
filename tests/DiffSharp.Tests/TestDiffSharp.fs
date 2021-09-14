@@ -627,6 +627,12 @@ type TestDiffSharp () =
         dsharp.config(dtype=dtype)
 
     [<Test>]
+    member _.TestBackends () =
+        let backends = dsharp.backends() |> List.sort
+        let backendsCorrect = [Backend.Reference; Backend.Torch] |> List.sort
+        Assert.CheckEqual(backendsCorrect, backends)
+
+    [<Test>]
     member _.TestDevices () =
         // Get devices for default reference backend
         let defaultReferenceBackendDevices = dsharp.devices()

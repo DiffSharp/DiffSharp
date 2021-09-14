@@ -1227,17 +1227,30 @@ type dsharp =
         let (device,dtype,backend) = configuration
         dsharp.config(device, dtype, backend)
 
-    /// <summary>Return the list of available devices.</summary>
+    /// <summary>Returns the list of available backends.</summary>
+    static member backends() =
+        let backends = [|Backend.Reference; Backend.Torch|]
+        let backendsAvailable = Array.zeroCreate<bool> backends.Length
+        for i = 0 to backends.Length-1 do
+            try
+                // Try to create a tensor in the given backend, hence testing the whole underlying process
+                let _ = dsharp.tensor([0f], device=Device.CPU, dtype=Dtype.Float32, backend=backends.[i])
+                backendsAvailable.[i] <- true
+            with
+            | _ -> ()
+        [for i = 0 to backends.Length-1 do if backendsAvailable.[i] then yield backends.[i]]
+
+    /// <summary>Returns the list of available devices for a given backend.</summary>
     /// <param name="deviceType">If given, only return devices for this device type.</param>
     /// <param name="backend">Return information for this backend. Defaults to Backend.Default.</param>
     static member devices(?deviceType, ?backend) = BackendTensorStatics.Get(?backend=backend).GetDevices(?deviceType=deviceType)
 
-    /// <summary>Indicates if the given device type is supported.</summary>
+    /// <summary>Indicates if a given device type is available for a given backend.</summary>
     /// <param name="deviceType">The requested device type.</param>
     /// <param name="backend">Return information for this backend. Defaults to Backend.Default.</param>
     static member isDeviceTypeAvailable(deviceType, ?backend) = BackendTensorStatics.Get(?backend=backend).IsDeviceTypeAvailable(deviceType)
 
-    /// <summary>Indicates if CUDA is supported.</summary>
+    /// <summary>Indicates if CUDA is available for a given backend.</summary>
     /// <param name="backend">Return information for this backend. Defaults to Backend.Default.</param>
     static member isCudaAvailable(?backend) = BackendTensorStatics.Get(?backend=backend).IsDeviceTypeAvailable(DeviceType.CUDA)
 
