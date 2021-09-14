@@ -26,10 +26,11 @@ module internal Utils =
 [<AbstractClass>]
 type RawTensorCPU<'T when 'T : equality and 'T :> scalar>(values: 'T[], shape: Shape, dtype: Dtype, device: Device) =
     inherit RawTensor()
+    do if device.DeviceType = DeviceType.CUDA then failwithf "CUDA is not supported by the reference backend."
 
     let mutable values = values
     let mutable isMutable = false
-    let checkMutable() = if not isMutable then failwith "the tensor can't be mutated" 
+    let checkMutable() = if not isMutable then failwith "The tensor cannot be mutated." 
     override _.Shape = shape
     override _.Dim = shape.Length
     override _.Nelement = shapeLength shape
@@ -2166,7 +2167,7 @@ type ReferenceBackendTensorStatics() =
         //| Some DeviceType.CUDA -> [ Device.GPU ]
         | Some _ -> []
 
-    override _.IsDeviceTypeAvailable (deviceType) = (match deviceType with DeviceType.CPU | DeviceType.CUDA -> true | _ -> false)
+    override _.IsDeviceTypeAvailable (deviceType) = (match deviceType with DeviceType.CPU -> true | _ -> false)
     override _.Seed(seed) = Random.Seed(seed)
     override _.Zero(dtype, device) =
         match dtype with 
