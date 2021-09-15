@@ -1241,9 +1241,12 @@ type dsharp =
         [for i = 0 to backends.Length-1 do if backendsAvailable.[i] then yield backends.[i]]
 
     /// <summary>Returns the list of available devices for a given backend.</summary>
-    /// <param name="deviceType">If given, only return devices for this device type.</param>
     /// <param name="backend">Return information for this backend. Defaults to Backend.Default.</param>
-    static member devices(?deviceType, ?backend) = BackendTensorStatics.Get(?backend=backend).GetDevices(?deviceType=deviceType)
+    /// <param name="deviceType">If given, only return devices for this device type.</param>
+    static member devices(?backend, ?deviceType) = BackendTensorStatics.Get(?backend=backend).GetDevices(?deviceType=deviceType)
+
+    /// <summary>Returns the list of available backends and devices available for each backend.</summary>
+    static member backendsAndDevices() = [for b in dsharp.backends() do yield b, dsharp.devices(backend=b)]
 
     /// <summary>Indicates if a given device type is available for a given backend.</summary>
     /// <param name="deviceType">The requested device type.</param>
