@@ -332,6 +332,21 @@ type TestModel () =
         Assert.True(targets.allclose(y, 0.01))
 
     [<Test>]
+    member _.TestModelSequential () =
+        let m1 = Linear(1, 2)
+        let m2 = Linear(2, 3)
+        let m3 = Linear(3, 4)
+
+        let m = m1 --> m2 --> m3
+        let mSequential = Sequential([m1;m2;m3])
+
+        let x = dsharp.randn([1;1])
+        let y = x --> m
+        let ySequential = x --> mSequential
+
+        Assert.True(ySequential.allclose(y))
+
+    [<Test>]
     member _.TestModelConv1d () =
         // Trains a little binary classifier
         let din, cin, cout, k = 16, 1, 2, 3
