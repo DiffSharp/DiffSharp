@@ -295,9 +295,6 @@ type Model<'In, 'Out>() =
             m.parametersVector <- old
 
     /// <summary>TBD</summary>
-    // override m.ToString() = sprintf "%s, nparameters:%s" (m.getString()) (thousands m.nparameters)
-
-    /// <summary>TBD</summary>
     static member create (ps: seq<obj>) (f: 'In -> 'Out) : Model<'In, 'Out> =
         let model = { new Model<'In, 'Out>() with override _.forward(x:'In) : 'Out = f x}
         model.add(ps)
