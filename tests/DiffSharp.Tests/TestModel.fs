@@ -316,6 +316,36 @@ type TestModel () =
         Assert.CheckEqual(Mode.Train, m.models.[2].mode)
 
     [<Test>]
+    member _.TestModelChildrenModels () =
+        let m0 = Linear(2, 2)
+        let m1 = Sequential([m0])
+        let m2 = Sequential([m1])
+
+        let m0children = m0.children
+        let m1children = m1.children
+        let m2children = m2.children
+
+        let m0childrenCorrect:list<ModelBase> = []
+        let m1childrenCorrect:list<ModelBase> = [m0]
+        let m2childrenCorrect:list<ModelBase> = [m1]
+
+        Assert.CheckEqual(m0childrenCorrect, m0children)
+        Assert.CheckEqual(m1childrenCorrect, m1children)
+        Assert.CheckEqual(m2childrenCorrect, m2children)
+
+        let m0models = m0.models
+        let m1models = m1.models
+        let m2models = m2.models
+
+        let m0modelsCorrect:list<ModelBase> = [m0]
+        let m1modelsCorrect:list<ModelBase> = [m1;m0]
+        let m2modelsCorrect:list<ModelBase> = [m2;m1;m0]
+
+        Assert.CheckEqual(m0modelsCorrect, m0models)
+        Assert.CheckEqual(m1modelsCorrect, m1models)
+        Assert.CheckEqual(m2modelsCorrect, m2models)
+
+    [<Test>]
     member _.TestModelLinear () =
         // Trains a linear regressor
         let n, din, dout = 4, 100, 10
