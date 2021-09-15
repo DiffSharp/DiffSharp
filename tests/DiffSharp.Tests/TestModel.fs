@@ -299,21 +299,21 @@ type TestModel () =
     member _.TestModelTrainEval () =
         let m = Linear(1, 2) --> Linear(2, 3) --> Linear(3, 4)
         Assert.CheckEqual(Mode.Train, m.mode)
-        Assert.CheckEqual(Mode.Train, m.allModels.[0].mode)
-        Assert.CheckEqual(Mode.Train, m.allModels.[1].mode)
-        Assert.CheckEqual(Mode.Train, m.allModels.[2].mode)
+        Assert.CheckEqual(Mode.Train, m.models.[0].mode)
+        Assert.CheckEqual(Mode.Train, m.models.[1].mode)
+        Assert.CheckEqual(Mode.Train, m.models.[2].mode)
 
         m.eval()
         Assert.CheckEqual(Mode.Eval, m.mode)
-        Assert.CheckEqual(Mode.Eval, m.allModels.[0].mode)
-        Assert.CheckEqual(Mode.Eval, m.allModels.[1].mode)
-        Assert.CheckEqual(Mode.Eval, m.allModels.[2].mode)
+        Assert.CheckEqual(Mode.Eval, m.models.[0].mode)
+        Assert.CheckEqual(Mode.Eval, m.models.[1].mode)
+        Assert.CheckEqual(Mode.Eval, m.models.[2].mode)
 
         m.train()
         Assert.CheckEqual(Mode.Train, m.mode)
-        Assert.CheckEqual(Mode.Train, m.allModels.[0].mode)
-        Assert.CheckEqual(Mode.Train, m.allModels.[1].mode)
-        Assert.CheckEqual(Mode.Train, m.allModels.[2].mode)
+        Assert.CheckEqual(Mode.Train, m.models.[0].mode)
+        Assert.CheckEqual(Mode.Train, m.models.[1].mode)
+        Assert.CheckEqual(Mode.Train, m.models.[2].mode)
 
     [<Test>]
     member _.TestModelLinear () =

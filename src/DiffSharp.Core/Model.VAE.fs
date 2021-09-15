@@ -67,7 +67,7 @@ type VAE(xShape:seq<int>, zDim:int, encoder:Model, decoder:Model) =
     override m.decode z =
         z --> postZ -->decoder
 
-    override _.getString() = sprintf "VAE(%A, %A, %A, %A)" xShape zDim encoder decoder
+    override _.ToString() = sprintf "VAE(%A, %A, %A, %A)" xShape zDim encoder decoder
 
 
 /// <summary>Variational auto-encoder with multilayer perceptron (MLP) encoder and decoder.</summary>
@@ -103,4 +103,4 @@ type VAEMLP(xDim:int, zDim:int, ?hDims:seq<int>, ?nonlinearity:Tensor->Tensor, ?
             h <- nonlinearity <| dec.[i].forward(h)
         nonlinearityLast <| dec.[dec.Length-1].forward(h)
 
-    override _.getString() = sprintf "VAEMLP(%A, %A, %A)" xDim hDims zDim
+    override _.ToString() = sprintf "VAEMLP(%A, %A, %A)" xDim hDims zDim

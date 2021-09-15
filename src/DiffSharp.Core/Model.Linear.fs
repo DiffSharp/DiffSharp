@@ -17,7 +17,7 @@ type Linear(inFeatures, outFeatures, ?bias:bool) =
     do base.add([w;b],["Linear-weight";"Linear-bias"])
 
     /// <summary>TBD</summary>
-    override _.getString() = sprintf "Linear(%A, %A)" inFeatures outFeatures
+    override _.ToString() = sprintf "Linear(%A, %A)" inFeatures outFeatures
 
     /// <summary>TBD</summary>
     override _.forward(value) =

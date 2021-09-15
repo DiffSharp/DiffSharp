@@ -39,7 +39,7 @@ type RNNCell(inFeatures, outFeatures, ?nonlinearity, ?bias, ?batchFirst) =
         with get () = h.value
         and set v = h.value <- v
 
-    override _.getString() = sprintf "RNNCell(%A, %A)" inFeatures outFeatures
+    override _.ToString() = sprintf "RNNCell(%A, %A)" inFeatures outFeatures
 
     member r.reset() = r.hidden <- dsharp.tensor([])
 
@@ -77,7 +77,7 @@ type LSTMCell(inFeatures, outFeatures, ?bias, ?batchFirst) =
         with get () = c.value
         and set v = c.value <- v
 
-    override _.getString() = sprintf "LSTMCell(%A, %A)" inFeatures outFeatures
+    override _.ToString() = sprintf "LSTMCell(%A, %A)" inFeatures outFeatures
 
     member r.reset() = r.hidden <- dsharp.tensor([])
 
@@ -125,7 +125,7 @@ type RNN(inFeatures, outFeatures, ?numLayers, ?nonlinearity, ?bias, ?batchFirst,
         with get () = hs.value
         and set v = hs.value <- v
 
-    override _.getString() = sprintf "RNN(%A, %A, numLayers:%A, bidirectional:%A)" inFeatures outFeatures numLayers bidirectional
+    override _.ToString() = sprintf "RNN(%A, %A, numLayers:%A, bidirectional:%A)" inFeatures outFeatures numLayers bidirectional
 
     member r.reset() = r.hidden <- dsharp.tensor([])
 
@@ -180,7 +180,7 @@ type LSTM(inFeatures, outFeatures, ?numLayers, ?bias, ?batchFirst, ?dropout, ?bi
         with get () = cs.value
         and set v = cs.value <- v
 
-    override _.getString() = sprintf "LSTM(%A, %A, numLayers:%A, bidirectional:%A)" inFeatures outFeatures numLayers bidirectional
+    override _.ToString() = sprintf "LSTM(%A, %A, numLayers:%A, bidirectional:%A)" inFeatures outFeatures numLayers bidirectional
 
     member r.reset() =
         r.hidden <- dsharp.tensor([])

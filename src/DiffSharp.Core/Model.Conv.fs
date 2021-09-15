@@ -17,7 +17,7 @@ type Conv1d(inChannels:int, outChannels:int, kernelSize:int, ?stride:int, ?paddi
     do base.add([w;b],["Conv1d-weight";"Conv1d-bias"])
 
     /// <summary>TBD</summary>
-    override _.getString() = sprintf "Conv1d(%A, %A, %A)" inChannels outChannels kernelSize
+    override _.ToString() = sprintf "Conv1d(%A, %A, %A)" inChannels outChannels kernelSize
 
     /// <summary>TBD</summary>
     override _.forward(value) =
@@ -36,7 +36,7 @@ type Conv2d(inChannels:int, outChannels:int, ?kernelSize:int, ?stride:int, ?padd
     do base.add([w;b],["Conv2d-weight";"Conv2d-bias"])
 
     /// <summary>TBD</summary>
-    override _.getString() = sprintf "Conv2d(%A, %A, %A)" inChannels outChannels kernelSizes
+    override _.ToString() = sprintf "Conv2d(%A, %A, %A)" inChannels outChannels kernelSizes
 
     /// <summary>TBD</summary>
     override _.forward(value) =
@@ -55,7 +55,7 @@ type Conv3d(inChannels:int, outChannels:int, ?kernelSize:int, ?stride:int, ?padd
     do base.add([w;b],["Conv3d-weight";"Conv3d-bias"])
 
     /// <summary>TBD</summary>
-    override _.getString() = sprintf "Conv3d(%A, %A, %A)" inChannels outChannels kernelSizes
+    override _.ToString() = sprintf "Conv3d(%A, %A, %A)" inChannels outChannels kernelSizes
 
     /// <summary>TBD</summary>
     override _.forward(value) =

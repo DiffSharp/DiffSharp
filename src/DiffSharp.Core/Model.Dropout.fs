@@ -12,7 +12,7 @@ type Dropout(?p:double) =
     inherit Model()
 
     /// <summary>TBD</summary>
-    override _.getString() = sprintf "Dropout()"
+    override _.ToString() = sprintf "Dropout()"
 
     /// <summary>TBD</summary>
     override m.forward(value) =
@@ -24,7 +24,7 @@ type Dropout2d(?p:double) =
     inherit Model()
 
     /// <summary>TBD</summary>
-    override _.getString() = sprintf "Dropout2d()"
+    override _.ToString() = sprintf "Dropout2d()"
 
     /// <summary>TBD</summary>
     override m.forward(value) =
@@ -36,7 +36,7 @@ type Dropout3d(?p:double) =
     inherit Model()
 
     /// <summary>TBD</summary>
-    override _.getString() = sprintf "Dropout3d()"
+    override _.ToString() = sprintf "Dropout3d()"
 
     /// <summary>TBD</summary>
     override m.forward(value) =

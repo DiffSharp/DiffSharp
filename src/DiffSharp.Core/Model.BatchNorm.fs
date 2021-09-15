@@ -66,7 +66,7 @@ type BatchNorm1d(numFeatures:int, ?eps:double, ?momentum:Tensor, ?affine:bool, ?
         _variance.value <- (1 - momentum) * _variance.value + momentum * batchVariance
 
     /// <summary>TBD</summary>
-    override _.getString() = sprintf "BatchNorm1d(%A)" numFeatures
+    override _.ToString() = sprintf "BatchNorm1d(%A)" numFeatures
 
     /// <summary>TBD</summary>
     override m.forward(value) =
@@ -157,7 +157,7 @@ type BatchNorm2d(numFeatures:int, ?eps:double, ?momentum:Tensor, ?affine:bool, ?
         _variance.value <- (1 - momentum) * _variance.value + momentum * batchVariance
 
     /// <summary>TBD</summary>
-    override _.getString() = sprintf "BatchNorm2d(%A)" numFeatures
+    override _.ToString() = sprintf "BatchNorm2d(%A)" numFeatures
 
     /// <summary>TBD</summary>
     override m.forward(value) =
@@ -234,7 +234,7 @@ type BatchNorm3d(numFeatures:int, ?eps:double, ?momentum:Tensor, ?affine:bool, ?
         _variance.value <- (1 - momentum) * _variance.value + momentum * batchVariance
 
     /// <summary>TBD</summary>
-    override _.getString() = sprintf "BatchNorm3d(%A)" numFeatures
+    override _.ToString() = sprintf "BatchNorm3d(%A)" numFeatures
 
     /// <summary>TBD</summary>
     override m.forward(value) =
