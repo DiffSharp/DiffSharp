@@ -178,7 +178,7 @@ type ModelBase() =
     /// <summary>TBD</summary>
     let namePrefixes = Dictionary<string, int>()
     let parameterDict = ParameterDict()
-    let modelsDict = Dictionary<string, ModelBase>()
+    let modelDict = Dictionary<string, ModelBase>()
 
     /// <summary>TBD</summary>
     member m.train() = 
@@ -202,7 +202,7 @@ type ModelBase() =
 
     member _.children
         with get () = 
-            modelsDict.Values |> Seq.toList
+            modelDict.Values |> Seq.toList
 
     member m.models
         with get () =
@@ -231,7 +231,7 @@ type ModelBase() =
                 parameterDict.add(n, param)
             | :? Model as model ->
                 let n = if names.Length > 0 then names.[i] else sprintf "model-%s" (Random.UUID())
-                modelsDict.Add(n, model)
+                modelDict.Add(n, model)
                 parameterDict.add(model.parameters.map(fun (nn, pp:Parameter) -> (nextName nn, pp)))
             | _ -> failwithf "Unsupported type. Expecting a Parameter or Model"
 
