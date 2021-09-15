@@ -7,6 +7,21 @@ namespace DiffSharp.Model
 
 open DiffSharp
 
+[<AutoOpen>]
+module ModelRecurrentAutoOpens =
+    let rnnShape (value:Tensor) inFeatures batchFirst =
+        let value =
+            if batchFirst then
+                if value.dim <> 3 then failwithf "Expecting the input to be of shape batchSize x seqLen x inFeatures, but received input with shape %A" value.shape
+                value.transpose(0, 1)
+            else
+                if value.dim <> 3 then failwithf "Expecting the input to be of shape seqLen x batchSize x inFeatures, but received input with shape %A" value.shape
+                value
+        if value.shape.[2] <> inFeatures then failwithf "Expecting input to have %A features, but received input with shape %A" inFeatures value.shape
+        let seqLen, batchSize = value.shape.[0], value.shape.[1]
+        value, seqLen, batchSize
+
+
 /// <summary>Unit cell of a recurrent neural network. Prefer using the RNN class instead, which can combine RNNCells in multiple layers.</summary>
 type RNNCell(inFeatures, outFeatures, ?nonlinearity, ?bias, ?batchFirst) =
     inherit Model()
