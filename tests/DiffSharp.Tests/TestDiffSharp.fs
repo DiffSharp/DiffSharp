@@ -639,6 +639,11 @@ type TestDiffSharp () =
         Assert.CheckEqual(backendsCorrect, backends)
 
     [<Test>]
+    member _.TestIsBackendAvailable () =
+        let referenceBackendAvailable = dsharp.isBackendAvailable(Backend.Reference)
+        Assert.True(referenceBackendAvailable)
+
+    [<Test>]
     member _.TestDevices () =
         // Get devices for default reference backend
         let defaultReferenceBackendDevices = dsharp.devices()

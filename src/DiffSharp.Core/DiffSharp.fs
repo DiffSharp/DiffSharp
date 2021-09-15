@@ -1248,6 +1248,9 @@ type dsharp =
     /// <summary>Returns the list of available backends and devices available for each backend.</summary>
     static member backendsAndDevices() = [for b in dsharp.backends() do yield b, dsharp.devices(backend=b)]
 
+    /// <summary>Indicates if a given backend is available.</summary>
+    static member isBackendAvailable(backend) = dsharp.backends() |> List.contains backend
+
     /// <summary>Indicates if a given device type is available for a given backend.</summary>
     /// <param name="deviceType">The requested device type.</param>
     /// <param name="backend">Return information for this backend. Defaults to Backend.Default.</param>
