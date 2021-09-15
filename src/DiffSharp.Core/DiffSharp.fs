@@ -1251,6 +1251,11 @@ type dsharp =
     /// <summary>Indicates if a given backend is available.</summary>
     static member isBackendAvailable(backend) = dsharp.backends() |> List.contains backend
 
+    /// <summary>Indicates if a given device is available for a given backend.</summary>
+    /// <param name="device">The requested device.</param>
+    /// <param name="backend">Return information for this backend. Defaults to Backend.Default.</param>
+    static member isDeviceAvailable(device, ?backend) = dsharp.devices(?backend=backend) |> List.contains device
+
     /// <summary>Indicates if a given device type is available for a given backend.</summary>
     /// <param name="deviceType">The requested device type.</param>
     /// <param name="backend">Return information for this backend. Defaults to Backend.Default.</param>
