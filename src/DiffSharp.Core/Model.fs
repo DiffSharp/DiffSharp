@@ -176,11 +176,9 @@ type ModelBase() =
     val mutable mode: Mode
 
     /// <summary>TBD</summary>
+    let namePrefixes = Dictionary<string, int>()
     let parameterDict = ParameterDict()
-    let parameterPrefixes = Dictionary<string, int>()
-
-    /// <summary>TBD</summary>
-    member val private subModels = Dictionary<string, ModelBase>()
+    let modelsDict = Dictionary<string, ModelBase>()
 
     /// <summary>TBD</summary>
     member m.train() = 
@@ -193,7 +191,7 @@ type ModelBase() =
         for model:ModelBase in m.models do model.mode <- Mode.Eval
 
     /// <summary>TBD</summary>
-    member m.parameters
+    member _.parameters
         with get () = parameterDict
         and set parameters = parameterDict.set(parameters)
 
@@ -202,9 +200,9 @@ type ModelBase() =
         with get () = m.parameters.flatten()
         and set parameters = m.parameters.unflatten(parameters)
 
-    member m.children
+    member _.children
         with get () = 
-            m.subModels.Values |> Seq.toList
+            modelsDict.Values |> Seq.toList
 
     member m.models
         with get () =
@@ -214,7 +212,7 @@ type ModelBase() =
     member m.init(f:string*Tensor->Tensor) = for KeyValue(n, p) in m.parameters.values do p.value <- f(n, p.value)
 
     /// <summary>TBD</summary>
-    member m.add(items:seq<obj>, ?names:seq<string>) =
+    member _.add(items:seq<obj>, ?names:seq<string>) =
         let items = items |> Seq.toArray
         let names = defaultArg names (Seq.empty) |> Seq.toArray
         if names.Length > 0 then
@@ -222,19 +220,19 @@ type ModelBase() =
             for name in names do if name.Contains("__") then failwithf "String '__' not allowed in name '%s'" name
         let nextName (name:string) =
             let name = if name.Contains("__") then name.Split("__").[0] else name
-            let i = parameterPrefixes.GetValueOrDefault name
-            parameterPrefixes.[name] <- i+1
+            let i = namePrefixes.GetValueOrDefault name
+            namePrefixes.[name] <- i+1
             sprintf "%s__%A" name (i+1)
         for i in 0..items.Length-1 do
             let item = items.[i]
             match item with
             | :? Parameter as param ->
                 let n = if names.Length > 0 then names.[i] else sprintf "param-%s" (Random.UUID())
-                m.parameters.add(n, param)
+                parameterDict.add(n, param)
             | :? Model as model ->
                 let n = if names.Length > 0 then names.[i] else sprintf "model-%s" (Random.UUID())
-                m.subModels.Add(n, model)
-                m.parameters.add(model.parameters.map(fun (nn, pp:Parameter) -> (nextName nn, pp)))
+                modelsDict.Add(n, model)
+                parameterDict.add(model.parameters.map(fun (nn, pp:Parameter) -> (nextName nn, pp)))
             | _ -> failwithf "Unsupported type. Expecting a Parameter or Model"
 
     /// <summary>
@@ -266,16 +264,6 @@ type ModelBase() =
     /// <summary>Gets the number of parameters of the model</summary>
     member m.nparameters = m.parameters.nelement
 
-    // abstract member getString: unit -> string
-    // default m.getString() =
-    //     if m.allModels |> List.length < 2 then "Model()" // allModels has one element (m) in case there are no submodels
-    //     else
-    //     let sb = System.Text.StringBuilder()
-    //     sb.Append("Model(\n") |> ignore
-    //     for model in m.allModels do sb.Append(sprintf "%A\n" model) |> ignore
-    //     sb.Append(")") |> ignore
-    //     sb.ToString()
-
     /// <summary>TBD</summary>
     member m.saveParameters(fileName) = m.parametersVector.save(fileName)
 
@@ -284,8 +272,6 @@ type ModelBase() =
 
     /// <summary>TBD</summary>
     member m.save(fileName) = saveBinary m fileName
-
-    // override m.ToString() = sprintf "%s, nparameters:%A" (m.getString()) m.nparameters
 
 
 [<AbstractClass>]
