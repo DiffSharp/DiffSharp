@@ -89,7 +89,7 @@ type Tensor =
         if t.backend = backend then t else
         match t with
         | TensorC(tp) -> 
-            let tpflat = tp.ViewT([|tp.Nelement|]) //
+            let tpflat = tp.ViewT([|tp.Nelement|])
             let tpflatValues = tpflat.ToValues()
             TensorC(tp.CreateLike(tpflatValues, backend=backend).ViewT(tp.Shape))
         | TensorF(_) -> failwith "Cannot move TensorF - do not move during differentiation"

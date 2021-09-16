@@ -178,7 +178,27 @@ type ModelBase() =
     /// <summary>TBD</summary>
     let namePrefixes = Dictionary<string, int>()
     let parameterDict = ParameterDict()
+    let bufferDict = ParameterDict()
+    let mutable stateDict = ParameterDict()
     let modelDict = Dictionary<string, ModelBase>()
+
+    let updateState() =
+        stateDict <- parameterDict.copy()
+        stateDict.add(bufferDict)
+
+    let nextName (name:string) =
+        let name = if name.Contains("__") then name.Split("__").[0] else name
+        let i = namePrefixes.GetValueOrDefault name
+        namePrefixes.[name] <- i+1
+        sprintf "%s__%A" name (i+1)
+
+    member _.checkItems(items:seq<_>, ?names:seq<string>)=
+        let items = items |> Seq.toArray
+        let names = defaultArg names (Seq.empty) |> Seq.toArray
+        if names.Length > 0 then
+            if items.Length <> names.Length then failwithf "Expecting items (%A) and names (%A) to have the same length" items.Length names.Length
+            for name in names do if name.Contains("__") then failwithf "String '__' not allowed in name '%s'" name
+        items, names
 
     /// <summary>TBD</summary>
     member m.train() = 
@@ -193,12 +213,30 @@ type ModelBase() =
     /// <summary>TBD</summary>
     member _.parameters
         with get () = parameterDict
-        and set parameters = parameterDict.set(parameters)
+        and set p = parameterDict.set(p)
 
     /// <summary>TBD</summary>
-    member m.parametersVector
-        with get () = m.parameters.flatten()
-        and set parameters = m.parameters.unflatten(parameters)
+    member _.parametersVector
+        with get () = parameterDict.flatten()
+        and set p = parameterDict.unflatten(p)
+
+    /// <summary>TBD</summary>
+    member _.buffers
+        with get () = bufferDict
+        and set b = bufferDict.set(b)
+
+    /// <summary>TBD</summary>
+    member _.buffersVector
+        with get () = bufferDict.flatten()
+        and set b = bufferDict.unflatten(b)
+
+    member _.state
+        with get () = stateDict
+        and set s = stateDict.set(s)
+
+    member _.stateVector
+        with get () = stateDict.flatten()
+        and set s = stateDict.unflatten(s)
 
     member _.children
         with get () = 
@@ -211,6 +249,35 @@ type ModelBase() =
     /// <summary>TBD</summary>
     member m.init(f:string*Tensor->Tensor) = for KeyValue(n, p) in m.parameters.values do p.value <- f(n, p.value)
 
+    member m.addParameter(items:seq<Parameter>, ?names:seq<string>) =
+        let items, names = m.checkItems(items, ?names=names)
+        for i in 0..items.Length-1 do
+            let param = items.[i]
+            let n = if names.Length > 0 then names.[i] else sprintf "param-%s" (Random.UUID())
+            parameterDict.add(nextName n, param)
+        updateState()
+
+    member m.addBuffer(items:seq<Parameter>, ?names:seq<string>) =
+        let items, names = m.checkItems(items, ?names=names)
+        for i in 0..items.Length-1 do
+            let param = items.[i]
+            let n = if names.Length > 0 then names.[i] else sprintf "buffer-%s" (Random.UUID())
+            bufferDict.add(nextName n, param)
+        updateState()
+
+    member m.addModel(items:seq<Model>, ?names:seq<string>) =
+        let items, names = m.checkItems(items, ?names=names)
+        for i in 0..items.Length-1 do
+            let model = items.[i]
+            let n = if names.Length > 0 then names.[i] else sprintf "model-%s" (Random.UUID())
+            modelDict.Add(n, model)
+            parameterDict.add(model.parameters.map(fun (nn, pp:Parameter) -> (nextName nn, pp)))
+        updateState()
+
+    member m.addParameter(item:Parameter, ?name:string) = m.addParameter([item], ?names=if name.IsSome then Some(seq {name.Value}) else None)
+    member m.addBuffer(item:Parameter, ?name:string) = m.addBuffer([item], ?names=if name.IsSome then Some(seq {name.Value}) else None)
+    member m.addModel(item:Model, ?name:string) = m.addModel([item], ?names=if name.IsSome then Some(seq {name.Value}) else None)
+
     /// <summary>TBD</summary>
     member _.add(items:seq<obj>, ?names:seq<string>) =
         let items = items |> Seq.toArray
@@ -218,11 +285,6 @@ type ModelBase() =
         if names.Length > 0 then
             if items.Length <> names.Length then failwithf "Expecting items (%A) and names (%A) to have the same length" items.Length names.Length
             for name in names do if name.Contains("__") then failwithf "String '__' not allowed in name '%s'" name
-        let nextName (name:string) =
-            let name = if name.Contains("__") then name.Split("__").[0] else name
-            let i = namePrefixes.GetValueOrDefault name
-            namePrefixes.[name] <- i+1
-            sprintf "%s__%A" name (i+1)
         for i in 0..items.Length-1 do
             let item = items.[i]
             match item with
