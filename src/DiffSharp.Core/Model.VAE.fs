@@ -50,22 +50,22 @@ type VAE(xShape:seq<int>, zDim:int, encoder:Model, decoder:Model) =
     inherit VAEBase(zDim)
     // TODO: check if encoder can accept input with xShape
     let encoderOutputDim = encoder.forward(dsharp.zeros(xShape).unsqueeze(0)).flatten().nelement
-    let preZ = Linear(encoderOutputDim, zDim*2)
-    let postZ = Linear(zDim, encoderOutputDim)
+    let prez = Linear(encoderOutputDim, zDim*2)
+    let postz = Linear(zDim, encoderOutputDim)
     do
         // TODO: check if decoder can accept input with (-1, zDim)
         // let decodedExample = xExample --> encoder --> decoder
         // if decodedExample.shape <> xShape then failwithf "Expecting decoder's output shape (%A) to be xShape (%A)" decodedExample.shape xShape
-        base.add([encoder;decoder;preZ;postZ],["VAE-encoder";"VAE-decoder";"VAE-preZ"; "VAE-postZ"])
+        base.add([encoder;decoder;prez;postz],["VAE-encoder";"VAE-decoder";"VAE-prez"; "VAE-postz"])
 
     override m.encode x =
-        let mulogvar = x --> encoder --> preZ
+        let mulogvar = x --> encoder --> prez
         let h = mulogvar.split([zDim; zDim], dim=1)
         let mu, logVar = h.[0], h.[1]
         mu, logVar
 
     override m.decode z =
-        z --> postZ -->decoder
+        z --> postz -->decoder
 
     override _.ToString() = sprintf "VAE(%A, %A, %A, %A)" xShape zDim encoder decoder
 
