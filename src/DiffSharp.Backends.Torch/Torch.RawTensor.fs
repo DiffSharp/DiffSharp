@@ -1211,6 +1211,7 @@ type TorchTensorOps<'T, 'T2>
 
     member _.CreateFromFlatArray(values:Array, shape:Shape, device: Device) : RawTensor =
         let values = values :?> 'T[] |> Array.map conv 
+        // torch.InitializeDevice(device.ToTorch) |> ignore
         let t = 
             match shape with 
             | [| |] -> fromScalar(values.[0])
@@ -1417,7 +1418,7 @@ type TorchBackendTensorStatics() =
           // you have to work it out via some other route.
         ]
 
-    override _.IsDeviceTypeSupported (deviceType) =
+    override _.IsDeviceTypeAvailable (deviceType) =
         match deviceType with 
         | DiffSharp.DeviceType.CPU -> true
         | DiffSharp.DeviceType.CUDA -> torch.cuda.is_available()

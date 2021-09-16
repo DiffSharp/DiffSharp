@@ -1216,7 +1216,7 @@ type dsharp =
         device |> Option.iter (fun d -> Device.Default <- d)
         dtype |> Option.iter (fun d -> Dtype.Default <- d)
         backend |> Option.iter (fun d -> Backend.Default <- d)
-        dsharp.tensor(0.) |> ignore // We need this to ensure the backend assemblies are loaded and backend is ready to set the random seed immediately after config
+        dsharp.tensor([0f], Device.Default, Dtype.Default, Backend.Default) |> ignore // We need this to ensure the backend assemblies are loaded and backend is ready to set the random seed immediately after config
 
     /// <summary>Return the current default element type, device and backend.</summary>
     static member config() = Device.Default, Dtype.Default, Backend.Default
@@ -1227,19 +1227,43 @@ type dsharp =
         let (device,dtype,backend) = configuration
         dsharp.config(device, dtype, backend)
 
-    /// <summary>Return the list of available devices.</summary>
-    /// <param name="deviceType">If given, only return devices for this device type.</param>
-    /// <param name="backend">Return information for this backend. Defaults to Backend.Default.</param>
-    static member devices(?deviceType, ?backend) = BackendTensorStatics.Get(?backend=backend).GetDevices(?deviceType=deviceType)
+    /// <summary>Returns the list of available backends.</summary>
+    static member backends() =
+        let backends = [|Backend.Reference; Backend.Torch|]
+        let backendsAvailable = Array.zeroCreate<bool> backends.Length
+        for i = 0 to backends.Length-1 do
+            try
+                // Try to create a tensor in the given backend, hence testing the whole underlying process
+                let _ = dsharp.tensor([0f], device=Device.CPU, dtype=Dtype.Float32, backend=backends.[i])
+                backendsAvailable.[i] <- true
+            with
+            | _ -> ()
+        [for i = 0 to backends.Length-1 do if backendsAvailable.[i] then yield backends.[i]]
 
-    /// <summary>Indicates if the given device type is supported.</summary>
+    /// <summary>Returns the list of available devices for a given backend.</summary>
+    /// <param name="backend">Return information for this backend. Defaults to Backend.Default.</param>
+    /// <param name="deviceType">If given, only return devices for this device type.</param>
+    static member devices(?backend, ?deviceType) = BackendTensorStatics.Get(?backend=backend).GetDevices(?deviceType=deviceType)
+
+    /// <summary>Returns the list of available backends and devices available for each backend.</summary>
+    static member backendsAndDevices() = [for b in dsharp.backends() do yield b, dsharp.devices(backend=b)]
+
+    /// <summary>Indicates if a given backend is available.</summary>
+    static member isBackendAvailable(backend) = dsharp.backends() |> List.contains backend
+
+    /// <summary>Indicates if a given device is available for a given backend.</summary>
+    /// <param name="device">The requested device.</param>
+    /// <param name="backend">Return information for this backend. Defaults to Backend.Default.</param>
+    static member isDeviceAvailable(device, ?backend) = dsharp.devices(?backend=backend) |> List.contains device
+
+    /// <summary>Indicates if a given device type is available for a given backend.</summary>
     /// <param name="deviceType">The requested device type.</param>
     /// <param name="backend">Return information for this backend. Defaults to Backend.Default.</param>
-    static member isDeviceTypeSupported(deviceType, ?backend) = BackendTensorStatics.Get(?backend=backend).IsDeviceTypeSupported(deviceType)
+    static member isDeviceTypeAvailable(deviceType, ?backend) = BackendTensorStatics.Get(?backend=backend).IsDeviceTypeAvailable(deviceType)
 
-    /// <summary>Indicates if CUDA is supported.</summary>
+    /// <summary>Indicates if CUDA is available for a given backend.</summary>
     /// <param name="backend">Return information for this backend. Defaults to Backend.Default.</param>
-    static member isCudaSupported(?backend) = BackendTensorStatics.Get(?backend=backend).IsDeviceTypeSupported(DeviceType.CUDA)
+    static member isCudaAvailable(?backend) = BackendTensorStatics.Get(?backend=backend).IsDeviceTypeAvailable(DeviceType.CUDA)
 
 
 // Differentiable methods mirroring F# collection modules

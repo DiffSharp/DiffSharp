@@ -55,7 +55,7 @@ type BackendTensorStatics() =
     abstract GetDevices: ?deviceType: DeviceType -> Device list
 
     /// Indicates if a device type is supported by this backend
-    abstract IsDeviceTypeSupported: deviceType: DeviceType -> bool
+    abstract IsDeviceTypeAvailable: deviceType: DeviceType -> bool
     
     /// Seed all backends with the given random seed, or a new seed based on the current time
     /// if no seed is specified.

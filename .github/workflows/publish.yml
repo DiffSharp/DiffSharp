@@ -82,8 +82,8 @@ jobs:
     - name: Publish NuGets
       run: dotnet nuget push "bin/packages/*.nupkg" -s https://api.nuget.org/v3/index.json -k ${{ secrets.NUGET_ORG_TOKEN_2020 }} --skip-duplicate
 
-  # Done in a separate job because it downloads the massive Windows CUDA pacakges (though only for reference
-  # during the pacakge build, it doesn't actually use them)
+  # Done in a separate job because it downloads the massive Windows CUDA packages (though only for reference
+  # during the package build, it doesn't actually use them)
   pack_windows_cuda:
 
     runs-on: ubuntu-latest
@@ -102,8 +102,8 @@ jobs:
     - name: Publish NuGets
       run: dotnet nuget push "bin/packages/*.nupkg" -s https://api.nuget.org/v3/index.json -k ${{ secrets.NUGET_ORG_TOKEN_2020 }} --skip-duplicate
 
-  # Done in a separate job because it downloads the massive Linux CUDA pacakges (though only for reference
-  # during the pacakge build, it doesn't actually use them)
+  # Done in a separate job because it downloads the massive Linux CUDA packages (though only for reference
+  # during the package build, it doesn't actually use them)
   pack_linux_cuda:
 
     runs-on: ubuntu-latest
