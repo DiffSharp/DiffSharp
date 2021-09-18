@@ -13,10 +13,10 @@ open DiffSharp.Data
 open DiffSharp.Optim
 
 type ModelStyle1a() =
-    inherit Model()
+    inherit Model() 
     let fc1 = Linear(10, 16)
     let fc2 = Linear(16, 20)
-    do base.add([fc1; fc2], ["fc1"; "fc2"])
+    do base.addModel([fc1; fc2], ["fc1"; "fc2"])
     override __.forward(x) =
         x
         |> fc1.forward
@@ -28,7 +28,8 @@ type ModelStyle1b() =
     let fc1 = Linear(20, 32)
     let fc2 = Linear(32, 30)
     let p = Parameter(dsharp.randn([]))
-    do base.add([fc1; fc2; p], ["fc1"; "fc2"; "p"])
+    do base.addModel([fc1; fc2], ["fc1"; "fc2"])
+    do base.addParameter([p], ["p"])
     override __.forward(x) =
         x
         |> fc1.forward
@@ -40,7 +41,7 @@ type GenericModelFloatFloat() =
     inherit Model<float,float>()
     let fc1 = Linear(1, 2)
     let fc2 = Linear(2, 1)
-    do base.add([fc1; fc2], ["fc1"; "fc2"])
+    do base.addModel([fc1; fc2], ["fc1"; "fc2"])
     do base.init (fun (_, t) -> t.onesLike())
     override __.forward(x) =
         x |> dsharp.tensor
@@ -53,7 +54,7 @@ type GenericModelIntString() =
     inherit Model<int,string>()
     let fc1 = Linear(1, 2)
     let fc2 = Linear(2, 1)
-    do base.add([fc1; fc2], ["fc1"; "fc2"])
+    do base.addModel([fc1; fc2], ["fc1"; "fc2"])
     do base.init (fun (_, t) -> t.onesLike())
     override __.forward(x) =
         x |> float32 |> dsharp.tensor
@@ -102,7 +103,7 @@ type TestModel () =
     member _.TestModelCreationStyle2 () =
         let fc1 = Linear(10, 32)
         let fc2 = Linear(32, 10)
-        let net = Model.create [fc1; fc2] 
+        let net = Model.create [fc1; fc2] [] []
                     (dsharp.view [-1; 10]
                     >> fc1.forward
                     >> dsharp.relu
@@ -112,7 +113,7 @@ type TestModel () =
         let fc1 = Linear(10, 32)
         let fc2 = Linear(32, 10)
         let p = Parameter(dsharp.randn([]))
-        let net2 = Model.create [fc1; fc2; p] 
+        let net2 = Model.create [fc1; fc2] [p] []
                     (dsharp.view [-1; 10]
                     >> fc1.forward
                     >> dsharp.relu
@@ -218,18 +219,18 @@ type TestModel () =
         Assert.CheckEqual(([| |]: int array), y.shape)
 
     [<Test>]
-    member _.TestModelSaveLoadParameters () =
+    member _.TestModelSaveLoadState () =
         let net1 = ModelStyle1a()
-        let p1 = net1.parametersVector
+        let p1 = net1.stateVector
         let fileName = System.IO.Path.GetTempFileName()
-        net1.saveParameters(fileName)
+        net1.saveState(fileName)
 
         let net2 = ModelStyle1a()
-        let p2 = net2.parametersVector
+        let p2 = net2.stateVector
         Assert.AreNotEqual(p1, p2)
 
-        net2.loadParameters(fileName)
-        let p2 = net2.parametersVector
+        net2.loadState(fileName)
+        let p2 = net2.stateVector
         Assert.CheckEqual(p1, p2)
 
         let x = dsharp.randn([1;10])

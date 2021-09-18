@@ -50,13 +50,13 @@ type VAE(xShape:seq<int>, zDim:int, encoder:Model, decoder:Model) =
     inherit VAEBase(zDim)
     // TODO: check if encoder can accept input with xShape
     let encoderOutputDim = encoder.forward(dsharp.zeros(xShape).unsqueeze(0)).flatten().nelement
-    let prez = Linear(encoderOutputDim, zDim*2)
-    let postz = Linear(zDim, encoderOutputDim)
+    let prez = Linear(encoderOutputDim, zDim*2) :> Model
+    let postz = Linear(zDim, encoderOutputDim) :> Model
     do
         // TODO: check if decoder can accept input with (-1, zDim)
         // let decodedExample = xExample --> encoder --> decoder
         // if decodedExample.shape <> xShape then failwithf "Expecting decoder's output shape (%A) to be xShape (%A)" decodedExample.shape xShape
-        base.add([encoder;decoder;prez;postz],["VAE-encoder";"VAE-decoder";"VAE-prez"; "VAE-postz"])
+        base.addModel([encoder;decoder;prez;postz],["VAE-encoder";"VAE-decoder";"VAE-prez"; "VAE-postz"])
 
     override m.encode x =
         let mulogvar = x --> encoder --> prez
@@ -85,8 +85,8 @@ type VAEMLP(xDim:int, zDim:int, ?hDims:seq<int>, ?nonlinearity:Tensor->Tensor, ?
     let enc = Array.append [|for i in 0..dims.Length-2 -> Linear(dims.[i], dims.[i+1])|] [|Linear(dims.[dims.Length-2], dims.[dims.Length-1])|]
     let dec = [|for i in 0..dims.Length-2 -> Linear(dims.[i+1], dims.[i])|] |> Array.rev
     do 
-        base.add([for m in enc -> box m])
-        base.add([for m in dec -> box m])
+        base.addModel(enc |> Array.map box)
+        base.addModel(dec |> Array.map box)
 
     override m.encode (x:Tensor) =
         let batchSize = x.shape.[0]
