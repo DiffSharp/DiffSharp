@@ -309,18 +309,7 @@ type ModelBase() =
 
     /// <summary>Moves the state (parameters and buffers) of the model to the given configuration</summary>
     member m.move(?device, ?dtype, ?backend) = 
-        printfn "before model move"
-        printfn "p  %A" m.parameters
-        printfn "pv %A" m.parametersVector
-        printfn "s  %A" m.state
-        printfn "sv %A" m.stateVector
-        // m.parameters.move(?device=device, ?dtype=dtype, ?backend=backend)
         m.state.move(?device=device, ?dtype=dtype, ?backend=backend)
-        printfn "after model move"
-        printfn "p  %A" m.parameters
-        printfn "pv %A" m.parametersVector
-        printfn "s  %A" m.state
-        printfn "sv %A" m.stateVector
 
     /// <summary>Gets the number of parameters of the model</summary>
     member m.nparameters = m.parameters.nelement
