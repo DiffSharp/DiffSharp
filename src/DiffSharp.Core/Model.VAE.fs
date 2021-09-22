@@ -50,8 +50,8 @@ type VAE(xShape:seq<int>, zDim:int, encoder:Model, decoder:Model) =
     inherit VAEBase(zDim)
     // TODO: check if encoder can accept input with xShape
     let encoderOutputDim = encoder.forward(dsharp.zeros(xShape).unsqueeze(0)).flatten().nelement
-    let prez = Linear(encoderOutputDim, zDim*2) :> Model
-    let postz = Linear(zDim, encoderOutputDim) :> Model
+    let prez = Linear(encoderOutputDim, zDim*2)
+    let postz = Linear(zDim, encoderOutputDim)
     do
         // TODO: check if decoder can accept input with (-1, zDim)
         // let decodedExample = xExample --> encoder --> decoder
