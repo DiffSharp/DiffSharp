@@ -259,14 +259,25 @@ type TestModel () =
         for combo1 in Combos.FloatingPointExcept16s do
             use _holder = dsharp.useConfig(combo1.dtype, combo1.device, combo1.backend)
             let net = dsharp.view [-1; 2] --> Linear(2, 4) --> dsharp.relu --> Linear(4, 1)
+
             Assert.CheckEqual(combo1.device, net.parametersVector.device)
             Assert.CheckEqual(combo1.dtype, net.parametersVector.dtype)
             Assert.CheckEqual(combo1.backend, net.parametersVector.backend)
+
+            Assert.CheckEqual(combo1.device, net.device)
+            Assert.CheckEqual(combo1.dtype, net.dtype)
+            Assert.CheckEqual(combo1.backend, net.backend)
+
             for combo2 in Combos.FloatingPointExcept16s do
                 net.move(combo2.device, combo2.dtype, combo2.backend)
+
                 Assert.CheckEqual(combo2.device, net.parametersVector.device)
                 Assert.CheckEqual(combo2.dtype, net.parametersVector.dtype)
                 Assert.CheckEqual(combo2.backend, net.parametersVector.backend)
+
+                Assert.CheckEqual(combo2.device, net.device)
+                Assert.CheckEqual(combo2.dtype, net.dtype)
+                Assert.CheckEqual(combo2.backend, net.backend)
 
     [<Test>]
     member _.TestModelClone () =
@@ -1026,15 +1037,15 @@ type TestModel () =
     [<Test>]
     member _.TestModelParameterNames () =
         let lin1 = Linear(10, 10)
-        let lin1Names = lin1.parameters.values.Keys |> Seq.toArray
+        let lin1Names = lin1.parameters |> Seq.map fst |> Seq.toArray
         let lin1NamesCorrect = [|"Linear-weight"; "Linear-bias"|]
 
         let lin2 = lin1 --> lin1
-        let lin2Names = lin2.parameters.values.Keys |> Seq.toArray
+        let lin2Names = lin2.parameters |> Seq.map fst |> Seq.toArray
         let lin2NamesCorrect = [|"Linear-weight__1"; "Linear-bias__1"; "Linear-weight__2"; "Linear-bias__2"|]
 
         let lin3 = lin1 --> lin1 --> lin1
-        let lin3Names = lin3.parameters.values.Keys |> Seq.toArray
+        let lin3Names = lin3.parameters |> Seq.map fst |> Seq.toArray
         let lin3NamesCorrect = [|"Linear-weight__1"; "Linear-bias__1"; "Linear-weight__2"; "Linear-bias__2"; "Linear-weight__3"; "Linear-bias__3"|]
 
         Assert.AreEqual(lin1NamesCorrect, lin1Names)

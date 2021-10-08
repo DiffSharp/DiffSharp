@@ -40,23 +40,44 @@ type Parameter =
 
 /// <summary>Represents a collection of named parameters in a model.</summary>
 type ParameterDict() =
-
-    // If the dictionary is empty then the latest 'move' is considered the configuration for the implied empty tensor
-    let mutable dummy = dsharp.zeros(0)
-
     /// <summary>TBD</summary>
-    member val values = Dictionary<string, Parameter>()
+    member val private values = Dictionary<string, Parameter>()
 
     /// <summary>TBD</summary>
     member d.Item
         with get key = d.values.[key].value
         and set key v = d.values.[key].value <- v
 
+    interface IEnumerable<string*Parameter> with
+        member d.GetEnumerator():IEnumerator<string*Parameter> = let s = d.values |> Seq.map (fun (KeyValue(a, b)) -> a, b) in s.GetEnumerator()
+
+    interface System.Collections.IEnumerable with
+        member d.GetEnumerator() = (d :> IEnumerable<string*Parameter>).GetEnumerator() :> System.Collections.IEnumerator
+
+    member d.device
+        with get() = 
+            if d.values.Count = 0 then Device.Default // Empty ParameterDict defaults to default device, dtype, backend config
+            else let p = d.values.Values |> Seq.head in p.value.device
+
+    member d.dtype
+        with get() = 
+            if d.values.Count = 0 then Dtype.Default // Empty ParameterDict defaults to default device, dtype, backend config
+            else let p = d.values.Values |> Seq.head in p.value.dtype
+
+    member d.backend
+        with get() = 
+            if d.values.Count = 0 then Backend.Default // Empty ParameterDict defaults to default device, dtype, backend config
+            else let p = d.values.Values |> Seq.head in p.value.backend
+
     /// <summary>TBD</summary>
     member d.clear() = d.values.Clear()
 
     /// <summary>TBD</summary>
-    member d.add(name, parameter) = d.values.Add(name, parameter)
+    member d.add(name, parameter:Parameter) = 
+        if d.device <> parameter.value.device then failwithf "Expecting a parameter with device %A but received %A" d.device parameter.value.device
+        if d.dtype <> parameter.value.dtype then failwithf "Expecting a parameter with dtype %A but received %A" d.dtype parameter.value.dtype
+        if d.backend <> parameter.value.backend then failwithf "Expecting a parameter with backend %A but received %A" d.backend parameter.value.backend
+        d.values.Add(name, parameter)
 
     /// <summary>TBD</summary>
     member d.add(parameters:list<string*Parameter>) = for (n, p) in parameters do d.add(n, p)
@@ -68,7 +89,8 @@ type ParameterDict() =
     member d.map(f:string*Parameter->string*Parameter) =
         let ret = ParameterDict()
         for KeyValue(n, p) in d.values do 
-            ret.values.Add(f(n, p))
+            let n, p = f(n, p)
+            ret.add(n, p)
         ret
 
     /// <summary>TBD</summary>
@@ -122,7 +144,6 @@ type ParameterDict() =
 
     /// <summary>TBD</summary>
     member d.move(?device, ?dtype, ?backend) =
-        dummy <- dummy.move(?device=device, ?dtype=dtype, ?backend=backend)
         d.iter (fun (_, p) -> p.move(?device=device, ?dtype=dtype, ?backend=backend))
 
     /// <summary>TBD</summary>
@@ -131,8 +152,8 @@ type ParameterDict() =
     /// <summary>TBD</summary>
     member d.flatten() =
         let ts = [| for t in d.values.Values do t.value.view(-1) |]
-        if ts.Length = 0 then dummy else
-        dsharp.cat(ts)
+        if ts.Length = 0 then dsharp.zeros(0) // Empty ParameterDict defaults to default device, dtype, backend config
+        else dsharp.cat(ts)
 
     /// <summary>TBD</summary>
     member d.unflatten(tensors:Tensor) =
@@ -213,6 +234,15 @@ type ModelBase() =
         m.mode <- Mode.Eval
         for model:ModelBase in m.models do model.mode <- Mode.Eval
 
+    member _.device
+        with get() = parameterDict.device
+
+    member _.dtype
+        with get() = parameterDict.dtype
+
+    member _.backend
+        with get() = parameterDict.backend
+
     /// <summary>TBD</summary>
     member _.parameters
         with get () = parameterDict
@@ -247,10 +277,10 @@ type ModelBase() =
 
     member m.models
         with get () =
-            m :: [for c in m.children do yield! c.models] 
+            m :: [for c in m.children do yield! c.models]
 
     /// <summary>TBD</summary>
-    member m.init(f:string*Tensor->Tensor) = for KeyValue(n, p) in m.parameters.values do p.value <- f(n, p.value)
+    member m.init(f:string*Tensor->Tensor) = m.parameters.iter(fun (n, p) -> p.value <- f(n, p.value))
 
     member m.addParameter(items:seq<Parameter>, ?names:seq<string>) =
         let items, names = m.checkItems(items, ?names=names)
@@ -278,9 +308,9 @@ type ModelBase() =
             let n = if names.Length > 0 then names.[i] else sprintf "Model-%s" (Random.UUID())
 
             modelDict.Add(n, model)
-            for KeyValue(n, p) in model.parameters.values do 
+            for n, p in model.parameters do 
                 parameterDict.add(nextName n, p)
-            for KeyValue(n, b) in model.buffers.values do 
+            for n, b in model.buffers do 
                 bufferDict.add(nextName n, b)
         updateState()
 
