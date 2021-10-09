@@ -295,6 +295,11 @@ type TestModel () =
         net.loadState(fileName)
         Assert.True(net.isNoDiff)
 
+        net.reverseDiff()
+        net.saveState(fileName, noDiff=false)
+        net.loadState(fileName)
+        Assert.True(net.isReverseDiff)
+
     [<Test>]
     member _.TestModelSaveLoadNoDiff () =
         let net = ModelStyle1a()
@@ -307,6 +312,11 @@ type TestModel () =
 
         let net2 = Model.load(fileName)
         Assert.True(net2.isNoDiff)
+
+        net2.reverseDiff()
+        net2.save(fileName, noDiff=false)
+        let net3 = Model.load(fileName)
+        Assert.True(net3.isReverseDiff)
 
     [<Test>]
     member _.TestModelMove () =
