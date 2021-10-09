@@ -268,10 +268,12 @@ type ModelBase() =
         with get () = bufferDict.flatten()
         and set b = bufferDict.unflatten(b)
 
+    /// <summary>TBD</summary>
     member _.state
         with get () = stateDict
         and set s = stateDict.set(s)
 
+    /// <summary>TBD</summary>
     member _.stateVector
         with get () = stateDict.flatten()
         and set s = stateDict.unflatten(s)
@@ -279,28 +281,35 @@ type ModelBase() =
     /// <summary>Gets the number of parameters of the model</summary>
     member m.nparameters = m.parameters.nelement
 
+    /// <summary>TBD</summary>
     member m.nbuffers = m.buffers.nelement
 
+    /// <summary>TBD</summary>
     member m.nstate = m.state.nelement
 
+    /// <summary>TBD</summary>
     member _.children
         with get () = 
             modelDict.Values |> Seq.cast<ModelBase> |> Seq.toList
 
+    /// <summary>TBD</summary>
     member m.models
         with get () =
             m :: [for c in m.children do yield! c.models]
 
+    /// <summary>TBD</summary>
     member m.hasOwnParameters
         with get () =
             let childrenParams = m.children |> List.map (fun c -> c.nparameters) |> List.sum
             m.nparameters <> childrenParams
 
+    /// <summary>TBD</summary>
     member m.hasOwnBuffers
         with get () =
             let childrenBuffers = m.children |> List.map (fun c -> c.nbuffers) |> List.sum
             m.nbuffers <> childrenBuffers
 
+    /// <summary>TBD</summary>
     member m.hasOwnState
         with get () =
             let childrenState = m.children |> List.map (fun c -> c.nstate) |> List.sum
@@ -309,6 +318,7 @@ type ModelBase() =
     /// <summary>TBD</summary>
     member m.init(f:string*Tensor->Tensor) = m.parameters.iter(fun (n, p) -> p.value <- f(n, p.value))
 
+    /// <summary>TBD</summary>
     member m.addParameter(items:seq<Parameter>, ?names:seq<string>) =
         let items, names = m.checkItems(items, ?names=names)
         for i in 0..items.Length-1 do
@@ -317,6 +327,7 @@ type ModelBase() =
             parameterDict.add(n, param)
         updateState()
 
+    /// <summary>TBD</summary>
     member m.addBuffer(items:seq<Parameter>, ?names:seq<string>) =
         let items, names = m.checkItems(items, ?names=names)
         for i in 0..items.Length-1 do
@@ -325,6 +336,7 @@ type ModelBase() =
             bufferDict.add(n, param)
         updateState()
 
+    /// <summary>TBD</summary>
     member m.addModel(items:seq<obj>, ?names:seq<string>) =
         let items, names = m.checkItems(items, ?names=names)
         for i in 0..items.Length-1 do
@@ -390,6 +402,7 @@ type ModelBase() =
         sb.Append(")") |> ignore
         sb.ToString()
 
+    /// <summary>TBD</summary>
     member m.summary() =
         let sb = System.Text.StringBuilder()
         sb.AppendLine("---") |> ignore
