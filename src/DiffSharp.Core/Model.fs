@@ -43,7 +43,10 @@ type Parameter =
 /// <summary>Represents a collection of named parameters in a model.</summary>
 type ParameterDict() =
     /// <summary>TBD</summary>
-    member val private parameters = OrderedDictionary()  // This non-generic OrderedDictionary is used since there is currently no generic OrderedDictionary https://github.com/dotnet/runtime/issues/24826
+    // A generic Dictionary is not good because it does not guarantee an order in which the items are returned. https://docs.microsoft.com/en-us/dotnet/api/system.collections.generic.dictionary-2?view=net-5.0
+    // A generic SortedDictionary exists but we don't want to sort the parameters by keys and we want to have them in the order they were registered. https://docs.microsoft.com/en-us/dotnet/api/system.collections.generic.sorteddictionary-2?view=net-5.0
+    // This non-generic OrderedDictionary is used since there is currently no generic OrderedDictionary https://github.com/dotnet/runtime/issues/24826
+    member val private parameters = OrderedDictionary() 
 
     /// <summary>TBD</summary>
     member d.Item
