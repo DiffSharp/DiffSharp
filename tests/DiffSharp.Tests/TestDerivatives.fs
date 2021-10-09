@@ -59,7 +59,7 @@ type TestDerivatives () =
               revz.reverse(combo.tensor([100., 200., 300.]))
               let revxd = revx.derivative
               let revxdCorrect = combo.tensor([100., 200., 300.])
-              let revyd = revy.isNoDiff()
+              let revyd = revy.isNoDiff
               let revydCorrect = true
 
               Assert.CheckEqual(fwdzCorrect, fwdz)
@@ -113,7 +113,7 @@ type TestDerivatives () =
                 revz.reverse(combo.tensor([100., 200., 300.]))
                 let revxd = revx.derivative
                 let revxdCorrect = combo.tensor([100., 200., 300.])
-                let revyd = revy.isNoDiff()
+                let revyd = revy.isNoDiff
                 let revydCorrect = true
 
                 Assert.CheckEqual(fwdzCorrect, fwdz)
@@ -138,7 +138,7 @@ type TestDerivatives () =
                 let revz = if swap then revy + revx else revx + revy
                 let revzCorrect = combo.tensor([5., 6., 7.])
                 revz.reverse(combo.tensor([100., 200., 300.]))
-                let revxd = revx.isNoDiff()
+                let revxd = revx.isNoDiff
                 let revxdCorrect = true
                 let revyd = revy.derivative
                 let revydCorrect = combo.tensor(600.)
@@ -194,7 +194,7 @@ type TestDerivatives () =
                 revz.reverse(combo.tensor([[100., 200.], [300., 400.]]))
                 let revxd = revx.derivative
                 let revxdCorrect = combo.tensor([[100., 200.], [300., 400.]])
-                let revyd = revy.isNoDiff()
+                let revyd = revy.isNoDiff
                 let revydCorrect = true
 
                 Assert.CheckEqual(fwdzCorrect, fwdz)
@@ -219,7 +219,7 @@ type TestDerivatives () =
                 let revz = if swap then revy + revx else revx + revy
                 let revzCorrect = combo.tensor([[6., 8.], [8., 10.]])
                 revz.reverse(combo.tensor([[100., 200.], [300., 400.]]))
-                let revxd = revx.isNoDiff()
+                let revxd = revx.isNoDiff
                 let revxdCorrect = true
                 let revyd = revy.derivative
                 let revydCorrect = combo.tensor([400., 600.])
@@ -369,7 +369,7 @@ type TestDerivatives () =
             revz.reverse(combo.tensor([100., 200., 300.]))
             let revxd = revx.derivative
             let revxdCorrect = combo.tensor([100., 200., 300.])
-            let revyd = revy.isNoDiff()
+            let revyd = revy.isNoDiff
             let revydCorrect = true
 
             Assert.CheckEqual(fwdzCorrect, fwdz)
@@ -393,7 +393,7 @@ type TestDerivatives () =
             let revz = revx - revy
             let revzCorrect = combo.tensor([-3., -3., -3.])
             revz.reverse(combo.tensor([100., 200., 300.]))
-            let revxd = revx.isNoDiff()
+            let revxd = revx.isNoDiff
             let revxdCorrect = true
             let revyd = revy.derivative
             let revydCorrect = combo.tensor([-100., -200., -300.])
@@ -447,7 +447,7 @@ type TestDerivatives () =
             revz.reverse(combo.tensor([100., 200., 300.]))
             let revxd = revx.derivative
             let revxdCorrect = combo.tensor(600.)
-            let revyd = revy.isNoDiff()
+            let revyd = revy.isNoDiff
             let revydCorrect = true
 
             Assert.CheckEqual(fwdzCorrect, fwdz)
@@ -471,7 +471,7 @@ type TestDerivatives () =
             let revz = revx - revy
             let revzCorrect = combo.tensor([-3., -4., -5.])
             revz.reverse(combo.tensor([100., 200., 300.]))
-            let revxd = revx.isNoDiff()
+            let revxd = revx.isNoDiff
             let revxdCorrect = true
             let revyd = revy.derivative
             let revydCorrect = combo.tensor([-100., -200., -300.])
@@ -525,7 +525,7 @@ type TestDerivatives () =
             revz.reverse(combo.tensor([100., 200., 300.]))
             let revxd = revx.derivative
             let revxdCorrect = combo.tensor([100., 200., 300.])
-            let revyd = revy.isNoDiff()
+            let revyd = revy.isNoDiff
             let revydCorrect = true
 
             Assert.CheckEqual(fwdzCorrect, fwdz)
@@ -549,7 +549,7 @@ type TestDerivatives () =
             let revz = revx - revy
             let revzCorrect = combo.tensor([-3., -2., -1.])
             revz.reverse(combo.tensor([100., 200., 300.]))
-            let revxd = revx.isNoDiff()
+            let revxd = revx.isNoDiff
             let revxdCorrect = true
             let revyd = revy.derivative
             let revydCorrect = combo.tensor(-600.)
@@ -605,7 +605,7 @@ type TestDerivatives () =
               revz.reverse(combo.tensor([100., 200., 300.]))
               let revxd = revx.derivative
               let revxdCorrect = combo.tensor([400., 1000., 1800.])
-              let revyd = revy.isNoDiff()
+              let revyd = revy.isNoDiff
               let revydCorrect = true
 
               Assert.CheckEqual(fwdzCorrect, fwdz)
@@ -659,7 +659,7 @@ type TestDerivatives () =
                 revz.reverse(combo.tensor([100., 200., 300.]))
                 let revxd = revx.derivative
                 let revxdCorrect = combo.tensor([400., 800., 1200.])
-                let revyd = revy.isNoDiff()
+                let revyd = revy.isNoDiff
                 let revydCorrect = true
 
                 Assert.CheckEqual(fwdzCorrect, fwdz)
@@ -684,7 +684,7 @@ type TestDerivatives () =
                 let revz = if swap then revy * revx else revx * revy
                 let revzCorrect = combo.tensor([4., 8., 12.])
                 revz.reverse(combo.tensor([100., 200., 300.]))
-                let revxd = revx.isNoDiff()
+                let revxd = revx.isNoDiff
                 let revxdCorrect = true
                 let revyd = revy.derivative
                 let revydCorrect = combo.tensor(1400.)
@@ -738,7 +738,7 @@ type TestDerivatives () =
             revz.reverse(combo.tensor([1000., 2000., 3000.]))
             let revxd = revx.derivative
             let revxdCorrect = combo.tensor([250., 400., 500.])
-            let revyd = revy.isNoDiff()
+            let revyd = revy.isNoDiff
             let revydCorrect = true
 
             Assert.CheckEqual(fwdzCorrect, fwdz)
@@ -762,7 +762,7 @@ type TestDerivatives () =
             let revz = revx / revy
             let revzCorrect = combo.tensor([0.2500, 0.4000, 0.5000])
             revz.reverse(combo.tensor([1000., 2000., 3000.]))
-            let revxd = revx.isNoDiff()
+            let revxd = revx.isNoDiff
             let revxdCorrect = true
             let revyd = revy.derivative
             let revydCorrect = combo.tensor([ -62.5000, -160.0000, -250.0000])
@@ -816,7 +816,7 @@ type TestDerivatives () =
             revz.reverse(combo.tensor([1000., 2000., 3000.]))
             let revxd = revx.derivative
             let revxdCorrect = combo.tensor(1150.)
-            let revyd = revy.isNoDiff()
+            let revyd = revy.isNoDiff
             let revydCorrect = true
 
             Assert.True(fwdz.allclose(fwdzCorrect, 0.01))
@@ -840,7 +840,7 @@ type TestDerivatives () =
             let revz = revx / revy
             let revzCorrect = combo.tensor([0.2500, 0.2000, 0.1667])
             revz.reverse(combo.tensor([1000., 2000., 3000.]))
-            let revxd = revx.isNoDiff()
+            let revxd = revx.isNoDiff
             let revxdCorrect = true
             let revyd = revy.derivative
             let revydCorrect = combo.tensor([-62.5000, -80.0000, -83.3333])
@@ -894,7 +894,7 @@ type TestDerivatives () =
             revz.reverse(combo.tensor([1000., 2000., 3000.]))
             let revxd = revx.derivative
             let revxdCorrect = combo.tensor([250., 500., 750.])
-            let revyd = revy.isNoDiff()
+            let revyd = revy.isNoDiff
             let revydCorrect = true
 
             Assert.CheckEqual(fwdzCorrect, fwdz)
@@ -918,7 +918,7 @@ type TestDerivatives () =
             let revz = revx / revy
             let revzCorrect = combo.tensor([0.2500, 0.5000, 0.7500])
             revz.reverse(combo.tensor([1000., 2000., 3000.]))
-            let revxd = revx.isNoDiff()
+            let revxd = revx.isNoDiff
             let revxdCorrect = true
             let revyd = revy.derivative
             let revydCorrect = combo.tensor(-875.)
@@ -972,7 +972,7 @@ type TestDerivatives () =
             revz.reverse(combo.tensor([3.1,3.2,3.3]))
             let revxd = revx.derivative
             let revxdCorrect = combo.tensor([  12.4000,  256.0000, 4811.3999])
-            let revyd = revy.isNoDiff()
+            let revyd = revy.isNoDiff
             let revydCorrect = true
 
             Assert.True(fwdz.allclose(fwdzCorrect, 0.01))
@@ -996,7 +996,7 @@ type TestDerivatives () =
             let revz = revx ** revy
             let revzCorrect = combo.tensor([  1.,  32., 729.])
             revz.reverse(combo.tensor([3.1,3.2,3.3]))
-            let revxd = revx.isNoDiff()
+            let revxd = revx.isNoDiff
             let revxdCorrect = true
             let revyd = revy.derivative
             let revydCorrect = combo.tensor([   0.0000,   70.9783, 2642.9316])
@@ -1050,7 +1050,7 @@ type TestDerivatives () =
             revz.reverse(combo.tensor([3.1,3.2,3.3]))
             let revxd = revx.derivative
             let revxdCorrect = combo.tensor(273.2062)
-            let revyd = revy.isNoDiff()
+            let revyd = revy.isNoDiff
             let revydCorrect = true
 
             Assert.True(fwdz.allclose(fwdzCorrect, 0.01))
@@ -1074,7 +1074,7 @@ type TestDerivatives () =
             let revz = revx ** revy
             let revzCorrect = combo.tensor([ 5.0625,  7.5938, 11.3906])
             revz.reverse(combo.tensor([3.1,3.2,3.3]))
-            let revxd = revx.isNoDiff()
+            let revxd = revx.isNoDiff
             let revxdCorrect = true
             let revyd = revy.derivative
             let revydCorrect = combo.tensor([ 6.3633,  9.8528, 15.2411])
@@ -1128,7 +1128,7 @@ type TestDerivatives () =
             revz.reverse(combo.tensor([3.1, 3.2, 3.3]))
             let revxd = revx.derivative
             let revxdCorrect = combo.tensor([ 12.4000, 102.4000, 356.4000])
-            let revyd = revy.isNoDiff()
+            let revyd = revy.isNoDiff
             let revydCorrect = true
 
             Assert.True(fwdz.allclose(fwdzCorrect, 0.01))
@@ -1152,7 +1152,7 @@ type TestDerivatives () =
             let revz = revx ** revy
             let revzCorrect = combo.tensor([ 1., 16., 81.])
             revz.reverse(combo.tensor([3.1, 3.2, 3.3]))
-            let revxd = revx.isNoDiff()
+            let revxd = revx.isNoDiff
             let revxdCorrect = true
             let revyd = revy.derivative
             let revydCorrect = combo.tensor(329.1482)
@@ -1266,7 +1266,7 @@ type TestDerivatives () =
             let revxdCorrect = combo.tensor([[33.4050, 46.2136,  0.6191, 55.9696, 37.6556],
                 [41.2370, 28.2842, 12.0266, 23.6085, 28.0854],
                 [65.6689, 62.6571, 12.2551, 65.4497, 55.9926]])
-            let revyd = revy.isNoDiff()
+            let revyd = revy.isNoDiff
             let revydCorrect = true
 
             Assert.True(fwdz.allclose(fwdzCorrect, 0.01))
@@ -1315,7 +1315,7 @@ type TestDerivatives () =
             revz.reverse(combo.tensor([[7.3984, 0.1849],
                 [1.2520, 9.5731],
                 [6.8201, 9.5221]]))            
-            let revxd = revx.isNoDiff()
+            let revxd = revx.isNoDiff
             let revxdCorrect = true
             let revyd = revy.derivative
             let revydCorrect = combo.tensor([[ 82.9549,129.8180],
@@ -2660,7 +2660,7 @@ type TestDerivatives () =
                 [ 1.2203; -0.8378; -0.3876];
                 [ 0.3626; -0.1200; -0.1496];
                 [-0.6304;  1.0198; -0.4969]])
-            let revyd = revy.isNoDiff()
+            let revyd = revy.isNoDiff
             let revydCorrect = true
 
             Assert.True(fwdz.allclose(fwdzCorrect, 0.01))
@@ -2706,7 +2706,7 @@ type TestDerivatives () =
                 [ 1.2203; -0.8378; -0.3876];
                 [ 0.3626; -0.1200; -0.1496];
                 [-0.6304;  1.0198; -0.4969]]))
-            let revxd = revx.isNoDiff()
+            let revxd = revx.isNoDiff
             let revxdCorrect = true
             let revyd = revy.derivative
             let revydCorrect = combo.tensor([[1.2199; -0.5281]; [-0.8378; -0.3876]])

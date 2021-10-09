@@ -167,28 +167,28 @@ type TestModel () =
     member _.TestModelParametersDiff () =
         let net = ModelStyle1a()
 
-        Assert.True(net.parametersVector.isNoDiff())
+        Assert.True(net.parametersVector.isNoDiff)
 
         let p = net.parametersVector
         let p = p.forwardDiff(p.onesLike())
         net.parametersVector <- p
-        Assert.True(net.parametersVector.isForwardDiff())
+        Assert.True(net.parametersVector.isForwardDiff)
 
         net.noDiff()
-        Assert.True(net.parametersVector.isNoDiff())
+        Assert.True(net.parametersVector.isNoDiff)
 
         let p = net.parametersVector
         let p = p.reverseDiff()
         net.parametersVector <- p
-        Assert.True(net.parametersVector.isReverseDiff())
+        Assert.True(net.parametersVector.isReverseDiff)
 
         net.noDiff()
-        Assert.True(net.parametersVector.isNoDiff())
+        Assert.True(net.parametersVector.isNoDiff)
 
         let p = net.parametersVector
         let x = dsharp.randn([1;10])
         ignore <| dsharp.grad (net.asFunction x >> dsharp.sum) p
-        Assert.True(net.parametersVector.isNoDiff())
+        Assert.True(net.parametersVector.isNoDiff)
 
     [<Test>]
     member _.TestModelForwardParameters () =

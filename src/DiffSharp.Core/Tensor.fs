@@ -257,20 +257,20 @@ type Tensor =
     ///  Returns the input tensor but with any support for automatic differentiation removed.
     member t.noDiff() = t.primalDeep
 
-    /// Indicates if a tensor includes support for forward-mode differentiation
-    member t.isForwardDiff() =
+    /// Indicates if a tensor is taking part in forward-mode differentiation
+    member t.isForwardDiff =
         match t with
         | TensorF(_) -> true
         | _ -> false
 
-    /// Indicates if a tensor includes support for reverse-mode differentiation
-    member t.isReverseDiff() =
+    /// Indicates if a tensor is taking part in reverse-mode differentiation
+    member t.isReverseDiff =
         match t with
         | TensorR(_) -> true
         | _ -> false
 
-    /// Indicates if a tensor includes support for forward or reverse-mode differentiation
-    member t.isNoDiff() =
+    /// Indicates if a tensor is a constant, meaning that it is not taking part in forward or reverse-mode differentiation
+    member t.isNoDiff =
         match t with
         | TensorC(_) -> true
         | _ -> false
@@ -994,7 +994,7 @@ type Tensor =
         let tensors = tensors |> Seq.toArray
         let allSameDiffType = tensors |> Array.forall (fun t -> t.isSameDiffType(tensors.[0]))
         if not allSameDiffType then failwithf "Cannot stack tensors with different differentiation type (TensorC, TensorF, TensorR)."
-        if not (tensors.[0].isNoDiff()) then
+        if not tensors.[0].isNoDiff then
             let allSameTag = tensors |> Array.forall (fun t -> t.nestingTag = tensors.[0].nestingTag)
             if not allSameTag then failwithf "Cannot stack tensors with different nesting tags."
         let shapes = tensors |> Array.map (fun t -> t.shape)
@@ -1030,7 +1030,7 @@ type Tensor =
         let tensors = tensors |> Seq.toArray
         let allSameDiffType = tensors |> Array.forall (fun t -> t.isSameDiffType(tensors.[0]))
         if not allSameDiffType then failwithf "Cannot cat tensors with different differentiation type (TensorC, TensorF, TensorR)."
-        if not (tensors.[0].isNoDiff()) then
+        if not tensors.[0].isNoDiff then
             let allSameTag = tensors |> Array.forall (fun t -> t.nestingTag = tensors.[0].nestingTag)
             if not allSameTag then failwithf "Cannot cat tensors with different nesting tags."
         let shapes = tensors |> Array.map (fun t -> t.shape)
