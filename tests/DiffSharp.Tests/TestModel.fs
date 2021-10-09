@@ -191,6 +191,34 @@ type TestModel () =
         Assert.True(net.parametersVector.isNoDiff)
 
     [<Test>]
+    member _.TestModelDiff () =
+        let net = ModelStyle1a()
+
+        let status = net.isNoDiff, net.isForwardDiff, net.isReverseDiff
+        let statusCorrect = true, false, false
+        Assert.AreEqual(statusCorrect, status)
+
+        net.forwardDiff(net.parameters)
+        let status = net.isNoDiff, net.isForwardDiff, net.isReverseDiff
+        let statusCorrect = false, true, false
+        Assert.AreEqual(statusCorrect, status)
+
+        net.noDiff()
+        let status = net.isNoDiff, net.isForwardDiff, net.isReverseDiff
+        let statusCorrect = true, false, false
+        Assert.AreEqual(statusCorrect, status)
+
+        net.reverseDiff()
+        let status = net.isNoDiff, net.isForwardDiff, net.isReverseDiff
+        let statusCorrect = false, false, true
+        Assert.AreEqual(statusCorrect, status)
+
+        net.noDiff()
+        let status = net.isNoDiff, net.isForwardDiff, net.isReverseDiff
+        let statusCorrect = true, false, false
+        Assert.AreEqual(statusCorrect, status)
+
+    [<Test>]
     member _.TestModelForwardParameters () =
         let net = ModelStyle1a()
         let f = net.asFunction

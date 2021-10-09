@@ -75,6 +75,21 @@ type ParameterDict() =
             if d.parameters.Count = 0 then Backend.Default // Empty ParameterDict defaults to default device, dtype, backend config
             else let p = d.parameters.[0] :?> Parameter in p.value.backend
 
+    member d.isForwardDiff
+        with get() = 
+            if d.parameters.Count = 0 then false
+            else let p = d.parameters.[0] :?> Parameter in p.value.isForwardDiff
+
+    member d.isReverseDiff
+        with get() = 
+            if d.parameters.Count = 0 then false
+            else let p = d.parameters.[0] :?> Parameter in p.value.isReverseDiff
+
+    member d.isNoDiff
+        with get() = 
+            if d.parameters.Count = 0 then true
+            else let p = d.parameters.[0] :?> Parameter in p.value.isNoDiff
+
     /// <summary>TBD</summary>
     member d.clear() = d.parameters.Clear()
 
@@ -247,6 +262,15 @@ type ModelBase() =
 
     member _.backend
         with get() = parameterDict.backend
+
+    member _.isForwardDiff
+        with get() = parameterDict.isForwardDiff
+
+    member _.isReverseDiff
+        with get() = parameterDict.isReverseDiff
+
+    member _.isNoDiff
+        with get() = parameterDict.isNoDiff
 
     /// <summary>TBD</summary>
     member _.parameters
