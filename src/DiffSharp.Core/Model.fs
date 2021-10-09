@@ -7,7 +7,9 @@ namespace rec DiffSharp.Model
 
 open DiffSharp
 open DiffSharp.Util
+open System.Collections
 open System.Collections.Generic
+open System.Collections.Specialized
 
 
 /// <namespacedoc>
@@ -41,54 +43,55 @@ type Parameter =
 /// <summary>Represents a collection of named parameters in a model.</summary>
 type ParameterDict() =
     /// <summary>TBD</summary>
-    member val private values = Dictionary<string, Parameter>()
+    member val private parameters = OrderedDictionary()
 
     /// <summary>TBD</summary>
     member d.Item
-        with get key = d.values.[key].value
-        and set key v = d.values.[key].value <- v
+        with get (key:string) = (d.parameters.[key] :?> Parameter).value
+        and set (key:string) (v:Tensor) = (d.parameters.[key] :?> Parameter).value <- v
 
     interface IEnumerable<string*Parameter> with
-        member d.GetEnumerator():IEnumerator<string*Parameter> = let s = d.values |> Seq.map (fun (KeyValue(a, b)) -> a, b) in s.GetEnumerator()
+        member d.GetEnumerator():IEnumerator<string*Parameter> = 
+            let s = d.parameters |> Seq.cast<DictionaryEntry> |> Seq.map (fun v -> v.Key :?> string, v.Value :?> Parameter) in s.GetEnumerator()
 
     interface System.Collections.IEnumerable with
         member d.GetEnumerator() = (d :> IEnumerable<string*Parameter>).GetEnumerator() :> System.Collections.IEnumerator
 
     member d.device
         with get() = 
-            if d.values.Count = 0 then Device.Default // Empty ParameterDict defaults to default device, dtype, backend config
-            else let p = d.values.Values |> Seq.head in p.value.device
+            if d.parameters.Count = 0 then Device.Default // Empty ParameterDict defaults to default device, dtype, backend config
+            else let p = d.parameters.[0] :?> Parameter in p.value.device
 
     member d.dtype
         with get() = 
-            if d.values.Count = 0 then Dtype.Default // Empty ParameterDict defaults to default device, dtype, backend config
-            else let p = d.values.Values |> Seq.head in p.value.dtype
+            if d.parameters.Count = 0 then Dtype.Default // Empty ParameterDict defaults to default device, dtype, backend config
+            else let p = d.parameters.[0] :?> Parameter in p.value.dtype
 
     member d.backend
         with get() = 
-            if d.values.Count = 0 then Backend.Default // Empty ParameterDict defaults to default device, dtype, backend config
-            else let p = d.values.Values |> Seq.head in p.value.backend
+            if d.parameters.Count = 0 then Backend.Default // Empty ParameterDict defaults to default device, dtype, backend config
+            else let p = d.parameters.[0] :?> Parameter in p.value.backend
 
     /// <summary>TBD</summary>
-    member d.clear() = d.values.Clear()
+    member d.clear() = d.parameters.Clear()
 
     /// <summary>TBD</summary>
     member d.add(name, parameter:Parameter) = 
         if d.device <> parameter.value.device then failwithf "Expecting a parameter with device %A but received %A" d.device parameter.value.device
         if d.dtype <> parameter.value.dtype then failwithf "Expecting a parameter with dtype %A but received %A" d.dtype parameter.value.dtype
         if d.backend <> parameter.value.backend then failwithf "Expecting a parameter with backend %A but received %A" d.backend parameter.value.backend
-        d.values.Add(name, parameter)
+        d.parameters.Add(name, parameter)
 
     /// <summary>TBD</summary>
     member d.add(parameters:list<string*Parameter>) = for (n, p) in parameters do d.add(n, p)
 
     /// <summary>TBD</summary>
-    member d.add(parameters:ParameterDict) = for KeyValue(n, p) in parameters.values do d.add(n, p)
+    member d.add(parameters:ParameterDict) = for n, p in parameters do d.add(n, p)
 
     /// <summary>TBD</summary>
     member d.map(f:string*Parameter->string*Parameter) =
         let ret = ParameterDict()
-        for KeyValue(n, p) in d.values do 
+        for n, p in d do 
             let n, p = f(n, p)
             ret.add(n, p)
         ret
@@ -101,14 +104,13 @@ type ParameterDict() =
 
     /// <summary>TBD</summary>
     member d.set(other:ParameterDict) = 
-        let dKeys = Dictionary.KeyCollection(d.values) |> Seq.toArray
-        let oKeys = Dictionary.KeyCollection(other.values) |> Seq.toArray
+        let dKeys = d.parameters.Keys
+        let oKeys = other.parameters.Keys
         if dKeys <> oKeys then failwithf "Expecting ParameterDict objects to have same set of keys."
         d.iter(fun (n, p) -> p.value <- other.[n])
 
     /// <summary>TBD</summary>
-    member d.iter(f:string*Parameter->unit) = 
-        for KeyValue(n, p) in d.values do f(n,p)
+    member d.iter(f:string*Parameter->unit) = for n, p in d do f(n, p)
 
     /// <summary>
     ///  Adjust the parameters to include support for forward-mode automatic differentiation.
@@ -147,11 +149,11 @@ type ParameterDict() =
         d.iter (fun (_, p) -> p.move(?device=device, ?dtype=dtype, ?backend=backend))
 
     /// <summary>TBD</summary>
-    member d.nelement with get() = [|for t in d.values.Values do t.value.nelement|] |> Array.sum
+    member d.nelement with get() = [|for t in d.parameters.Values do (t :?> Parameter).value.nelement|] |> Array.sum
 
     /// <summary>TBD</summary>
     member d.flatten() =
-        let ts = [| for t in d.values.Values do t.value.view(-1) |]
+        let ts = [| for t in d.parameters.Values do (t :?> Parameter).value.view(-1) |]
         if ts.Length = 0 then dsharp.zeros(0) // Empty ParameterDict defaults to default device, dtype, backend config
         else dsharp.cat(ts)
 
@@ -159,11 +161,11 @@ type ParameterDict() =
     member d.unflatten(tensors:Tensor) =
         if tensors.dim <> 1 then failwithf "Expecting 1d tensors but received tensors with shape %A" tensors.shape
         if tensors.nelement <> d.nelement then failwithf "Expecting tensors.nelement (%A) and ParameterDict.nelement (%A) to be the same" tensors.nelement d.nelement
-        let shapes = [|for t in d.values.Values do t.value.shape|]
+        let shapes = [|for t in d.parameters.Values do (t :?> Parameter).value.shape|]
         let sizes = [|for s in shapes do shapeLength s|]
         let ts = Array.map2 (fun (t:Tensor) (s:int[]) -> t.view(s)) (tensors.split(sizes)) shapes
         let mutable i = 0
-        let keys = Dictionary.copyKeys d.values
+        let keys = OrderedDictionary.copyKeys d.parameters
         for n in keys do
             d.[n] <- ts.[i]
             i <- i+1
@@ -176,11 +178,11 @@ type ParameterDict() =
 
     /// <summary>TBD</summary>
     override d.ToString() =
-        if d.values.Count = 0 then "ParameterDict()"
+        if d.parameters.Count = 0 then "ParameterDict()"
         else
         let sb = System.Text.StringBuilder()
         sb.AppendLine("ParameterDict(") |> ignore
-        for KeyValue(n, p) in d.values do 
+        for n, p in d do 
             sb.AppendLine(sprintf "%A: %A" n p) |> ignore
         sb.Append(")") |> ignore
         sb.ToString()
@@ -203,7 +205,7 @@ type ModelBase() =
     let parameterDict = ParameterDict()
     let bufferDict = ParameterDict()
     let stateDict = ParameterDict()
-    let modelDict = Dictionary<string, ModelBase>()
+    let modelDict = OrderedDictionary()
 
     let updateState() =
         stateDict.clear()
@@ -273,7 +275,7 @@ type ModelBase() =
 
     member _.children
         with get () = 
-            modelDict.Values |> Seq.toList
+            modelDict.Values |> Seq.cast<ModelBase> |> Seq.toList
 
     member m.models
         with get () =
@@ -357,7 +359,9 @@ type ModelBase() =
         let sb = System.Text.StringBuilder()
         sb.Append("ModelBase(") |> ignore
         let mutable prefix = ""
-        for KeyValue(_, m) in modelDict do 
+        for v in modelDict do 
+            // let n = (v :?> DictionaryEntry).Key :?> string
+            let m = (v :?> DictionaryEntry).Value :?> ModelBase
             // sb.Append(sprintf "%A: %A" n m) |> ignore
             sb.Append(sprintf "%s%A" prefix m) |> ignore
             prefix <- ", "

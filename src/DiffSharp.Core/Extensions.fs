@@ -7,6 +7,7 @@ namespace DiffSharp.Util
 
 open System
 open System.Collections.Generic
+open System.Collections.Specialized
 open System.Diagnostics.CodeAnalysis
 
 
@@ -230,7 +231,16 @@ module Seq =
         | :? ('T[]) as arr -> arr
         | _ -> Seq.toArray xs
 
-/// Contains extensions related to .NET dictionaries. 
+/// Contains extensions related to .NET OrderedDictionary. 
+module OrderedDictionary =
+
+    /// Gets a fresh array containing the keys of the dictionary.
+    let copyKeys (dictionary:OrderedDictionary) =
+        let keys = Array.zeroCreate dictionary.Count
+        dictionary.Keys.CopyTo(keys, 0)
+        keys
+
+/// Contains extensions related to .NET Dictionary. 
 module Dictionary =
 
     /// Gets a fresh array containing the keys of the dictionary.
