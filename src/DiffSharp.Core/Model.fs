@@ -405,13 +405,38 @@ type ModelBase() =
         m.state.move(?device=device, ?dtype=dtype, ?backend=backend)
 
     /// <summary>TBD</summary>
-    member m.saveState(fileName) = m.stateVector.save(fileName)
+    member m.saveState(fileName, ?noDiff:bool) =
+        let noDiff = defaultArg noDiff true
+        let ss =
+            if noDiff then m.stateVector.noDiff() // We remove any derivatives from the state vector before saving. This doesn't alter the differentiation state of the model.
+            else m.stateVector
+        ss.save(fileName)
 
     /// <summary>TBD</summary>
     member m.loadState(fileName) = m.stateVector <- Tensor.load(fileName)
 
     /// <summary>TBD</summary>
-    member m.save(fileName) = saveBinary m fileName
+    member m.save(fileName, ?noDiff:bool) =
+        let noDiff = defaultArg noDiff true
+        let mm =
+            if noDiff then
+                if m.isNoDiff then m
+                else
+                    // We clone the model and then remove any derivatives. The clone is used because we don't want a save operation to alter the differentiation state of the model.
+                    let mClone:ModelBase = m.clone()
+                    mClone.noDiff()
+                    mClone
+            else m
+        saveBinary mm fileName
+
+    /// <summary>TBD</summary>
+    static member load(fileName):ModelBase = loadBinary fileName
+
+    /// <summary>TBD</summary>
+    member m.clone() = 
+        let fileName = System.IO.Path.GetTempFileName()
+        m.save(fileName, noDiff=false)
+        ModelBase.load(fileName)
 
     override _.ToString() = 
         let sb = System.Text.StringBuilder()
@@ -490,13 +515,10 @@ type Model<'In, 'Out>() =
     static member (-->) (t:'In, m:Model<'In, 'Out>) = m.forward t
 
     /// <summary>TBD</summary>
-    static member load(fileName):Model<'In, 'Out> = loadBinary fileName
+    static member load(fileName):Model<'In, 'Out> = ModelBase.load(fileName) :?> Model<'In, 'Out>
 
     /// <summary>TBD</summary>
-    member m.clone():Model<'In, 'Out> = 
-        let fileName = System.IO.Path.GetTempFileName()
-        m.save(fileName)
-        Model<'In, 'Out>.load(fileName)
+    member m.clone():Model<'In, 'Out> = (m :> ModelBase).clone() :?> Model<'In, 'Out>
 
 
 type Model = Model<Tensor, Tensor>

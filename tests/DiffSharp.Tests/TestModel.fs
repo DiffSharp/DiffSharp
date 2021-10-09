@@ -283,6 +283,32 @@ type TestModel () =
         Assert.CheckEqual(y1, y2)
 
     [<Test>]
+    member _.TestModelSaveLoadStateNoDiff () =
+        let net = ModelStyle1a()
+        net.reverseDiff()
+        Assert.True(net.isReverseDiff)
+
+        let fileName = System.IO.Path.GetTempFileName()
+        net.saveState(fileName)
+        Assert.True(net.isReverseDiff)
+
+        net.loadState(fileName)
+        Assert.True(net.isNoDiff)
+
+    [<Test>]
+    member _.TestModelSaveLoadNoDiff () =
+        let net = ModelStyle1a()
+        net.reverseDiff()
+        Assert.True(net.isReverseDiff)
+
+        let fileName = System.IO.Path.GetTempFileName()
+        net.save(fileName)
+        Assert.True(net.isReverseDiff)
+
+        let net2 = Model.load(fileName)
+        Assert.True(net2.isNoDiff)
+
+    [<Test>]
     member _.TestModelMove () =
         for combo1 in Combos.FloatingPointExcept16s do
             use _holder = dsharp.useConfig(combo1.dtype, combo1.device, combo1.backend)
