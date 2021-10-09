@@ -462,7 +462,10 @@ module UtilAutoOpens =
     let stringPadAs (s1:string) (s2:string) = stringPad s1 s2.Length
 
     /// Formats an integer as a string with comma as thousands separator
-    let thousands(x:int) = String.Format("{0:#,0}", x)
+    let thousandsInt(x:int) = String.Format("{0:#,0}", x)
+
+    /// Formats an integer as a string with comma as thousands separator
+    let thousandsFloat(x:float) = String.Format("{0:N}", x)
 
     /// Returns the file contents as Base64 encoded string
     let fileToBase64String fileName =

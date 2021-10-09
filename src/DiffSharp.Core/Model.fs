@@ -276,6 +276,13 @@ type ModelBase() =
         with get () = stateDict.flatten()
         and set s = stateDict.unflatten(s)
 
+    /// <summary>Gets the number of parameters of the model</summary>
+    member m.nparameters = m.parameters.nelement
+
+    member m.nbuffers = m.buffers.nelement
+
+    member m.nstate = m.state.nelement
+
     member _.children
         with get () = 
             modelDict.Values |> Seq.cast<ModelBase> |> Seq.toList
@@ -283,6 +290,21 @@ type ModelBase() =
     member m.models
         with get () =
             m :: [for c in m.children do yield! c.models]
+
+    member m.hasOwnParameters
+        with get () =
+            let childrenParams = m.children |> List.map (fun c -> c.nparameters) |> List.sum
+            m.nparameters <> childrenParams
+
+    member m.hasOwnBuffers
+        with get () =
+            let childrenBuffers = m.children |> List.map (fun c -> c.nbuffers) |> List.sum
+            m.nbuffers <> childrenBuffers
+
+    member m.hasOwnState
+        with get () =
+            let childrenState = m.children |> List.map (fun c -> c.nstate) |> List.sum
+            m.nstate <> childrenState
 
     /// <summary>TBD</summary>
     member m.init(f:string*Tensor->Tensor) = m.parameters.iter(fun (n, p) -> p.value <- f(n, p.value))
@@ -346,9 +368,6 @@ type ModelBase() =
     member m.move(?device, ?dtype, ?backend) = 
         m.state.move(?device=device, ?dtype=dtype, ?backend=backend)
 
-    /// <summary>Gets the number of parameters of the model</summary>
-    member m.nparameters = m.parameters.nelement
-
     /// <summary>TBD</summary>
     member m.saveState(fileName) = m.stateVector.save(fileName)
 
@@ -369,6 +388,23 @@ type ModelBase() =
             sb.Append(sprintf "%s%A" prefix m) |> ignore
             prefix <- ", "
         sb.Append(")") |> ignore
+        sb.ToString()
+
+    member m.summary() =
+        let sb = System.Text.StringBuilder()
+        sb.AppendLine("---") |> ignore
+        sb.AppendLine(sprintf "%-40s %16s" "Model" "Params") |> ignore
+        sb.AppendLine("---") |> ignore
+        for mm in m.models do
+            if mm.hasOwnParameters then
+                sb.AppendLine(sprintf "%-40s %16s" (mm.ToString()) (thousandsInt mm.nparameters)) |> ignore
+        sb.AppendLine("---") |> ignore
+        sb.AppendLine(sprintf "Total params                  : %s" (thousandsInt m.nstate)) |> ignore
+        sb.AppendLine(sprintf "Trainable params              : %s" (thousandsInt m.nparameters)) |> ignore
+        sb.AppendLine(sprintf "Non-trainable params (buffers): %s" (thousandsInt m.nbuffers)) |> ignore
+        sb.AppendLine("---") |> ignore
+        sb.AppendLine(sprintf "Total params size (MiB)       : %s" (thousandsFloat ((float (m.stateVector.memorySize()))/(1024.*1024.)))) |> ignore
+        sb.AppendLine("---") |> ignore
         sb.ToString()
 
 

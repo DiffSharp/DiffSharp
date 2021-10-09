@@ -530,6 +530,36 @@ type Tensor =
     /// Convert a scalar tensor to a boolean value
     member t.toBool() = t.toScalar().toBool()
 
+    /// Returns the size in bytes of an individual element in this tensor. Depending on dtype, backend configuration, this is not guaranteed to be correct and can behave differently in different runtime environments.
+    member t.elementSize() =
+        let bitsPerElement =
+            match t.backend, t.dtype with
+            | Backend.Reference, Dtype.BFloat16 -> 32 // Backed by float32
+            | Backend.Reference, Dtype.Float16 -> 32 // Backed by float32
+            | Backend.Reference, Dtype.Float32 -> 32
+            | Backend.Reference, Dtype.Float64 -> 64
+            | Backend.Reference, Dtype.Int8 -> 8
+            | Backend.Reference, Dtype.Byte -> 8
+            | Backend.Reference, Dtype.Int16 -> 16
+            | Backend.Reference, Dtype.Int32 -> 32
+            | Backend.Reference, Dtype.Int64 -> 64
+            | Backend.Reference, Dtype.Bool -> 8 // Not reliable https://stackoverflow.com/a/28515361
+            | Backend.Torch, Dtype.BFloat16 -> 16
+            | Backend.Torch, Dtype.Float16 -> 16
+            | Backend.Torch, Dtype.Float32 -> 32
+            | Backend.Torch, Dtype.Float64 -> 64
+            | Backend.Torch, Dtype.Int8 -> 8
+            | Backend.Torch, Dtype.Byte -> 8
+            | Backend.Torch, Dtype.Int16 -> 16
+            | Backend.Torch, Dtype.Int32 -> 32
+            | Backend.Torch, Dtype.Int64 -> 64
+            | Backend.Torch, Dtype.Bool -> 8 // https://github.com/pytorch/pytorch/issues/41571
+            | _ -> failwithf "Unknown backend, dtype configuration to compute memory size"
+        bitsPerElement / 8
+
+    /// Returns the size in bytes of the total memory used by this tensor. Depending on dtype, backend configuration, this is not guaranteed to be correct and can behave differently in different runtime environments.
+    member t.memorySize() = t.nelement * t.elementSize()
+
     /// Indicates if two tensors have the same shape and all corresponding elements are equal within the
     /// given tolerances.
     member t.allclose(tensor:Tensor, ?relativeTolerance, ?absoluteTolerance) =
