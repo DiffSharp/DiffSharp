@@ -358,6 +358,48 @@ type TestModel () =
         Assert.CheckEqual(m2modelsCorrect, m2models)
 
     [<Test>]
+    member _.TestModelChildrenParameters () =
+        let l1 = Linear(1, 2)
+        let l2 = Linear(2, 3)
+        let l3 = Linear(3, 4)
+
+        // ModelBase
+        // |-ModelBase
+        //   |-ModelBase
+        //     |-ModelBase
+        //       |- l1
+        //     |-l2
+        // |-l3
+        let m1 = l1 --> dsharp.relu --> l2 --> dsharp.relu --> l3 --> dsharp.flatten(1)
+
+        // ModelBase
+        // |-ModelBase
+        //   |-l1
+        //   |-l2
+        // |-l3 
+        let m2 = l1 --> l2 --> l3
+
+        // ModelBase
+        // |-l1
+        // |-l2
+        // |-l3
+        let m3 = Sequential([l1; l2; l3])
+
+        let childrenParams (m:ModelBase) = 
+            m.children |> List.map (fun c -> c.nparameters) |> List.sum
+
+        let m1Params = m1.nparameters
+        let m2Params = m2.nparameters
+        let m3Params = m3.nparameters
+        let m1ChildrenParams = childrenParams m1
+        let m2ChildrenParams = childrenParams m2
+        let m3ChildrenParams = childrenParams m3
+
+        Assert.CheckEqual(m1Params, m1ChildrenParams)
+        Assert.CheckEqual(m2Params, m2ChildrenParams)
+        Assert.CheckEqual(m3Params, m3ChildrenParams)
+
+    [<Test>]
     member _.TestModelLinear () =
         // Trains a linear regressor
         let n, din, dout = 4, 100, 10
