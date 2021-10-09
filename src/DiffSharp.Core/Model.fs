@@ -43,7 +43,7 @@ type Parameter =
 /// <summary>Represents a collection of named parameters in a model.</summary>
 type ParameterDict() =
     /// <summary>TBD</summary>
-    member val private parameters = OrderedDictionary()
+    member val private parameters = OrderedDictionary()  // This non-generic OrderedDictionary is used since there is currently no generic OrderedDictionary https://github.com/dotnet/runtime/issues/24826
 
     /// <summary>TBD</summary>
     member d.Item
