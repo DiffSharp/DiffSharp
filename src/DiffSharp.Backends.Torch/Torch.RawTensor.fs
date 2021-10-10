@@ -124,7 +124,8 @@ type TorchRawTensor(tt: torch.Tensor, shape: Shape, dtype: Dtype, device: Device
 
     override t.GetItem(indexes:int[]) =
         Shape.checkCanIndex t.Shape indexes
-        t.MakeLike(tt=tt.[indexes |> Array.map (fun v -> torch.TensorIndex.Single(int64 v))], shape=[||]).ToScalar()
+        if t.Shape.Length = 0 then t.ToScalar()
+        else t.MakeLike(tt=tt.[indexes |> Array.map (fun v -> torch.TensorIndex.Single(int64 v))], shape=[||]).ToScalar()
 
     override t.GetSlice(fullBounds:int[,]) =
         let n = fullBounds.GetLength(0)

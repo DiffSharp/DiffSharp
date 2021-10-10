@@ -8,6 +8,7 @@
     <Compile Include="Backend.fs" />
     <Compile Include="Device.fs" />
     <Compile Include="Dtype.fs" />
+    <Compile Include="Printer.fs" />
     <Compile Include="Shape.fs" />
     <Compile Include="Util.fs" />
     <Compile Include="Scalar.fs" />

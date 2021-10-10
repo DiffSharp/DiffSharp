@@ -423,9 +423,9 @@ type Tensor =
     override t.ToString() = 
         let rec fmt postfix (t: Tensor) =
             match t with
-            | TensorC(p) -> p.Print(name="tensor", postfix=postfix)
-            | TensorF(tp,_,_) -> fmt (postfix + ", fwd") tp
-            | TensorR(tp,_,_,_,_) -> fmt (postfix + ", rev") tp
+            | TensorC(p) -> p.Print(postfix)
+            | TensorF(tp,_,_) -> fmt (postfix + ":fwd") tp
+            | TensorR(tp,_,_,_,_) -> fmt (postfix + ":rev") tp
         fmt "" t
 
     override t.Equals(other) =
