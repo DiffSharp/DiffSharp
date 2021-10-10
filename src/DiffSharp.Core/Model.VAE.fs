@@ -50,24 +50,24 @@ type VAE(xShape:seq<int>, zDim:int, encoder:Model, decoder:Model) =
     inherit VAEBase(zDim)
     // TODO: check if encoder can accept input with xShape
     let encoderOutputDim = encoder.forward(dsharp.zeros(xShape).unsqueeze(0)).flatten().nelement
-    let preZ = Linear(encoderOutputDim, zDim*2)
-    let postZ = Linear(zDim, encoderOutputDim)
+    let prez = Linear(encoderOutputDim, zDim*2)
+    let postz = Linear(zDim, encoderOutputDim)
     do
         // TODO: check if decoder can accept input with (-1, zDim)
         // let decodedExample = xExample --> encoder --> decoder
         // if decodedExample.shape <> xShape then failwithf "Expecting decoder's output shape (%A) to be xShape (%A)" decodedExample.shape xShape
-        base.add([encoder;decoder;preZ;postZ],["VAE-encoder";"VAE-decoder";"VAE-preZ"; "VAE-postZ"])
+        base.addModel([encoder;decoder;prez;postz],["VAE-encoder";"VAE-decoder";"VAE-prez"; "VAE-postz"])
 
     override m.encode x =
-        let mulogvar = x --> encoder --> preZ
+        let mulogvar = x --> encoder --> prez
         let h = mulogvar.split([zDim; zDim], dim=1)
         let mu, logVar = h.[0], h.[1]
         mu, logVar
 
     override m.decode z =
-        z --> postZ -->decoder
+        z --> postz -->decoder
 
-    override _.getString() = sprintf "VAE(%A, %A, %A, %A)" xShape zDim encoder decoder
+    override _.ToString() = sprintf "VAE(%A, %A, %A, %A)" xShape zDim encoder decoder
 
 
 /// <summary>Variational auto-encoder with multilayer perceptron (MLP) encoder and decoder.</summary>
@@ -85,8 +85,8 @@ type VAEMLP(xDim:int, zDim:int, ?hDims:seq<int>, ?nonlinearity:Tensor->Tensor, ?
     let enc = Array.append [|for i in 0..dims.Length-2 -> Linear(dims.[i], dims.[i+1])|] [|Linear(dims.[dims.Length-2], dims.[dims.Length-1])|]
     let dec = [|for i in 0..dims.Length-2 -> Linear(dims.[i+1], dims.[i])|] |> Array.rev
     do 
-        base.add([for m in enc -> box m])
-        base.add([for m in dec -> box m])
+        base.addModel(enc |> Array.map box)
+        base.addModel(dec |> Array.map box)
 
     override m.encode (x:Tensor) =
         let batchSize = x.shape.[0]
@@ -103,4 +103,4 @@ type VAEMLP(xDim:int, zDim:int, ?hDims:seq<int>, ?nonlinearity:Tensor->Tensor, ?
             h <- nonlinearity <| dec.[i].forward(h)
         nonlinearityLast <| dec.[dec.Length-1].forward(h)
 
-    override _.getString() = sprintf "VAEMLP(%A, %A, %A)" xDim hDims zDim
+    override _.ToString() = sprintf "VAEMLP(%A, %A, %A)" xDim hDims zDim

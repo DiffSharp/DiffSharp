@@ -7,22 +7,9 @@ namespace rec DiffSharp.Model
 
 open DiffSharp
 open DiffSharp.Util
+open System.Collections
 open System.Collections.Generic
-
-
-[<AutoOpen>]
-module ModelAutoOpens =
-    let rnnShape (value:Tensor) inFeatures batchFirst =
-        let value =
-            if batchFirst then
-                if value.dim <> 3 then failwithf "Expecting the input to be of shape batchSize x seqLen x inFeatures, but received input with shape %A" value.shape
-                value.transpose(0, 1)
-            else
-                if value.dim <> 3 then failwithf "Expecting the input to be of shape seqLen x batchSize x inFeatures, but received input with shape %A" value.shape
-                value
-        if value.shape.[2] <> inFeatures then failwithf "Expecting input to have %A features, but received input with shape %A" inFeatures value.shape
-        let seqLen, batchSize = value.shape.[0], value.shape.[1]
-        value, seqLen, batchSize
+open System.Collections.Specialized
 
 
 /// <namespacedoc>
@@ -47,53 +34,101 @@ type Parameter =
     /// <summary>TBD</summary>
     member p.move(?device, ?dtype, ?backend) = p.value <- p.value.move(?device=device, ?dtype=dtype, ?backend=backend)
 
+    member p.copy() = Parameter(p.value.clone())
+
     /// <summary>TBD</summary>
-    override p.ToString() = sprintf "Parameter(shape:%A, value:%A)" p.value.shape p.value
+    override p.ToString() = sprintf "Parameter(shape: %A, value: %A)" (p.value.shape |> List.ofSeq) p.value
 
 
 /// <summary>Represents a collection of named parameters in a model.</summary>
 type ParameterDict() =
-
-    // If the dictionary is empty then the latest 'move' is considered the configuration for the implied empty tensor
-    let mutable dummy = dsharp.zeros(0)
-
     /// <summary>TBD</summary>
-    member val values = Dictionary<string, Parameter>()
+    // A generic Dictionary is not good because it does not guarantee an order in which the items are returned. https://docs.microsoft.com/en-us/dotnet/api/system.collections.generic.dictionary-2?view=net-5.0
+    // A generic SortedDictionary exists but we don't want to sort the parameters by keys and we want to have them in the order they were registered. https://docs.microsoft.com/en-us/dotnet/api/system.collections.generic.sorteddictionary-2?view=net-5.0
+    // This non-generic OrderedDictionary is used since there is currently no generic OrderedDictionary https://github.com/dotnet/runtime/issues/24826
+    member val private parameters = OrderedDictionary() 
 
     /// <summary>TBD</summary>
     member d.Item
-        with get key = d.values.[key].value
-        and set key v = d.values.[key].value <- v
+        with get (key:string) = (d.parameters.[key] :?> Parameter).value
+        and set (key:string) (v:Tensor) = (d.parameters.[key] :?> Parameter).value <- v
+
+    interface IEnumerable<string*Parameter> with
+        member d.GetEnumerator():IEnumerator<string*Parameter> = 
+            let s = d.parameters |> Seq.cast<DictionaryEntry> |> Seq.map (fun v -> v.Key :?> string, v.Value :?> Parameter) in s.GetEnumerator()
+
+    interface System.Collections.IEnumerable with
+        member d.GetEnumerator() = (d :> IEnumerable<string*Parameter>).GetEnumerator() :> System.Collections.IEnumerator
+
+    member d.device
+        with get() = 
+            if d.parameters.Count = 0 then Device.Default // Empty ParameterDict defaults to default device, dtype, backend config
+            else let p = d.parameters.[0] :?> Parameter in p.value.device
+
+    member d.dtype
+        with get() = 
+            if d.parameters.Count = 0 then Dtype.Default // Empty ParameterDict defaults to default device, dtype, backend config
+            else let p = d.parameters.[0] :?> Parameter in p.value.dtype
+
+    member d.backend
+        with get() = 
+            if d.parameters.Count = 0 then Backend.Default // Empty ParameterDict defaults to default device, dtype, backend config
+            else let p = d.parameters.[0] :?> Parameter in p.value.backend
+
+    member d.isForwardDiff
+        with get() = 
+            if d.parameters.Count = 0 then false
+            else let p = d.parameters.[0] :?> Parameter in p.value.isForwardDiff
+
+    member d.isReverseDiff
+        with get() = 
+            if d.parameters.Count = 0 then false
+            else let p = d.parameters.[0] :?> Parameter in p.value.isReverseDiff
+
+    member d.isNoDiff
+        with get() = 
+            if d.parameters.Count = 0 then true
+            else let p = d.parameters.[0] :?> Parameter in p.value.isNoDiff
 
     /// <summary>TBD</summary>
-    member d.add(name, parameter) = d.values.Add(name, parameter)
+    member d.clear() = d.parameters.Clear()
+
+    /// <summary>TBD</summary>
+    member d.add(name, parameter:Parameter) = 
+        if d.device <> parameter.value.device then failwithf "Expecting a parameter with device %A but received %A" d.device parameter.value.device
+        if d.dtype <> parameter.value.dtype then failwithf "Expecting a parameter with dtype %A but received %A" d.dtype parameter.value.dtype
+        if d.backend <> parameter.value.backend then failwithf "Expecting a parameter with backend %A but received %A" d.backend parameter.value.backend
+        d.parameters.Add(name, parameter)
 
     /// <summary>TBD</summary>
     member d.add(parameters:list<string*Parameter>) = for (n, p) in parameters do d.add(n, p)
 
     /// <summary>TBD</summary>
-    member d.add(parameters:ParameterDict) = for KeyValue(n, p) in parameters.values do d.add(n, p)
-
-    /// <summary>TBD</summary>
-    member d.copy() = d.map(fun (t:Tensor) -> t)
+    member d.add(parameters:ParameterDict) = for n, p in parameters do d.add(n, p)
 
     /// <summary>TBD</summary>
     member d.map(f:string*Parameter->string*Parameter) =
         let ret = ParameterDict()
-        for KeyValue(n, p) in d.values do ret.values.Add(f(n,p))
+        for n, p in d do 
+            let n, p = f(n, p)
+            ret.add(n, p)
         ret
 
     /// <summary>TBD</summary>
-    member d.map(f:string*Tensor->string*Tensor) = d.map(fun (n, p:Parameter) -> let nn, tt = f(n, p.value) in nn, Parameter(tt))
+    member d.map(f:Parameter->Parameter) = d.map(fun (n, p) -> (n, f p))
 
     /// <summary>TBD</summary>
-    member d.map(f:Tensor->Tensor) = d.map(fun (n,t) -> n, f t)
+    member d.copy() = d.map(fun (n, p:Parameter) -> (n, p.copy()))
 
     /// <summary>TBD</summary>
-    member d.set(parameters:ParameterDict) = d.iter(fun (n, p) -> p.value <- parameters.[n])
+    member d.set(other:ParameterDict) = 
+        let dKeys = d.parameters.Keys
+        let oKeys = other.parameters.Keys
+        if dKeys <> oKeys then failwithf "Expecting ParameterDict objects to have same set of keys."
+        d.iter(fun (n, p) -> p.value <- other.[n])
 
     /// <summary>TBD</summary>
-    member d.iter(f:string*Parameter->unit) = for KeyValue(n, p) in d.values do f(n,p)
+    member d.iter(f:string*Parameter->unit) = for n, p in d do f(n, p)
 
     /// <summary>
     ///  Adjust the parameters to include support for forward-mode automatic differentiation.
@@ -129,33 +164,26 @@ type ParameterDict() =
 
     /// <summary>TBD</summary>
     member d.move(?device, ?dtype, ?backend) =
-        dummy <- dummy.move(?device=device, ?dtype=dtype, ?backend=backend)
         d.iter (fun (_, p) -> p.move(?device=device, ?dtype=dtype, ?backend=backend))
 
     /// <summary>TBD</summary>
-    member d.primal with get() = d.map(fun (t:Tensor)->t.primal)
-
-    /// <summary>TBD</summary>
-    member d.derivative with get() = d.map(fun (t:Tensor)->t.derivative)
-
-    /// <summary>TBD</summary>
-    member d.nelement with get() = [|for t in d.values.Values do t.value.nelement|] |> Array.sum
+    member d.nelement with get() = [|for t in d.parameters.Values do (t :?> Parameter).value.nelement|] |> Array.sum
 
     /// <summary>TBD</summary>
     member d.flatten() =
-        let ts = [| for t in d.values.Values do t.value.view(-1) |]
-        if ts.Length = 0 then dummy else
-        dsharp.cat(ts)
+        let ts = [| for t in d.parameters.Values do (t :?> Parameter).value.view(-1) |]
+        if ts.Length = 0 then dsharp.zeros(0) // Empty ParameterDict defaults to default device, dtype, backend config
+        else dsharp.cat(ts)
 
     /// <summary>TBD</summary>
     member d.unflatten(tensors:Tensor) =
         if tensors.dim <> 1 then failwithf "Expecting 1d tensors but received tensors with shape %A" tensors.shape
         if tensors.nelement <> d.nelement then failwithf "Expecting tensors.nelement (%A) and ParameterDict.nelement (%A) to be the same" tensors.nelement d.nelement
-        let shapes = [|for t in d.values.Values do t.value.shape|]
+        let shapes = [|for t in d.parameters.Values do (t :?> Parameter).value.shape|]
         let sizes = [|for s in shapes do shapeLength s|]
         let ts = Array.map2 (fun (t:Tensor) (s:int[]) -> t.view(s)) (tensors.split(sizes)) shapes
         let mutable i = 0
-        let keys = Dictionary.copyKeys d.values
+        let keys = OrderedDictionary.copyKeys d.parameters
         for n in keys do
             d.[n] <- ts.[i]
             i <- i+1
@@ -168,12 +196,12 @@ type ParameterDict() =
 
     /// <summary>TBD</summary>
     override d.ToString() =
+        if d.parameters.Count = 0 then "ParameterDict()"
+        else
         let sb = System.Text.StringBuilder()
-        sb.Append("ParameterDict(") |> ignore
-        let mutable prefix = ""
-        for KeyValue(n, p) in d.values do 
-            sb.Append(sprintf "%s%A:%A" prefix n p) |> ignore
-            prefix <- ", "
+        sb.AppendLine("ParameterDict(") |> ignore
+        for n, p in d do 
+            sb.AppendLine(sprintf "%A: %A" n p) |> ignore
         sb.Append(")") |> ignore
         sb.ToString()
 
@@ -191,64 +219,163 @@ type ModelBase() =
     val mutable mode: Mode
 
     /// <summary>TBD</summary>
+    let namePrefixes = Dictionary<string, int>()
     let parameterDict = ParameterDict()
-    let parameterPrefixes = Dictionary<string, int>()
+    let bufferDict = ParameterDict()
+    let stateDict = ParameterDict()
+    let modelDict = OrderedDictionary()
 
-    /// <summary>TBD</summary>
-    member val subModels = Dictionary<string, ModelBase>()
+    let updateState() =
+        stateDict.clear()
+        stateDict.add(parameterDict)
+        stateDict.add(bufferDict)
+
+    let nextName (name:string) =
+        let name = if name.Contains("__") then name.Split("__").[0] else name
+        let i = namePrefixes.GetValueOrDefault name
+        namePrefixes.[name] <- i+1
+        sprintf "%s__%A" name (i+1)
+
+    member _.checkItems(items:seq<_>, ?names:seq<string>)=
+        let items = items |> Seq.toArray
+        let names = defaultArg names (Seq.empty) |> Seq.toArray
+        if names.Length > 0 then
+            if items.Length <> names.Length then failwithf "Expecting items (%A) and names (%A) to have the same length" items.Length names.Length
+            for name in names do if name.Contains("__") then failwithf "String '__' not allowed in name '%s'" name
+        items, names
 
     /// <summary>TBD</summary>
     member m.train() = 
         m.mode <- Mode.Train
-        for model:ModelBase in m.allModels do model.mode <- Mode.Train
+        for model:ModelBase in m.models do model.mode <- Mode.Train
 
     /// <summary>TBD</summary>
     member m.eval() = 
         m.mode <- Mode.Eval
-        for model:ModelBase in m.allModels do model.mode <- Mode.Eval
+        for model:ModelBase in m.models do model.mode <- Mode.Eval
+
+    member _.device
+        with get() = parameterDict.device
+
+    member _.dtype
+        with get() = parameterDict.dtype
+
+    member _.backend
+        with get() = parameterDict.backend
+
+    member _.isForwardDiff
+        with get() = parameterDict.isForwardDiff
+
+    member _.isReverseDiff
+        with get() = parameterDict.isReverseDiff
+
+    member _.isNoDiff
+        with get() = parameterDict.isNoDiff
 
     /// <summary>TBD</summary>
-    member m.parameters
+    member _.parameters
         with get () = parameterDict
-        and set parameters = parameterDict.set(parameters)
+        and set p = parameterDict.set(p)
 
     /// <summary>TBD</summary>
-    member m.parametersVector
-        with get () = m.parameters.flatten()
-        and set parameters = m.parameters.unflatten(parameters)
+    member _.parametersVector
+        with get () = parameterDict.flatten()
+        and set p = parameterDict.unflatten(p)
 
     /// <summary>TBD</summary>
-    member m.allModels
+    member _.buffers
+        with get () = bufferDict
+        and set b = bufferDict.set(b)
+
+    /// <summary>TBD</summary>
+    member _.buffersVector
+        with get () = bufferDict.flatten()
+        and set b = bufferDict.unflatten(b)
+
+    /// <summary>TBD</summary>
+    member _.state
+        with get () = stateDict
+        and set s = stateDict.set(s)
+
+    /// <summary>TBD</summary>
+    member _.stateVector
+        with get () = stateDict.flatten()
+        and set s = stateDict.unflatten(s)
+
+    /// <summary>Gets the number of parameters of the model</summary>
+    member m.nparameters = m.parameters.nelement
+
+    /// <summary>TBD</summary>
+    member m.nbuffers = m.buffers.nelement
+
+    /// <summary>TBD</summary>
+    member m.nstate = m.state.nelement
+
+    /// <summary>TBD</summary>
+    member _.children
+        with get () = 
+            modelDict.Values |> Seq.cast<ModelBase> |> Seq.toList
+
+    /// <summary>TBD</summary>
+    member m.models
         with get () =
-            if m.subModels.Count = 0 then [m]
-            else [for sm in m.subModels.Values do yield! sm.allModels]
+            m :: [for c in m.children do yield! c.models]
 
     /// <summary>TBD</summary>
-    member m.init(f:string*Tensor->Tensor) = for KeyValue(n, p) in m.parameters.values do p.value <- f(n, p.value)
+    member m.hasOwnParameters
+        with get () =
+            let childrenParams = m.children |> List.map (fun c -> c.nparameters) |> List.sum
+            m.nparameters <> childrenParams
 
     /// <summary>TBD</summary>
-    member m.add(parameters:seq<obj>, ?names:seq<string>) =
-        let parameters = parameters |> Seq.toArray
-        let names = defaultArg names (Seq.empty) |> Seq.toArray
-        if names.Length > 0 then
-            if parameters.Length <> names.Length then failwithf "Expecting parameters (%A) and names (%A) to have the same length" parameters.Length names.Length
-            for name in names do if name.Contains("__") then failwithf "String '__' not allowed in name '%s'" name
-        let nextName (name:string) =
-            let name = if name.Contains("__") then name.Split("__").[0] else name
-            let i = parameterPrefixes.GetValueOrDefault name
-            parameterPrefixes.[name] <- i+1
-            sprintf "%s__%A" name (i+1)
-        for i in 0..parameters.Length-1 do
-            let p = parameters.[i]
-            match (box p) with
-            | :? Parameter as p ->
-                let n = if names.Length > 0 then names.[i] else sprintf "param-%s" (Random.UUID())
-                m.parameters.add(n, p)
-            | :? Model as mm ->
-                let n = if names.Length > 0 then names.[i] else sprintf "model-%s" (Random.UUID())
-                m.subModels.Add(n, mm)
-                m.parameters.add(mm.parameters.map(fun (nn, pp:Parameter) -> (nextName nn, pp)))
-            | _ -> failwithf "Unsupported type. Expecting a Parameter or Model"
+    member m.hasOwnBuffers
+        with get () =
+            let childrenBuffers = m.children |> List.map (fun c -> c.nbuffers) |> List.sum
+            m.nbuffers <> childrenBuffers
+
+    /// <summary>TBD</summary>
+    member m.hasOwnState
+        with get () =
+            let childrenState = m.children |> List.map (fun c -> c.nstate) |> List.sum
+            m.nstate <> childrenState
+
+    /// <summary>TBD</summary>
+    member m.init(f:string*Tensor->Tensor) = m.parameters.iter(fun (n, p) -> p.value <- f(n, p.value))
+
+    /// <summary>TBD</summary>
+    member m.addParameter(items:seq<Parameter>, ?names:seq<string>) =
+        let items, names = m.checkItems(items, ?names=names)
+        for i in 0..items.Length-1 do
+            let param = items.[i]
+            let n = if names.Length > 0 then names.[i] else sprintf "Parameter-%s" (Random.UUID())
+            parameterDict.add(n, param)
+        updateState()
+
+    /// <summary>TBD</summary>
+    member m.addBuffer(items:seq<Parameter>, ?names:seq<string>) =
+        let items, names = m.checkItems(items, ?names=names)
+        for i in 0..items.Length-1 do
+            let param = items.[i]
+            let n = if names.Length > 0 then names.[i] else sprintf "Buffer-%s" (Random.UUID())
+            bufferDict.add(n, param)
+        updateState()
+
+    /// <summary>TBD</summary>
+    member m.addModel(items:seq<obj>, ?names:seq<string>) =
+        let items, names = m.checkItems(items, ?names=names)
+        for i in 0..items.Length-1 do
+            let model = 
+                match items.[i] with
+                | :? ModelBase as mm -> mm
+                | _ -> failwithf "Unsupported type. Expecting a Model."
+            let n = if names.Length > 0 then names.[i] else sprintf "Model-%s" (Random.UUID())
+
+            modelDict.Add(n, model)
+            for n, p in model.parameters do 
+                parameterDict.add(nextName n, p)
+            for n, b in model.buffers do 
+                bufferDict.add(nextName n, b)
+        updateState()
 
     /// <summary>
     ///  Adjust the parameters of the model to include support for forward-mode automatic differentiation.
@@ -273,32 +400,74 @@ type ModelBase() =
     /// <summary>TBD</summary>
     member m.noDiff() = m.parameters.noDiff()
 
-    /// <summary>Moves the parameters of the model to the given configuration</summary>
-    member m.move(?device, ?dtype, ?backend) = m.parameters.move(?device=device, ?dtype=dtype, ?backend=backend)
+    /// <summary>Moves the state (parameters and buffers) of the model to the given configuration</summary>
+    member m.move(?device, ?dtype, ?backend) = 
+        m.state.move(?device=device, ?dtype=dtype, ?backend=backend)
 
-    /// <summary>Gets the number of parameters of the model</summary>
-    member m.nparameters = m.parameters.nelement
+    /// <summary>TBD</summary>
+    member m.saveState(fileName, ?noDiff:bool) =
+        let noDiff = defaultArg noDiff true
+        let ss =
+            if noDiff then m.stateVector.noDiff() // We remove any derivatives from the state vector before saving. This doesn't alter the differentiation state of the model.
+            else m.stateVector
+        ss.save(fileName)
 
-    abstract member getString: unit -> string
-    default m.getString() =
-        if m.allModels |> List.length < 2 then "Model()" // allModels has one element (m) in case there are no submodels
-        else
+    /// <summary>TBD</summary>
+    member m.loadState(fileName) = m.stateVector <- Tensor.load(fileName)
+
+    /// <summary>TBD</summary>
+    member m.save(fileName, ?noDiff:bool) =
+        let noDiff = defaultArg noDiff true
+        let mm =
+            if noDiff then
+                if m.isNoDiff then m
+                else
+                    // We clone the model and then remove any derivatives. The clone is used because we don't want a save operation to alter the differentiation state of the model.
+                    let mClone:ModelBase = m.clone()
+                    mClone.noDiff()
+                    mClone
+            else m
+        saveBinary mm fileName
+
+    /// <summary>TBD</summary>
+    static member load(fileName):ModelBase = loadBinary fileName
+
+    /// <summary>TBD</summary>
+    member m.clone() = 
+        let fileName = System.IO.Path.GetTempFileName()
+        m.save(fileName, noDiff=false)
+        ModelBase.load(fileName)
+
+    override _.ToString() = 
         let sb = System.Text.StringBuilder()
-        sb.Append("Model(\n") |> ignore
-        for model in m.allModels do sb.Append(sprintf "%A\n" model) |> ignore
+        sb.Append("ModelBase(") |> ignore
+        let mutable prefix = ""
+        for v in modelDict do 
+            // let n = (v :?> DictionaryEntry).Key :?> string
+            let m = (v :?> DictionaryEntry).Value :?> ModelBase
+            // sb.Append(sprintf "%A: %A" n m) |> ignore
+            sb.Append(sprintf "%s%A" prefix m) |> ignore
+            prefix <- ", "
         sb.Append(")") |> ignore
         sb.ToString()
 
     /// <summary>TBD</summary>
-    member m.saveParameters(fileName) = m.parametersVector.save(fileName)
-
-    /// <summary>TBD</summary>
-    member m.loadParameters(fileName) = m.parametersVector <- Tensor.load(fileName)
-
-    /// <summary>TBD</summary>
-    member m.save(fileName) = saveBinary m fileName
-
-    override m.ToString() = sprintf "%s, nparameters:%A" (m.getString()) m.nparameters
+    member m.summary() =
+        let sb = System.Text.StringBuilder()
+        sb.AppendLine("---") |> ignore
+        sb.AppendLine(sprintf "%-40s %16s" "Model" "Params") |> ignore
+        sb.AppendLine("---") |> ignore
+        for mm in m.models do
+            if mm.hasOwnParameters then
+                sb.AppendLine(sprintf "%-40s %16s" (mm.ToString()) (thousandsInt mm.nparameters)) |> ignore
+        sb.AppendLine("---") |> ignore
+        sb.AppendLine(sprintf "Total params                  : %s" (thousandsInt m.nstate)) |> ignore
+        sb.AppendLine(sprintf "Trainable params              : %s" (thousandsInt m.nparameters)) |> ignore
+        sb.AppendLine(sprintf "Non-trainable params (buffers): %s" (thousandsInt m.nbuffers)) |> ignore
+        sb.AppendLine("---") |> ignore
+        sb.AppendLine(sprintf "Total params size (MiB)       : %s" (thousandsFloat ((float (m.stateVector.memorySize()))/(1024.*1024.)))) |> ignore
+        sb.AppendLine("---") |> ignore
+        sb.ToString()
 
 
 [<AbstractClass>]
@@ -320,40 +489,36 @@ type Model<'In, 'Out>() =
             m.forward(input) 
         finally
             m.parametersVector <- old
-
+    
     /// <summary>TBD</summary>
-    override m.ToString() = sprintf "%s, nparameters:%s" (m.getString()) (thousands m.nparameters)
-
-    /// <summary>TBD</summary>
-    static member create (ps: seq<obj>) (f: 'In -> 'Out) : Model<'In, 'Out> =
+    static member create (models: seq<obj>) (parameters: seq<Parameter>) (buffers: seq<Parameter>) (f: 'In -> 'Out) : Model<'In, 'Out> =
         let model = { new Model<'In, 'Out>() with override _.forward(x:'In) : 'Out = f x}
-        model.add(ps)
+        model.addModel(models)
+        model.addParameter(parameters)
+        model.addBuffer(buffers)
         model
 
     /// <summary>TBD</summary>
     static member compose (m1:Model<'In, 'Out>) (m2:Model<'Out, 'Out2>) : Model<'In, 'Out2> =
-        Model<'In, 'Out2>.create [box m1; box m2] (m1.forward >> m2.forward)
+        Model<'In, 'Out2>.create [box m1; box m2] [] [] (m1.forward >> m2.forward)
 
     /// <summary>TBD</summary>
     static member (-->) (m1:Model<'In, 'Out>, m2:Model<'Out, 'Out2>) = Model<'In, 'Out>.compose m1 m2
     
     /// <summary>TBD</summary>
-    static member (-->) (m:Model<'In, 'Out>, f:'Out->'Out2) = Model<'In, 'Out2>.create [m] (m.forward >> f)
+    static member (-->) (m:Model<'In, 'Out>, f:'Out->'Out2) = Model<'In, 'Out2>.create [m] [] [] (m.forward >> f)
 
     /// <summary>TBD</summary>
-    static member (-->) (f:'In->'Out, m:Model<'Out, 'Out2>) = Model<'In, 'Out2>.create [m] (f >> m.forward)
+    static member (-->) (f:'In->'Out, m:Model<'Out, 'Out2>) = Model<'In, 'Out2>.create [m] [] [] (f >> m.forward)
 
     /// <summary>TBD</summary>
     static member (-->) (t:'In, m:Model<'In, 'Out>) = m.forward t
 
     /// <summary>TBD</summary>
-    static member load(fileName):Model<'In, 'Out> = loadBinary fileName
+    static member load(fileName):Model<'In, 'Out> = ModelBase.load(fileName) :?> Model<'In, 'Out>
 
     /// <summary>TBD</summary>
-    member m.clone():Model<'In, 'Out> = 
-        let fileName = System.IO.Path.GetTempFileName()
-        m.save(fileName)
-        Model<'In, 'Out>.load(fileName)
+    member m.clone():Model<'In, 'Out> = (m :> ModelBase).clone() :?> Model<'In, 'Out>
 
 
 type Model = Model<Tensor, Tensor>

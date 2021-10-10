@@ -163,8 +163,8 @@ module TestExtensions =
             revz2.reverse(zd)
             let revxd1 = revx1.derivative
             let revxd2 = revx2.derivative
-            let revyd1 = revy1.isNoDiff()
-            let revyd2 = revy2.isNoDiff()
+            let revyd1 = revy1.isNoDiff
+            let revyd2 = revy2.isNoDiff
 
             Assert.True(fwdz1.allclose(fwdz2, 0.01))
             Assert.True(fwdzd1.allclose(fwdzd2, 0.01))
@@ -189,8 +189,8 @@ module TestExtensions =
             let revz2 = op1 revx2 revy2
             revz1.reverse(zd)
             revz2.reverse(zd)
-            let revxd1 = revx1.isNoDiff()
-            let revxd2 = revx2.isNoDiff()
+            let revxd1 = revx1.isNoDiff
+            let revxd2 = revx2.isNoDiff
             let revyd1 = revy1.derivative
             let revyd2 = revy2.derivative            
 

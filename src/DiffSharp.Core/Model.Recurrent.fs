@@ -7,6 +7,21 @@ namespace DiffSharp.Model
 
 open DiffSharp
 
+[<AutoOpen>]
+module ModelRecurrentAutoOpens =
+    let rnnShape (value:Tensor) inFeatures batchFirst =
+        let value =
+            if batchFirst then
+                if value.dim <> 3 then failwithf "Expecting the input to be of shape batchSize x seqLen x inFeatures, but received input with shape %A" value.shape
+                value.transpose(0, 1)
+            else
+                if value.dim <> 3 then failwithf "Expecting the input to be of shape seqLen x batchSize x inFeatures, but received input with shape %A" value.shape
+                value
+        if value.shape.[2] <> inFeatures then failwithf "Expecting input to have %A features, but received input with shape %A" inFeatures value.shape
+        let seqLen, batchSize = value.shape.[0], value.shape.[1]
+        value, seqLen, batchSize
+
+
 /// <summary>Unit cell of a recurrent neural network. Prefer using the RNN class instead, which can combine RNNCells in multiple layers.</summary>
 type RNNCell(inFeatures, outFeatures, ?nonlinearity, ?bias, ?batchFirst) =
     inherit Model()
@@ -18,13 +33,14 @@ type RNNCell(inFeatures, outFeatures, ?nonlinearity, ?bias, ?batchFirst) =
     let whh = Parameter(Weight.uniform([|outFeatures; outFeatures|], k))
     let b = Parameter(if bias then Weight.uniform([|outFeatures|], k) else dsharp.tensor([]))
     let h = Parameter <| dsharp.tensor([]) // Not a paramter to be trained, this is for keeping hidden state
-    do base.add([wih;whh;b],["RNNCell-weight-ih";"RNNCell-weight-hh";"RNNCell-bias"])
+    do base.addParameter([wih;whh;b],["RNNCell-weight-ih";"RNNCell-weight-hh";"RNNCell-bias"])
+    do base.addBuffer([h], ["RNNCell-hidden"])
 
     member _.hidden 
         with get () = h.value
         and set v = h.value <- v
 
-    override _.getString() = sprintf "RNNCell(%A, %A)" inFeatures outFeatures
+    override _.ToString() = sprintf "RNNCell(%A, %A)" inFeatures outFeatures
 
     member r.reset() = r.hidden <- dsharp.tensor([])
 
@@ -52,7 +68,8 @@ type LSTMCell(inFeatures, outFeatures, ?bias, ?batchFirst) =
     let b = Parameter(if bias then Weight.uniform([|outFeatures*4|], k) else dsharp.tensor([]))
     let h = Parameter <| dsharp.tensor([]) // Not a paramter to be trained, this is for keeping hidden state
     let c = Parameter <| dsharp.tensor([]) // Not a paramter to be trained, this is for keeping hidden state
-    do base.add([wih;whh;b],["LSTMCell-weight-ih";"LSTMCell-weight-hh";"LSTMCell-bias"])
+    do base.addParameter([wih;whh;b],["LSTMCell-weight-ih";"LSTMCell-weight-hh";"LSTMCell-bias"])
+    do base.addBuffer([h;c],["LSTMCell-hidden";"LSTMCell-cell"])
 
     member _.hidden 
         with get () = h.value
@@ -62,7 +79,7 @@ type LSTMCell(inFeatures, outFeatures, ?bias, ?batchFirst) =
         with get () = c.value
         and set v = c.value <- v
 
-    override _.getString() = sprintf "LSTMCell(%A, %A)" inFeatures outFeatures
+    override _.ToString() = sprintf "LSTMCell(%A, %A)" inFeatures outFeatures
 
     member r.reset() = r.hidden <- dsharp.tensor([])
 
@@ -102,15 +119,15 @@ type RNN(inFeatures, outFeatures, ?numLayers, ?nonlinearity, ?bias, ?batchFirst,
     let dropoutLayer = Dropout(dropout)
     let hs = Parameter <| dsharp.tensor([]) // Not a parameter to be trained, it is for keeping hidden state
     do 
-        base.add(layers |> Array.map box, Array.init numLayers (fun i -> sprintf "RNN-layer-%A" i))
-        if bidirectional then base.add(layersReverse |> Array.map box, Array.init numLayers (fun i -> sprintf "RNN-layer-reverse-%A" i))
-        if dropout > 0. then base.add([dropoutLayer], ["RNN-dropout"])
+        base.addModel(layers |> Array.map box, Array.init numLayers (fun i -> sprintf "RNN-layer-%A" i))
+        if bidirectional then base.addModel(layersReverse |> Array.map box, Array.init numLayers (fun i -> sprintf "RNN-layer-reverse-%A" i))
+        if dropout > 0. then base.addModel([dropoutLayer], ["RNN-dropout"])
 
     member _.hidden
         with get () = hs.value
         and set v = hs.value <- v
 
-    override _.getString() = sprintf "RNN(%A, %A, numLayers:%A, bidirectional:%A)" inFeatures outFeatures numLayers bidirectional
+    override _.ToString() = sprintf "RNN(%A, %A, numLayers:%A, bidirectional:%A)" inFeatures outFeatures numLayers bidirectional
 
     member r.reset() = r.hidden <- dsharp.tensor([])
 
@@ -153,9 +170,9 @@ type LSTM(inFeatures, outFeatures, ?numLayers, ?bias, ?batchFirst, ?dropout, ?bi
     let hs = Parameter <| dsharp.tensor([]) // Not a parameter to be trained, it is for keeping hidden state
     let cs = Parameter <| dsharp.tensor([]) // Not a parameter to be trained, it is for keeping hidden state
     do 
-        base.add(layers |> Array.map box, Array.init numLayers (fun i -> sprintf "LSTM-layer-%A" i))
-        if bidirectional then base.add(layersReverse |> Array.map box, Array.init numLayers (fun i -> sprintf "LSTM-layer-reverse-%A" i))
-        if dropout > 0. then base.add([dropoutLayer], ["LSTM-dropout"])
+        base.addModel(layers |> Array.map box, Array.init numLayers (fun i -> sprintf "LSTM-layer-%A" i))
+        if bidirectional then base.addModel(layersReverse |> Array.map box, Array.init numLayers (fun i -> sprintf "LSTM-layer-reverse-%A" i))
+        if dropout > 0. then base.addModel([dropoutLayer], ["LSTM-dropout"])
 
     member _.hidden
         with get () = hs.value
@@ -165,7 +182,7 @@ type LSTM(inFeatures, outFeatures, ?numLayers, ?bias, ?batchFirst, ?dropout, ?bi
         with get () = cs.value
         and set v = cs.value <- v
 
-    override _.getString() = sprintf "LSTM(%A, %A, numLayers:%A, bidirectional:%A)" inFeatures outFeatures numLayers bidirectional
+    override _.ToString() = sprintf "LSTM(%A, %A, numLayers:%A, bidirectional:%A)" inFeatures outFeatures numLayers bidirectional
 
     member r.reset() =
         r.hidden <- dsharp.tensor([])
