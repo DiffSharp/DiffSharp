@@ -421,11 +421,11 @@ type Tensor =
         p |> List.rev, ps
 
     override t.ToString() = 
-        let rec fmt extra (t: Tensor) =
+        let rec fmt postfix (t: Tensor) =
             match t with
-            | TensorC(p) -> p.GetString(extra)
-            | TensorF(tp,_,_) -> fmt (extra + ", fwd") tp
-            | TensorR(tp,_,_,_,_) -> fmt (extra + ", rev") tp
+            | TensorC(p) -> p.Print(name="tensor", postfix=postfix)
+            | TensorF(tp,_,_) -> fmt (postfix + ", fwd") tp
+            | TensorR(tp,_,_,_,_) -> fmt (postfix + ", rev") tp
         fmt "" t
 
     override t.Equals(other) =

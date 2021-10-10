@@ -109,7 +109,7 @@ type RawTensor() =
     /// backend is used this will be the corresponding TorchSharp TorchTensor.
     abstract Handle: obj
 
-    override t.ToString() = t.GetString("")
+    override t.ToString() = t.Print()
     
     /// Gets a tensor containing arbitrary values for the given shape and configuration
     static member Empty(shape:Shape, ?dtype, ?device, ?backend) = 
@@ -619,7 +619,9 @@ type RawTensor() =
         | Dtype.IntegralOrBool -> t.FullLike(t.Shape, false, dtype=Dtype.Bool)
         | _ -> t.NeqTT(t)
 
-    member t.GetString(extra: string) =
+    member t.Print(?name: string, ?postfix: string) =
+        let name = defaultArg name "RawTensor"
+        let postfix = defaultArg postfix ""
         // sprintf "RawTensor(Value=%A, Shape=%A, Dim=%A, Length=%A)" t.Value t.Shape t.Dim t.Length
         let printVal (x:scalar) = 
             match x.GetTypeCode() with 
@@ -636,7 +638,8 @@ type RawTensor() =
             | _ -> x.ToString()
 
         let sb = System.Text.StringBuilder()
-        sb.Append("tensor(") |> ignore
+        sb.Append(name) |> ignore
+        sb.Append("(") |> ignore
         match t.Dim with
         | 0 -> 
             sb.Append(printVal (t.ToScalar())) |> ignore
@@ -670,7 +673,7 @@ type RawTensor() =
         if t.Backend <> Backend.Default then
             sb.Append ",backend=" |> ignore
             sb.Append (t.Backend.ToString()) |> ignore
-        sb.Append(extra) |> ignore
+        sb.Append(postfix) |> ignore
         sb.Append(")") |> ignore
         sb.ToString()
 
