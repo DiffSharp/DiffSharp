@@ -150,29 +150,29 @@ type TorchRawTensor(tt: torch.Tensor, shape: Shape, dtype: Dtype, device: Device
         let n = shapeLength shape
         match dtype with 
         | Dtype.Int8 ->
-            let data = tt.Data<sbyte>()
+            let data = tt.data<sbyte>()
             for i in 0 .. n-1 do
-                 res <- combineHashes res (int32 data.[i])
+                 res <- combineHashes res (int32 data.[int64 i])
         | Dtype.Byte ->
-            let data = tt.Data<byte>()
+            let data = tt.data<byte>()
             for i in 0 .. n-1 do
-                 res <- combineHashes res (int32 data.[i])
+                 res <- combineHashes res (int32 data.[int64 i])
         | Dtype.Bool ->
-            let data = tt.Data<byte>()
+            let data = tt.data<byte>()
             for i in 0 .. n-1 do
-                 res <- combineHashes res (int32 data.[i])
+                 res <- combineHashes res (int32 data.[int64 i])
         | Dtype.Int16 ->
-            let data = tt.Data<int16>()
+            let data = tt.data<int16>()
             for i in 0 .. n-1 do
-                 res <- combineHashes res (int32 data.[i] )
+                 res <- combineHashes res (int32 data.[int64 i] )
         | Dtype.Int32 ->
-            let data = tt.Data<int32>()
+            let data = tt.data<int32>()
             for i in 0 .. n-1 do
-                 res <- combineHashes res (int32 data.[i])
+                 res <- combineHashes res (int32 data.[int64 i])
         | Dtype.Int64 -> 
-            let data = tt.Data<int64>()
+            let data = tt.data<int64>()
             for i in 0 .. n-1 do
-                 res <- combineHashes res (int32 data.[i])
+                 res <- combineHashes res (int32 data.[int64 i])
         | Dtype.Float16 ->
             for i in 0 .. n-1 do
                  res <- combineHashes res (hash (tt.ReadCpuFloat16(int64 i)))
@@ -180,13 +180,13 @@ type TorchRawTensor(tt: torch.Tensor, shape: Shape, dtype: Dtype, device: Device
             for i in 0 .. n-1 do
                  res <- combineHashes res (hash (tt.ReadCpuBFloat16(int64 i)))
         | Dtype.Float32 ->
-            let data = tt.Data<single>()
+            let data = tt.data<single>()
             for i in 0 .. n-1 do
-                 res <- combineHashes res (hash data.[i])
+                 res <- combineHashes res (hash data.[int64 i])
         | Dtype.Float64 ->
-            let data = tt.Data<double>()
+            let data = tt.data<double>()
             for i in 0 .. n-1 do
-                 res <- combineHashes res (hash data.[i])
+                 res <- combineHashes res (hash data.[int64 i])
         res
     
     override t.Expand(newShape) =
@@ -231,14 +231,14 @@ type TorchRawTensor(tt: torch.Tensor, shape: Shape, dtype: Dtype, device: Device
         | Dtype.Float32 -> t.ToValuesTyped<float32>(fun s -> s.ToSingle())
         | Dtype.Float64 -> t.ToValuesTyped<double>(fun s -> s.ToDouble())
 
-    member private _.ToRawDataViaDirectAccess<'T>() : 'T[] =
+    member private _.ToRawDataViaDirectAccess< 'T when 'T: struct and 'T :> ValueType and 'T : (new : unit -> 'T) >() : 'T[] =
         // Torch Tensors must be CPU before raw data can be accessed
         let tt2 = torchMoveTo tt Device.CPU
 
-        let data = tt2.Data<'T>()
+        let data = tt2.data<'T>()
         let res = Array.zeroCreate<'T> (int32 tt2.NumberOfElements)
         for i in 0 .. int32 tt2.NumberOfElements - 1 do
-            res.[i] <- data.[i]
+            res.[i] <- data.[int64 i]
         res
 
     member t.ToRawData() : Array =
@@ -1011,34 +1011,34 @@ type TorchRawTensor(tt: torch.Tensor, shape: Shape, dtype: Dtype, device: Device
             match dtype with 
             | Dtype.Bool -> 
                 let data = info.GetValue("data", typeof<bool[]>)  :?> bool[]
-                torch.BoolTensor.from (data, toTorchShape shape) 
+                torch.tensor(data, dtype=toTorchType Dtype.Bool, dimensions=toTorchShape shape) 
             | Dtype.Byte -> 
                 let data = info.GetValue("data", typeof<byte[]>)  :?> byte[]
-                torch.ByteTensor.from (data, toTorchShape shape) 
+                torch.tensor(data, dtype=toTorchType Dtype.Byte, dimensions=toTorchShape shape) 
             | Dtype.Int8 -> 
                 let data = info.GetValue("data", typeof<sbyte[]>)  :?> sbyte[]
-                torch.Int8Tensor.from (data, toTorchShape shape) 
+                torch.tensor(data, dtype=toTorchType Dtype.Int8, dimensions=toTorchShape shape) 
             | Dtype.Int16 -> 
                 let data = info.GetValue("data", typeof<int16[]>)  :?> int16[]
-                torch.Int16Tensor.from (data, toTorchShape shape) 
+                torch.tensor(data, dtype=toTorchType Dtype.Int16, dimensions=toTorchShape shape) 
             | Dtype.Int32 -> 
                 let data = info.GetValue("data", typeof<int32[]>)  :?> int32[]
-                torch.Int32Tensor.from (data, toTorchShape shape) 
+                torch.tensor(data, dtype=toTorchType Dtype.Int32, dimensions=toTorchShape shape) 
             | Dtype.Int64 -> 
                 let data = info.GetValue("data", typeof<int64[]>)  :?> int64[]
-                torch.Int64Tensor.from (data, toTorchShape shape) 
+                torch.tensor(data, dtype=toTorchType Dtype.Int64, dimensions=toTorchShape shape) 
             | Dtype.Float32 -> 
                 let data = info.GetValue("data", typeof<float32[]>)  :?> float32[]
-                torch.Float32Tensor.from (data, toTorchShape shape) 
+                torch.tensor(data, dtype=toTorchType Dtype.Float32, dimensions=toTorchShape shape) 
             | Dtype.Float64 -> 
                 let data = info.GetValue("data", typeof<double[]>)  :?> double[]
-                torch.Float64Tensor.from (data, toTorchShape shape) 
+                torch.tensor(data, dtype=toTorchType Dtype.Float64, dimensions=toTorchShape shape) 
             | Dtype.Float16 -> 
                 let data = info.GetValue("data", typeof<float32[]>)  :?> float32[]
-                torch.Float16Tensor.from (data, toTorchShape shape) 
+                torch.tensor(data, dtype=toTorchType Dtype.Float16, dimensions=toTorchShape shape) 
             | Dtype.BFloat16 -> 
                 let data = info.GetValue("data", typeof<float32[]>)  :?> float32[]
-                torch.BFloat16Tensor.from (data, toTorchShape shape) 
+                torch.tensor(data, dtype=toTorchType Dtype.BFloat16, dimensions=toTorchShape shape) 
 
         TorchRawTensor(tt, shape, dtype, Device.CPU)
 
@@ -1222,135 +1222,135 @@ type TorchTensorOps<'T, 'T2>
 type TorchFloat32TensorOps() = 
 
     inherit TorchTensorOps<single, single>(Dtype.Float32, id, 
-        (fun v -> torch.Float32Tensor.from(v)), 
-        (fun (data, shape) -> torch.Float32Tensor.from(data, shape)), 
+        (fun v -> torch.tensor(float v, dtype=toTorchType Dtype.Float32)), 
+        (fun (data, shape) -> torch.tensor(data, shape, dtype=toTorchType Dtype.Float32)), 
         0.0f, 1.0f, 
-        (fun (shape, device) -> torch.Float32Tensor.empty(shape, device.ToTorch)), 
-        (fun (shape, device) -> torch.Float32Tensor.zeros(shape, device.ToTorch)), 
-        (fun (shape, device) -> torch.Float32Tensor.ones(shape, device.ToTorch)), 
-        (fun (shape, device) -> torch.Float32Tensor.rand(shape, device.ToTorch)), 
-        (fun (shape, device) -> torch.Float32Tensor.randn(shape, device.ToTorch)), 
-        (fun (shape, low, high, device) -> torch.Float32Tensor.randint(int64 (high-low), shape, device.ToTorch).add_((float low).ToScalar())), 
+        (fun (shape, device) -> torch.empty(size=shape, dtype=toTorchType Dtype.Float32, device=device.ToTorch)), 
+        (fun (shape, device) -> torch.zeros(size=shape, dtype=toTorchType Dtype.Float32, device=device.ToTorch)), 
+        (fun (shape, device) -> torch.ones(size=shape, dtype=toTorchType Dtype.Float32, device=device.ToTorch)), 
+        (fun (shape, device) -> torch.rand(size=shape, dtype=toTorchType Dtype.Float32, device=device.ToTorch)), 
+        (fun (shape, device) -> torch.randn(size=shape, dtype=toTorchType Dtype.Float32, device=device.ToTorch)), 
+        (fun (shape, low, high, device) -> torch.randint(int64 (high-low), size=shape, dtype=toTorchType Dtype.Float32, device=device.ToTorch).add_((float low).ToScalar())), 
         System.Convert.ToSingle, 
         TorchSharp.Scalar.op_Implicit)
 
 type TorchFloat64TensorOps() = 
 
     inherit TorchTensorOps<double, double>(Dtype.Float64, id, 
-        (fun v -> torch.Float64Tensor.from(v)), 
-        (fun (data, shape) -> torch.Float64Tensor.from(data, shape)), 
+        (fun v -> torch.tensor(v, dtype=toTorchType Dtype.Float64)), 
+        (fun (data, shape) -> torch.tensor(data, shape, dtype=toTorchType Dtype.Float64)), 
         0.0, 1.0, 
-        (fun (shape, device) -> torch.Float64Tensor.empty(shape, device.ToTorch)), 
-        (fun (shape, device) -> torch.Float64Tensor.zeros(shape, device.ToTorch)), 
-        (fun (shape, device) -> torch.Float64Tensor.ones(shape, device.ToTorch)), 
-        (fun (shape, device) -> torch.Float64Tensor.rand(shape, device.ToTorch)), 
-        (fun (shape, device) -> torch.Float64Tensor.randn(shape, device.ToTorch)), 
-        (fun (shape, low, high, device) -> torch.Float64Tensor.randint(int64 (high-low), shape, device.ToTorch).add_((double low).ToScalar())), 
+        (fun (shape, device) -> torch.empty(size=shape, dtype=toTorchType Dtype.Float64, device=device.ToTorch)), 
+        (fun (shape, device) -> torch.zeros(size=shape, dtype=toTorchType Dtype.Float64, device=device.ToTorch)), 
+        (fun (shape, device) -> torch.ones(size=shape, dtype=toTorchType Dtype.Float64, device=device.ToTorch)), 
+        (fun (shape, device) -> torch.rand(size=shape, dtype=toTorchType Dtype.Float64, device=device.ToTorch)), 
+        (fun (shape, device) -> torch.randn(size=shape, dtype=toTorchType Dtype.Float64, device=device.ToTorch)), 
+        (fun (shape, low, high, device) -> torch.randint(int64 (high-low), size=shape, dtype=toTorchType Dtype.Float64, device=device.ToTorch).add_((double low).ToScalar())), 
         System.Convert.ToDouble, 
         TorchSharp.Scalar.op_Implicit)
 
 type TorchInt8TensorOps() = 
 
     inherit TorchTensorOps<sbyte, sbyte>(Dtype.Int8, sbyte,
-        (fun v -> torch.Int8Tensor.from(v)), 
-        (fun (data, shape) -> torch.Int8Tensor.from(data, shape)), 
+        (fun v -> torch.tensor(int64 v, dtype=toTorchType Dtype.Int8)),
+        (fun (data, shape) -> torch.tensor(data, shape, dtype=toTorchType Dtype.Int8)), 
         0y, 1y,
-        (fun (shape, device) -> torch.Int8Tensor.empty(shape, device.ToTorch)), 
-        (fun (shape, device) -> torch.Int8Tensor.zeros(shape, device.ToTorch)), 
-        (fun (shape, device) -> torch.Int8Tensor.ones(shape, device.ToTorch)), 
+        (fun (shape, device) -> torch.empty(size=shape, dtype=toTorchType Dtype.Int8, device=device.ToTorch)), 
+        (fun (shape, device) -> torch.zeros(size=shape, dtype=toTorchType Dtype.Int8, device=device.ToTorch)), 
+        (fun (shape, device) -> torch.ones(size=shape, dtype=toTorchType Dtype.Int8, device=device.ToTorch)), 
         (fun _ -> opNotSupported "Random" Dtype.Int8), 
         (fun _ -> opNotSupported "RandomNormal" Dtype.Int8), 
-        (fun (shape, low, high, device) -> torch.Int8Tensor.randint(int64 (high-low), shape, device.ToTorch).add_((sbyte low).ToScalar())), 
+        (fun (shape, low, high, device) -> torch.randint(int64 (high-low), size=shape, dtype=toTorchType Dtype.Int8, device=device.ToTorch).add_((sbyte low).ToScalar())), 
         System.Convert.ToSByte, 
         TorchSharp.Scalar.op_Implicit)
 
 type TorchInt16TensorOps() = 
 
     inherit TorchTensorOps<int16, int16>(Dtype.Int16, int16, 
-        (fun v -> torch.Int16Tensor.from(v)), 
-        (fun (data, shape) -> torch.Int16Tensor.from(data, shape)), 
+        (fun v -> torch.tensor(int64 v, dtype=toTorchType Dtype.Int16)), 
+        (fun (data, shape) -> torch.tensor(data, shape, dtype=toTorchType Dtype.Int16)), 
         0s, 1s,
-        (fun (shape, device) -> torch.Int16Tensor.empty(shape, device.ToTorch)), 
-        (fun (shape, device) -> torch.Int16Tensor.zeros(shape, device.ToTorch)), 
-        (fun (shape, device) -> torch.Int16Tensor.ones(shape, device.ToTorch)), 
+        (fun (shape, device) -> torch.empty(size=shape, dtype=toTorchType Dtype.Int16, device=device.ToTorch)), 
+        (fun (shape, device) -> torch.zeros(size=shape, dtype=toTorchType Dtype.Int16, device=device.ToTorch)), 
+        (fun (shape, device) -> torch.ones(size=shape, dtype=toTorchType Dtype.Int16, device=device.ToTorch)), 
         (fun _ -> opNotSupported "Random" Dtype.Int16), 
         (fun _ -> opNotSupported "RandomNormal" Dtype.Int16), 
-        (fun (shape, low, high, device) -> torch.Int16Tensor.randint(int64 (high-low), shape, device.ToTorch).add_((int16 low).ToScalar())), 
+        (fun (shape, low, high, device) -> torch.randint(int64 (high-low), size=shape, dtype=toTorchType Dtype.Int16, device=device.ToTorch).add_((int16 low).ToScalar())), 
         System.Convert.ToInt16, 
         TorchSharp.Scalar.op_Implicit)
 
 type TorchInt32TensorOps() = 
 
     inherit TorchTensorOps<int32, int32>(Dtype.Int32, int32, 
-        (fun v -> torch.Int32Tensor.from(v)), 
-        torch.Int32Tensor.from, 
+        (fun v -> torch.tensor(int64 v, dtype=toTorchType Dtype.Int32)), 
+        (fun (data, shape) -> torch.tensor(data, shape, dtype=toTorchType Dtype.Int32)), 
         0, 1,
-        (fun (shape, device) -> torch.Int32Tensor.empty(shape, device.ToTorch)), 
-        (fun (shape, device) -> torch.Int32Tensor.zeros(shape, device.ToTorch)), 
-        (fun (shape, device) -> torch.Int32Tensor.ones(shape, device.ToTorch)), 
+        (fun (shape, device) -> torch.empty(size=shape, dtype=toTorchType Dtype.Int32, device=device.ToTorch)), 
+        (fun (shape, device) -> torch.zeros(size=shape, dtype=toTorchType Dtype.Int32, device=device.ToTorch)), 
+        (fun (shape, device) -> torch.ones(size=shape, dtype=toTorchType Dtype.Int32, device=device.ToTorch)), 
         (fun _ -> opNotSupported "Random" Dtype.Int32), 
         (fun _ -> opNotSupported "RandomNormal" Dtype.Int32), 
-        (fun (shape, low, high, device) -> torch.Int32Tensor.randint(int64 (high-low), shape, device.ToTorch).add_((int32 low).ToScalar())), 
+        (fun (shape, low, high, device) -> torch.randint(int64 (high-low), size=shape, dtype=toTorchType Dtype.Int32, device=device.ToTorch).add_((int32 low).ToScalar())), 
         System.Convert.ToInt32, 
         TorchSharp.Scalar.op_Implicit)
 
 type TorchInt64TensorOps() = 
 
     inherit TorchTensorOps<int64, int64>(Dtype.Int64, int64, 
-        (fun v -> torch.Int64Tensor.from(v)), 
-        (fun (data, shape) -> torch.Int64Tensor.from(data, shape)), 
+        (fun v -> torch.tensor(v, dtype=toTorchType Dtype.Int64)), 
+        (fun (data, shape) -> torch.tensor(data, shape, dtype=toTorchType Dtype.Int64)), 
         0L, 1L,
-        (fun (shape, device) -> torch.Int64Tensor.empty(shape, device.ToTorch)), 
-        (fun (shape, device) -> torch.Int64Tensor.zeros(shape, device.ToTorch)), 
-        (fun (shape, device) -> torch.Int64Tensor.ones(shape, device.ToTorch)), 
+        (fun (shape, device) -> torch.empty(size=shape, dtype=toTorchType Dtype.Int64, device=device.ToTorch)), 
+        (fun (shape, device) -> torch.zeros(size=shape, dtype=toTorchType Dtype.Int64, device=device.ToTorch)), 
+        (fun (shape, device) -> torch.ones(size=shape, dtype=toTorchType Dtype.Int64, device=device.ToTorch)), 
         (fun _ -> opNotSupported "Random" Dtype.Int64), 
         (fun _ -> opNotSupported "RandomNormal" Dtype.Int64), 
-        (fun (shape, low, high, device) -> torch.Int64Tensor.randint(int64 (high-low), shape, device.ToTorch).add_((int64 low).ToScalar())), 
+        (fun (shape, low, high, device) -> torch.randint(int64 (high-low), size=shape, dtype=toTorchType Dtype.Int64, device=device.ToTorch).add_((int64 low).ToScalar())), 
         System.Convert.ToInt64, 
         TorchSharp.Scalar.op_Implicit)
 
 type TorchBoolTensorOps() = 
 
     inherit TorchTensorOps<bool, bool>(Dtype.Bool, id, 
-        (fun v -> torch.BoolTensor.from(v)), 
-        (fun (data, shape) -> torch.BoolTensor.from(data, shape)), 
+        (fun v -> torch.tensor(v, dtype=toTorchType Dtype.Bool)), 
+        (fun (data, shape) -> torch.tensor(data, shape, dtype=toTorchType Dtype.Bool)), 
         false, true,
-        (fun (shape, device) -> torch.BoolTensor.empty(shape, device.ToTorch)), 
-        (fun (shape, device) -> torch.BoolTensor.zeros(shape, device.ToTorch)), 
-        (fun (shape, device) -> torch.BoolTensor.ones(shape, device.ToTorch)), 
+        (fun (shape, device) -> torch.empty(size=shape, dtype=toTorchType Dtype.Bool, device=device.ToTorch)), 
+        (fun (shape, device) -> torch.zeros(size=shape, dtype=toTorchType Dtype.Bool, device=device.ToTorch)), 
+        (fun (shape, device) -> torch.ones(size=shape, dtype=toTorchType Dtype.Bool, device=device.ToTorch)), 
         (fun _ -> opNotSupported "Random" Dtype.Bool), 
         (fun _ -> opNotSupported "RandomNormal"  Dtype.Bool), 
-        (fun (shape, low, high, device) -> torch.BoolTensor.randint(min 2L (int64 (high-low)), shape, device.ToTorch).add_((low > 0).ToScalar())), 
+        (fun (shape, low, high, device) -> torch.randint(min 2L (int64 (high-low)), size=shape, dtype=toTorchType Dtype.Bool, device=device.ToTorch).add_((low > 0).ToScalar())), 
         System.Convert.ToBoolean, 
         TorchSharp.Scalar.op_Implicit)
 
 type TorchByteTensorOps() = 
 
     inherit TorchTensorOps<byte, byte>(Dtype.Byte, id, 
-        (fun v -> torch.ByteTensor.from(v)), 
-        (fun (data, shape) -> torch.ByteTensor.from(data, shape)), 
+        (fun v -> torch.tensor(int64 v, dtype=toTorchType Dtype.Byte)), 
+        (fun (data, shape) -> torch.tensor(data, shape, dtype=toTorchType Dtype.Byte)), 
         0uy, 1uy,
-        (fun (shape, device) -> torch.ByteTensor.empty(shape, device.ToTorch)), 
-        (fun (shape, device) -> torch.ByteTensor.zeros(shape, device.ToTorch)), 
-        (fun (shape, device) -> torch.ByteTensor.ones(shape, device.ToTorch)), 
+        (fun (shape, device) -> torch.empty(size=shape, dtype=toTorchType Dtype.Byte, device=device.ToTorch)), 
+        (fun (shape, device) -> torch.zeros(size=shape, dtype=toTorchType Dtype.Byte, device=device.ToTorch)), 
+        (fun (shape, device) -> torch.ones(size=shape, dtype=toTorchType Dtype.Byte, device=device.ToTorch)), 
         (fun _ -> opNotSupported "Random" Dtype.Byte), 
         (fun _ -> opNotSupported "RandomNormal"  Dtype.Byte), 
-        (fun (shape, low, high, device) -> torch.ByteTensor.randint(int64 (high-low), shape, device.ToTorch).add_((byte low).ToScalar())), 
+        (fun (shape, low, high, device) -> torch.randint(int64 (high-low), size=shape, dtype=toTorchType Dtype.Byte, device=device.ToTorch).add_((byte low).ToScalar())), 
         System.Convert.ToByte, 
         TorchSharp.Scalar.op_Implicit)
 
 type TorchFloat16TensorOps() = 
 
     inherit TorchTensorOps<single, single>(Dtype.Float16, id, 
-        (fun v -> torch.Float16Tensor.from(v)), 
-        (fun (data, shape) -> torch.Float16Tensor.from(data, shape)), 
+        (fun v -> torch.tensor(float v, dtype=toTorchType Dtype.Float16)), 
+        (fun (data, shape) -> torch.tensor(data, shape, dtype=toTorchType Dtype.Float16)), 
         0.0f, 1.0f, 
-        (fun (shape, device) -> torch.Float16Tensor.empty(shape, device.ToTorch)), 
-        (fun (shape, device) -> torch.Float16Tensor.zeros(shape, device.ToTorch)), 
-        (fun (shape, device) -> torch.Float16Tensor.ones(shape, device.ToTorch)), 
-        (fun (shape, device) -> torch.Float16Tensor.rand(shape, device.ToTorch)), 
-        (fun (shape, device) -> torch.Float16Tensor.randn(shape, device.ToTorch)), 
-        (fun (shape, low, high, device) -> torch.Float16Tensor.randint(int64 (high-low), shape, device.ToTorch).add_((float low).ToScalar())), 
+        (fun (shape, device) -> torch.empty(size=shape, dtype=toTorchType Dtype.Float16, device=device.ToTorch)), 
+        (fun (shape, device) -> torch.zeros(size=shape, dtype=toTorchType Dtype.Float16, device=device.ToTorch)), 
+        (fun (shape, device) -> torch.ones(size=shape, dtype=toTorchType Dtype.Float16, device=device.ToTorch)), 
+        (fun (shape, device) -> torch.rand(size=shape, dtype=toTorchType Dtype.Float16, device=device.ToTorch)), 
+        (fun (shape, device) -> torch.randn(size=shape, dtype=toTorchType Dtype.Float16, device=device.ToTorch)), 
+        (fun (shape, low, high, device) -> torch.randint(int64 (high-low), size=shape, dtype=toTorchType Dtype.Float16, device=device.ToTorch).add_((float low).ToScalar())), 
         System.Convert.ToSingle, 
         TorchSharp.Scalar.op_Implicit)
 
@@ -1358,15 +1358,15 @@ type TorchFloat16TensorOps() =
 type TorchBFloat16TensorOps() = 
 
     inherit TorchTensorOps<single, single>(Dtype.BFloat16, id, 
-        (fun v -> torch.BFloat16Tensor.from(v)), 
-        (fun (data, shape) -> torch.BFloat16Tensor.from(data, shape)), 
+        (fun v -> torch.tensor(float v, dtype=toTorchType Dtype.BFloat16)), 
+        (fun (data, shape) -> torch.tensor(data, shape, dtype=toTorchType Dtype.BFloat16)), 
         0.0f, 1.0f, 
-        (fun (shape, device) -> torch.BFloat16Tensor.empty(shape, device.ToTorch)), 
-        (fun (shape, device) -> torch.BFloat16Tensor.zeros(shape, device.ToTorch)), 
-        (fun (shape, device) -> torch.BFloat16Tensor.ones(shape, device.ToTorch)), 
-        (fun (shape, device) -> torch.BFloat16Tensor.rand(shape, device.ToTorch)), 
-        (fun (shape, device) -> torch.BFloat16Tensor.randn(shape, device.ToTorch)), 
-        (fun (shape, low, high, device) -> torch.BFloat16Tensor.randint(int64 (high-low), shape, device.ToTorch).add_((float low).ToScalar())), 
+        (fun (shape, device) -> torch.empty(size=shape, dtype=toTorchType Dtype.BFloat16, device=device.ToTorch)), 
+        (fun (shape, device) -> torch.zeros(size=shape, dtype=toTorchType Dtype.BFloat16, device=device.ToTorch)), 
+        (fun (shape, device) -> torch.ones(size=shape, dtype=toTorchType Dtype.BFloat16, device=device.ToTorch)), 
+        (fun (shape, device) -> torch.rand(size=shape, dtype=toTorchType Dtype.BFloat16, device=device.ToTorch)), 
+        (fun (shape, device) -> torch.randn(size=shape, dtype=toTorchType Dtype.BFloat16, device=device.ToTorch)), 
+        (fun (shape, low, high, device) -> torch.randint(int64 (high-low), size=shape, dtype=toTorchType Dtype.BFloat16, device=device.ToTorch).add_((float low).ToScalar())), 
         System.Convert.ToSingle, 
         TorchSharp.Scalar.op_Implicit)
 
@@ -1390,7 +1390,7 @@ type TorchBackendTensorStatics() =
         match supported.[n] with 
         | 0 ->
             try
-                torch.Float32Tensor.empty([| 1L |], device= torch.Device(deviceType.ToTorch, index=0)) |> ignore
+                torch.empty([| 1L |], device= torch.Device(deviceType.ToTorch, index=0)) |> ignore
                 supported.[n] <- 1
                 true
              with _ -> 
