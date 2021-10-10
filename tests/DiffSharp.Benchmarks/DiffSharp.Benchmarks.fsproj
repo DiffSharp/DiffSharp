@@ -34,17 +34,17 @@
 	<PackageReference Update="FSharp.Core" Version="$(FSharpCoreVersion)" />
   </ItemGroup>
 
-  <!-- Choose the appropriate version of libtorch for our current OS and environment -->
+  <!-- Choose the appropriate TorchSharp bundle with libtorch runtime for our current OS and environment -->
   <ItemGroup Condition="'$(DIFFSHARP_TESTGPU)' == 'true' AND $([MSBuild]::IsOsPlatform(Linux))">
-    <PackageReference Include="libtorch-cuda-11.1-linux-x64" Version="$(LibTorchNugetVersion)" />
+    <PackageReference Include="TorchSharp-cuda-linux" Version="$(TorchSharpVersion)" />
   </ItemGroup>
 
   <ItemGroup Condition="'$(DIFFSHARP_TESTGPU)' == 'true' AND $([MSBuild]::IsOsPlatform(Windows))">
-    <PackageReference Include="libtorch-cuda-11.1-win-x64" Version="$(LibTorchNugetVersion)" />
+    <PackageReference Include="TorchSharp-cuda-windows" Version="$(TorchSharpVersion)" />
   </ItemGroup>
 
   <ItemGroup Condition="'$(DIFFSHARP_TESTGPU)' != 'true'">
-    <PackageReference Include="libtorch-cpu" Version="$(LibTorchNugetVersion)" />
+    <PackageReference Include="TorchSharp-cpu" Version="$(TorchSharpVersion)" />
   </ItemGroup>
 
 </Project>

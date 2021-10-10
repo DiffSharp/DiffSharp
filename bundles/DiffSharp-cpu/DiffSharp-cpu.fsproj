@@ -14,9 +14,9 @@
     <ProjectReference Include="..\..\src\DiffSharp.Data\DiffSharp.Data.fsproj" />
     <ProjectReference Include="..\..\src\DiffSharp.Backends.Reference\DiffSharp.Backends.Reference.fsproj" />
     <ProjectReference Include="..\..\src\DiffSharp.Backends.Torch\DiffSharp.Backends.Torch.fsproj" />
-    <!--  reference a libtorch runtime redist -->
-    <PackageReference Include="libtorch-cpu" Version="$(LibTorchNugetVersion)" />
-	<PackageReference Update="FSharp.Core" Version="$(FSharpCoreVersion)" />
+    <!-- reference a TorchSharp bundle with libtorch runtime redist -->
+    <PackageReference Include="TorchSharp-cpu" Version="$(TorchSharpVersion)" />
+	  <PackageReference Update="FSharp.Core" Version="$(FSharpCoreVersion)" />
   </ItemGroup>
 
 </Project>
