@@ -322,9 +322,6 @@ type RawTensor() =
     /// Split the given tensors along the given dimensions
     abstract SplitT: sizes: int[] * dim: int -> RawTensor[]
 
-    /// Get a textual representation of the tensors
-    abstract GetString: extra: string -> string
-    
     /// <summary> Get a slice of the given tensor.</summary>
     ///
     /// <param name="fullBounds">
@@ -622,7 +619,7 @@ type RawTensor() =
         | Dtype.IntegralOrBool -> t.FullLike(t.Shape, false, dtype=Dtype.Bool)
         | _ -> t.NeqTT(t)
 
-    default t.GetString(extra: string) =
+    member t.GetString(extra: string) =
         // sprintf "RawTensor(Value=%A, Shape=%A, Dim=%A, Length=%A)" t.Value t.Shape t.Dim t.Length
         let printVal (x:scalar) = 
             match x.GetTypeCode() with 
