@@ -620,7 +620,7 @@ type RawTensor() =
         | _ -> t.NeqTT(t)
 
     member t.Print(?postfix: string) =
-        // sprintf "RawTensor(Value=%A, Shape=%A, Dim=%A, Length=%A)" t.Value t.Shape t.Dim t.Length
+        // TODO: this code is not ideal and can be reimplemented to be cleaner and more efficient
         let postfix = defaultArg postfix ""
         let threshold = Printer.Default.threshold
         let edgeItems = Printer.Default.edgeItems
@@ -633,13 +633,18 @@ type RawTensor() =
         let floatMaxStrLen1 = System.String.Format("{0:G"+precision.ToString()+"}", if vmin < 0. then -absMax else absMax).Length
         let floatMaxStrLen2 = System.String.Format("{0:0."+precisionStr+"}", if vmin < 0. then -absMax else absMax).Length
         let floatFormat1 = "{0,"+floatMaxStrLen1.ToString()+":G"+precision.ToString()+"}"
-        let floatFormat2 = "{0,"+floatMaxStrLen2.ToString()+": 0."+precisionStr+";-0."+precisionStr+"}"
+        let floatFormat2 = "{0,"+floatMaxStrLen2.ToString()+":0."+precisionStr+"}"
+        let floatFormat3 = "{0,"+floatMaxStrLen2.ToString()+": 0."+precisionStr+";-0."+precisionStr+"}"
+        let floatNoDecimals = t.Dtype.IsFloatingPoint && (let tt = t.Cast(Dtype.Float64) in tt.CeilT().Equals(tt))
+        let floatNonNegative = t.Dtype.IsFloatingPoint && (let tt = t.Cast(Dtype.Float64) in tt.AbsT().Equals(tt))
         let printFloat (v:float) =
-            if absMax >= 10. then
+            if absMax >= 10. || floatNoDecimals then
                 let p = System.String.Format(floatFormat1, v)
                 if p.Contains(".") || p.Contains("e") || p.Contains("E") || p.Contains("NaN") || p.Contains("Inf") || p.Contains("∞") then p else p + "."
-            else
+            elif floatNonNegative then
                 System.String.Format(floatFormat2, v)
+            else
+                System.String.Format(floatFormat3, v)
 
         let intMaxStrLen = System.String.Format("{0:D}", int64 (if vmin < 0. then -absMax else absMax)).Length
         let intFormat = "{0,"+intMaxStrLen.ToString()+":D}"
@@ -656,7 +661,7 @@ type RawTensor() =
             | TypeCode.SByte -> printInt (x.toInt64())
             | TypeCode.Int16 -> printInt (x.toInt64())
             | TypeCode.Boolean -> if (x.toBool()) then " true" else "false"
-            | _ -> x.ToString()
+            | _ -> printFloat (x.toDouble()) // Handles Float16, BFloat16
 
         let sb = System.Text.StringBuilder()
         sb.Append("tensor(") |> ignore

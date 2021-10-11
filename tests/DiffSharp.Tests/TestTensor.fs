@@ -1211,12 +1211,12 @@ type TestTensor () =
 
         let t0Bool = dsharp.tensor([ 0.; 1. ], dtype=Dtype.Bool)
         let t0BoolToString = t0Bool.ToString()
-        let t0BoolToStringCorrect = sprintf "tensor([false, true],dtype=Bool)" 
+        let t0BoolToStringCorrect = sprintf "tensor([false,  true],dtype=Bool)" 
         Assert.CheckEqual(t0BoolToStringCorrect, t0BoolToString)
 
         let t1Bool = dsharp.tensor([ false; true ], dtype=Dtype.Bool)
         let t1BoolToString = t1Bool.ToString()
-        let t1BoolToStringCorrect = sprintf "tensor([false, true],dtype=Bool)" 
+        let t1BoolToStringCorrect = sprintf "tensor([false,  true],dtype=Bool)" 
         Assert.CheckEqual(t1BoolToStringCorrect, t1BoolToString)
 
     [<Test>]
