@@ -630,15 +630,15 @@ type RawTensor() =
         let vmax = t.GetItem(t.MaxIndexT()).toDouble()
         let absMax = max (abs vmin) (abs vmax)
         let precisionStr = (String.replicate precision "0")
-        let floatMaxStrLen1 = System.String.Format("{0:G"+precision.ToString()+"}", if vmin < 0. then -absMax else absMax).Length
-        let floatMaxStrLen2 = System.String.Format("{0:0."+precisionStr+"}", if vmin < 0. then -absMax else absMax).Length
+        let floatMaxStrLen1 = System.String.Format("{0:G"+precision.ToString()+"}", absMax).Length
+        let floatMaxStrLen2 = System.String.Format("{0:0."+precisionStr+"}", absMax).Length
         let floatFormat1 = "{0,"+floatMaxStrLen1.ToString()+":G"+precision.ToString()+"}"
         let floatFormat2 = "{0,"+floatMaxStrLen2.ToString()+":0."+precisionStr+"}"
         let floatFormat3 = "{0,"+floatMaxStrLen2.ToString()+": 0."+precisionStr+";-0."+precisionStr+"}"
         let floatNoDecimals = t.Dtype.IsFloatingPoint && (let tt = t.Cast(Dtype.Float64) in tt.CeilT().Equals(tt))
         let floatNonNegative = t.Dtype.IsFloatingPoint && (let tt = t.Cast(Dtype.Float64) in tt.AbsT().Equals(tt))
         let printFloat (v:float) =
-            if absMax >= 10. || floatNoDecimals then
+            if absMax >= 1.e8 || floatNoDecimals then
                 let p = System.String.Format(floatFormat1, v)
                 if p.Contains(".") || p.Contains("e") || p.Contains("E") || p.Contains("NaN") || p.Contains("Inf") || p.Contains("∞") then p else p + "."
             elif floatNonNegative then
