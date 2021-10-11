@@ -1686,14 +1686,6 @@ type Tensor =
         else
             let mask = a.fullLike(1.-p, Array.append a.shape.[0..1] [|1;1;1|]).bernoulli()
             a * mask
-
-    // This is useful to keep as a special case of sum for performance reasons because it's involved in reverse mode of broadcasting addition of bias in NN linear layers
-    member internal a.sumT2Dim0() =
-        let inline fRaw(a:RawTensor) = a.SumT2Dim0()
-        let inline fTensor(a:Tensor) = a.sumT2Dim0()
-        let inline dfFwd(ap,ad:Tensor,fp):Tensor = ad.sumT2Dim0()
-        let inline dfRev(a) = SumT2Dim0(a)
-        Tensor.OpUnary(a, fRaw, fTensor, dfFwd, dfRev)
     
     /// <summary>Returns a tensor that is a transposed version of input. The given dimensions dim0 and dim1 are swapped.</summary>
     /// <param name="dim0">The first dimension to be transposed.</param>
@@ -2788,7 +2780,6 @@ type Tensor =
                         | Conv3DTConstT(_,b,_,_) -> reset (b::tt)
                         | NegT(a) -> reset (a::tt)
                         | SumT(a) -> reset (a::tt)
-                        | SumT2Dim0(a) -> reset (a::tt)
                         | ExpandT(a) -> reset (a::tt)
                         | StackTs(a,_) -> reset (List.append (a |> List.ofSeq) tt)
                         | UnstackT(a,_,_) -> reset (a::tt)
@@ -2932,7 +2923,6 @@ type Tensor =
                             push (check(bderivative, b) :: tt)
                         | NegT(a) -> push (check(-td, a) :: tt)
                         | SumT(a) -> push (check(td.expand(a.shape), a) :: tt)
-                        | SumT2Dim0(a) -> push (check(a.zerosLike() + td, a) :: tt)
                         | ExpandT(a) -> push (check(td.sumToSize(a.shape), a) :: tt)
                         | StackTs(a,dim) ->
                             push (List.append (Array.zip (td.unstack(dim)) a |> Array.map check |> Array.toList) tt)
@@ -3075,7 +3065,6 @@ and TensorOp =
 
     | NegT of Tensor
     | SumT of Tensor
-    | SumT2Dim0 of Tensor
     | ExpandT of Tensor
     | StackTs of Tensor[] * dim:int
     | UnstackT of Tensor * dim:int * i:int

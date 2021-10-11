@@ -1464,13 +1464,13 @@ type TestDerivatives () =
     member _.TestDerivativeSumT2Dim0 () =
         for combo in Combos.AllDevicesAndBackendsFloat32 do
             let fwdx = combo.tensor([[1.; 2.]; [3.; 4.]]).forwardDiff(combo.tensor([[2.; 3.]; [4.; 5.]]))
-            let fwdz = fwdx.sumT2Dim0()
+            let fwdz = fwdx.sum(0)
             let fwdzCorrect = combo.tensor([4.; 6.])
             let fwdzd = fwdz.derivative
             let fwdzdCorrect = combo.tensor([6.; 8.])
 
             let revx = combo.tensor([[1.; 2.]; [3.; 4.]]).reverseDiff()
-            let revz = revx.sumT2Dim0()
+            let revz = revx.sum(0)
             let revzCorrect = combo.tensor([4.; 6.])
             revz.reverse(combo.tensor([5.; 6.]))
             let revxd = revx.derivative

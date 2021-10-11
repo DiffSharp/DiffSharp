@@ -837,11 +837,6 @@ type TorchRawTensor(tt: torch.Tensor, shape: Shape, dtype: Dtype, device: Device
         let result = t1.MakeLike(resultt, shape=originalInput.Shape)
         result
 
-    override t.SumT2Dim0() =
-        let result = tt.sum([| 0L |], ``type``= tt.dtype)
-        let resultShape = [|t.Shape.[1]|]
-        t.MakeLike(result, shape=resultShape)
-
     override t.NegT() =
         match dtype with 
         | Dtype.Bool -> opNotSupported "NegT" dtype
