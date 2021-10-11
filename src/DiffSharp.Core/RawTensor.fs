@@ -513,6 +513,9 @@ type RawTensor() =
     /// Returns the scalar tensor for the summation of all elements in the tensor 
     abstract SumT: ?resultType: Dtype -> RawTensor
 
+    /// Returns the tensor representing the summation of the tensor along the given dimension
+    abstract SumTDim: dim: int * ?resultType: Dtype -> RawTensor
+
     /// Returns the transpose of the tensor between the given dimensions
     abstract TransposeT: dim0: int * dim1: int -> RawTensor
 

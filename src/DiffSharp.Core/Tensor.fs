@@ -1485,25 +1485,19 @@ type Tensor =
     /// <param name="keepDim">Whether the output tensor has dim retained or not.</param>
     /// <param name="dtype">The desired data type of returned tensor.</param>
     member a.sum(dim:int, ?keepDim:bool, ?dtype: Dtype) =
-       // TODO: this can be implemented in a more memory efficient way by pushing the sum operation to the RawTensor level and implementing the derivatives using general broadcasting when it's available
-       let keepDim = defaultArg keepDim false
-       let dim = Shape.completeDim a.dim dim  // Handles -1 semantics
-       let res =
-        if dim = 0 && a.dim = 0 then a
-        else
-            if dim >= a.dim || dim < 0 then failwithf "Expecting dim to be between 0 and %A" a.dim
-            let sBounds = Array2D.init a.dim 3 (fun i j -> if j=0 then 0 elif j=1 then a.shape.[i]-1 else 0)
-            sBounds.[dim, 1] <- 0
-            sBounds.[dim, 2] <- 1
-            let mutable s = a.zerosLike(dtype=a.dtype.SummationType).GetSlice(sBounds)
-            for i=0 to a.shape.[dim]-1 do
-                sBounds.[dim,0] <- i
-                sBounds.[dim,1] <- i
-                sBounds.[dim,2] <- 1
-                s <- s + a.GetSlice(sBounds).cast(a.dtype.SummationType)
-            s
-       let res2 = if keepDim then res.unsqueeze(dim) else res
-       res2.castAfterSummation(?dtype=dtype)
+        let keepDim = defaultArg keepDim false
+        let dim = Shape.completeDim a.dim dim  // Handles -1 semantics
+        let res =
+            if dim = 0 && a.dim = 0 then a
+            else
+               if dim >= a.dim || dim < 0 then failwithf "Expecting 0 < dim (%A) < %A" dim a.dim
+               let inline fRaw(a:RawTensor) = a.SumTDim(dim=dim, ?resultType=dtype)
+               let inline fTensor(a:Tensor) = a.sum(dim=dim, ?dtype=dtype)
+               let inline dfFwd(ap,ad:Tensor,fp) = ad.sum(dim=dim, ?dtype=dtype)
+               let inline dfRev(a) = SumTDim(a, dim)
+               Tensor.OpUnary(a, fRaw, fTensor, dfFwd, dfRev)
+        let res2 = if keepDim then res.unsqueeze(dim) else res
+        res2.castAfterSummation(?dtype=dtype)
 
     /// <summary>Sum this tensor to size <paramref name="newShape" />, which must be broadcastable to this tensor size.</summary>
     member a.sumToSize(newShape:int[], ?dtype: Dtype) =
@@ -2780,6 +2774,7 @@ type Tensor =
                         | Conv3DTConstT(_,b,_,_) -> reset (b::tt)
                         | NegT(a) -> reset (a::tt)
                         | SumT(a) -> reset (a::tt)
+                        | SumTDim(a,_) -> reset (a::tt)
                         | ExpandT(a) -> reset (a::tt)
                         | StackTs(a,_) -> reset (List.append (a |> List.ofSeq) tt)
                         | UnstackT(a,_,_) -> reset (a::tt)
@@ -2923,6 +2918,10 @@ type Tensor =
                             push (check(bderivative, b) :: tt)
                         | NegT(a) -> push (check(-td, a) :: tt)
                         | SumT(a) -> push (check(td.expand(a.shape), a) :: tt)
+                        | SumTDim(a, dim) -> 
+                            let s = Array.copy a.shape
+                            s.[dim] <- 1
+                            push (check(td.view(s).expand(a.shape), a) :: tt)
                         | ExpandT(a) -> push (check(td.sumToSize(a.shape), a) :: tt)
                         | StackTs(a,dim) ->
                             push (List.append (Array.zip (td.unstack(dim)) a |> Array.map check |> Array.toList) tt)
@@ -3065,6 +3064,7 @@ and TensorOp =
 
     | NegT of Tensor
     | SumT of Tensor
+    | SumTDim of Tensor * int
     | ExpandT of Tensor
     | StackTs of Tensor[] * dim:int
     | UnstackT of Tensor * dim:int * i:int

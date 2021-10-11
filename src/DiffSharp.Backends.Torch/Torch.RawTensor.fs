@@ -847,6 +847,12 @@ type TorchRawTensor(tt: torch.Tensor, shape: Shape, dtype: Dtype, device: Device
         let outType = match resultType with None -> dtype.SummationType | Some dt -> dt
         t.MakeLike(tt.sum(typeArg), shape=Shape.scalar, dtype=outType)
 
+    override t.SumTDim(dim, ?resultType) =
+        let typeArg = match resultType with None -> Nullable() | Some dt -> Nullable(toTorchType dt)
+        let outType = match resultType with None -> dtype.SummationType | Some dt -> dt
+        let ret = tt.sum(dim=(int64 dim), ``type``=typeArg, keepdim=false)  // keepdim is fixed to false as it is handled at Tensor level, not at RawTensor level
+        t.MakeLike(ret, shape=fromTorchShape ret.shape, dtype=outType)
+
     override t.SignT() =
         t.MakeLike(tt.sign())
 
