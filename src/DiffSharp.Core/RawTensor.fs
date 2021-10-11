@@ -109,7 +109,7 @@ type RawTensor() =
     /// backend is used this will be the corresponding TorchSharp TorchTensor.
     abstract Handle: obj
 
-    override t.ToString() = t.GetString("")
+    override t.ToString() = t.Print()
     
     /// Gets a tensor containing arbitrary values for the given shape and configuration
     static member Empty(shape:Shape, ?dtype, ?device, ?backend) = 
@@ -322,9 +322,6 @@ type RawTensor() =
     /// Split the given tensors along the given dimensions
     abstract SplitT: sizes: int[] * dim: int -> RawTensor[]
 
-    /// Get a textual representation of the tensors
-    abstract GetString: extra: string -> string
-    
     /// <summary> Get a slice of the given tensor.</summary>
     ///
     /// <param name="fullBounds">
@@ -622,46 +619,99 @@ type RawTensor() =
         | Dtype.IntegralOrBool -> t.FullLike(t.Shape, false, dtype=Dtype.Bool)
         | _ -> t.NeqTT(t)
 
-    default t.GetString(extra: string) =
-        // sprintf "RawTensor(Value=%A, Shape=%A, Dim=%A, Length=%A)" t.Value t.Shape t.Dim t.Length
+    member t.Print(?postfix: string) =
+        // TODO: this code is not ideal and can be reimplemented to be cleaner and more efficient
+        let postfix = defaultArg postfix ""
+        let threshold = Printer.Default.threshold
+        let edgeItems = Printer.Default.edgeItems
+        let precision = Printer.Default.precision
+
+        let vmin = t.GetItem(t.MinIndexT()).toDouble()
+        let vmax = t.GetItem(t.MaxIndexT()).toDouble()
+        let absMax = max (abs vmin) (abs vmax)
+        let precisionStr = (String.replicate precision "0")
+        let floatMaxStrLen1 = System.String.Format("{0:G"+precision.ToString()+"}", absMax).Length
+        let floatMaxStrLen2 = System.String.Format("{0:0."+precisionStr+"}", absMax).Length
+        let floatFormat1 = "{0,"+floatMaxStrLen1.ToString()+":G"+precision.ToString()+"}"
+        let floatFormat2 = "{0,"+floatMaxStrLen2.ToString()+":0."+precisionStr+"}"
+        let floatFormat3 = "{0,"+floatMaxStrLen2.ToString()+": 0."+precisionStr+";-0."+precisionStr+"}"
+        let floatNoDecimals = t.Dtype.IsFloatingPoint && (let tt = t.Cast(Dtype.Float64) in tt.CeilT().Equals(tt))
+        let floatNonNegative = t.Dtype.IsFloatingPoint && (let tt = t.Cast(Dtype.Float64) in tt.AbsT().Equals(tt))
+        let printFloat (v:float) =
+            if absMax >= 1.e8 || floatNoDecimals then
+                let p = System.String.Format(floatFormat1, v)
+                if p.Contains(".") || p.Contains("e") || p.Contains("E") || p.Contains("NaN") || p.Contains("Inf") || p.Contains("∞") then p else p + "."
+            elif floatNonNegative then
+                System.String.Format(floatFormat2, v)
+            else
+                System.String.Format(floatFormat3, v)
+
+        let intMaxStrLen = System.String.Format("{0:D}", int64 (if vmin < 0. then -absMax else absMax)).Length
+        let intFormat = "{0,"+intMaxStrLen.ToString()+":D}"
+        let printInt (v:int64) =
+            System.String.Format(intFormat, v)
+
         let printVal (x:scalar) = 
             match x.GetTypeCode() with 
-            // "%g" has the desired behavior that is a combination of "%e" and "%f"
-            // One edge case example is "%g" prints "2" for 2.0 but we prefer "2."
-            | TypeCode.Single -> let p = sprintf "%g" (x.toSingle()) in if p.Contains(".") || p.Contains("e") || p.Contains("NaN") || p.Contains("Inf") then p else p + "."
-            | TypeCode.Double -> let p = sprintf "%g" (x.toDouble()) in if p.Contains(".") || p.Contains("e") || p.Contains("NaN") || p.Contains("Inf") then p else p + "."
-            | TypeCode.Int32 -> sprintf "%d" (x.toInt32())
-            | TypeCode.Int64 -> sprintf "%d" (x.toInt64())
-            | TypeCode.Byte -> sprintf "%d" (x.toByte())
-            | TypeCode.SByte -> sprintf "%d" (x.toSByte())
-            | TypeCode.Int16 -> sprintf "%d" (x.toInt16())
-            | TypeCode.Boolean -> if (x.toBool()) then "true" else "false"
-            | _ -> x.ToString()
+            | TypeCode.Single -> printFloat (x.toDouble())
+            | TypeCode.Double -> printFloat (x.toDouble())
+            | TypeCode.Int32 -> printInt (x.toInt64())
+            | TypeCode.Int64 -> printInt (x.toInt64())
+            | TypeCode.Byte -> printInt (x.toInt64())
+            | TypeCode.SByte -> printInt (x.toInt64())
+            | TypeCode.Int16 -> printInt (x.toInt64())
+            | TypeCode.Boolean -> if (x.toBool()) then " true" else "false"
+            | _ -> printFloat (x.toDouble()) // Handles Float16, BFloat16
 
         let sb = System.Text.StringBuilder()
         sb.Append("tensor(") |> ignore
         match t.Dim with
-        | 0 -> 
+        | 0 ->
             sb.Append(printVal (t.ToScalar())) |> ignore
         | _ ->
             let rec print (shape:Shape) externalCoords = 
                 if shape.Length = 1 then
                     sb.Append("[") |> ignore
                     let mutable prefix = ""
-                    for i=0 to shape.[0]-1 do
-                        let globalCoords = Array.append externalCoords [|i|]
-                        sb.Append(prefix) |> ignore
-                        sb.Append(printVal (t.GetItem(globalCoords))) |> ignore
-                        prefix <- ", "
+                    if (shape.[0] >= threshold) && (edgeItems*2 < shape.[0]) then
+                        for i=0 to edgeItems-1 do
+                            let globalCoords = Array.append externalCoords [|i|]
+                            sb.Append(prefix) |> ignore
+                            sb.Append(printVal (t.GetItem(globalCoords))) |> ignore
+                            prefix <- ", "
+                        sb.Append(", ...") |> ignore
+                        for i=shape.[0]-edgeItems to shape.[0]-1 do
+                            let globalCoords = Array.append externalCoords [|i|]
+                            sb.Append(prefix) |> ignore
+                            sb.Append(printVal (t.GetItem(globalCoords))) |> ignore
+                            // prefix <- ", "
+                    else
+                        for i=0 to shape.[0]-1 do
+                            let globalCoords = Array.append externalCoords [|i|]
+                            sb.Append(prefix) |> ignore
+                            sb.Append(printVal (t.GetItem(globalCoords))) |> ignore
+                            prefix <- ", "
                     sb.Append("]") |> ignore
                 else
                     sb.Append("[") |> ignore
                     let mutable prefix = ""
                     let prefix2 = sprintf ",%s%s" (String.replicate (max 1 (shape.Length-1)) "\n       ") (String.replicate (externalCoords.Length+1) " ")
-                    for i=0 to shape.[0]-1 do
+                    if (shape.[0] >= threshold) && (edgeItems*2 < shape.[0]) then
+                        for i=0 to edgeItems-1 do
+                            sb.Append(prefix) |> ignore
+                            print shape.[1..] (Array.append externalCoords [|i|])
+                            prefix <- prefix2
                         sb.Append(prefix) |> ignore
-                        print shape.[1..] (Array.append externalCoords [|i|])
-                        prefix <- prefix2
+                        sb.Append("...") |> ignore
+                        for i=shape.[0]-edgeItems to shape.[0]-1 do
+                            sb.Append(prefix) |> ignore
+                            print shape.[1..] (Array.append externalCoords [|i|])
+                            // prefix <- prefix2
+                    else
+                        for i=0 to shape.[0]-1 do
+                            sb.Append(prefix) |> ignore
+                            print shape.[1..] (Array.append externalCoords [|i|])
+                            prefix <- prefix2
                     sb.Append("]") |> ignore
             print t.Shape [||]
         if t.Dtype <> Dtype.Default then
@@ -673,8 +723,8 @@ type RawTensor() =
         if t.Backend <> Backend.Default then
             sb.Append ",backend=" |> ignore
             sb.Append (t.Backend.ToString()) |> ignore
-        sb.Append(extra) |> ignore
         sb.Append(")") |> ignore
+        sb.Append(postfix) |> ignore
         sb.ToString()
 
     override x.Equals(yobj: obj) = 

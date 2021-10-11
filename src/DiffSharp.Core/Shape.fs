@@ -50,6 +50,12 @@ module rec Shape =
                     yield len|]
         outputShape
 
+    /// Checks if the given index is valid in the context of the given shape.
+    let checkCanIndex (shape: int[]) (index: int[]) =
+        if shape.Length <> index.Length then failwithf "Expecting shape (%A) and index (%A) to have the same length" shape index
+        let valid = Array.forall2 (fun s i -> (i < s) && (i >= 0)) shape index
+        if not valid then failwithf "index (%A) is not valid for shape (%A)" index shape
+
     /// Computes the shape that results from a dilation operation.
     let dilated (shape: Shape) (dilations: int[]) =
         Array.map2 (fun n d -> n + (n - 1) * (d - 1)) shape dilations
@@ -832,15 +838,9 @@ module ShapeAutoOpens =
     let dilatedCoordinates (coordinates: int[]) (dilations: int[]) =
         Array.map2 (*) coordinates dilations
 
-    /// Checks if the given index is valid in the context of the given shape.
-    let checkValidIndex (shape: int[]) (index: int[]) =
-        if shape.Length <> index.Length then failwithf "Expecting shape (%A) and index (%A) to have the same length" shape index
-        let valid = Array.forall2 (fun s i -> i < s) shape index
-        if not valid then failwithf "index (%A) is not valid for shape (%A)" index shape
-
     /// Converts the given index to a flat index in the context of the given shape.
     let indexToFlatIndex (shape: int[]) (index: int[]) =
-        checkValidIndex shape index
+        Shape.checkCanIndex shape index
         let mutable flatIndex = 0
         for i=0 to index.Length - 1 do
             let v = if i = index.Length - 1 then 1 else (Array.reduce (*) shape.[i+1..])

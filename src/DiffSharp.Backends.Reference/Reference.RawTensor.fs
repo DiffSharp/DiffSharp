@@ -64,6 +64,9 @@ type RawTensorCPU<'T when 'T : equality and 'T :> scalar>(values: 'T[], shape: S
             if index.Length <> t.Dim then failwithf "Expecting a %id index" t.Dim
             t.Values.[t.IndexToFlatIndex(index)] <- v
 
+    override t.GetItem(indexes:int[]) =
+        t.[indexes] :> scalar
+
     override t.GetSlice(fullBounds:int[,]) =
         // printfn "rfullBounds\n%A" fullBounds
         let shape = Shape.checkCanGetSlice t.Shape fullBounds

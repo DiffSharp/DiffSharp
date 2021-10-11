@@ -1206,26 +1206,28 @@ type dsharp =
     static member move(input:Tensor, ?device, ?dtype, ?backend) =
         input.move(?device=device, ?dtype=dtype, ?backend=backend)
 
-    /// <summary>Configure the default element type, device and/or backend.</summary>
+    /// <summary>Configure the default device, dtype, and/or backend.</summary>
     /// <param name="device">The new default device.</param>
-    /// <param name="dtype">The new default element type. Only floating point types are supported as the default.</param>
+    /// <param name="dtype">The new default element type. Only floating point dtypes are supported as the default.</param>
     /// <param name="backend">The new default backend.</param>
-    static member config(?device: Device, ?dtype: Dtype, ?backend: Backend) = 
+    /// <param name="printer">The new default printer.</param>
+    static member config(?device: Device, ?dtype: Dtype, ?backend: Backend, ?printer: Printer) = 
         if dtype.IsSome then 
             if not dtype.Value.IsFloatingPoint then failwithf "Only floating point types are supported as the default type."
         device |> Option.iter (fun d -> Device.Default <- d)
         dtype |> Option.iter (fun d -> Dtype.Default <- d)
         backend |> Option.iter (fun d -> Backend.Default <- d)
+        printer |> Option.iter (fun d -> Printer.Default <- d)
         dsharp.tensor([0f], Device.Default, Dtype.Default, Backend.Default) |> ignore // We need this to ensure the backend assemblies are loaded and backend is ready to set the random seed immediately after config
 
-    /// <summary>Return the current default element type, device and backend.</summary>
-    static member config() = Device.Default, Dtype.Default, Backend.Default
+    /// <summary>Return the current default device, element type, backend, and printer.</summary>
+    static member config() = Device.Default, Dtype.Default, Backend.Default, Printer.Default
 
-    /// <summary>Configure the default element type, device and/or backend. Only floating point types are supported as the default.</summary>
-    /// <param name="configuration">A tuple of the new default element type, default device and default backend.</param>
-    static member config(configuration: (Device * Dtype * Backend)) =
-        let (device,dtype,backend) = configuration
-        dsharp.config(device, dtype, backend)
+    /// <summary>Configure the default device, element type, backend, printer. Only floating point dtypes are supported as the default.</summary>
+    /// <param name="configuration">A tuple of the new default device, default element type, default backend, and default printer.</param>
+    static member config(configuration: (Device * Dtype * Backend * Printer)) =
+        let (device,dtype,backend,printer) = configuration
+        dsharp.config(device, dtype, backend, printer)
 
     /// <summary>Returns the list of available backends.</summary>
     static member backends() =
