@@ -1786,6 +1786,9 @@ type Tensor =
     /// <param name="dim">The dimension along which to repeat values.</param>
     /// <param name="times">The number of repetitions for each element.</param>
     member a.repeat(dim:int, times:int) =
+        // Note: the repeat op was used in the days before broadcasting was implemented
+        // Most of its uses are now covered by broadcast and expand. But the operation
+        // is well defined and correct so we can keep it.
         Shape.checkCanRepeat a.shape dim
         let newShape = a.shape |> Array.copy
         newShape.[dim] <- times
@@ -2150,7 +2153,7 @@ type Tensor =
     member a.softmax(dim:int) =
         let dim = Shape.completeDim a.dim dim  // Handles -1 semantics
         let e = (a - a.max().noDiff()).exp()
-        let esum = e.sum(dim, keepDim=true) //.repeat(dim, a.shape.[dim])
+        let esum = e.sum(dim, keepDim=true)
         e / esum
 
     /// <summary>Applies a softmax followed by a logarithm.</summary>
