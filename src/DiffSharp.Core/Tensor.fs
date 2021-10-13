@@ -2150,7 +2150,7 @@ type Tensor =
     member a.softmax(dim:int) =
         let dim = Shape.completeDim a.dim dim  // Handles -1 semantics
         let e = (a - a.max().noDiff()).exp()
-        let esum = e.sum(dim, keepDim=true).repeat(dim, a.shape.[dim])
+        let esum = e.sum(dim, keepDim=true) //.repeat(dim, a.shape.[dim])
         e / esum
 
     /// <summary>Applies a softmax followed by a logarithm.</summary>
