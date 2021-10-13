@@ -1552,28 +1552,11 @@ type Tensor =
     /// <param name="keepDim">Whether the output tensor has dim retained or not.</param>
     /// <param name="unbiased">Whether to use the unbiased estimation or not.</param>
     member a.variance(dim:int, ?keepDim:bool, ?unbiased:bool) =
-        // This is Welford's algorithm, see https://en.wikipedia.org/wiki/Algorithms_for_calculating_variance
-        let keepDim = defaultArg keepDim false
+        // This is the two-pass algorithm, see https://en.wikipedia.org/wiki/Algorithms_for_calculating_variance
         let unbiased = defaultArg unbiased true  // Use Bessel's correction if unbiased=true
         let dim = Shape.completeDim a.dim dim  // Handles -1 semantics
-        let sBounds = Array2D.init a.dim 3 (fun i j -> if j=0 then 0 elif j=1 then a.shape.[i]-1 else 0)
-        sBounds.[dim, 1] <- 0
-        sBounds.[dim, 2] <- 1
-        let mutable mean = a.zerosLike().GetSlice(sBounds)
-        let mutable sse = a.zerosLike().GetSlice(sBounds)
-        let n = a.shape.[dim]
-        for i=0 to n-1 do
-            sBounds.[dim,0] <- i
-            sBounds.[dim,1] <- i
-            sBounds.[dim,2] <- 1
-            let slice = a.GetSlice(sBounds)
-            let delta = slice - mean
-            mean <- mean + delta / (i + 1)
-            let delta2 = slice - mean 
-            sse <- sse + delta * delta2
-        let nn = if unbiased then n - 1 else n
-        let res = sse / nn
-        if keepDim then res.unsqueeze(dim) else res
+        let n = if unbiased then a.shape.[dim] - 1 else a.shape.[dim]
+        let a' = a - a.mean(dim=dim, keepDim=true) in (a' * a').sum(dim=dim, ?keepDim=keepDim) / n
 
     /// <summary>Returns the standard deviation of each row of the input tensor in the given dimension dim.</summary>
     /// <remarks>
