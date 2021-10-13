@@ -236,10 +236,6 @@ type RawTensorCPU<'T when 'T : equality and 'T :> scalar>(values: 'T[], shape: S
         let result = Array2D.init t.Shape.[1] t.Shape.[0] (fun i j -> t.Values.[j*tcols + i])
         t.CreateLike(result)
 
-    // override t.InverseT2() =
-    //     failwithf "Not implemented"
-    //     upcast t
-
     override t.SqueezeT(dim) =
         let result = Array.copy t.Values
         t.MakeLike(result, Shape.squeeze dim t.Shape)
@@ -1074,11 +1070,18 @@ module internal RawTensorCPU =
         let result = Array.reduce (+) t.Values
         ([|result|], [||])
     
-    let inline SumT2Dim0(t: RawTensorCPU< ^T >) : (^T[] * Shape) =
-        if t.Dim <> 2 then invalidOp "Expecting a 2d Tensor"
-        let result = Array.init t.Shape.[1] (fun j -> Array.init t.Shape.[0] (fun i -> t.Values.[i * t.Shape.[1] + j]) |> Array.reduce (+))
-        let resultShape = [|t.Shape.[1]|]
-        (result, resultShape)
+    let inline SumTDim(t: RawTensorCPU< ^T >, dim: int) : RawTensorCPU< ^T > =
+        let sBounds = Array2D.init t.Dim 3 (fun i j -> if j=0 then 0 elif j=1 then t.Shape.[i]-1 else 0)
+        sBounds.[dim, 1] <- 0
+        sBounds.[dim, 2] <- 1
+        let s = t.ZerosLike(shape=t.Shape, dtype=t.Dtype.SummationType).GetSlice(sBounds) :?> RawTensorCPU<'T>
+        s.SetMutable()
+        for i=0 to t.Shape.[dim]-1 do
+            sBounds.[dim,0] <- i
+            sBounds.[dim,1] <- i
+            sBounds.[dim,2] <- 1
+            s.AddInPlace(t.GetSlice(sBounds).Cast(t.Dtype.SummationType))
+        s
 
     let inline SignT op (t: RawTensorCPU< ^T >) : (^T[] * Shape) =
         let result = t.Values |> Array.map op
@@ -1239,7 +1242,11 @@ type RawTensorFloat32(values: float32[], shape:Shape, device) =
         match resultType with 
         | None -> res
         | Some dtype -> res.Cast(dtype)
-    override t.SumT2Dim0() = RawTensorCPU.SumT2Dim0(t) |> create
+    override t.SumTDim(dim, resultType) =
+        let res = RawTensorCPU.SumTDim(t, dim)
+        match resultType with 
+        | None -> res :> _
+        | Some dtype -> res.Cast(dtype)
     override t.SignT() = RawTensorCPU.SignT (sign >> float32) t |> create
     override t.FloorT() = RawTensorCPU.FloorT(t) |> create
     override t.CeilT() = RawTensorCPU.CeilT(t) |> create
@@ -1338,7 +1345,11 @@ type RawTensorFloat64(values: double[], shape:Shape, device) =
         match resultType with 
         | None -> res
         | Some dtype -> res.Cast(dtype)
-    override t.SumT2Dim0() = RawTensorCPU.SumT2Dim0(t) |> create
+    override t.SumTDim(dim, resultType) =
+        let res = RawTensorCPU.SumTDim(t, dim)
+        match resultType with 
+        | None -> res :> _
+        | Some dtype -> res.Cast(dtype)
     override t.SignT() = RawTensorCPU.SignT (sign >> double) t |> create
     override t.FloorT() = RawTensorCPU.FloorT(t) |> create
     override t.CeilT() = RawTensorCPU.CeilT(t) |> create
@@ -1429,7 +1440,7 @@ type RawTensorInt8(values: int8[], shape:Shape, device) =
     override t1.Conv3D(t2, stride, padding) = RawTensorCPU.Conv3D (t1, t2, stride, padding) :> _
     override t.NegT() = RawTensorCPU.NegT (~-) (t) |> create
     override t.SumT(resultType) = t.Cast(Dtype.Int64).SumT(?resultType=resultType)
-    override t.SumT2Dim0() = RawTensorCPU.SumT2Dim0(t) |> create
+    override t.SumTDim(dim, resultType) = t.Cast(Dtype.Int64).SumTDim(dim, ?resultType=resultType)
     override t.SignT() = RawTensorCPU.SignT (sign >> int8) t |> create
     override t.AbsT() = RawTensorCPU.AbsT abs t |> create
     override t.ReluT() = RawTensorCPU.ReluT(t) |> create
@@ -1525,7 +1536,7 @@ type RawTensorByte(values: byte[], shape:Shape, device) =
     override t1.Conv3D(t2, stride, padding) = RawTensorCPU.Conv3D (t1, t2, stride, padding) :> _
     override t.NegT() = RawTensorCPU.NegT (sbyte >> (~-) >> byte ) (t) |> create
     override t.SumT(resultType) = t.Cast(Dtype.Int64).SumT(?resultType=resultType)
-    override t.SumT2Dim0() = RawTensorCPU.SumT2Dim0(t) |> create
+    override t.SumTDim(dim, resultType) = t.Cast(Dtype.Int64).SumTDim(dim, ?resultType=resultType)
     override t.SignT() = RawTensorCPU.SignT (min 1uy) t |> create
     override t.AbsT() = RawTensorCPU.AbsT id t |> create
     override t.ReluT() = RawTensorCPU.ReluT(t) |> create
@@ -1621,7 +1632,7 @@ type RawTensorInt16(values: int16[], shape:Shape, device) =
     override t1.Conv3D(t2, stride, padding) = RawTensorCPU.Conv3D (t1, t2, stride, padding) :> _
     override t.NegT() = RawTensorCPU.NegT (~-) (t) |> create
     override t.SumT(resultType) = t.Cast(Dtype.Int64).SumT(?resultType=resultType)
-    override t.SumT2Dim0() = RawTensorCPU.SumT2Dim0(t) |> create
+    override t.SumTDim(dim, resultType) = t.Cast(Dtype.Int64).SumTDim(dim, ?resultType=resultType)
     override t.SignT() = RawTensorCPU.SignT (sign >> int16) t |> create
     override t.AbsT() = RawTensorCPU.AbsT abs t |> create
     override t.ReluT() = RawTensorCPU.ReluT(t) |> create
@@ -1717,7 +1728,7 @@ type RawTensorInt32(values: int32[], shape:Shape, device) =
     override t1.Conv3D(t2, stride, padding) = RawTensorCPU.Conv3D (t1, t2, stride, padding) :> _
     override t.NegT() = RawTensorCPU.NegT (~-) (t) |> create
     override t.SumT(resultType) = t.Cast(Dtype.Int64).SumT(?resultType=resultType)
-    override t.SumT2Dim0() = RawTensorCPU.SumT2Dim0(t) |> create
+    override t.SumTDim(dim, resultType) = t.Cast(Dtype.Int64).SumTDim(dim, ?resultType=resultType)
     override t.SignT() = RawTensorCPU.SignT (sign >> int32) t |> create
     override t.AbsT() = RawTensorCPU.AbsT abs t |> create
     override t.ReluT() = RawTensorCPU.ReluT(t) |> create
@@ -1817,7 +1828,11 @@ type RawTensorInt64(values: int64[], shape:Shape, device) =
         match resultType with 
         | None -> res
         | Some dtype -> res.Cast(dtype)
-    override t.SumT2Dim0() = RawTensorCPU.SumT2Dim0(t) |> create
+    override t.SumTDim(dim, resultType) =
+        let res = RawTensorCPU.SumTDim(t, dim)
+        match resultType with 
+        | None -> res :> _
+        | Some dtype -> res.Cast(dtype)
     override t.SignT() = RawTensorCPU.SignT (sign >> int64) t |> create
     override t.AbsT() = RawTensorCPU.AbsT abs t |> create
     override t.ReluT() = RawTensorCPU.ReluT(t) |> create
@@ -1891,7 +1906,7 @@ type RawTensorBool(values: bool[], shape:Shape, device) =
         let t2 = t2.toBool() 
         t1.MakeLike(Array.map (fun a -> a && t2) t1.Values, t1.Shape)
     override t.SumT(resultType) = t.Cast(Int64).SumT(?resultType=resultType)
-    override t.SumT2Dim0() = t.Cast(Int64).SumT2Dim0()
+    override t.SumTDim(dim, resultType) = t.Cast(Dtype.Int64).SumTDim(dim, ?resultType=resultType)
     override t.SignT() = t :> _
 
     override t.ClampT(_low, _high) = opNotSupported "Clamp" t.Dtype
@@ -2020,7 +2035,11 @@ type RawTensorFloat16(values: float32[], shape:Shape, device) =
         match resultType with 
         | None -> res
         | Some dtype -> res.Cast(dtype)
-    override t.SumT2Dim0() = RawTensorCPU.SumT2Dim0(t) |> create
+    override t.SumTDim(dim, resultType) =
+        let res = RawTensorCPU.SumTDim(t, dim)
+        match resultType with 
+        | None -> res :> _
+        | Some dtype -> res.Cast(dtype)
     override t.SignT() = RawTensorCPU.SignT (sign >> float32) t |> create
     override t.FloorT() = RawTensorCPU.FloorT(t) |> create
     override t.CeilT() = RawTensorCPU.CeilT(t) |> create
@@ -2119,7 +2138,11 @@ type RawTensorBFloat16(values: float32[], shape:Shape, device) =
         match resultType with 
         | None -> res
         | Some dtype -> res.Cast(dtype)
-    override t.SumT2Dim0() = RawTensorCPU.SumT2Dim0(t) |> create
+    override t.SumTDim(dim, resultType) =
+        let res = RawTensorCPU.SumTDim(t, dim)
+        match resultType with 
+        | None -> res :> _
+        | Some dtype -> res.Cast(dtype)
     override t.SignT() = RawTensorCPU.SignT (sign >> float32) t |> create
     override t.FloorT() = RawTensorCPU.FloorT(t) |> create
     override t.CeilT() = RawTensorCPU.CeilT(t) |> create

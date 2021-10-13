@@ -837,11 +837,6 @@ type TorchRawTensor(tt: torch.Tensor, shape: Shape, dtype: Dtype, device: Device
         let result = t1.MakeLike(resultt, shape=originalInput.Shape)
         result
 
-    override t.SumT2Dim0() =
-        let result = tt.sum([| 0L |], ``type``= tt.dtype)
-        let resultShape = [|t.Shape.[1]|]
-        t.MakeLike(result, shape=resultShape)
-
     override t.NegT() =
         match dtype with 
         | Dtype.Bool -> opNotSupported "NegT" dtype
@@ -851,6 +846,12 @@ type TorchRawTensor(tt: torch.Tensor, shape: Shape, dtype: Dtype, device: Device
         let typeArg = match resultType with None -> Nullable() | Some dt -> Nullable(toTorchType dt)
         let outType = match resultType with None -> dtype.SummationType | Some dt -> dt
         t.MakeLike(tt.sum(typeArg), shape=Shape.scalar, dtype=outType)
+
+    override t.SumTDim(dim, ?resultType) =
+        let typeArg = match resultType with None -> Nullable() | Some dt -> Nullable(toTorchType dt)
+        let outType = match resultType with None -> dtype.SummationType | Some dt -> dt
+        let ret = tt.sum(dim=(int64 dim), ``type``=typeArg, keepdim=false)  // keepdim is fixed to false as it is handled at Tensor level, not at RawTensor level
+        t.MakeLike(ret, shape=fromTorchShape ret.shape, dtype=outType)
 
     override t.SignT() =
         t.MakeLike(tt.sign())

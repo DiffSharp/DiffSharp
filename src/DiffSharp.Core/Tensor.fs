@@ -1485,25 +1485,19 @@ type Tensor =
     /// <param name="keepDim">Whether the output tensor has dim retained or not.</param>
     /// <param name="dtype">The desired data type of returned tensor.</param>
     member a.sum(dim:int, ?keepDim:bool, ?dtype: Dtype) =
-       // TODO: this can be implemented in a more memory efficient way by pushing the sum operation to the RawTensor level and implementing the derivatives using general broadcasting when it's available
-       let keepDim = defaultArg keepDim false
-       let dim = Shape.completeDim a.dim dim  // Handles -1 semantics
-       let res =
-        if dim = 0 && a.dim = 0 then a
-        else
-            if dim >= a.dim || dim < 0 then failwithf "Expecting dim to be between 0 and %A" a.dim
-            let sBounds = Array2D.init a.dim 3 (fun i j -> if j=0 then 0 elif j=1 then a.shape.[i]-1 else 0)
-            sBounds.[dim, 1] <- 0
-            sBounds.[dim, 2] <- 1
-            let mutable s = a.zerosLike(dtype=a.dtype.SummationType).GetSlice(sBounds)
-            for i=0 to a.shape.[dim]-1 do
-                sBounds.[dim,0] <- i
-                sBounds.[dim,1] <- i
-                sBounds.[dim,2] <- 1
-                s <- s + a.GetSlice(sBounds).cast(a.dtype.SummationType)
-            s
-       let res2 = if keepDim then res.unsqueeze(dim) else res
-       res2.castAfterSummation(?dtype=dtype)
+        let keepDim = defaultArg keepDim false
+        let dim = Shape.completeDim a.dim dim  // Handles -1 semantics
+        let res =
+            if dim = 0 && a.dim = 0 then a
+            else
+               if dim >= a.dim || dim < 0 then failwithf "Expecting 0 < dim (%A) < %A" dim a.dim
+               let inline fRaw(a:RawTensor) = a.SumTDim(dim=dim, ?resultType=dtype)
+               let inline fTensor(a:Tensor) = a.sum(dim=dim, ?dtype=dtype)
+               let inline dfFwd(ap,ad:Tensor,fp) = ad.sum(dim=dim, ?dtype=dtype)
+               let inline dfRev(a) = SumTDim(a, dim)
+               Tensor.OpUnary(a, fRaw, fTensor, dfFwd, dfRev)
+        let res2 = if keepDim then res.unsqueeze(dim) else res
+        res2.castAfterSummation(?dtype=dtype)
 
     /// <summary>Sum this tensor to size <paramref name="newShape" />, which must be broadcastable to this tensor size.</summary>
     member a.sumToSize(newShape:int[], ?dtype: Dtype) =
@@ -1558,28 +1552,11 @@ type Tensor =
     /// <param name="keepDim">Whether the output tensor has dim retained or not.</param>
     /// <param name="unbiased">Whether to use the unbiased estimation or not.</param>
     member a.variance(dim:int, ?keepDim:bool, ?unbiased:bool) =
-        // This is Welford's algorithm, see https://en.wikipedia.org/wiki/Algorithms_for_calculating_variance
-        let keepDim = defaultArg keepDim false
+        // This is the two-pass algorithm, see https://en.wikipedia.org/wiki/Algorithms_for_calculating_variance
         let unbiased = defaultArg unbiased true  // Use Bessel's correction if unbiased=true
         let dim = Shape.completeDim a.dim dim  // Handles -1 semantics
-        let sBounds = Array2D.init a.dim 3 (fun i j -> if j=0 then 0 elif j=1 then a.shape.[i]-1 else 0)
-        sBounds.[dim, 1] <- 0
-        sBounds.[dim, 2] <- 1
-        let mutable mean = a.zerosLike().GetSlice(sBounds)
-        let mutable sse = a.zerosLike().GetSlice(sBounds)
-        let n = a.shape.[dim]
-        for i=0 to n-1 do
-            sBounds.[dim,0] <- i
-            sBounds.[dim,1] <- i
-            sBounds.[dim,2] <- 1
-            let slice = a.GetSlice(sBounds)
-            let delta = slice - mean
-            mean <- mean + delta / (i + 1)
-            let delta2 = slice - mean 
-            sse <- sse + delta * delta2
-        let nn = if unbiased then n - 1 else n
-        let res = sse / nn
-        if keepDim then res.unsqueeze(dim) else res
+        let n = if unbiased then a.shape.[dim] - 1 else a.shape.[dim]
+        let a' = a - a.mean(dim=dim, keepDim=true) in (a' * a').sum(dim=dim, ?keepDim=keepDim) / n
 
     /// <summary>Returns the standard deviation of each row of the input tensor in the given dimension dim.</summary>
     /// <remarks>
@@ -1686,14 +1663,6 @@ type Tensor =
         else
             let mask = a.fullLike(1.-p, Array.append a.shape.[0..1] [|1;1;1|]).bernoulli()
             a * mask
-
-    // This is useful to keep as a special case of sum for performance reasons because it's involved in reverse mode of broadcasting addition of bias in NN linear layers
-    member internal a.sumT2Dim0() =
-        let inline fRaw(a:RawTensor) = a.SumT2Dim0()
-        let inline fTensor(a:Tensor) = a.sumT2Dim0()
-        let inline dfFwd(ap,ad:Tensor,fp):Tensor = ad.sumT2Dim0()
-        let inline dfRev(a) = SumT2Dim0(a)
-        Tensor.OpUnary(a, fRaw, fTensor, dfFwd, dfRev)
     
     /// <summary>Returns a tensor that is a transposed version of input. The given dimensions dim0 and dim1 are swapped.</summary>
     /// <param name="dim0">The first dimension to be transposed.</param>
@@ -1800,6 +1769,9 @@ type Tensor =
     /// <param name="dim">The dimension along which to repeat values.</param>
     /// <param name="times">The number of repetitions for each element.</param>
     member a.repeat(dim:int, times:int) =
+        // Note: the repeat op was used in the days before broadcasting was implemented
+        // Most of its uses are now covered by broadcast and expand. But the operation
+        // is well defined and correct so we can keep it.
         Shape.checkCanRepeat a.shape dim
         let newShape = a.shape |> Array.copy
         newShape.[dim] <- times
@@ -2164,7 +2136,7 @@ type Tensor =
     member a.softmax(dim:int) =
         let dim = Shape.completeDim a.dim dim  // Handles -1 semantics
         let e = (a - a.max().noDiff()).exp()
-        let esum = e.sum(dim, keepDim=true).repeat(dim, a.shape.[dim])
+        let esum = e.sum(dim, keepDim=true)
         e / esum
 
     /// <summary>Applies a softmax followed by a logarithm.</summary>
@@ -2788,7 +2760,7 @@ type Tensor =
                         | Conv3DTConstT(_,b,_,_) -> reset (b::tt)
                         | NegT(a) -> reset (a::tt)
                         | SumT(a) -> reset (a::tt)
-                        | SumT2Dim0(a) -> reset (a::tt)
+                        | SumTDim(a,_) -> reset (a::tt)
                         | ExpandT(a) -> reset (a::tt)
                         | StackTs(a,_) -> reset (List.append (a |> List.ofSeq) tt)
                         | UnstackT(a,_,_) -> reset (a::tt)
@@ -2932,7 +2904,10 @@ type Tensor =
                             push (check(bderivative, b) :: tt)
                         | NegT(a) -> push (check(-td, a) :: tt)
                         | SumT(a) -> push (check(td.expand(a.shape), a) :: tt)
-                        | SumT2Dim0(a) -> push (check(a.zerosLike() + td, a) :: tt)
+                        | SumTDim(a, dim) -> 
+                            let s = Array.copy a.shape
+                            s.[dim] <- 1
+                            push (check(td.view(s).expand(a.shape), a) :: tt)
                         | ExpandT(a) -> push (check(td.sumToSize(a.shape), a) :: tt)
                         | StackTs(a,dim) ->
                             push (List.append (Array.zip (td.unstack(dim)) a |> Array.map check |> Array.toList) tt)
@@ -3075,7 +3050,7 @@ and TensorOp =
 
     | NegT of Tensor
     | SumT of Tensor
-    | SumT2Dim0 of Tensor
+    | SumTDim of Tensor * int
     | ExpandT of Tensor
     | StackTs of Tensor[] * dim:int
     | UnstackT of Tensor * dim:int * i:int

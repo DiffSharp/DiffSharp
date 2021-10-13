@@ -2725,11 +2725,11 @@ type TestTensor () =
         // Test all non-bool types
         for combo in Combos.IntegralAndFloatingPoint do 
             let t1 = combo.tensor([[1.; 2.]; [3.; 4.]])
-            let t1Sum = t1.sumT2Dim0()
-            let t1SumCorrect = combo.tensor([4.; 6.])
+            let t1Sum = t1.sum(0)
+            let t1SumCorrect = combo.tensor([4.; 6.], dtype=combo.dtype.SummationType)
 
             Assert.CheckEqual(t1SumCorrect, t1Sum)
-            Assert.CheckEqual(t1Sum.dtype, combo.dtype)
+            Assert.CheckEqual(t1Sum.dtype, combo.dtype.SummationType)
     
     [<Test>]
     member _.TestTensorSumDim () =
