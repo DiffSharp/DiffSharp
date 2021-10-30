@@ -21,6 +21,7 @@
     <Compile Include="DiffSharp.Numerical.fs" />
     <Compile Include="Distributions.fs" />
     <Compile Include="Data.fs" />
+    <Compile Include="DiffProg.fs" />
     <Compile Include="Model.fs" />
     <Compile Include="Model.Linear.fs" />
     <Compile Include="Model.Conv.fs" />
