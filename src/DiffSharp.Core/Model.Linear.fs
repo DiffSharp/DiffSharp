@@ -20,6 +20,6 @@ type Linear(inFeatures, outFeatures, ?bias:bool) =
     override _.ToString() = sprintf "Linear(%A, %A)" inFeatures outFeatures
 
     /// <summary>TBD</summary>
-    override _.forward(value) =
+    override _.run(value) =
         let f = dsharp.matmul(value, w.value)
         if bias then f + b.value else f

@@ -15,7 +15,7 @@ type Dropout(?p:double) =
     override _.ToString() = sprintf "Dropout()"
 
     /// <summary>TBD</summary>
-    override m.forward(value) =
+    override m.run(value) =
         if m.mode = Mode.Train then value.dropout(?p=p) else value
 
 
@@ -27,7 +27,7 @@ type Dropout2d(?p:double) =
     override _.ToString() = sprintf "Dropout2d()"
 
     /// <summary>TBD</summary>
-    override m.forward(value) =
+    override m.run(value) =
         if m.mode = Mode.Train then value.dropout2d(?p=p) else value
 
 
@@ -39,5 +39,5 @@ type Dropout3d(?p:double) =
     override _.ToString() = sprintf "Dropout3d()"
 
     /// <summary>TBD</summary>
-    override m.forward(value) =
+    override m.run(value) =
         if m.mode = Mode.Train then value.dropout3d(?p=p) else value

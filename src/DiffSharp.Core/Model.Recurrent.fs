@@ -44,7 +44,7 @@ type RNNCell(inFeatures, outFeatures, ?nonlinearity, ?bias, ?batchFirst) =
 
     member r.reset() = r.hidden <- dsharp.tensor([])
 
-    override r.forward(value) =
+    override r.run(value) =
         let value, seqLen, batchSize = rnnShape value inFeatures batchFirst
         if r.hidden.nelement = 0 then r.hidden <- dsharp.zeros([batchSize; outFeatures])
         let output = Array.create seqLen (dsharp.tensor([]))
@@ -83,7 +83,7 @@ type LSTMCell(inFeatures, outFeatures, ?bias, ?batchFirst) =
 
     member r.reset() = r.hidden <- dsharp.tensor([])
 
-    override r.forward(value) =
+    override r.run(value) =
         let value, seqLen, batchSize = rnnShape value inFeatures batchFirst
         if r.hidden.nelement = 0 then r.hidden <- dsharp.zeros([batchSize; outFeatures])
         if r.cell.nelement = 0 then r.cell <- dsharp.zeros([batchSize; outFeatures])
@@ -119,9 +119,9 @@ type RNN(inFeatures, outFeatures, ?numLayers, ?nonlinearity, ?bias, ?batchFirst,
     let dropoutLayer = Dropout(dropout)
     let hs = Parameter <| dsharp.tensor([]) // Not a parameter to be trained, it is for keeping hidden state
     do 
-        base.addModel(layers |> Array.map box, Array.init numLayers (fun i -> sprintf "RNN-layer-%A" i))
-        if bidirectional then base.addModel(layersReverse |> Array.map box, Array.init numLayers (fun i -> sprintf "RNN-layer-reverse-%A" i))
-        if dropout > 0. then base.addModel([dropoutLayer], ["RNN-dropout"])
+        base.add(layers |> Array.map box, Array.init numLayers (fun i -> sprintf "RNN-layer-%A" i))
+        if bidirectional then base.add(layersReverse |> Array.map box, Array.init numLayers (fun i -> sprintf "RNN-layer-reverse-%A" i))
+        if dropout > 0. then base.add([dropoutLayer], ["RNN-dropout"])
 
     member _.hidden
         with get () = hs.value
@@ -131,23 +131,23 @@ type RNN(inFeatures, outFeatures, ?numLayers, ?nonlinearity, ?bias, ?batchFirst,
 
     member r.reset() = r.hidden <- dsharp.tensor([])
 
-    override r.forward(value) =
+    override r.run(value) =
         let value, _, batchSize = rnnShape value inFeatures batchFirst
         if r.hidden.nelement = 0 then r.hidden <- dsharp.zeros([numLayers*numDirections; batchSize; outFeatures])
         let newhs = Array.create (numLayers*numDirections) (dsharp.tensor([]))
         let mutable hFwd = value
         for i in 0..numLayers-1 do 
             layers.[i].hidden <- r.hidden.[i]
-            hFwd <- layers.[i].forward(hFwd)
-            if dropout > 0. && i < numLayers-1 then hFwd <- dropoutLayer.forward(hFwd)
+            hFwd <- layers.[i].run(hFwd)
+            if dropout > 0. && i < numLayers-1 then hFwd <- dropoutLayer.run(hFwd)
             newhs.[i] <- layers.[i].hidden
         let output = 
             if bidirectional then
                 let mutable hRev = value.flip([0])
                 for i in 0..numLayers-1 do 
                     layersReverse.[i].hidden <- r.hidden.[numLayers+i]
-                    hRev <- layersReverse.[i].forward(hRev)
-                    if dropout > 0. && i < numLayers-1 then hRev <- dropoutLayer.forward(hRev)
+                    hRev <- layersReverse.[i].run(hRev)
+                    if dropout > 0. && i < numLayers-1 then hRev <- dropoutLayer.run(hRev)
                     newhs.[numLayers+i] <- layersReverse.[i].hidden
                 dsharp.cat([hFwd; hRev], 2)
             else hFwd
@@ -170,9 +170,9 @@ type LSTM(inFeatures, outFeatures, ?numLayers, ?bias, ?batchFirst, ?dropout, ?bi
     let hs = Parameter <| dsharp.tensor([]) // Not a parameter to be trained, it is for keeping hidden state
     let cs = Parameter <| dsharp.tensor([]) // Not a parameter to be trained, it is for keeping hidden state
     do 
-        base.addModel(layers |> Array.map box, Array.init numLayers (fun i -> sprintf "LSTM-layer-%A" i))
-        if bidirectional then base.addModel(layersReverse |> Array.map box, Array.init numLayers (fun i -> sprintf "LSTM-layer-reverse-%A" i))
-        if dropout > 0. then base.addModel([dropoutLayer], ["LSTM-dropout"])
+        base.add(layers |> Array.map box, Array.init numLayers (fun i -> sprintf "LSTM-layer-%A" i))
+        if bidirectional then base.add(layersReverse |> Array.map box, Array.init numLayers (fun i -> sprintf "LSTM-layer-reverse-%A" i))
+        if dropout > 0. then base.add([dropoutLayer], ["LSTM-dropout"])
 
     member _.hidden
         with get () = hs.value
@@ -188,7 +188,7 @@ type LSTM(inFeatures, outFeatures, ?numLayers, ?bias, ?batchFirst, ?dropout, ?bi
         r.hidden <- dsharp.tensor([])
         r.cell <- dsharp.tensor([])
 
-    override r.forward(value) =
+    override r.run(value) =
         let value, _, batchSize = rnnShape value inFeatures batchFirst
         if r.hidden.nelement = 0 then r.hidden <- dsharp.zeros([numLayers*numDirections; batchSize; outFeatures])
         if r.cell.nelement = 0 then r.cell <- dsharp.zeros([numLayers*numDirections; batchSize; outFeatures])
@@ -198,8 +198,8 @@ type LSTM(inFeatures, outFeatures, ?numLayers, ?bias, ?batchFirst, ?dropout, ?bi
         for i in 0..numLayers-1 do 
             layers.[i].hidden <- r.hidden.[i]
             layers.[i].cell <- r.cell.[i]
-            hFwd <- layers.[i].forward(hFwd)
-            if dropout > 0. && i < numLayers-1 then hFwd <- dropoutLayer.forward(hFwd)
+            hFwd <- layers.[i].run(hFwd)
+            if dropout > 0. && i < numLayers-1 then hFwd <- dropoutLayer.run(hFwd)
             newhs.[i] <- layers.[i].hidden
             newcs.[i] <- layers.[i].cell
         let output = 
@@ -208,8 +208,8 @@ type LSTM(inFeatures, outFeatures, ?numLayers, ?bias, ?batchFirst, ?dropout, ?bi
                 for i in 0..numLayers-1 do 
                     layersReverse.[i].hidden <- r.hidden.[numLayers+i]
                     layersReverse.[i].cell <- r.cell.[numLayers+i]
-                    hRev <- layersReverse.[i].forward(hRev)
-                    if dropout > 0. && i < numLayers-1 then hRev <- dropoutLayer.forward(hRev)
+                    hRev <- layersReverse.[i].run(hRev)
+                    if dropout > 0. && i < numLayers-1 then hRev <- dropoutLayer.run(hRev)
                     newhs.[numLayers+i] <- layersReverse.[i].hidden
                     newcs.[numLayers+i] <- layersReverse.[i].cell
                 dsharp.cat([hFwd; hRev], 2)

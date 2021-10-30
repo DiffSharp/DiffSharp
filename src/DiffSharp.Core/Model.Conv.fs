@@ -20,7 +20,7 @@ type Conv1d(inChannels:int, outChannels:int, kernelSize:int, ?stride:int, ?paddi
     override _.ToString() = sprintf "Conv1d(%A, %A, %A)" inChannels outChannels kernelSize
 
     /// <summary>TBD</summary>
-    override _.forward(value) =
+    override _.run(value) =
         let f = dsharp.conv1d(value, w.value, ?stride=stride, ?padding=padding, ?dilation=dilation)
         if bias then f + b.value.expand([value.shape.[0]; outChannels]).view([value.shape.[0]; outChannels; 1]) else f
 
@@ -39,7 +39,7 @@ type Conv2d(inChannels:int, outChannels:int, ?kernelSize:int, ?stride:int, ?padd
     override _.ToString() = sprintf "Conv2d(%A, %A, %A)" inChannels outChannels kernelSizes
 
     /// <summary>TBD</summary>
-    override _.forward(value) =
+    override _.run(value) =
         let f = dsharp.conv2d(value, w.value, ?stride=stride, ?strides=strides, ?padding=padding, ?paddings=paddings, ?dilation=dilation, ?dilations=dilations)
         if bias then f + b.value.expand([value.shape.[0]; outChannels]).view([value.shape.[0]; outChannels; 1; 1]) else f
 
@@ -58,6 +58,6 @@ type Conv3d(inChannels:int, outChannels:int, ?kernelSize:int, ?stride:int, ?padd
     override _.ToString() = sprintf "Conv3d(%A, %A, %A)" inChannels outChannels kernelSizes
 
     /// <summary>TBD</summary>
-    override _.forward(value) =
+    override _.run(value) =
         let f = dsharp.conv3d(value, w.value, ?stride=stride, ?strides=strides, ?padding=padding, ?paddings=paddings, ?dilation=dilation, ?dilations=dilations)
         if bias then f + b.value.expand([value.shape.[0]; outChannels]).view([value.shape.[0]; outChannels; 1; 1; 1]) else f

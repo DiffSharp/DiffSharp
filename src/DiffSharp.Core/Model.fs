@@ -19,12 +19,10 @@ open DiffSharp
 
 /// <summary>Represents a model (a differentiable program mapping a tensor to a tensor).</summary>
 /// <remarks>A parameter is a mutable register holding a tensor.</remarks>
-[<AbstractClass>]
-type Model() = 
-    inherit DiffProg<Tensor, Tensor>()
 
-    abstract member forward: Tensor->Tensor
-    override m.run x = m.forward x
+type Model = DiffProg<Tensor, Tensor>
+type Model<'In, 'Out> = DiffProg<'In, 'Out>
+
 
 
 /// <summary>Contains functionality related to generating initial parameter weights for models.</summary>

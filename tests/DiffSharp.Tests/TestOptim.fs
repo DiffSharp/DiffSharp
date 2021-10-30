@@ -32,7 +32,7 @@ type TestOptim () =
         let step0 = optimizer.stateStep
         let step0Correct = 0
         net.reverseDiff()
-        let y = net.forward(inputs)
+        let y = net.run(inputs)
         let loss = dsharp.mseLoss(y, targets)
         loss.reverse()
         optimizer.step()
@@ -50,11 +50,11 @@ type TestOptim () =
         for _ in 0..epochs do
             for _, inputs, targets in dataloader.epoch() do
                 net.reverseDiff()
-                let y = net.forward(inputs)
+                let y = net.run(inputs)
                 let loss = dsharp.mseLoss(y, targets)
                 loss.reverse()
                 optimizer.step()
-        let y = net.forward inputs
+        let y = net.run inputs
         Assert.True(targets.allclose(y, 0.1, 0.1))
 
     [<Test>]
@@ -63,7 +63,7 @@ type TestOptim () =
         let net = Linear(din, dout)
         let lr, mom, epochs = 1e-2, 0.9, 250
         optim.sgd(net, dataloader, dsharp.mseLoss, lr=dsharp.tensor(lr), momentum=dsharp.tensor(mom), nesterov=true,  threshold=1e-4, epochs=epochs)
-        let y = net.forward inputs
+        let y = net.run inputs
         Assert.True(targets.allclose(y, 0.1, 0.1))
 
     [<Test>]
@@ -73,11 +73,11 @@ type TestOptim () =
         let lr, epochs = 1e-1, 250
         for _ in 0..epochs do
             for _, inputs, targets in dataloader.epoch() do
-                let loss p = net.asFunction inputs p |> dsharp.mseLoss targets
+                let loss p = net.asFunction p inputs |> dsharp.mseLoss targets
                 let g = dsharp.grad loss net.parametersVector
                 net.parametersVector <- net.parametersVector - lr * g
 
-        let y = net.forward inputs
+        let y = net.run inputs
         Assert.True(targets.allclose(y, 0.1, 0.1))
 
     [<Test>]
@@ -89,12 +89,12 @@ type TestOptim () =
         for _ in 0..epochs do
             for _, inputs, targets in dataloader.epoch() do
                 net.reverseDiff()
-                let y = net.forward(inputs)
+                let y = net.run(inputs)
                 let loss = dsharp.mseLoss(y, targets)
                 loss.reverse()
                 optimizer.step()
                 printfn "%A" (float loss)
-        let y = net.forward inputs
+        let y = net.run inputs
         Assert.True(targets.allclose(y, 0.1, 0.1))
 
     [<Test>]
@@ -103,7 +103,7 @@ type TestOptim () =
         let net = Linear(din, dout)
         let lr, epochs = 1e-2, 50
         optim.adam(net, dataloader, dsharp.mseLoss, lr=dsharp.tensor(lr), threshold=1e-4, epochs=epochs)
-        let y = net.forward inputs
+        let y = net.run inputs
         Assert.True(targets.allclose(y, 0.1, 0.1))
 
     [<Test>]
