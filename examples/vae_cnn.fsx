@@ -7,10 +7,11 @@
 
 // Libtorch binaries
 // Option A: you can use a platform-specific nuget package
-// #r "nuget: libtorch-cuda-11.1-win-x64, 1.8.0.7"
-// #r "nuget: libtorch-cuda-11.1-linux-x64, 1.9.0.10"
+#r "nuget: TorchSharp-cpu, 0.93.5"
+// #r "nuget: TorchSharp-cuda-linux, 0.93.5"
+// #r "nuget: TorchSharp-cuda-windows, 0.93.5"
 // Option B: you can use a local libtorch installation
-System.Runtime.InteropServices.NativeLibrary.Load("/home/gunes/anaconda3/lib/python3.8/site-packages/torch/lib/libtorch.so")
+// System.Runtime.InteropServices.NativeLibrary.Load("/home/gunes/anaconda3/lib/python3.8/site-packages/torch/lib/libtorch.so")
 
 
 open DiffSharp
@@ -57,7 +58,7 @@ let decoder =
 
 let model = VAE([1;28;28], 64, encoder, decoder)
 
-printfn "Model: %A" model
+printfn "Model\n%s" (model.summary())
 
 let optimizer = Adam(model, lr=dsharp.tensor(0.001))
 
