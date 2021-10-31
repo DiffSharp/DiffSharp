@@ -213,7 +213,7 @@ type Mode =
 
 /// <summary>Represents a differentiable program, primarily a collection of named parameters and sub-programs and a function governed by them.</summary>
 [<AbstractClass>]
-type DiffProgBase() =
+type DiffProg() =
     [<DefaultValue>]
     val mutable mode: Mode
 
@@ -244,14 +244,14 @@ type DiffProgBase() =
         items, names
 
     /// <summary>TBD</summary>
-    member m.train() = 
-        m.mode <- Mode.Train
-        for prog:DiffProgBase in m.descendants do prog.mode <- Mode.Train
+    member prog.train() = 
+        prog.mode <- Mode.Train
+        for prog:DiffProg in prog.descendants do prog.mode <- Mode.Train
 
     /// <summary>TBD</summary>
-    member m.eval() = 
-        m.mode <- Mode.Eval
-        for prog:DiffProgBase in m.descendants do prog.mode <- Mode.Eval
+    member prog.eval() = 
+        prog.mode <- Mode.Eval
+        for prog:DiffProg in prog.descendants do prog.mode <- Mode.Eval
 
     member _.device
         with get() = parameterDict.device
@@ -302,48 +302,48 @@ type DiffProgBase() =
         and set s = stateDict.unflatten(s)
 
     /// <summary>Gets the number of parameters of the DiffProg</summary>
-    member m.nparameters = m.parameters.nelement
+    member prog.nparameters = prog.parameters.nelement
 
     /// <summary>TBD</summary>
-    member m.nbuffers = m.buffers.nelement
+    member prog.nbuffers = prog.buffers.nelement
 
     /// <summary>TBD</summary>
-    member m.nstate = m.state.nelement
+    member prog.nstate = prog.state.nelement
 
     /// <summary>TBD</summary>
     member _.children
         with get () = 
-            progDict.Values |> Seq.cast<DiffProgBase> |> Seq.toList
+            progDict.Values |> Seq.cast<DiffProg> |> Seq.toList
 
     /// <summary>TBD</summary>
-    member m.descendants
+    member prog.descendants
         with get () =
-            m :: [for c in m.children do yield! c.descendants]
+            prog :: [for child in prog.children do yield! child.descendants]
 
     /// <summary>TBD</summary>
-    member m.hasOwnParameters
+    member prog.hasOwnParameters
         with get () =
-            let childrenParams = m.children |> List.map (fun c -> c.nparameters) |> List.sum
-            m.nparameters <> childrenParams
+            let childrenParams = prog.children |> List.map (fun c -> c.nparameters) |> List.sum
+            prog.nparameters <> childrenParams
 
     /// <summary>TBD</summary>
-    member m.hasOwnBuffers
+    member prog.hasOwnBuffers
         with get () =
-            let childrenBuffers = m.children |> List.map (fun c -> c.nbuffers) |> List.sum
-            m.nbuffers <> childrenBuffers
+            let childrenBuffers = prog.children |> List.map (fun c -> c.nbuffers) |> List.sum
+            prog.nbuffers <> childrenBuffers
 
     /// <summary>TBD</summary>
-    member m.hasOwnState
+    member prog.hasOwnState
         with get () =
-            let childrenState = m.children |> List.map (fun c -> c.nstate) |> List.sum
-            m.nstate <> childrenState
+            let childrenState = prog.children |> List.map (fun c -> c.nstate) |> List.sum
+            prog.nstate <> childrenState
 
     /// <summary>TBD</summary>
-    member m.init(f:string*Tensor->Tensor) = m.parameters.iter(fun (n, p) -> p.value <- f(n, p.value))
+    member prog.init(f:string*Tensor->Tensor) = prog.parameters.iter(fun (n, p) -> p.value <- f(n, p.value))
 
     /// <summary>TBD</summary>
-    member m.addParameter(items:seq<Parameter>, ?names:seq<string>) =
-        let items, names = m.checkItems(items, ?names=names)
+    member prog.addParameter(items:seq<Parameter>, ?names:seq<string>) =
+        let items, names = prog.checkItems(items, ?names=names)
         for i in 0..items.Length-1 do
             let param = items.[i]
             let n = if names.Length > 0 then names.[i] else sprintf "Parameter-%s" (Random.UUID())
@@ -351,8 +351,8 @@ type DiffProgBase() =
         updateState()
 
     /// <summary>TBD</summary>
-    member m.addBuffer(items:seq<Parameter>, ?names:seq<string>) =
-        let items, names = m.checkItems(items, ?names=names)
+    member prog.addBuffer(items:seq<Parameter>, ?names:seq<string>) =
+        let items, names = prog.checkItems(items, ?names=names)
         for i in 0..items.Length-1 do
             let param = items.[i]
             let n = if names.Length > 0 then names.[i] else sprintf "Buffer-%s" (Random.UUID())
@@ -360,12 +360,12 @@ type DiffProgBase() =
         updateState()
 
     /// <summary>TBD</summary>
-    member m.add(items:seq<obj>, ?names:seq<string>) =
-        let items, names = m.checkItems(items, ?names=names)
+    member prog.add(items:seq<obj>, ?names:seq<string>) =
+        let items, names = prog.checkItems(items, ?names=names)
         for i in 0..items.Length-1 do
             let prog = 
                 match items.[i] with
-                | :? DiffProgBase as mm -> mm
+                | :? DiffProg as mm -> mm
                 | _ -> failwithf "Unsupported type. Expecting a DiffProg."
             let n = if names.Length > 0 then names.[i] else sprintf "DiffProg-%s" (Random.UUID())
 
@@ -384,7 +384,7 @@ type DiffProgBase() =
     /// <remarks>
     ///  After this call the current parameters of the program will have attached derivatives for forward mode differentiation.
     /// </remarks>
-    member m.forwardDiff(derivatives:ParameterDict, ?tag) = m.parameters.forwardDiff(derivatives, ?tag=tag)
+    member prog.forwardDiff(derivatives:ParameterDict, ?tag) = prog.parameters.forwardDiff(derivatives, ?tag=tag)
 
     /// <summary>
     ///  Adjust the parameters of the differentiable program to initiate a new level of reverse-mode automatic differentiation.
@@ -394,49 +394,49 @@ type DiffProgBase() =
     ///  After this call the current parameters of the program will support reverse-mode differentiation. After the completion
     ///  of the corresponding <c>reverse</c> operation, the computed derivatives will be available. 
     /// </remarks>
-    member m.reverseDiff(?tag) = m.parameters.reverseDiff(?tag=tag)
+    member prog.reverseDiff(?tag) = prog.parameters.reverseDiff(?tag=tag)
 
     /// <summary>TBD</summary>
-    member m.noDiff() = m.parameters.noDiff()
+    member prog.noDiff() = prog.parameters.noDiff()
 
     /// <summary>Moves the state (parameters and buffers) of the differentiable program to the given configuration</summary>
-    member m.move(?device, ?dtype, ?backend) = 
-        m.state.move(?device=device, ?dtype=dtype, ?backend=backend)
+    member prog.move(?device, ?dtype, ?backend) = 
+        prog.state.move(?device=device, ?dtype=dtype, ?backend=backend)
 
     /// <summary>TBD</summary>
-    member m.saveState(fileName, ?noDiff:bool) =
+    member prog.saveState(fileName, ?noDiff:bool) =
         let noDiff = defaultArg noDiff true
         let ss =
-            if noDiff then m.stateVector.noDiff() // We remove any derivatives from the state vector before saving. This doesn't alter the differentiation state of the program.
-            else m.stateVector
+            if noDiff then prog.stateVector.noDiff() // We remove any derivatives from the state vector before saving. This doesn't alter the differentiation state of the program.
+            else prog.stateVector
         ss.save(fileName)
 
     /// <summary>TBD</summary>
-    member m.loadState(fileName) = m.stateVector <- Tensor.load(fileName)
+    member prog.loadState(fileName) = prog.stateVector <- Tensor.load(fileName)
 
     /// <summary>TBD</summary>
-    member m.save(fileName, ?noDiff:bool) =
+    member prog.save(fileName, ?noDiff:bool) =
         let noDiff = defaultArg noDiff true
-        let mm =
+        let pp =
             if noDiff then
-                if m.isNoDiff then m
+                if prog.isNoDiff then prog
                 else
                     // We clone the program and then remove any derivatives before saving. 
                     // The clone is used because we don't want a save operation to alter the differentiation state of the program.
-                    let mClone:DiffProgBase = m.clone()
+                    let mClone:DiffProg = prog.clone()
                     mClone.noDiff()
                     mClone
-            else m
-        saveBinary mm fileName
+            else prog
+        saveBinary pp fileName
 
     /// <summary>TBD</summary>
-    static member load(fileName):DiffProgBase = loadBinary fileName
+    static member load(fileName):DiffProg = loadBinary fileName
 
     /// <summary>TBD</summary>
-    member m.clone() = 
+    member prog.clone() = 
         let fileName = System.IO.Path.GetTempFileName()
-        m.save(fileName, noDiff=false)
-        DiffProgBase.load(fileName)
+        prog.save(fileName, noDiff=false)
+        DiffProg.load(fileName)
 
     override _.ToString() = 
         let sb = System.Text.StringBuilder()
@@ -444,7 +444,7 @@ type DiffProgBase() =
         let mutable prefix = ""
         for v in progDict do 
             // let n = (v :?> DictionaryEntry).Key :?> string
-            let m = (v :?> DictionaryEntry).Value :?> DiffProgBase
+            let m = (v :?> DictionaryEntry).Value :?> DiffProg
             // sb.Append(sprintf "%A: %A" n m) |> ignore
             sb.Append(sprintf "%s%A" prefix m) |> ignore
             prefix <- ", "
@@ -452,27 +452,27 @@ type DiffProgBase() =
         sb.ToString()
 
     /// <summary>TBD</summary>
-    member m.summary() =
+    member prog.summary() =
         let sb = System.Text.StringBuilder()
         sb.AppendLine("---") |> ignore
         sb.AppendLine(sprintf "%-40s %16s" "Prog" "Params") |> ignore
         sb.AppendLine("---") |> ignore
-        for mm in m.descendants do
-            if mm.hasOwnParameters then
-                sb.AppendLine(sprintf "%-40s %16s" (mm.ToString()) (thousandsInt mm.nparameters)) |> ignore
+        for pp in prog.descendants do
+            if pp.hasOwnParameters then
+                sb.AppendLine(sprintf "%-40s %16s" (pp.ToString()) (thousandsInt pp.nparameters)) |> ignore
         sb.AppendLine("---") |> ignore
-        sb.AppendLine(sprintf "Total params                  : %s" (thousandsInt m.nstate)) |> ignore
-        sb.AppendLine(sprintf "Trainable params              : %s" (thousandsInt m.nparameters)) |> ignore
-        sb.AppendLine(sprintf "Non-trainable params (buffers): %s" (thousandsInt m.nbuffers)) |> ignore
+        sb.AppendLine(sprintf "Total params                  : %s" (thousandsInt prog.nstate)) |> ignore
+        sb.AppendLine(sprintf "Trainable params              : %s" (thousandsInt prog.nparameters)) |> ignore
+        sb.AppendLine(sprintf "Non-trainable params (buffers): %s" (thousandsInt prog.nbuffers)) |> ignore
         sb.AppendLine("---") |> ignore
-        sb.AppendLine(sprintf "Total params size (MiB)       : %s" (thousandsFloat ((float m.stateVector.memorySize)/(1024.*1024.)))) |> ignore
+        sb.AppendLine(sprintf "Total params size (MiB)       : %s" (thousandsFloat ((float prog.stateVector.memorySize)/(1024.*1024.)))) |> ignore
         sb.AppendLine("---") |> ignore
         sb.ToString()
 
 
 [<AbstractClass>]
 type DiffProg<'In, 'Out>() =
-    inherit DiffProgBase()
+    inherit DiffProg()
 
     /// <summary>TBD</summary>
     abstract member run: 'In -> 'Out
@@ -482,13 +482,13 @@ type DiffProg<'In, 'Out>() =
     ///    The resulting function can be composed with a loss function and differentiated.
     ///    During execution the parameters of the program are temporarily set to the supplied parameters.
     /// </remarks>
-    member m.asFunction (parameters:Tensor) (input:'In) =
-        let old = m.parametersVector
+    member prog.asFunction (parameters:Tensor) (input:'In) =
+        let old = prog.parametersVector
         try 
-            m.parametersVector <- parameters
-            m.run(input) 
+            prog.parametersVector <- parameters
+            prog.run(input) 
         finally
-            m.parametersVector <- old
+            prog.parametersVector <- old
     
     /// <summary>TBD</summary>
     static member create (progs: seq<obj>) (parameters: seq<Parameter>) (buffers: seq<Parameter>) (f: 'In -> 'Out) : DiffProg<'In, 'Out> =
@@ -499,23 +499,23 @@ type DiffProg<'In, 'Out>() =
         prog
 
     /// <summary>TBD</summary>
-    static member compose (m1:DiffProg<'In, 'Out>) (m2:DiffProg<'Out, 'Out2>) : DiffProg<'In, 'Out2> =
-        DiffProg<'In, 'Out2>.create [box m1; box m2] [] [] (m1.run >> m2.run)
+    static member compose (prog1:DiffProg<'In, 'Out>) (prog2:DiffProg<'Out, 'Out2>) : DiffProg<'In, 'Out2> =
+        DiffProg<'In, 'Out2>.create [box prog1; box prog2] [] [] (prog1.run >> prog2.run)
 
     /// <summary>TBD</summary>
-    static member (-->) (m1:DiffProg<'In, 'Out>, m2:DiffProg<'Out, 'Out2>) = DiffProg<'In, 'Out>.compose m1 m2
+    static member (-->) (prog1:DiffProg<'In, 'Out>, prog2:DiffProg<'Out, 'Out2>) = DiffProg<'In, 'Out>.compose prog1 prog2
     
     /// <summary>TBD</summary>
-    static member (-->) (m:DiffProg<'In, 'Out>, f:'Out->'Out2) = DiffProg<'In, 'Out2>.create [m] [] [] (m.run >> f)
+    static member (-->) (prog:DiffProg<'In, 'Out>, f:'Out->'Out2) = DiffProg<'In, 'Out2>.create [prog] [] [] (prog.run >> f)
 
     /// <summary>TBD</summary>
-    static member (-->) (f:'In->'Out, m:DiffProg<'Out, 'Out2>) = DiffProg<'In, 'Out2>.create [m] [] [] (f >> m.run)
+    static member (-->) (f:'In->'Out, prog:DiffProg<'Out, 'Out2>) = DiffProg<'In, 'Out2>.create [prog] [] [] (f >> prog.run)
 
     /// <summary>TBD</summary>
-    static member (-->) (t:'In, m:DiffProg<'In, 'Out>) = m.run t
+    static member (-->) (t:'In, prog:DiffProg<'In, 'Out>) = prog.run t
 
     /// <summary>TBD</summary>
-    static member load(fileName):DiffProg<'In, 'Out> = DiffProgBase.load(fileName) :?> DiffProg<'In, 'Out>
+    static member load(fileName):DiffProg<'In, 'Out> = DiffProg.load(fileName) :?> DiffProg<'In, 'Out>
 
     /// <summary>TBD</summary>
-    member m.clone():DiffProg<'In, 'Out> = (m :> DiffProgBase).clone() :?> DiffProg<'In, 'Out>
+    member prog.clone():DiffProg<'In, 'Out> = (prog :> DiffProg).clone() :?> DiffProg<'In, 'Out>

@@ -401,9 +401,9 @@ type TestModel () =
         let m1children = m1.children
         let m2children = m2.children
 
-        let m0childrenCorrect:list<DiffProgBase> = []
-        let m1childrenCorrect:list<DiffProgBase> = [m0]
-        let m2childrenCorrect:list<DiffProgBase> = [m1]
+        let m0childrenCorrect:list<DiffProg> = []
+        let m1childrenCorrect:list<DiffProg> = [m0]
+        let m2childrenCorrect:list<DiffProg> = [m1]
 
         Assert.CheckEqual(m0childrenCorrect, m0children)
         Assert.CheckEqual(m1childrenCorrect, m1children)
@@ -413,9 +413,9 @@ type TestModel () =
         let m1models = m1.descendants
         let m2models = m2.descendants
 
-        let m0modelsCorrect:list<DiffProgBase> = [m0]
-        let m1modelsCorrect:list<DiffProgBase> = [m1;m0]
-        let m2modelsCorrect:list<DiffProgBase> = [m2;m1;m0]
+        let m0modelsCorrect:list<DiffProg> = [m0]
+        let m1modelsCorrect:list<DiffProg> = [m1;m0]
+        let m2modelsCorrect:list<DiffProg> = [m2;m1;m0]
 
         Assert.CheckEqual(m0modelsCorrect, m0models)
         Assert.CheckEqual(m1modelsCorrect, m1models)
@@ -449,7 +449,7 @@ type TestModel () =
         // |-l3
         let m3 = Sequential([l1; l2; l3])
 
-        let childrenParams (m:DiffProgBase) = 
+        let childrenParams (m:DiffProg) = 
             m.children |> List.map (fun c -> c.nparameters) |> List.sum
 
         let m1Params = m1.nparameters
