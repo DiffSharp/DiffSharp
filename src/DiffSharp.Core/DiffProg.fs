@@ -211,7 +211,7 @@ type Mode =
     | Eval = 1
 
 
-/// <summary>Represents a differentiable program, primarily a collection of named parameters and sub-programs and a function governed by them.</summary>
+/// <summary>Represents the base class of all differentiable programs.</summary>
 [<AbstractClass>]
 type DiffProg() =
     [<DefaultValue>]
@@ -470,6 +470,8 @@ type DiffProg() =
         sb.ToString()
 
 
+
+/// <summary>Represents a differentiable program, primarily a collection of named parameters and sub-programs and a function governed by them.</summary>
 [<AbstractClass>]
 type DiffProg<'In, 'Out>() =
     inherit DiffProg()

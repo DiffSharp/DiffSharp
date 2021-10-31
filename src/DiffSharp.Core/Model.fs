@@ -12,14 +12,7 @@ open DiffSharp
 ///   <summary>Contains types and functionality related to describing models.</summary>
 /// </namespacedoc>
 
-// [<AutoOpen>]
-// module ModelExtensions =
-//     type DiffProg<'In, 'Out> with
-//         abstract member forward: 'In -> 'Out
-
 /// <summary>Represents a model (a differentiable program mapping a tensor to a tensor).</summary>
-/// <remarks>A parameter is a mutable register holding a tensor.</remarks>
-
 type Model = DiffProg<Tensor, Tensor>
 type Model<'In, 'Out> = DiffProg<'In, 'Out>
 
