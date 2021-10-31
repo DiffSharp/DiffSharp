@@ -1159,11 +1159,13 @@ type TestTensor () =
     [<Test>]
     member _.TestTensorToString () =
         for combo in Combos.IntegralAndFloatingPoint do 
+            let tempty = combo.tensor([])
             let t0 = combo.tensor(2.)
             let t1 = combo.tensor([[2.]; [2.]])
             let t2 = combo.tensor([[[2.; 2.]]])
             let t3 = combo.tensor([[1.;2.]; [3.;4.]])
             let t4 = combo.tensor([[[[1.]]]])
+            let temptyString = tempty.ToString()
             let t0String = t0.ToString()
             let t1String = t1.ToString()
             let t2String = t2.ToString()
@@ -1198,11 +1200,13 @@ type TestTensor () =
                     sprintf ",backend=%s" (combo.backend.ToString())
 
             let extraText = dtypeText + deviceText + backendText
+            let temptyStringCorrect = "tensor([])"
             let t0StringCorrect = sprintf "tensor(2%s%s)" suffix extraText
             let t1StringCorrect = sprintf "tensor([[2%s],\n        [2%s]]%s)" suffix suffix extraText
             let t2StringCorrect = sprintf "tensor([[[2%s, 2%s]]]%s)" suffix suffix extraText
             let t3StringCorrect = sprintf "tensor([[1%s, 2%s],\n        [3%s, 4%s]]%s)" suffix suffix suffix suffix extraText
             let t4StringCorrect = sprintf "tensor([[[[1%s]]]]%s)" suffix extraText
+            Assert.CheckEqual(temptyStringCorrect, temptyString)
             Assert.CheckEqual(t0StringCorrect, t0String)
             Assert.CheckEqual(t1StringCorrect, t1String)
             Assert.CheckEqual(t2StringCorrect, t2String)

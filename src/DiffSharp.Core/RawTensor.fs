@@ -622,6 +622,8 @@ type RawTensor() =
     member t.Print(?postfix: string) =
         // TODO: this code is not ideal and can be reimplemented to be cleaner and more efficient
         let postfix = defaultArg postfix ""
+        if t.Nelement = 0 then sprintf "tensor([])%s" postfix
+        else
         let threshold = Printer.Default.threshold
         let edgeItems = Printer.Default.edgeItems
         let precision = Printer.Default.precision
