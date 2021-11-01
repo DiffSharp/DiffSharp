@@ -50,7 +50,7 @@ type Tensor =
         | TensorF(tp,_,_) -> tp.primalRaw
         | TensorR(tp,_,_,_,_) -> tp.primalRaw
 
-    /// Gets the raw value of the tensor ignoring all its derivatives
+    /// Gets the differentiation nesting tag of the tensor
     member t.nestingTag =
         match t with
         | TensorC(_) -> failwithf "Cannot get nesting tag of constant tensor"
@@ -233,26 +233,29 @@ type Tensor =
     ///  Any tensors produced using this tensor will have attached derivatives for forward mode propagation.
     ///  The current global nesting level is used for nested differentiation.
     /// </remarks>
-    member t.forwardDiff(derivative:Tensor, ?tag:uint32) = 
+    member t.forwardDiff(derivative:Tensor, ?nestingTag:uint32) = 
         if not t.dtype.IsFloatingPoint then failwithf "Only tensors with floating dtype can be differentiated. Tensor has dtype %A." t.dtype
-        let tag = defaultArg tag GlobalNestingLevel.Current
+        let nestingTag = defaultArg nestingTag GlobalNestingLevel.Current
         if t.shape <> derivative.shape then
             failwithf "Expecting derivative of same shape with primal. primal: %A, derivative: %A" t derivative
-        TensorF(t, derivative, tag)
+        TensorF(t, derivative, nestingTag)
 
     /// <summary>
     ///  Returns the input tensor with added support for reverse-mode automatic differentiation.
     /// </summary>
-    /// <param name="tag">The level tag for nested differentiation.  Defaults to the current global nesting level</param>
+    /// <param name="derivative">The derivative (adjoint) to assign to the new reverse-mode tensor. Defaults to an empty placeholder tensor.</param>
+    /// <param name="nestingTag">The level nestingTag for nested differentiation. Defaults to the current global nesting level</param>
     /// <remarks>
     ///  Any tensors produced using this tensor will also support reverse-mode propagation. After the completion
     ///  of the corresponding <c>reverse</c> operation on the overall result tensor, the computed derivative
     ///  will be available. 
     /// </remarks>
-    member t.reverseDiff(?tag:uint32) =
+    member t.reverseDiff(?derivative:Tensor, ?nestingTag:uint32) =
         if not t.dtype.IsFloatingPoint then failwithf "Only tensors with floating dtype can be differentiated. Tensor has dtype %A." t.dtype
-        let tag = defaultArg tag GlobalNestingLevel.Current
-        TensorR(t, ref (t.zerosLike([0])), NewT, ref 0u, tag)
+        let derivative = defaultArg derivative (t.zerosLike([0]))
+        if derivative.nelement <> 0 && derivative.shape <> t.shape then failwithf "Expecting derivative shape (%A) to match the tensor shape (%A)" derivative.shape t.shape
+        let nestingTag = defaultArg nestingTag GlobalNestingLevel.Current
+        TensorR(t, ref derivative, NewT, ref 0u, nestingTag)
 
     ///  Returns the input tensor but with any support for automatic differentiation removed.
     member t.noDiff() = t.primalDeep

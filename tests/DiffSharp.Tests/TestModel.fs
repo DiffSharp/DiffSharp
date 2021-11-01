@@ -92,6 +92,66 @@ type TestModel () =
         Assert.CheckEqual(d1flatCorrect, d3flat)
 
     [<Test>]
+    member _.TestParameterDictFlattenReverseDiff () =
+        let t1p = dsharp.randn([2;5])
+        let t1d = dsharp.randnLike t1p
+        let t2p = dsharp.randn([4])
+        let t2d = dsharp.randnLike t2p
+
+        let p1 = Parameter <| t1p.reverseDiff(t1d)
+        let p2 = Parameter <| t2p.reverseDiff(t2d)
+
+        let d = ParameterDict()
+        d.add(["p1", p1; "p2", p2])
+
+        let dflat = d.flatten()
+        Assert.True(dflat.isReverseDiff)
+
+        let dflatp = dflat.primal
+        let dflatd = dflat.derivative
+        let dflatpCorrect = dsharp.cat([t1p.view(-1); t2p])
+        let dflatdCorrect = dsharp.cat([t1d.view(-1); t2d])
+        
+        Assert.CheckEqual(dflatpCorrect, dflatp)
+        Assert.CheckEqual(dflatdCorrect, dflatd)
+
+    [<Test>]
+    member _.TestParameterDictUnflattenReverseDiff () =
+        let t1p = dsharp.randn([2;5])
+        let t2p = dsharp.randn([4])
+
+        let p1 = Parameter <| t1p
+        let p2 = Parameter <| t2p
+
+        let d = ParameterDict()
+        d.add(["p1", p1; "p2", p2])
+
+        let dflatp = dsharp.randn([14])
+        let dflatd = dsharp.randn([14])
+        let dflat = dflatp.reverseDiff(dflatd)
+
+        Assert.False(d.isReverseDiff)
+        d.unflatten(dflat)
+        Assert.True(d.isReverseDiff)
+
+        let dp1 = d.["p1"]
+        let dp1p = dp1.primal
+        let dp1d = dp1.derivative
+        let dp2 = d.["p2"]
+        let dp2p = dp2.primal
+        let dp2d = dp2.derivative
+
+        let dfp = dflatp.split([2*5; 4])
+        let dp1pCorrect, dp2pCorrect = dfp.[0].view([2;5]), dfp.[1]
+        let dfd = dflatd.split([2*5; 4])
+        let dp1dCorrect, dp2dCorrect = dfd.[0].view([2;5]), dfd.[1]
+
+        Assert.CheckEqual(dp1pCorrect, dp1p)
+        Assert.CheckEqual(dp2pCorrect, dp2p)
+        Assert.CheckEqual(dp1dCorrect, dp1d)
+        Assert.CheckEqual(dp2dCorrect, dp2d)
+
+    [<Test>]
     member _.TestModelCreationStyle1 () =
         let net = ModelStyle1a()
         Assert.CheckEqual(516, net.nparameters)
