@@ -391,10 +391,10 @@ type Tensor =
             let fields = c.GetFields()
             sprintf "TensorR %A %s" t.shape c.Name
 
-    /// A debugging routine to compute the parents of a tensor involved in reverse-mode automatic differentiation
-    member t.parents() =
+    /// A debugging routine that returns the ancestors of a tensor involved in reverse-mode automatic differentiation
+    member t.ancestors() =
         let mutable p = []
-        let rec parents (t:obj) d =
+        let rec ancestors (t:obj) d =
             match t with
             | :? Tensor as t ->
                 p <- p |> List.append [t]
@@ -408,19 +408,19 @@ type Tensor =
                     for field in fields do
                         let fv = field.GetValue(o)
                         if fv :? Tensor then 
-                            ret <- ret + sprintf "\n%s%s" (String.replicate d " ") (parents fv (d+1))
+                            ret <- ret + sprintf "\n%s%s" (String.replicate d " ") (ancestors fv (d+1))
                     ret
             | :? (Tensor array) as ts ->
                 // p <- p |> List.append (ts |> Array.toList)
                 let mutable ret = ""
                 let mutable prefix = ""
                 for t in ts do
-                    ret <- ret + sprintf "%s%s%s" prefix (String.replicate d " ") (parents t (d+1))
+                    ret <- ret + sprintf "%s%s%s" prefix (String.replicate d " ") (ancestors t (d+1))
                     prefix <- "\n"
                 ret
             // | _ -> indentNewLines (sprintf "%A" t) d
             | _ -> ""
-        let ps = parents t 1
+        let ps = ancestors t 1
         p |> List.rev, ps
 
     override t.ToString() = 
@@ -2836,7 +2836,7 @@ type Tensor =
                 match t with
                 | TensorR(_,_,o,_,_) ->
                     // if t.derivative.hasnan() || t.derivative.hasinf() then failwithf "t.derivative has nan, inf, or -inf\n%A\n%A" t.derivative t.derivative.shape
-                    // if v.hasnan() || v.hasinf() then failwithf "v has nan, inf, or -inf\n%A\n%A\n%s" v v.shape (snd (t.parents()))
+                    // if v.hasnan() || v.hasinf() then failwithf "v has nan, inf, or -inf\n%A\n%A\n%s" v v.shape (snd (t.ancestors()))
                     t.derivative <- t.derivative + v
                     t.fanout <- t.fanout - 1u
                     if t.fanout = 0u then
