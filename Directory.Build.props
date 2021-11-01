@@ -49,6 +49,9 @@
      <PackageVersion Condition="'$(GITHUB_ACTIONS)' != 'true'">$(Version)-local-$([System.DateTime]::Now.ToString(`yyMMdd`))</PackageVersion>
      <!-- build on CI uses number -->
      <PackageVersion Condition="'$(GITHUB_ACTIONS)' == 'true'">$(Version)</PackageVersion>
+     <!-- NOTE: to release as preview, with a unique package per package run, use this:
+     <PackageVersion Condition="'$(GITHUB_ACTIONS)' == 'true'">$(Version)-preview-$(GITHUB_RUN_ID)</PackageVersion>
+     -->
      <PackageOutputPath>$(MSBuildThisFileDirectory)bin/packages</PackageOutputPath>
 
      <NuspecProperties>Authors=$(Authors);Owners=$(Owners);ProjectId=$(MSBuildProjectName);PackageVersion=$(PackageVersion);TorchSharpVersion=$(TorchSharpVerion)</NuspecProperties>
