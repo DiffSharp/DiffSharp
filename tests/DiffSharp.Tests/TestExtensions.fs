@@ -99,7 +99,7 @@ module TestExtensions =
             let revx1 = x.reverseDiff()
             let revx2 = x.reverseDiff()
             let revz1 = op1 revx1
-            let revz2 = op1 revx2
+            let revz2 = op2 revx2
             revz1.reverse(zd)
             revz2.reverse(zd)
             let revxd1 = revx1.derivative
@@ -130,7 +130,7 @@ module TestExtensions =
             let revx2 = x.reverseDiff()
             let revy2 = y.reverseDiff()
             let revz1 = op1 revx1 revy1
-            let revz2 = op1 revx2 revy2
+            let revz2 = op2 revx2 revy2
             revz1.reverse(zd)
             revz2.reverse(zd)
             let revxd1 = revx1.derivative
@@ -186,7 +186,7 @@ module TestExtensions =
             let revx2 = x
             let revy2 = y.reverseDiff()
             let revz1 = op1 revx1 revy1
-            let revz2 = op1 revx2 revy2
+            let revz2 = op2 revx2 revy2
             revz1.reverse(zd)
             revz2.reverse(zd)
             let revxd1 = revx1.isNoDiff
