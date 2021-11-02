@@ -16,51 +16,51 @@ type ModelStyle1a() =
     inherit Model() 
     let fc1 = Linear(10, 16)
     let fc2 = Linear(16, 20)
-    do base.add([fc1; fc2], ["fc1"; "fc2"])
-    override __.run(x) =
+    do base.addModel([fc1; fc2], ["fc1"; "fc2"])
+    override __.forward(x) =
         x
-        |> fc1.run
+        |> fc1.forward
         |> dsharp.relu
-        |> fc2.run
+        |> fc2.forward
 
 type ModelStyle1b() =
     inherit Model()
     let fc1 = Linear(20, 32)
     let fc2 = Linear(32, 30)
     let p = Parameter(dsharp.randn([]))
-    do base.add([fc1; fc2], ["fc1"; "fc2"])
+    do base.addModel([fc1; fc2], ["fc1"; "fc2"])
     do base.addParameter([p], ["p"])
-    override __.run(x) =
+    override __.forward(x) =
         x
-        |> fc1.run
+        |> fc1.forward
         |> dsharp.relu
-        |> fc2.run
+        |> fc2.forward
         |> dsharp.mul p.value
 
 type GenericModelFloatFloat() =
     inherit Model<float,float>()
     let fc1 = Linear(1, 2)
     let fc2 = Linear(2, 1)
-    do base.add([fc1; fc2], ["fc1"; "fc2"])
+    do base.addModel([fc1; fc2], ["fc1"; "fc2"])
     do base.init (fun (_, t) -> t.onesLike())
-    override __.run(x) =
+    override __.forward(x) =
         x |> dsharp.tensor
         |> dsharp.view([1; -1])
-        |> fc1.run
-        |> fc2.run
+        |> fc1.forward
+        |> fc2.forward
         |> float
 
 type GenericModelIntString() =
     inherit Model<int,string>()
     let fc1 = Linear(1, 2)
     let fc2 = Linear(2, 1)
-    do base.add([fc1; fc2], ["fc1"; "fc2"])
+    do base.addModel([fc1; fc2], ["fc1"; "fc2"])
     do base.init (fun (_, t) -> t.onesLike())
-    override __.run(x) =
+    override __.forward(x) =
         x |> float32 |> dsharp.tensor
         |> dsharp.view([1; -1])
-        |> fc1.run
-        |> fc2.run
+        |> fc1.forward
+        |> fc2.forward
         |> int
         |> string
 
@@ -165,9 +165,9 @@ type TestModel () =
         let fc2 = Linear(32, 10)
         let net = Model.create [fc1; fc2] [] []
                     (dsharp.view [-1; 10]
-                    >> fc1.run
+                    >> fc1.forward
                     >> dsharp.relu
-                    >> fc2.run)
+                    >> fc2.forward)
         Assert.CheckEqual(682, net.nparameters)
 
         let fc1 = Linear(10, 32)
@@ -175,9 +175,9 @@ type TestModel () =
         let p = Parameter(dsharp.randn([]))
         let net2 = Model.create [fc1; fc2] [p] []
                     (dsharp.view [-1; 10]
-                    >> fc1.run
+                    >> fc1.forward
                     >> dsharp.relu
-                    >> fc2.run
+                    >> fc2.forward
                     >> dsharp.mul p.value)
         Assert.CheckEqual(683, net2.nparameters)
 
@@ -190,7 +190,7 @@ type TestModel () =
     member _.TestModelUsageStyle1 () =
         let net = ModelStyle1a()
         let x = dsharp.randn([1; 10])
-        let y = net.run x |> dsharp.sin
+        let y = net.forward x |> dsharp.sin
         Assert.CheckEqual([| 1;20 |], y.shape)
 
     [<Test>]
@@ -220,7 +220,7 @@ type TestModel () =
         Assert.CheckEqual(516 + 1663, net3.nparameters)
 
         let x = dsharp.randn([5;10])
-        let y = net3.run(x)
+        let y = net3.forward(x)
         Assert.CheckEqual([|5;30|], y.shape)
 
     [<Test>]
@@ -461,9 +461,9 @@ type TestModel () =
         let m1children = m1.children
         let m2children = m2.children
 
-        let m0childrenCorrect:list<DiffProg> = []
-        let m1childrenCorrect:list<DiffProg> = [m0]
-        let m2childrenCorrect:list<DiffProg> = [m1]
+        let m0childrenCorrect:list<ModelBase> = []
+        let m1childrenCorrect:list<ModelBase> = [m0]
+        let m2childrenCorrect:list<ModelBase> = [m1]
 
         Assert.CheckEqual(m0childrenCorrect, m0children)
         Assert.CheckEqual(m1childrenCorrect, m1children)
@@ -473,9 +473,9 @@ type TestModel () =
         let m1models = m1.descendants
         let m2models = m2.descendants
 
-        let m0modelsCorrect:list<DiffProg> = [m0]
-        let m1modelsCorrect:list<DiffProg> = [m1;m0]
-        let m2modelsCorrect:list<DiffProg> = [m2;m1;m0]
+        let m0modelsCorrect:list<ModelBase> = [m0]
+        let m1modelsCorrect:list<ModelBase> = [m1;m0]
+        let m2modelsCorrect:list<ModelBase> = [m2;m1;m0]
 
         Assert.CheckEqual(m0modelsCorrect, m0models)
         Assert.CheckEqual(m1modelsCorrect, m1models)
@@ -509,7 +509,7 @@ type TestModel () =
         // |-l3
         let m3 = Sequential([l1; l2; l3])
 
-        let childrenParams (m:DiffProg) = 
+        let childrenParams (m:Model) = 
             m.children |> List.map (fun c -> c.nparameters) |> List.sum
 
         let m1Params = m1.nparameters
@@ -536,7 +536,7 @@ type TestModel () =
         for _ in 0..steps do
             let g = dsharp.grad (loss inputs) net.parametersVector
             net.parametersVector <- net.parametersVector - lr * g
-        let y = net.run inputs
+        let y = net.forward inputs
         Assert.True(targets.allclose(y, 0.01))
 
     [<Test>]

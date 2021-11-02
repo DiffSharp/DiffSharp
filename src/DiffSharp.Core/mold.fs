@@ -3,8 +3,9 @@
 //
 // BSD 2-Clause License. See LICENSE in root of repository.
 
-namespace DiffSharp
+namespace rec DiffSharp.Model
 
+open DiffSharp
 open DiffSharp.Util
 open System.Collections
 open System.Collections.Generic
@@ -12,20 +13,20 @@ open System.Collections.Specialized
 
 
 /// <namespacedoc>
-///   <summary>Contains types and functionality related to describing differentiable programs.</summary>
+///   <summary>Contains types and functionality related to describing models.</summary>
 /// </namespacedoc>
 ///
-/// <summary>Represents a parameter in a differentiable program.</summary>
+/// <summary>Represents a parameter in a model.</summary>
 /// <remarks>A parameter is a mutable register holding a tensor.</remarks>
 type Parameter =
     val mutable value:Tensor
     new(value) = {value=value}
 
     /// <summary>TBD</summary>
-    member p.forwardDiff(derivative:Tensor, ?nestingTag:uint32) = p.value <- p.value.forwardDiff(derivative, ?nestingTag=nestingTag)
+    member p.forwardDiff(derivative:Tensor, ?tag:uint32) = p.value <- p.value.forwardDiff(derivative, ?tag=tag)
 
     /// <summary>TBD</summary>
-    member p.reverseDiff(?nestingTag:uint32) = p.value <- p.value.reverseDiff(?nestingTag=nestingTag)
+    member p.reverseDiff(?tag:uint32) = p.value <- p.value.reverseDiff(?tag=tag)
 
     /// <summary>TBD</summary>
     member p.noDiff() = p.value <- p.value.noDiff()
@@ -39,7 +40,7 @@ type Parameter =
     override p.ToString() = sprintf "Parameter(shape: %A, value: %A)" (p.value.shape |> List.ofSeq) p.value
 
 
-/// <summary>Represents a collection of named parameters in a differentiable program.</summary>
+/// <summary>Represents a collection of named parameters in a model.</summary>
 type ParameterDict() =
     /// <summary>TBD</summary>
     // A generic Dictionary is not good because it does not guarantee an order in which the items are returned. https://docs.microsoft.com/en-us/dotnet/api/system.collections.generic.dictionary-2?view=net-5.0
@@ -58,8 +59,6 @@ type ParameterDict() =
 
     interface System.Collections.IEnumerable with
         member d.GetEnumerator() = (d :> IEnumerable<string*Parameter>).GetEnumerator() :> System.Collections.IEnumerator
-
-    member d.count = d.parameters.Count
 
     member d.device
         with get() = 
@@ -135,30 +134,30 @@ type ParameterDict() =
     ///  Adjust the parameters to include support for forward-mode automatic differentiation.
     /// </summary>
     /// <param name="derivatives">The derivatives of the parameters</param>
-    /// <param name="nestingTag">The level tag for nested differentiation.  Defaults to the current global nesting level</param>
+    /// <param name="tag">The level tag for nested differentiation.  Defaults to the current global nesting level</param>
     /// <remarks>
-    ///  After this call the current parameters in this dictionary will have attached derivatives for forward mode differentiation.
+    ///  After this call the current parameters of the model will have attached derivatives for forward mode propagation.
     /// </remarks>
-    member d.forwardDiff(derivatives:ParameterDict, ?nestingTag:uint32) = 
+    member d.forwardDiff(derivatives:ParameterDict, ?tag:uint32) = 
         // This is to be extra cautious about all Parameters in the ParameterDict getting the same tag, which is crucial for correctness of differentiation results
         // If we leave the default tag value to be determined by each underlying tensor, there is a risk that the tag can somehow change during the ParameterDict .iter call
-        let nestingTag = defaultArg nestingTag GlobalNestingLevel.Current
-        d.iter(fun (n, p) -> p.forwardDiff(derivatives.[n], nestingTag=nestingTag))
+        let tag = defaultArg tag GlobalNestingLevel.Current
+        d.iter(fun (n, p) -> p.forwardDiff(derivatives.[n], tag=tag))
 
     /// <summary>
     ///  Adjust the parameters to include support for reverse-mode automatic differentiation.
     /// </summary>
-    /// <param name="nestingTag">The level tag for nested differentiation.  Defaults to the current global nesting level</param>
+    /// <param name="tag">The level tag for nested differentiation.  Defaults to the current global nesting level</param>
     /// <remarks>
-    ///  After this call the current parameters in this dictionary will support reverse-mode differentiation. After the completion
+    ///  After this call the current parameters of the model will support reverse-mode propagation. After the completion
     ///  of the corresponding <c>reverse</c> operation, the computed derivative
     ///  will be available. 
     /// </remarks>
-    member d.reverseDiff(?nestingTag:uint32) = 
+    member d.reverseDiff(?tag:uint32) = 
         // This is to be extra cautious about all Parameters in the ParameterDict getting the same tag, which is crucial for correctness of differentiation results
         // If we leave the default tag value to be determined by each underlying tensor, there is a risk that the tag can somehow change during the ParameterDict .iter call
-        let nestingTag = defaultArg nestingTag GlobalNestingLevel.Current
-        d.iter(fun (_, p) -> p.reverseDiff(nestingTag=nestingTag))
+        let tag = defaultArg tag GlobalNestingLevel.Current
+        d.iter(fun (_, p) -> p.reverseDiff(tag=tag))
 
     /// <summary>TBD</summary>
     member d.noDiff() = d.iter(fun (_, p) -> p.noDiff())
@@ -172,35 +171,17 @@ type ParameterDict() =
 
     /// <summary>TBD</summary>
     member d.flatten() =
-        if d.count = 0 then dsharp.zeros(0) // Empty ParameterDict defaults to default device, dtype, backend config
-        elif d.isReverseDiff then
-            // We flatten reverse-mode parameters into a single reverse-mode tensor and also keep the derivative information to cover the use case
-            // where the reverse-mode derivative of the parameters (after reverse propagation) can be read from the flattened tensor.
-            // This extra code is needed because for reverse-mode tensor operations like cat normally do not keep derivative information and only apply to primals.
-            // This mirrors the behavior in ParameterDict.unflatten.
-            let pp, pd = Array.unzip [| for t in d.parameters.Values do let t = (t :?> Parameter) in t.value.primal.view(-1), t.value.derivative.view(-1) |]
-            let tp, td = dsharp.cat(pp), dsharp.cat(pd)
-            tp.reverseDiff(derivative=td, nestingTag=(d.parameters.[0] :?> Parameter).value.nestingTag)
-        else
         let ts = [| for t in d.parameters.Values do (t :?> Parameter).value.view(-1) |]
-        dsharp.cat(ts)
+        if ts.Length = 0 then dsharp.zeros(0) // Empty ParameterDict defaults to default device, dtype, backend config
+        else dsharp.cat(ts)
 
     /// <summary>TBD</summary>
     member d.unflatten(tensors:Tensor) =
         if tensors.dim <> 1 then failwithf "Expecting 1d tensors but received tensors with shape %A" tensors.shape
         if tensors.nelement <> d.nelement then failwithf "Expecting tensors.nelement (%A) and ParameterDict.nelement (%A) to be the same" tensors.nelement d.nelement
-        if tensors.nelement = 0 then ()
-        else
         let shapes = [|for t in d.parameters.Values do (t :?> Parameter).value.shape|]
         let sizes = [|for s in shapes do shapeLength s|]
-        let ts = 
-            if tensors.isReverseDiff && tensors.derivative.shape = tensors.primal.shape then
-                // For reverse-mode tensors, we split both primals and derivatives and combine these in reverse-mode tensors corresponding to each parameter
-                // This extra code is needed because reverser-mode tensor operations like split normally do not keep derivative information and only apply to primals.
-                // This mirrors the behavior in ParameterDict.flatten.
-                Array.map3 (fun (tp:Tensor) (td:Tensor) (s:int[]) -> tp.view(s).reverseDiff(derivative=td.view(s), nestingTag=tensors.nestingTag)) (tensors.primal.split(sizes)) (tensors.derivative.split(sizes)) shapes
-            else
-                Array.map2 (fun (t:Tensor) (s:int[]) -> t.view(s)) (tensors.split(sizes)) shapes
+        let ts = Array.map2 (fun (t:Tensor) (s:int[]) -> t.view(s)) (tensors.split(sizes)) shapes
         let mutable i = 0
         let keys = OrderedDictionary.copyKeys d.parameters
         for n in keys do
@@ -225,15 +206,15 @@ type ParameterDict() =
         sb.ToString()
 
 
-/// <summary>Indicates the training or evaluation mode for a differentiable program.</summary>
+/// <summary>Indicates the training or evaluation mode for a model.</summary>
 type Mode =
     | Train = 0
     | Eval = 1
 
 
-/// <summary>Represents the base class of all differentiable programs.</summary>
+/// <summary>Represents a model, primarily a collection of named parameters and sub-models and a function governed by them.</summary>
 [<AbstractClass>]
-type DiffProg() =
+type ModelBase() =
     [<DefaultValue>]
     val mutable mode: Mode
 
@@ -242,7 +223,7 @@ type DiffProg() =
     let parameterDict = ParameterDict()
     let bufferDict = ParameterDict()
     let stateDict = ParameterDict()
-    let progDict = OrderedDictionary()
+    let modelDict = OrderedDictionary()
 
     let updateState() =
         stateDict.clear()
@@ -264,14 +245,14 @@ type DiffProg() =
         items, names
 
     /// <summary>TBD</summary>
-    member prog.train() = 
-        prog.mode <- Mode.Train
-        for prog:DiffProg in prog.descendants do prog.mode <- Mode.Train
+    member m.train() = 
+        m.mode <- Mode.Train
+        for model:ModelBase in m.models do model.mode <- Mode.Train
 
     /// <summary>TBD</summary>
-    member prog.eval() = 
-        prog.mode <- Mode.Eval
-        for prog:DiffProg in prog.descendants do prog.mode <- Mode.Eval
+    member m.eval() = 
+        m.mode <- Mode.Eval
+        for model:ModelBase in m.models do model.mode <- Mode.Eval
 
     member _.device
         with get() = parameterDict.device
@@ -321,49 +302,49 @@ type DiffProg() =
         with get () = stateDict.flatten()
         and set s = stateDict.unflatten(s)
 
-    /// <summary>Gets the number of parameters of the DiffProg</summary>
-    member prog.nparameters = prog.parameters.nelement
+    /// <summary>Gets the number of parameters of the model</summary>
+    member m.nparameters = m.parameters.nelement
 
     /// <summary>TBD</summary>
-    member prog.nbuffers = prog.buffers.nelement
+    member m.nbuffers = m.buffers.nelement
 
     /// <summary>TBD</summary>
-    member prog.nstate = prog.state.nelement
+    member m.nstate = m.state.nelement
 
     /// <summary>TBD</summary>
     member _.children
         with get () = 
-            progDict.Values |> Seq.cast<DiffProg> |> Seq.toList
+            modelDict.Values |> Seq.cast<ModelBase> |> Seq.toList
 
     /// <summary>TBD</summary>
-    member prog.descendants
+    member m.models
         with get () =
-            prog :: [for child in prog.children do yield! child.descendants]
+            m :: [for c in m.children do yield! c.models]
 
     /// <summary>TBD</summary>
-    member prog.hasOwnParameters
+    member m.hasOwnParameters
         with get () =
-            let childrenParams = prog.children |> List.map (fun c -> c.nparameters) |> List.sum
-            prog.nparameters <> childrenParams
+            let childrenParams = m.children |> List.map (fun c -> c.nparameters) |> List.sum
+            m.nparameters <> childrenParams
 
     /// <summary>TBD</summary>
-    member prog.hasOwnBuffers
+    member m.hasOwnBuffers
         with get () =
-            let childrenBuffers = prog.children |> List.map (fun c -> c.nbuffers) |> List.sum
-            prog.nbuffers <> childrenBuffers
+            let childrenBuffers = m.children |> List.map (fun c -> c.nbuffers) |> List.sum
+            m.nbuffers <> childrenBuffers
 
     /// <summary>TBD</summary>
-    member prog.hasOwnState
+    member m.hasOwnState
         with get () =
-            let childrenState = prog.children |> List.map (fun c -> c.nstate) |> List.sum
-            prog.nstate <> childrenState
+            let childrenState = m.children |> List.map (fun c -> c.nstate) |> List.sum
+            m.nstate <> childrenState
 
     /// <summary>TBD</summary>
-    member prog.init(f:string*Tensor->Tensor) = prog.parameters.iter(fun (n, p) -> p.value <- f(n, p.value))
+    member m.init(f:string*Tensor->Tensor) = m.parameters.iter(fun (n, p) -> p.value <- f(n, p.value))
 
     /// <summary>TBD</summary>
-    member prog.addParameter(items:seq<Parameter>, ?names:seq<string>) =
-        let items, names = prog.checkItems(items, ?names=names)
+    member m.addParameter(items:seq<Parameter>, ?names:seq<string>) =
+        let items, names = m.checkItems(items, ?names=names)
         for i in 0..items.Length-1 do
             let param = items.[i]
             let n = if names.Length > 0 then names.[i] else sprintf "Parameter-%s" (Random.UUID())
@@ -371,8 +352,8 @@ type DiffProg() =
         updateState()
 
     /// <summary>TBD</summary>
-    member prog.addBuffer(items:seq<Parameter>, ?names:seq<string>) =
-        let items, names = prog.checkItems(items, ?names=names)
+    member m.addBuffer(items:seq<Parameter>, ?names:seq<string>) =
+        let items, names = m.checkItems(items, ?names=names)
         for i in 0..items.Length-1 do
             let param = items.[i]
             let n = if names.Length > 0 then names.[i] else sprintf "Buffer-%s" (Random.UUID())
@@ -380,91 +361,90 @@ type DiffProg() =
         updateState()
 
     /// <summary>TBD</summary>
-    member prog.add(items:seq<obj>, ?names:seq<string>) =
-        let items, names = prog.checkItems(items, ?names=names)
+    member m.addModel(items:seq<obj>, ?names:seq<string>) =
+        let items, names = m.checkItems(items, ?names=names)
         for i in 0..items.Length-1 do
-            let prog = 
+            let model = 
                 match items.[i] with
-                | :? DiffProg as mm -> mm
-                | _ -> failwithf "Unsupported type. Expecting a DiffProg."
-            let n = if names.Length > 0 then names.[i] else sprintf "DiffProg-%s" (Random.UUID())
+                | :? ModelBase as mm -> mm
+                | _ -> failwithf "Unsupported type. Expecting a Model."
+            let n = if names.Length > 0 then names.[i] else sprintf "Model-%s" (Random.UUID())
 
-            progDict.Add(n, prog)
-            for n, p in prog.parameters do 
+            modelDict.Add(n, model)
+            for n, p in model.parameters do 
                 parameterDict.add(nextName n, p)
-            for n, b in prog.buffers do 
+            for n, b in model.buffers do 
                 bufferDict.add(nextName n, b)
         updateState()
 
     /// <summary>
-    ///  Adjust the parameters of the differentiable program to initiate a new level of forward-mode automatic differentiation.
+    ///  Adjust the parameters of the model to include support for forward-mode automatic differentiation.
     /// </summary>
     /// <param name="derivatives">The derivatives of the parameters</param>
-    /// <param name="nestingTag">The level tag for nested differentiation.  Defaults to the current global nesting level</param>
+    /// <param name="tag">The level tag for nested differentiation.  Defaults to the current global nesting level</param>
     /// <remarks>
-    ///  After this call the current parameters of the program will have attached derivatives for forward mode differentiation.
+    ///  After this call the current parameters of the model will have attached derivatives for forward mode propagation.
     /// </remarks>
-    member prog.forwardDiff(derivatives:ParameterDict, ?nestingTag) = prog.parameters.forwardDiff(derivatives, ?nestingTag=nestingTag)
+    member m.forwardDiff(derivatives:ParameterDict, ?tag) = m.parameters.forwardDiff(derivatives, ?tag=tag)
 
     /// <summary>
-    ///  Adjust the parameters of the differentiable program to initiate a new level of reverse-mode automatic differentiation.
+    ///  Adjust the parameters of the model to include support for reverse-mode automatic differentiation.
     /// </summary>
-    /// <param name="nestingTag">The level tag for nested differentiation.  Defaults to the current global nesting level</param>
+    /// <param name="tag">The level tag for nested differentiation.  Defaults to the current global nesting level</param>
     /// <remarks>
-    ///  After this call the current parameters of the program will support reverse-mode differentiation. After the completion
-    ///  of the corresponding <c>reverse</c> operation, the computed derivatives will be available. 
+    ///  After this call the current parameters of the model will support reverse-mode propagation. After the completion
+    ///  of the corresponding <c>reverse</c> operation, the computed derivative will be available. 
     /// </remarks>
-    member prog.reverseDiff(?nestingTag) = prog.parameters.reverseDiff(?nestingTag=nestingTag)
+    member m.reverseDiff(?tag) = m.parameters.reverseDiff(?tag=tag)
 
     /// <summary>TBD</summary>
-    member prog.noDiff() = prog.parameters.noDiff()
+    member m.noDiff() = m.parameters.noDiff()
 
-    /// <summary>Moves the state (parameters and buffers) of the differentiable program to the given configuration</summary>
-    member prog.move(?device, ?dtype, ?backend) = 
-        prog.state.move(?device=device, ?dtype=dtype, ?backend=backend)
+    /// <summary>Moves the state (parameters and buffers) of the model to the given configuration</summary>
+    member m.move(?device, ?dtype, ?backend) = 
+        m.state.move(?device=device, ?dtype=dtype, ?backend=backend)
 
     /// <summary>TBD</summary>
-    member prog.saveState(fileName, ?noDiff:bool) =
+    member m.saveState(fileName, ?noDiff:bool) =
         let noDiff = defaultArg noDiff true
         let ss =
-            if noDiff then prog.stateVector.noDiff() // We remove any derivatives from the state vector before saving. This doesn't alter the differentiation state of the program.
-            else prog.stateVector
+            if noDiff then m.stateVector.noDiff() // We remove any derivatives from the state vector before saving. This doesn't alter the differentiation state of the model.
+            else m.stateVector
         ss.save(fileName)
 
     /// <summary>TBD</summary>
-    member prog.loadState(fileName) = prog.stateVector <- Tensor.load(fileName)
+    member m.loadState(fileName) = m.stateVector <- Tensor.load(fileName)
 
     /// <summary>TBD</summary>
-    member prog.save(fileName, ?noDiff:bool) =
+    member m.save(fileName, ?noDiff:bool) =
         let noDiff = defaultArg noDiff true
-        let pp =
+        let mm =
             if noDiff then
-                if prog.isNoDiff then prog
+                if m.isNoDiff then m
                 else
-                    // We clone the program and then remove any derivatives before saving. 
-                    // The clone is used because we don't want a save operation to alter the differentiation state of the program.
-                    let mClone:DiffProg = prog.clone()
+                    // We clone the model and then remove any derivatives. The clone is used because we don't want a save operation to alter the differentiation state of the model.
+                    let mClone:ModelBase = m.clone()
                     mClone.noDiff()
                     mClone
-            else prog
-        saveBinary pp fileName
+            else m
+        saveBinary mm fileName
 
     /// <summary>TBD</summary>
-    static member load(fileName):DiffProg = loadBinary fileName
+    static member load(fileName):ModelBase = loadBinary fileName
 
     /// <summary>TBD</summary>
-    member prog.clone() = 
+    member m.clone() = 
         let fileName = System.IO.Path.GetTempFileName()
-        prog.save(fileName, noDiff=false)
-        DiffProg.load(fileName)
+        m.save(fileName, noDiff=false)
+        ModelBase.load(fileName)
 
     override _.ToString() = 
         let sb = System.Text.StringBuilder()
-        sb.Append("DiffProg(") |> ignore
+        sb.Append("ModelBase(") |> ignore
         let mutable prefix = ""
-        for v in progDict do 
+        for v in modelDict do 
             // let n = (v :?> DictionaryEntry).Key :?> string
-            let m = (v :?> DictionaryEntry).Value :?> DiffProg
+            let m = (v :?> DictionaryEntry).Value :?> ModelBase
             // sb.Append(sprintf "%A: %A" n m) |> ignore
             sb.Append(sprintf "%s%A" prefix m) |> ignore
             prefix <- ", "
@@ -472,72 +452,89 @@ type DiffProg() =
         sb.ToString()
 
     /// <summary>TBD</summary>
-    member prog.summary() =
+    member m.summary() =
         let sb = System.Text.StringBuilder()
         sb.AppendLine("---") |> ignore
-        sb.AppendLine(sprintf "%-40s %16s" "Prog" "Params") |> ignore
+        sb.AppendLine(sprintf "%-40s %16s" "Model" "Params") |> ignore
         sb.AppendLine("---") |> ignore
-        for pp in prog.descendants do
-            if pp.hasOwnParameters then
-                sb.AppendLine(sprintf "%-40s %16s" (pp.ToString()) (thousandsInt pp.nparameters)) |> ignore
+        for mm in m.models do
+            if mm.hasOwnParameters then
+                sb.AppendLine(sprintf "%-40s %16s" (mm.ToString()) (thousandsInt mm.nparameters)) |> ignore
         sb.AppendLine("---") |> ignore
-        sb.AppendLine(sprintf "Total params                  : %s" (thousandsInt prog.nstate)) |> ignore
-        sb.AppendLine(sprintf "Trainable params              : %s" (thousandsInt prog.nparameters)) |> ignore
-        sb.AppendLine(sprintf "Non-trainable params (buffers): %s" (thousandsInt prog.nbuffers)) |> ignore
+        sb.AppendLine(sprintf "Total params                  : %s" (thousandsInt m.nstate)) |> ignore
+        sb.AppendLine(sprintf "Trainable params              : %s" (thousandsInt m.nparameters)) |> ignore
+        sb.AppendLine(sprintf "Non-trainable params (buffers): %s" (thousandsInt m.nbuffers)) |> ignore
         sb.AppendLine("---") |> ignore
-        sb.AppendLine(sprintf "Total params size (MiB)       : %s" (thousandsFloat ((float prog.stateVector.memorySize)/(1024.*1024.)))) |> ignore
+        sb.AppendLine(sprintf "Total params size (MiB)       : %s" (thousandsFloat ((float m.stateVector.memorySize)/(1024.*1024.)))) |> ignore
         sb.AppendLine("---") |> ignore
         sb.ToString()
 
 
-
-/// <summary>Represents a differentiable program, primarily a collection of named parameters and sub-programs and a function governed by them.</summary>
 [<AbstractClass>]
-type DiffProg<'In, 'Out>() =
-    inherit DiffProg()
+type Model<'In, 'Out>() =
+    inherit ModelBase()
 
     /// <summary>TBD</summary>
-    abstract member run: 'In -> 'Out
+    abstract member forward: 'In -> 'Out
 
-    /// <summary>Use the differentiable program as a function of its parameters and input.</summary>
+    /// <summary>Use the model as a function of its input and parameters</summary>
     /// <remarks>
     ///    The resulting function can be composed with a loss function and differentiated.
-    ///    During execution the parameters of the program are temporarily set to the supplied parameters.
+    ///    During execution the parameters of the model are temporarily set to the supplied parameters.
     /// </remarks>
-    member prog.asFunction (parameters:Tensor) (input:'In) =
-        let old = prog.parametersVector
+    member m.asFunction (input:'In) (parameters:Tensor) =
+        let old = m.parametersVector
         try 
-            prog.parametersVector <- parameters
-            prog.run(input) 
+            m.parametersVector <- parameters
+            m.forward(input) 
         finally
-            prog.parametersVector <- old
+            m.parametersVector <- old
     
     /// <summary>TBD</summary>
-    static member create (progs: seq<obj>) (parameters: seq<Parameter>) (buffers: seq<Parameter>) (f: 'In -> 'Out) : DiffProg<'In, 'Out> =
-        let prog = { new DiffProg<'In, 'Out>() with override _.run(x:'In) : 'Out = f x}
-        prog.add(progs)
-        prog.addParameter(parameters)
-        prog.addBuffer(buffers)
-        prog
+    static member create (models: seq<obj>) (parameters: seq<Parameter>) (buffers: seq<Parameter>) (f: 'In -> 'Out) : Model<'In, 'Out> =
+        let model = { new Model<'In, 'Out>() with override _.forward(x:'In) : 'Out = f x}
+        model.addModel(models)
+        model.addParameter(parameters)
+        model.addBuffer(buffers)
+        model
 
     /// <summary>TBD</summary>
-    static member compose (prog1:DiffProg<'In, 'Out>) (prog2:DiffProg<'Out, 'Out2>) : DiffProg<'In, 'Out2> =
-        DiffProg<'In, 'Out2>.create [box prog1; box prog2] [] [] (prog1.run >> prog2.run)
+    static member compose (m1:Model<'In, 'Out>) (m2:Model<'Out, 'Out2>) : Model<'In, 'Out2> =
+        Model<'In, 'Out2>.create [box m1; box m2] [] [] (m1.forward >> m2.forward)
 
     /// <summary>TBD</summary>
-    static member (-->) (prog1:DiffProg<'In, 'Out>, prog2:DiffProg<'Out, 'Out2>) = DiffProg<'In, 'Out>.compose prog1 prog2
+    static member (-->) (m1:Model<'In, 'Out>, m2:Model<'Out, 'Out2>) = Model<'In, 'Out>.compose m1 m2
     
     /// <summary>TBD</summary>
-    static member (-->) (prog:DiffProg<'In, 'Out>, f:'Out->'Out2) = DiffProg<'In, 'Out2>.create [prog] [] [] (prog.run >> f)
+    static member (-->) (m:Model<'In, 'Out>, f:'Out->'Out2) = Model<'In, 'Out2>.create [m] [] [] (m.forward >> f)
 
     /// <summary>TBD</summary>
-    static member (-->) (f:'In->'Out, prog:DiffProg<'Out, 'Out2>) = DiffProg<'In, 'Out2>.create [prog] [] [] (f >> prog.run)
+    static member (-->) (f:'In->'Out, m:Model<'Out, 'Out2>) = Model<'In, 'Out2>.create [m] [] [] (f >> m.forward)
 
     /// <summary>TBD</summary>
-    static member (-->) (t:'In, prog:DiffProg<'In, 'Out>) = prog.run t
+    static member (-->) (t:'In, m:Model<'In, 'Out>) = m.forward t
 
     /// <summary>TBD</summary>
-    static member load(fileName):DiffProg<'In, 'Out> = DiffProg.load(fileName) :?> DiffProg<'In, 'Out>
+    static member load(fileName):Model<'In, 'Out> = ModelBase.load(fileName) :?> Model<'In, 'Out>
 
     /// <summary>TBD</summary>
-    member prog.clone():DiffProg<'In, 'Out> = (prog :> DiffProg).clone() :?> DiffProg<'In, 'Out>
+    member m.clone():Model<'In, 'Out> = (m :> ModelBase).clone() :?> Model<'In, 'Out>
+
+
+type Model = Model<Tensor, Tensor>
+
+
+/// <summary>Contains functionality related to generating initial parameter weights.</summary>
+type Weight =
+
+    /// <summary>TBD</summary>
+    static member kaiming(fanIn, fanOut, ?a:float) = 
+        // He et al. 2015. https://arxiv.org/abs/1502.01852
+        let a = defaultArg a (sqrt 5.)
+        let w = dsharp.randn([fanIn; fanOut])
+        let s = sqrt (2. / ((1. + a*a) * (float fanIn)))
+        w * s
+
+    /// <summary>TBD</summary>
+    static member uniform(shape:Shape, k:float) =
+        -k + dsharp.rand(shape) * 2*k

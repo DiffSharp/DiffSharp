@@ -184,7 +184,7 @@ type optim =
             |> Seq.takeWhile (fun (bi, data, targets) ->
                 i <- i + 1
                 model.reverseDiff()
-                let o = model.run(data)
+                let o = model.forward(data)
                 let l = loss targets o
                 l.reverse()
                 optimizer.step()

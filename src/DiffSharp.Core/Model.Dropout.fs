@@ -5,7 +5,6 @@
 
 namespace DiffSharp.Model
 
-open DiffSharp
 
 /// <summary>A model which during training, randomly zeroes some of the elements of the input tensor with probability p using samples from a Bernoulli distribution.</summary>
 type Dropout(?p:double) =
@@ -15,7 +14,7 @@ type Dropout(?p:double) =
     override _.ToString() = sprintf "Dropout()"
 
     /// <summary>TBD</summary>
-    override m.run(value) =
+    override m.forward(value) =
         if m.mode = Mode.Train then value.dropout(?p=p) else value
 
 
@@ -27,7 +26,7 @@ type Dropout2d(?p:double) =
     override _.ToString() = sprintf "Dropout2d()"
 
     /// <summary>TBD</summary>
-    override m.run(value) =
+    override m.forward(value) =
         if m.mode = Mode.Train then value.dropout2d(?p=p) else value
 
 
@@ -39,5 +38,5 @@ type Dropout3d(?p:double) =
     override _.ToString() = sprintf "Dropout3d()"
 
     /// <summary>TBD</summary>
-    override m.run(value) =
+    override m.forward(value) =
         if m.mode = Mode.Train then value.dropout3d(?p=p) else value

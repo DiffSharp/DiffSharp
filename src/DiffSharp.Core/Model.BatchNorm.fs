@@ -70,7 +70,7 @@ type BatchNorm1d(numFeatures:int, ?eps:double, ?momentum:Tensor, ?affine:bool, ?
     override _.ToString() = sprintf "BatchNorm1d(%A)" numFeatures
 
     /// <summary>TBD</summary>
-    override m.run(value) =
+    override m.forward(value) =
         if value.dim = 2 then
             if value.shape.[1] <> numFeatures then failwithf "Expecting value to have shape NxL (batchSize x numFeatures) where numFeatures=%A, received value with shape %A" numFeatures value.shape
             let mean, var =
@@ -162,7 +162,7 @@ type BatchNorm2d(numFeatures:int, ?eps:double, ?momentum:Tensor, ?affine:bool, ?
     override _.ToString() = sprintf "BatchNorm2d(%A)" numFeatures
 
     /// <summary>TBD</summary>
-    override m.run(value) =
+    override m.forward(value) =
         if value.dim <> 4 || value.shape.[1] <> numFeatures then failwithf "Expecting value to have shape NxCxHxW (batchSize x numFeatures x height x width) where numFeatures=%A, received value with shape %A" numFeatures value.shape
         let vt = value.transpose(0,1).view([numFeatures;-1])
         let mean, var =
@@ -240,7 +240,7 @@ type BatchNorm3d(numFeatures:int, ?eps:double, ?momentum:Tensor, ?affine:bool, ?
     override _.ToString() = sprintf "BatchNorm3d(%A)" numFeatures
 
     /// <summary>TBD</summary>
-    override m.run(value) =
+    override m.forward(value) =
         if value.dim <> 5 || value.shape.[1] <> numFeatures then failwithf "Expecting value to have shape NxCxDxHxW (batchSize x numFeatures x depth x height x width) where numFeatures=%A, received value with shape %A" numFeatures value.shape
         let vt = value.transpose(0,1).view([numFeatures;-1])
         let mean, var =
