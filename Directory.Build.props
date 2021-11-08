@@ -33,7 +33,7 @@
   </PropertyGroup>
 
   <PropertyGroup>
-     <Version>1.0.0</Version>
+     <Version>1.0.1</Version>
      <Authors>Atılım Güneş Baydin, Don Syme, Barak A. Pearlmutter, Jeffrey Siskind, and DiffSharp contributors</Authors>
      <Owners>DiffSharp maintainers</Owners>
      <PackageProjectUrl>https://diffsharp.github.io</PackageProjectUrl>
@@ -47,10 +47,11 @@
 
      <!-- local build uses number unique by day -->
      <PackageVersion Condition="'$(GITHUB_ACTIONS)' != 'true'">$(Version)-local-$([System.DateTime]::Now.ToString(`yyMMdd`))</PackageVersion>
-     <!-- tagged build on CI uses number -->
-     <PackageVersion Condition="'$(GITHUB_ACTIONS)' == 'true' AND '$(GITHUB_REF)' == 'refs/tags/v$(Version)'">$(Version)</PackageVersion>
-     <!-- untagged build on CI uses unique -->
-     <PackageVersion Condition="'$(GITHUB_ACTIONS)' == 'true' AND '$(GITHUB_REF)' != 'refs/tags/v$(Version)'">$(Version)-preview-$(GITHUB_RUN_ID)</PackageVersion>
+     <!-- build on CI uses number -->
+     <PackageVersion Condition="'$(GITHUB_ACTIONS)' == 'true'">$(Version)</PackageVersion>
+     <!-- NOTE: to release as preview, with a unique package per package run, use this:
+     <PackageVersion Condition="'$(GITHUB_ACTIONS)' == 'true'">$(Version)-preview-$(GITHUB_RUN_ID)</PackageVersion>
+     -->
      <PackageOutputPath>$(MSBuildThisFileDirectory)bin/packages</PackageOutputPath>
 
      <NuspecProperties>Authors=$(Authors);Owners=$(Owners);ProjectId=$(MSBuildProjectName);PackageVersion=$(PackageVersion);TorchSharpVersion=$(TorchSharpVerion)</NuspecProperties>
