@@ -1,4 +1,4 @@
-name: Build/test Release
+name: Build and test (Release)
 
 on:
   pull_request:
@@ -6,7 +6,7 @@ on:
       - '**'
 
 jobs:
-  build_ubuntu:
+  build_linux:
 
     runs-on: ubuntu-latest
 
