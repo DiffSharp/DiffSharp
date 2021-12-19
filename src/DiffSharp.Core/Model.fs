@@ -3,7 +3,7 @@
 //
 // BSD 2-Clause License. See LICENSE in root of repository.
 
-namespace rec DiffSharp.Model
+namespace DiffSharp.Model
 
 open DiffSharp
 open DiffSharp.Util
@@ -16,17 +16,17 @@ open System.Collections.Specialized
 ///   <summary>Contains types and functionality related to describing models.</summary>
 /// </namespacedoc>
 ///
-/// <summary>Represents a parameter in a model.</summary>
+/// <summary>Represents a parameter.</summary>
 /// <remarks>A parameter is a mutable register holding a tensor.</remarks>
 type Parameter =
     val mutable value:Tensor
     new(value) = {value=value}
 
     /// <summary>TBD</summary>
-    member p.forwardDiff(derivative:Tensor, ?tag:uint32) = p.value <- p.value.forwardDiff(derivative, ?tag=tag)
+    member p.forwardDiff(derivative:Tensor, ?nestingTag:uint32) = p.value <- p.value.forwardDiff(derivative, ?nestingTag=nestingTag)
 
     /// <summary>TBD</summary>
-    member p.reverseDiff(?tag:uint32) = p.value <- p.value.reverseDiff(?tag=tag)
+    member p.reverseDiff(?nestingTag:uint32) = p.value <- p.value.reverseDiff(?nestingTag=nestingTag)
 
     /// <summary>TBD</summary>
     member p.noDiff() = p.value <- p.value.noDiff()
@@ -40,7 +40,7 @@ type Parameter =
     override p.ToString() = sprintf "Parameter(shape: %A, value: %A)" (p.value.shape |> List.ofSeq) p.value
 
 
-/// <summary>Represents a collection of named parameters in a model.</summary>
+/// <summary>Represents a collection of named parameters.</summary>
 type ParameterDict() =
     /// <summary>TBD</summary>
     // A generic Dictionary is not good because it does not guarantee an order in which the items are returned. https://docs.microsoft.com/en-us/dotnet/api/system.collections.generic.dictionary-2?view=net-5.0
@@ -59,6 +59,8 @@ type ParameterDict() =
 
     interface System.Collections.IEnumerable with
         member d.GetEnumerator() = (d :> IEnumerable<string*Parameter>).GetEnumerator() :> System.Collections.IEnumerator
+
+    member d.count = d.parameters.Count
 
     member d.device
         with get() = 
@@ -134,30 +136,30 @@ type ParameterDict() =
     ///  Adjust the parameters to include support for forward-mode automatic differentiation.
     /// </summary>
     /// <param name="derivatives">The derivatives of the parameters</param>
-    /// <param name="tag">The level tag for nested differentiation.  Defaults to the current global nesting level</param>
+    /// <param name="nestingTag">The level tag for nested differentiation.  Defaults to the current global nesting level</param>
     /// <remarks>
-    ///  After this call the current parameters of the model will have attached derivatives for forward mode propagation.
+    ///  After this call the current parameters in this dictionary will have attached derivatives for forward mode differentiation.
     /// </remarks>
-    member d.forwardDiff(derivatives:ParameterDict, ?tag:uint32) = 
+    member d.forwardDiff(derivatives:ParameterDict, ?nestingTag:uint32) = 
         // This is to be extra cautious about all Parameters in the ParameterDict getting the same tag, which is crucial for correctness of differentiation results
         // If we leave the default tag value to be determined by each underlying tensor, there is a risk that the tag can somehow change during the ParameterDict .iter call
-        let tag = defaultArg tag GlobalNestingLevel.Current
-        d.iter(fun (n, p) -> p.forwardDiff(derivatives.[n], tag=tag))
+        let nestingTag = defaultArg nestingTag GlobalNestingLevel.Current
+        d.iter(fun (n, p) -> p.forwardDiff(derivatives.[n], nestingTag=nestingTag))
 
     /// <summary>
     ///  Adjust the parameters to include support for reverse-mode automatic differentiation.
     /// </summary>
-    /// <param name="tag">The level tag for nested differentiation.  Defaults to the current global nesting level</param>
+    /// <param name="nestingTag">The level tag for nested differentiation.  Defaults to the current global nesting level</param>
     /// <remarks>
-    ///  After this call the current parameters of the model will support reverse-mode propagation. After the completion
+    ///  After this call the current parameters in this dictionary will support reverse-mode differentiation. After the completion
     ///  of the corresponding <c>reverse</c> operation, the computed derivative
     ///  will be available. 
     /// </remarks>
-    member d.reverseDiff(?tag:uint32) = 
+    member d.reverseDiff(?nestingTag:uint32) = 
         // This is to be extra cautious about all Parameters in the ParameterDict getting the same tag, which is crucial for correctness of differentiation results
         // If we leave the default tag value to be determined by each underlying tensor, there is a risk that the tag can somehow change during the ParameterDict .iter call
-        let tag = defaultArg tag GlobalNestingLevel.Current
-        d.iter(fun (_, p) -> p.reverseDiff(tag=tag))
+        let nestingTag = defaultArg nestingTag GlobalNestingLevel.Current
+        d.iter(fun (_, p) -> p.reverseDiff(nestingTag=nestingTag))
 
     /// <summary>TBD</summary>
     member d.noDiff() = d.iter(fun (_, p) -> p.noDiff())
@@ -171,17 +173,35 @@ type ParameterDict() =
 
     /// <summary>TBD</summary>
     member d.flatten() =
+        if d.count = 0 then dsharp.zeros(0) // Empty ParameterDict defaults to default device, dtype, backend config
+        elif d.isReverseDiff then
+            // We flatten reverse-mode parameters into a single reverse-mode tensor and also keep the derivative information to cover the use case
+            // where the reverse-mode derivative of the parameters (after reverse propagation) can be read from the flattened tensor.
+            // This extra code is needed because for reverse-mode tensor operations like cat normally do not keep derivative information and only apply to primals.
+            // This mirrors the behavior in ParameterDict.unflatten.
+            let pp, pd = Array.unzip [| for t in d.parameters.Values do let t = (t :?> Parameter) in t.value.primal.view(-1), t.value.derivative.view(-1) |]
+            let tp, td = dsharp.cat(pp), dsharp.cat(pd)
+            tp.reverseDiff(derivative=td, nestingTag=(d.parameters.[0] :?> Parameter).value.nestingTag)
+        else
         let ts = [| for t in d.parameters.Values do (t :?> Parameter).value.view(-1) |]
-        if ts.Length = 0 then dsharp.zeros(0) // Empty ParameterDict defaults to default device, dtype, backend config
-        else dsharp.cat(ts)
+        dsharp.cat(ts)
 
     /// <summary>TBD</summary>
     member d.unflatten(tensors:Tensor) =
         if tensors.dim <> 1 then failwithf "Expecting 1d tensors but received tensors with shape %A" tensors.shape
         if tensors.nelement <> d.nelement then failwithf "Expecting tensors.nelement (%A) and ParameterDict.nelement (%A) to be the same" tensors.nelement d.nelement
+        if tensors.nelement = 0 then ()
+        else
         let shapes = [|for t in d.parameters.Values do (t :?> Parameter).value.shape|]
         let sizes = [|for s in shapes do shapeLength s|]
-        let ts = Array.map2 (fun (t:Tensor) (s:int[]) -> t.view(s)) (tensors.split(sizes)) shapes
+        let ts = 
+            if tensors.isReverseDiff && tensors.derivative.shape = tensors.primal.shape then
+                // For reverse-mode tensors, we split both primals and derivatives and combine these in reverse-mode tensors corresponding to each parameter
+                // This extra code is needed because reverser-mode tensor operations like split normally do not keep derivative information and only apply to primals.
+                // This mirrors the behavior in ParameterDict.flatten.
+                Array.map3 (fun (tp:Tensor) (td:Tensor) (s:int[]) -> tp.view(s).reverseDiff(derivative=td.view(s), nestingTag=tensors.nestingTag)) (tensors.primal.split(sizes)) (tensors.derivative.split(sizes)) shapes
+            else
+                Array.map2 (fun (t:Tensor) (s:int[]) -> t.view(s)) (tensors.split(sizes)) shapes
         let mutable i = 0
         let keys = OrderedDictionary.copyKeys d.parameters
         for n in keys do
@@ -212,7 +232,7 @@ type Mode =
     | Eval = 1
 
 
-/// <summary>Represents a model, primarily a collection of named parameters and sub-models and a function governed by them.</summary>
+/// <summary>Represents the base class of all models.</summary>
 [<AbstractClass>]
 type ModelBase() =
     [<DefaultValue>]
@@ -247,12 +267,12 @@ type ModelBase() =
     /// <summary>TBD</summary>
     member m.train() = 
         m.mode <- Mode.Train
-        for model:ModelBase in m.models do model.mode <- Mode.Train
+        for model:ModelBase in m.descendants do model.mode <- Mode.Train
 
     /// <summary>TBD</summary>
     member m.eval() = 
         m.mode <- Mode.Eval
-        for model:ModelBase in m.models do model.mode <- Mode.Eval
+        for model:ModelBase in m.descendants do model.mode <- Mode.Eval
 
     member _.device
         with get() = parameterDict.device
@@ -302,7 +322,7 @@ type ModelBase() =
         with get () = stateDict.flatten()
         and set s = stateDict.unflatten(s)
 
-    /// <summary>Gets the number of parameters of the model</summary>
+    /// <summary>Gets the number of parameters of the Model</summary>
     member m.nparameters = m.parameters.nelement
 
     /// <summary>TBD</summary>
@@ -317,9 +337,9 @@ type ModelBase() =
             modelDict.Values |> Seq.cast<ModelBase> |> Seq.toList
 
     /// <summary>TBD</summary>
-    member m.models
+    member m.descendants
         with get () =
-            m :: [for c in m.children do yield! c.models]
+            m :: [for child in m.children do yield! child.descendants]
 
     /// <summary>TBD</summary>
     member m.hasOwnParameters
@@ -367,7 +387,7 @@ type ModelBase() =
             let model = 
                 match items.[i] with
                 | :? ModelBase as mm -> mm
-                | _ -> failwithf "Unsupported type. Expecting a Model."
+                | _ -> failwithf "Unsupported type. Expecting a ModelBase."
             let n = if names.Length > 0 then names.[i] else sprintf "Model-%s" (Random.UUID())
 
             modelDict.Add(n, model)
@@ -378,24 +398,24 @@ type ModelBase() =
         updateState()
 
     /// <summary>
-    ///  Adjust the parameters of the model to include support for forward-mode automatic differentiation.
+    ///  Adjust the parameters of the model to initiate a new level of forward-mode automatic differentiation.
     /// </summary>
     /// <param name="derivatives">The derivatives of the parameters</param>
-    /// <param name="tag">The level tag for nested differentiation.  Defaults to the current global nesting level</param>
+    /// <param name="nestingTag">The level tag for nested differentiation.  Defaults to the current global nesting level</param>
     /// <remarks>
-    ///  After this call the current parameters of the model will have attached derivatives for forward mode propagation.
+    ///  After this call the current parameters of the model will have attached derivatives for forward mode differentiation.
     /// </remarks>
-    member m.forwardDiff(derivatives:ParameterDict, ?tag) = m.parameters.forwardDiff(derivatives, ?tag=tag)
+    member m.forwardDiff(derivatives:ParameterDict, ?nestingTag) = m.parameters.forwardDiff(derivatives, ?nestingTag=nestingTag)
 
     /// <summary>
-    ///  Adjust the parameters of the model to include support for reverse-mode automatic differentiation.
+    ///  Adjust the parameters of the model to initiate a new level of reverse-mode automatic differentiation.
     /// </summary>
-    /// <param name="tag">The level tag for nested differentiation.  Defaults to the current global nesting level</param>
+    /// <param name="nestingTag">The level tag for nested differentiation.  Defaults to the current global nesting level</param>
     /// <remarks>
-    ///  After this call the current parameters of the model will support reverse-mode propagation. After the completion
-    ///  of the corresponding <c>reverse</c> operation, the computed derivative will be available. 
+    ///  After this call the current parameters of the model will support reverse-mode differentiation. After the completion
+    ///  of the corresponding <c>reverse</c> operation, the computed derivatives will be available. 
     /// </remarks>
-    member m.reverseDiff(?tag) = m.parameters.reverseDiff(?tag=tag)
+    member m.reverseDiff(?nestingTag) = m.parameters.reverseDiff(?nestingTag=nestingTag)
 
     /// <summary>TBD</summary>
     member m.noDiff() = m.parameters.noDiff()
@@ -422,7 +442,8 @@ type ModelBase() =
             if noDiff then
                 if m.isNoDiff then m
                 else
-                    // We clone the model and then remove any derivatives. The clone is used because we don't want a save operation to alter the differentiation state of the model.
+                    // We clone the model and then remove any derivatives before saving. 
+                    // The clone is used because we don't want a save operation to alter the differentiation state of the model.
                     let mClone:ModelBase = m.clone()
                     mClone.noDiff()
                     mClone
@@ -440,7 +461,7 @@ type ModelBase() =
 
     override _.ToString() = 
         let sb = System.Text.StringBuilder()
-        sb.Append("ModelBase(") |> ignore
+        sb.Append("Model(") |> ignore
         let mutable prefix = ""
         for v in modelDict do 
             // let n = (v :?> DictionaryEntry).Key :?> string
@@ -457,7 +478,7 @@ type ModelBase() =
         sb.AppendLine("---") |> ignore
         sb.AppendLine(sprintf "%-40s %16s" "Model" "Params") |> ignore
         sb.AppendLine("---") |> ignore
-        for mm in m.models do
+        for mm in m.descendants do
             if mm.hasOwnParameters then
                 sb.AppendLine(sprintf "%-40s %16s" (mm.ToString()) (thousandsInt mm.nparameters)) |> ignore
         sb.AppendLine("---") |> ignore
@@ -470,6 +491,8 @@ type ModelBase() =
         sb.ToString()
 
 
+
+/// <summary>Represents a model, primarily a collection of named parameters and sub-models and a function governed by them.</summary>
 [<AbstractClass>]
 type Model<'In, 'Out>() =
     inherit ModelBase()
@@ -477,16 +500,16 @@ type Model<'In, 'Out>() =
     /// <summary>TBD</summary>
     abstract member forward: 'In -> 'Out
 
-    /// <summary>Use the model as a function of its input and parameters</summary>
+    /// <summary>Use the model as a function of its parameters and input.</summary>
     /// <remarks>
     ///    The resulting function can be composed with a loss function and differentiated.
     ///    During execution the parameters of the model are temporarily set to the supplied parameters.
     /// </remarks>
-    member m.asFunction (input:'In) (parameters:Tensor) =
+    member m.asFunction (parameters:Tensor) (input:'In) =
         let old = m.parametersVector
         try 
             m.parametersVector <- parameters
-            m.forward(input) 
+            m.forward(input)
         finally
             m.parametersVector <- old
     
@@ -499,20 +522,20 @@ type Model<'In, 'Out>() =
         model
 
     /// <summary>TBD</summary>
-    static member compose (m1:Model<'In, 'Out>) (m2:Model<'Out, 'Out2>) : Model<'In, 'Out2> =
-        Model<'In, 'Out2>.create [box m1; box m2] [] [] (m1.forward >> m2.forward)
+    static member compose (model1:Model<'In, 'Out>) (model2:Model<'Out, 'Out2>) : Model<'In, 'Out2> =
+        Model<'In, 'Out2>.create [box model1; box model2] [] [] (model1.forward >> model2.forward)
 
     /// <summary>TBD</summary>
-    static member (-->) (m1:Model<'In, 'Out>, m2:Model<'Out, 'Out2>) = Model<'In, 'Out>.compose m1 m2
+    static member (-->) (model1:Model<'In, 'Out>, model2:Model<'Out, 'Out2>) = Model<'In, 'Out>.compose model1 model2
     
     /// <summary>TBD</summary>
-    static member (-->) (m:Model<'In, 'Out>, f:'Out->'Out2) = Model<'In, 'Out2>.create [m] [] [] (m.forward >> f)
+    static member (-->) (model:Model<'In, 'Out>, f:'Out->'Out2) = Model<'In, 'Out2>.create [model] [] [] (model.forward >> f)
 
     /// <summary>TBD</summary>
-    static member (-->) (f:'In->'Out, m:Model<'Out, 'Out2>) = Model<'In, 'Out2>.create [m] [] [] (f >> m.forward)
+    static member (-->) (f:'In->'Out, model:Model<'Out, 'Out2>) = Model<'In, 'Out2>.create [model] [] [] (f >> model.forward)
 
     /// <summary>TBD</summary>
-    static member (-->) (t:'In, m:Model<'In, 'Out>) = m.forward t
+    static member (-->) (t:'In, model:Model<'In, 'Out>) = model.forward t
 
     /// <summary>TBD</summary>
     static member load(fileName):Model<'In, 'Out> = ModelBase.load(fileName) :?> Model<'In, 'Out>
@@ -524,7 +547,7 @@ type Model<'In, 'Out>() =
 type Model = Model<Tensor, Tensor>
 
 
-/// <summary>Contains functionality related to generating initial parameter weights.</summary>
+/// <summary>Contains functionality related to generating initial parameter weights for models.</summary>
 type Weight =
 
     /// <summary>TBD</summary>

@@ -5172,10 +5172,10 @@ type TestTensor () =
             Assert.CheckEqual(t3DepthCorrect, t3Depth)
 
     [<Test>]
-    member _.TestTensorParents () =
+    member _.TestTensorAncestors () =
         let a = dsharp.randn(5).reverseDiff()
         let b = a.sin().exp() + a
-        let _, s = b.parents()
+        let _, s = b.ancestors()
         let sCorrect = """TensorR [|5|] AddTT
  TensorR [|5|] ExpT
   TensorR [|5|] SinT

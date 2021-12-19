@@ -5,7 +5,6 @@
 
 namespace DiffSharp.Model
 
-open DiffSharp
 
 /// <summary>A model which during training, randomly zeroes some of the elements of the input tensor with probability p using samples from a Bernoulli distribution.</summary>
 type Dropout(?p:double) =

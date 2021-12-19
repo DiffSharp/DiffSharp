@@ -92,6 +92,66 @@ type TestModel () =
         Assert.CheckEqual(d1flatCorrect, d3flat)
 
     [<Test>]
+    member _.TestParameterDictFlattenReverseDiff () =
+        let t1p = dsharp.randn([2;5])
+        let t1d = dsharp.randnLike t1p
+        let t2p = dsharp.randn([4])
+        let t2d = dsharp.randnLike t2p
+
+        let p1 = Parameter <| t1p.reverseDiff(t1d)
+        let p2 = Parameter <| t2p.reverseDiff(t2d)
+
+        let d = ParameterDict()
+        d.add(["p1", p1; "p2", p2])
+
+        let dflat = d.flatten()
+        Assert.True(dflat.isReverseDiff)
+
+        let dflatp = dflat.primal
+        let dflatd = dflat.derivative
+        let dflatpCorrect = dsharp.cat([t1p.view(-1); t2p])
+        let dflatdCorrect = dsharp.cat([t1d.view(-1); t2d])
+        
+        Assert.CheckEqual(dflatpCorrect, dflatp)
+        Assert.CheckEqual(dflatdCorrect, dflatd)
+
+    [<Test>]
+    member _.TestParameterDictUnflattenReverseDiff () =
+        let t1p = dsharp.randn([2;5])
+        let t2p = dsharp.randn([4])
+
+        let p1 = Parameter <| t1p
+        let p2 = Parameter <| t2p
+
+        let d = ParameterDict()
+        d.add(["p1", p1; "p2", p2])
+
+        let dflatp = dsharp.randn([14])
+        let dflatd = dsharp.randn([14])
+        let dflat = dflatp.reverseDiff(dflatd)
+
+        Assert.False(d.isReverseDiff)
+        d.unflatten(dflat)
+        Assert.True(d.isReverseDiff)
+
+        let dp1 = d.["p1"]
+        let dp1p = dp1.primal
+        let dp1d = dp1.derivative
+        let dp2 = d.["p2"]
+        let dp2p = dp2.primal
+        let dp2d = dp2.derivative
+
+        let dfp = dflatp.split([2*5; 4])
+        let dp1pCorrect, dp2pCorrect = dfp.[0].view([2;5]), dfp.[1]
+        let dfd = dflatd.split([2*5; 4])
+        let dp1dCorrect, dp2dCorrect = dfd.[0].view([2;5]), dfd.[1]
+
+        Assert.CheckEqual(dp1pCorrect, dp1p)
+        Assert.CheckEqual(dp2pCorrect, dp2p)
+        Assert.CheckEqual(dp1dCorrect, dp1d)
+        Assert.CheckEqual(dp2dCorrect, dp2d)
+
+    [<Test>]
     member _.TestModelCreationStyle1 () =
         let net = ModelStyle1a()
         Assert.CheckEqual(516, net.nparameters)
@@ -187,7 +247,7 @@ type TestModel () =
 
         let p = net.parametersVector
         let x = dsharp.randn([1;10])
-        ignore <| dsharp.grad (net.asFunction x >> dsharp.sum) p
+        ignore <| dsharp.grad (fun p -> net.asFunction p x |> dsharp.sum) p
         Assert.True(net.parametersVector.isNoDiff)
 
     [<Test>]
@@ -224,26 +284,26 @@ type TestModel () =
         let f = net.asFunction
         let p = net.parametersVector
         let x = dsharp.randn([1;10])
-        let y = f x p
+        let y = f p x
         Assert.CheckEqual([|1;20|], y.shape)
 
     [<Test>]
     member _.TestModelForwardCompose () =
         let net = ModelStyle1a()
-        let f x p = net.asFunction x p |> dsharp.sin
+        let f p x = net.asFunction p x |> dsharp.sin
         let p = net.parametersVector
         let x = dsharp.randn([1;10])
-        let y = f x p
+        let y = f p x
         Assert.CheckEqual([|1;20|], y.shape)
 
     [<Test>]
     member _.TestModelForwardLoss () =
         let net = ModelStyle1a()
-        let f t x p = net.asFunction x p |> dsharp.mseLoss t
+        let f p x t = net.asFunction p x |> dsharp.mseLoss t
         let p = net.parametersVector
         let x = dsharp.randn([1;10])
         let t = dsharp.randn([1;20])
-        let y = f t x p
+        let y = f p x t
         Assert.CheckEqual(([| |]: int array), y.shape)
 
     [<Test>]
@@ -375,21 +435,21 @@ type TestModel () =
     member _.TestModelTrainEval () =
         let m = Linear(1, 2) --> Linear(2, 3) --> Linear(3, 4)
         Assert.CheckEqual(Mode.Train, m.mode)
-        Assert.CheckEqual(Mode.Train, m.models.[0].mode)
-        Assert.CheckEqual(Mode.Train, m.models.[1].mode)
-        Assert.CheckEqual(Mode.Train, m.models.[2].mode)
+        Assert.CheckEqual(Mode.Train, m.descendants.[0].mode)
+        Assert.CheckEqual(Mode.Train, m.descendants.[1].mode)
+        Assert.CheckEqual(Mode.Train, m.descendants.[2].mode)
 
         m.eval()
         Assert.CheckEqual(Mode.Eval, m.mode)
-        Assert.CheckEqual(Mode.Eval, m.models.[0].mode)
-        Assert.CheckEqual(Mode.Eval, m.models.[1].mode)
-        Assert.CheckEqual(Mode.Eval, m.models.[2].mode)
+        Assert.CheckEqual(Mode.Eval, m.descendants.[0].mode)
+        Assert.CheckEqual(Mode.Eval, m.descendants.[1].mode)
+        Assert.CheckEqual(Mode.Eval, m.descendants.[2].mode)
 
         m.train()
         Assert.CheckEqual(Mode.Train, m.mode)
-        Assert.CheckEqual(Mode.Train, m.models.[0].mode)
-        Assert.CheckEqual(Mode.Train, m.models.[1].mode)
-        Assert.CheckEqual(Mode.Train, m.models.[2].mode)
+        Assert.CheckEqual(Mode.Train, m.descendants.[0].mode)
+        Assert.CheckEqual(Mode.Train, m.descendants.[1].mode)
+        Assert.CheckEqual(Mode.Train, m.descendants.[2].mode)
 
     [<Test>]
     member _.TestModelChildrenModels () =
@@ -409,9 +469,9 @@ type TestModel () =
         Assert.CheckEqual(m1childrenCorrect, m1children)
         Assert.CheckEqual(m2childrenCorrect, m2children)
 
-        let m0models = m0.models
-        let m1models = m1.models
-        let m2models = m2.models
+        let m0models = m0.descendants
+        let m1models = m1.descendants
+        let m2models = m2.descendants
 
         let m0modelsCorrect:list<ModelBase> = [m0]
         let m1modelsCorrect:list<ModelBase> = [m1;m0]
@@ -449,7 +509,7 @@ type TestModel () =
         // |-l3
         let m3 = Sequential([l1; l2; l3])
 
-        let childrenParams (m:ModelBase) = 
+        let childrenParams (m:Model) = 
             m.children |> List.map (fun c -> c.nparameters) |> List.sum
 
         let m1Params = m1.nparameters
@@ -472,7 +532,7 @@ type TestModel () =
         let net = Linear(din, dout)
 
         let lr, steps = 1e-2, 1000
-        let loss inputs p = net.asFunction inputs p |> dsharp.mseLoss targets
+        let loss inputs p = net.asFunction p inputs |> dsharp.mseLoss targets
         for _ in 0..steps do
             let g = dsharp.grad (loss inputs) net.parametersVector
             net.parametersVector <- net.parametersVector - lr * g

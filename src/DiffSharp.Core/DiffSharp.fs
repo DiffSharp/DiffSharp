@@ -1392,15 +1392,15 @@ type dsharp with
     static member noDiff (tensor:Tensor) = tensor.noDiff()
 
     /// <summary>Produce a new tensor suitable for calculating the forward-mode derivative at the given level tag.</summary>
-    /// <param name="tag">The level tag.</param>
+    /// <param name="nestingTag">The level tag.</param>
     /// <param name="derivative">The derivative of the input.</param>
     /// <param name="tensor">The input.</param>
-    static member forwardDiff (tag:uint32) (derivative:Tensor) (tensor:Tensor) = tensor.forwardDiff(derivative, tag)
+    static member forwardDiff (nestingTag:uint32) (derivative:Tensor) (tensor:Tensor) = tensor.forwardDiff(derivative, nestingTag)
 
     /// <summary>Produce a new tensor suitable for calculating the reverse-mode derivative at the given level tag.</summary>
-    /// <param name="tag">The level tag.</param>
+    /// <param name="nestingTag">The level tag.</param>
     /// <param name="tensor">The output tensor.</param>
-    static member reverseDiff (tag:uint32) (tensor:Tensor) = tensor.reverseDiff(tag)
+    static member reverseDiff (nestingTag:uint32) (tensor:Tensor) = tensor.reverseDiff(nestingTag=nestingTag)
 
     /// <summary>Reset the reverse mode computation associated with the given output tensor.</summary>
     /// <param name="tensor">The output tensor.</param>

@@ -6,7 +6,6 @@
 namespace DiffSharp.Model
 
 open DiffSharp
-open DiffSharp.Compose
 
 /// <summary>Variational auto-encoder base</summary>
 [<AbstractClass>]

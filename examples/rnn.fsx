@@ -7,10 +7,11 @@
 
 // Libtorch binaries
 // Option A: you can use a platform-specific nuget package
-// #r "nuget: libtorch-cuda-11.1-win-x64, 1.8.0.7"
-// #r "nuget: libtorch-cuda-11.1-linux-x64, 1.8.0.7"
+#r "nuget: TorchSharp-cpu, 0.93.5"
+// #r "nuget: TorchSharp-cuda-linux, 0.93.5"
+// #r "nuget: TorchSharp-cuda-windows, 0.93.5"
 // Option B: you can use a local libtorch installation
-System.Runtime.InteropServices.NativeLibrary.Load("/home/gunes/anaconda3/lib/python3.8/site-packages/torch/lib/libtorch.so")
+// System.Runtime.InteropServices.NativeLibrary.Load("/home/gunes/anaconda3/lib/python3.8/site-packages/torch/lib/libtorch.so")
 
 
 open DiffSharp
@@ -43,7 +44,7 @@ let languageModel =
     --> dsharp.view([-1; 512])
     --> Linear(512, dataset.numChars)
 
-print languageModel
+printfn "%s" (languageModel.summary())
 
 let modelFileName = "rnn_language_model.params"
 if File.Exists(modelFileName) then 

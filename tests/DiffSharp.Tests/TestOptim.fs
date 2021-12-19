@@ -73,7 +73,7 @@ type TestOptim () =
         let lr, epochs = 1e-1, 250
         for _ in 0..epochs do
             for _, inputs, targets in dataloader.epoch() do
-                let loss p = net.asFunction inputs p |> dsharp.mseLoss targets
+                let loss p = net.asFunction p inputs |> dsharp.mseLoss targets
                 let g = dsharp.grad loss net.parametersVector
                 net.parametersVector <- net.parametersVector - lr * g
 
