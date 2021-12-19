@@ -1,5 +1,5 @@
 ﻿(*** condition: prepare ***)
-#I "../tests/DiffSharp.Tests/bin/Debug/net5.0"
+#I "../tests/DiffSharp.Tests/bin/Debug/net6.0"
 #r "DiffSharp.Core.dll"
 #r "DiffSharp.Data.dll"
 #r "DiffSharp.Backends.Reference.dll"
