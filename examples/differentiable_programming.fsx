@@ -27,8 +27,13 @@ open System.IO
 dsharp.config(backend=Backend.Torch, device=Device.CPU)
 dsharp.seed(1)
 
-let def p (f:'In->'Out) : DiffProg<'In, 'Out>=
-    DiffProg<'In, 'Out>.create [] p [] f
+type Model<'In, 'Out> with
+    member m.run = m.forward
+type DiffProg<'In, 'Out> = Model<'In, 'Out>
+
+
+let diffprog parameters (f:'In->'Out) : DiffProg<'In, 'Out>=
+    DiffProg<'In, 'Out>.create [] parameters [] f
 
 let param (x:Tensor) = Parameter(x)
 
@@ -42,14 +47,14 @@ let learn (diffprog:DiffProg<_,_>) loss =
         l.reverse()
         let p = diffprog.parametersVector
         diffprog.parametersVector <- p.primal - lr * p.derivative
-        printfn "%A %A" i l
+        printfn "iteration %A, loss %A" i (float l)
     diffprog
 
 // A linear model as a differentiable program
 // DiffProg<Tensor,Tensor>
-let diffprog =
+let dp =
     let w = param (dsharp.randn([5; 1]))
-    def [w] 
+    diffprog [w] 
         (fun (x:Tensor)  -> x.matmul(w.value))
 
 // Data
@@ -65,8 +70,8 @@ let loss (diffprog:DiffProg<Tensor, Tensor>) = dsharp.mseLoss(diffprog.run x, y)
 
 // Learned diferentiable program
 // DiffProg<Tensor,Tensor>
-let diffproglearned = learn diffprog loss
+let dpLearned = learn dp loss
 
 // Function that runs the differentiable program with new data
 // Tensor -> Tensor
-diffproglearned.run 
+dpLearned.run 

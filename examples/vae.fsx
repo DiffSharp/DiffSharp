@@ -11,7 +11,7 @@
 // #r "nuget: TorchSharp-cuda-linux, 0.93.5"
 // #r "nuget: TorchSharp-cuda-windows, 0.93.5"
 // Option B: you can use a local libtorch installation
-// System.Runtime.InteropServices.NativeLibrary.Load("/home/gunes/anaconda3/lib/python3.8/site-packages/torch/lib/libtorch.so")
+// System.forwardtime.InteropServices.NativeLibrary.Load("/home/gunes/anaconda3/lib/python3.8/site-packages/torch/lib/libtorch.so")
 
 
 open DiffSharp
@@ -34,15 +34,15 @@ type VAE(xDim:int, zDim:int, ?hDims:seq<int>, ?nonlinearity:Tensor->Tensor, ?non
     let enc = Array.append [|for i in 0..dims.Length-2 -> Linear(dims.[i], dims.[i+1])|] [|Linear(dims.[dims.Length-2], dims.[dims.Length-1])|]
     let dec = [|for i in 0..dims.Length-2 -> Linear(dims.[i+1], dims.[i])|] |> Array.rev
     do 
-        base.add([for m in enc -> box m])
-        base.add([for m in dec -> box m])
+        base.addModel([for m in enc -> box m])
+        base.addModel([for m in dec -> box m])
 
     let encode x =
         let mutable x = x
         for i in 0..enc.Length-3 do
-            x <- nonlinearity <| enc.[i].run(x)
-        let mu = enc.[enc.Length-2].run(x)
-        let logVar = enc.[enc.Length-1].run(x)
+            x <- nonlinearity <| enc.[i].forward(x)
+        let mu = enc.[enc.Length-2].forward(x)
+        let logVar = enc.[enc.Length-1].forward(x)
         mu, logVar
 
     let sampleLatent mu (logVar:Tensor) =
@@ -53,15 +53,15 @@ type VAE(xDim:int, zDim:int, ?hDims:seq<int>, ?nonlinearity:Tensor->Tensor, ?non
     let decode z =
         let mutable h = z
         for i in 0..dec.Length-2 do
-            h <- nonlinearity <| dec.[i].run(h)
-        nonlinearityLast <| dec.[dec.Length-1].run(h)
+            h <- nonlinearity <| dec.[i].forward(h)
+        nonlinearityLast <| dec.[dec.Length-1].forward(h)
 
     member _.encodeDecode(x:Tensor) =
         let mu, logVar = encode (x.view([-1; xDim]))
         let z = sampleLatent mu logVar
         decode z, mu, logVar
 
-    override m.run(x) =
+    override m.forward(x) =
         let x, _, _ = m.encodeDecode(x) in x
 
     override _.ToString() = sprintf "VAE(%A, %A, %A)" xDim hDims zDim
