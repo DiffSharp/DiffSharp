@@ -11,7 +11,7 @@
 // #r "nuget: TorchSharp-cuda-linux, 0.93.5"
 // #r "nuget: TorchSharp-cuda-windows, 0.93.5"
 // Option B: you can use a local libtorch installation
-// System.forwardtime.InteropServices.NativeLibrary.Load("/home/gunes/anaconda3/lib/python3.8/site-packages/torch/lib/libtorch.so")
+// System.Runtime.InteropServices.NativeLibrary.Load("/home/gunes/anaconda3/lib/python3.8/site-packages/torch/lib/libtorch.so")
 
 
 open DiffSharp
