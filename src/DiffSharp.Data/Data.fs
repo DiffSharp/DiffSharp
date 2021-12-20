@@ -30,41 +30,45 @@ module DataUtil =
             wc.Dispose()
 
     let extractTarStream (stream:Stream) (outputDir:string) =
+        // Tar standard: https://www.gnu.org/software/tar/manual/html_node/Standard.html
         let buffer:byte[] = Array.zeroCreate 100
         let mutable stop = false
         while not stop do
-            stream.Read(buffer, 0, 100) |> ignore
+            stream.Read(buffer, 0, 100) |> ignore // Read 'char name[100]'
             let name = Encoding.ASCII.GetString(buffer).Trim(Convert.ToChar(0)).Trim()
             if String.IsNullOrWhiteSpace(name) then stop <- true
             else
-                stream.Seek(24L, SeekOrigin.Current) |> ignore
-                stream.Read(buffer, 0, 12) |> ignore
+                stream.Seek(24L, SeekOrigin.Current) |> ignore // Seek to 'char size[12]'
+                stream.Read(buffer, 0, 12) |> ignore // Read 'char size[12]'
                 let size = Convert.ToInt32(Encoding.ASCII.GetString(buffer, 0, 12).Trim(Convert.ToChar(0)).Trim(), 8)
                 printfn "Extracting %A (%A Bytes)" name size
-                stream.Seek(376L, SeekOrigin.Current) |> ignore
+                stream.Seek(376L, SeekOrigin.Current) |> ignore // Seek to end of header block, beginning of file data
                 let output = Path.Combine(outputDir, name)
                 if not (Directory.Exists(Path.GetDirectoryName(output))) then
                     Directory.CreateDirectory(Path.GetDirectoryName(output)) |> ignore
                 if size > 0 then
                     let str = File.Open(output, FileMode.OpenOrCreate, FileAccess.Write)
                     let buf:byte[] = Array.zeroCreate size
-                    stream.Read(buf, 0, buf.Length) |> ignore
+                    stream.Read(buf, 0, buf.Length) |> ignore // Read file data
                     str.Write(buf, 0, buf.Length)
                     str.Close()
                 let pos = stream.Position
                 let mutable offset = 512L - (pos % 512L)
                 if offset = 512L then
                     offset <- 0L
-                stream.Seek(offset, SeekOrigin.Current) |> ignore
+                stream.Seek(offset, SeekOrigin.Current) |> ignore // Seek to next 512-byte block
 
     let extractTarGz (fileName:string) (outputDir:string) =
         let fs = File.OpenRead(fileName)
         let gz = new GZipStream(fs, CompressionMode.Decompress)
         let chunk = 4096
         let memstr = new MemoryStream()
-        let mutable read = chunk
         let buffer:byte[] = Array.zeroCreate chunk
-        while read = chunk do
+        // The code below for GZipStream read was affected by a breaking change between dotnet 5.0 and 6.0
+        // https://docs.microsoft.com/en-us/dotnet/core/compatibility/core-libraries/6.0/partial-byte-reads-in-streams
+        // It was subsequently fixed to work correctly on both dotnet 5.0 and 6.0
+        let mutable read = 1
+        while read > 0 do
             read <- gz.Read(buffer, 0, chunk)
             memstr.Write(buffer, 0, read)
         gz.Close()
