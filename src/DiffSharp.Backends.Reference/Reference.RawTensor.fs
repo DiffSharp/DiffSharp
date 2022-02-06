@@ -312,6 +312,23 @@ type RawTensorCPU<'T when 'T : equality and 'T :> scalar>(values: 'T[], shape: S
         gather result.Shape [||]
         upcast result
 
+    override t.ScatterT(dim:int, indices, destinationShape:Shape) =
+        Shape.checkCanScatter t.Shape dim indices.Shape indices.Dtype destinationShape
+        let indices = indices :?> RawTensorCPU<int>
+        let result = t.ZerosLike(destinationShape) :?> RawTensorCPU<'T>
+        let rec scatter (shape:Shape) externalCoords =
+            if shape.Length = 1 then
+                for i=0 to shape.[0]-1 do
+                    let globalCoords = Array.append externalCoords [|i|]
+                    let globalCoordsIndices = Array.copy globalCoords
+                    globalCoordsIndices.[dim] <- indices.[globalCoords]
+                    result.[globalCoordsIndices] <- t.[globalCoords]
+            else
+                for i=0 to shape.[0]-1 do
+                    scatter shape.[1..] (Array.append externalCoords [|i|])
+        scatter t.Shape [||]
+        upcast result
+
     override t.ViewT(shape:Shape) =
         Shape.checkCanView t.Shape shape
         let result = Array.copy t.Values

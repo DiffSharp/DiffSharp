@@ -365,6 +365,9 @@ type RawTensor() =
     /// Returns a tensor selecting the given indices from the given dimension and stacking those in the order specified.
     abstract GatherT: dim: int * indices: RawTensor -> RawTensor
 
+    /// Returns a tensor with given destination shape where values are copied from the current tensor to locations specified by the dimension and indices.
+    abstract ScatterT: dim: int * indices: RawTensor * destinationShape: Shape -> RawTensor
+
     /// Returns a boolean tensor comparing each element pairwise with the corresponding element in <c>t2</c>
     abstract LtTT: t2: RawTensor -> RawTensor
 

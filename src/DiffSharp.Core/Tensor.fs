@@ -1797,6 +1797,20 @@ type Tensor =
         let inline dfRev(a) = GatherT(a, dim, indices)
         Tensor.OpUnary(a, fRaw, fTensor, dfFwd, dfRev)
 
+    /// <summary>Scatter values along an axis specified by dim.</summary>
+    /// <param name="dim">The axis along which to index.</param>
+    /// <param name="indices">The the indices of elements to gather.</param>
+    /// <param name="destinationShape">The destination shape.</param>
+    member a.scatter(dim:int, indices:Tensor, destinationShape:seq<int>) =
+        let destinationShape = destinationShape|>Shape.create
+        let dim = Shape.completeDim a.dim dim  // Handles -1 semantics
+        Shape.checkCanScatter a.shape dim indices.shape indices.dtype destinationShape
+        let inline fRaw(a:RawTensor) = a.ScatterT(dim, indices.primalRaw, destinationShape)
+        let inline fTensor(a:Tensor) = a.scatter(dim, indices, destinationShape)
+        let inline dfFwd(ap,ad:Tensor,fp) = ad.scatter(dim, indices, destinationShape)
+        let inline dfRev(a) = ScatterT(a, dim, indices)
+        Tensor.OpUnary(a, fRaw, fTensor, dfFwd, dfRev)
+
     /// <summary>Returns a new tensor with the same data as the self tensor but of a different shape.</summary>
     /// <remarks>
     ///   The returned tensor shares the same data and must have the same number of elements, but may have a different size. 
@@ -2753,6 +2767,7 @@ type Tensor =
                         | CatTs(a,_) -> reset (List.append (a |> List.ofSeq) tt)
                         | SplitT(a,_,_,_) -> reset (a::tt)
                         | GatherT(a,_,_) -> reset (a::tt)
+                        | ScatterT(a,_,_) -> reset (a::tt)
                         | PermuteT(a,_) -> reset (a::tt)
                         | TransposeT(a,_,_) -> reset (a::tt)
                         | TransposeT2(a) -> reset (a::tt)
@@ -2909,19 +2924,8 @@ type Tensor =
                             let locs = (0,sizes) ||> Array.scan (+)
                             a.derivative <- a.derivative.addSlice(Array.init a.dim (fun j -> if j=dim then locs.[i] else 0), td)
                             push (check(a.zeroLike(), a) :: tt)
-                        | GatherT(a,dim,indices) -> 
-                            // TODO: The following is a minimal correct implementation. A better implementation is possible by implementing "scatter".
-                            let tflat = td.flatten()
-                            let iflat = indices.flatten()
-                            if a.derivative.dim = 0 then a.derivative <- a.derivative.expandAs(a)
-                            let adimscalar = Array.create a.dim 1
-                            for i=0 to tflat.nelement-1 do
-                                let t = tflat.[i].view(adimscalar)
-                                let j = iflat.[i].toInt32()
-                                let loc = flatIndexToIndex indices.shape i
-                                loc.[dim] <- j
-                                a.derivative <- a.derivative.addSlice(loc, t)
-                            push (check(a.zeroLike(), a) :: tt)
+                        | GatherT(a,dim,indices) -> push (check(td.scatter(dim, indices, a.shape), a) :: tt)
+                        | ScatterT(a,dim,indices) -> push (check(td.gather(dim, indices), a) :: tt)
                         | PermuteT(a, inversePermutation) -> push (check(td.permute(inversePermutation), a) :: tt)
                         | TransposeT(a, dim0, dim1) -> push (check(td.transpose(dim0, dim1), a) :: tt)
                         | TransposeT2(a) -> push (check(td.transpose(), a) :: tt)
@@ -3043,6 +3047,7 @@ and TensorOp =
     | SplitT of Tensor * int[] * dim:int * i:int
     | SliceT of Tensor * int[,]
     | GatherT of Tensor * int * Tensor
+    | ScatterT of Tensor * int * Tensor
     | PermuteT of Tensor * inversePermutation: int[]
     | TransposeT of Tensor * int * int
     | TransposeT2 of Tensor
