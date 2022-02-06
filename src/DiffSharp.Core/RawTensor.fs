@@ -359,10 +359,10 @@ type RawTensor() =
     /// are equal up to the given tolerances.
     abstract AllClose: t2: RawTensor * relativeTolerance: float * absoluteTolerance: float -> bool
 
-    /// Returns a boolean tensor with values constrained by the corresponding elements in the low/high tensors.
+    /// Returns a tensor with values constrained by the corresponding elements in the low/high tensors.
     abstract ClampT: low: RawTensor * high: RawTensor -> RawTensor
 
-    /// Returns a boolean tensor selecting the given indices from the given dimension and stacking those in the order specified.
+    /// Returns a tensor selecting the given indices from the given dimension and stacking those in the order specified.
     abstract GatherT: dim: int * indices: RawTensor -> RawTensor
 
     /// Returns a boolean tensor comparing each element pairwise with the corresponding element in <c>t2</c>
