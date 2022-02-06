@@ -1789,6 +1789,7 @@ type Tensor =
     /// <param name="dim">The axis along which to index.</param>
     /// <param name="indices">The the indices of elements to gather.</param>
     member a.gather(dim:int, indices:Tensor) =
+        let dim = Shape.completeDim a.dim dim  // Handles -1 semantics
         Shape.checkCanGather a.shape dim indices.shape indices.dtype
         let inline fRaw(a:RawTensor) = a.GatherT(dim, indices.primalRaw)
         let inline fTensor(a:Tensor) = a.gather(dim, indices)
@@ -2224,44 +2225,26 @@ type Tensor =
                 if target.shape.[0] <> n then failwithf "Expecting either: input with shape (N,C) and target with shape (N); or input with shape (N,C,d1,d2,...,dk) and target with shape (N,d1,d2,...,dk). Received input.shape %A and target.shape %A" input.shape target.shape
                 if d <> target.shape.[1..] then failwithf "Expecting either: input with shape (N,C) and target with shape (N); or input with shape (N,C,d1,d2,...,dk) and target with shape (N,d1,d2,...,dk). Received input.shape %A and target.shape %A" input.shape target.shape
                 n, c, d
-        let mutable weightSpecified = false
-        let mutable ww = input.zeroLike()
-        match weight with
-        | Some w -> ww <- w; weightSpecified <- true
-        | None -> ww <- input.onesLike([classes]); weightSpecified <- false
-        let weight = ww
+        let target = target.int()
+        let weightSpecified, weight = 
+            match weight with
+            | Some w -> 
+                if w.dim <> 1 || w.shape.[0] <> classes then failwithf "Expecting weight with shape (C). Received weight.shape %A" w.shape
+                let vv = Array.create input.dim 1
+                vv.[1] <- classes
+                true, w.view(vv).expandAs(input).gather(1, target.unsqueeze(1)).squeeze(1)
+            | None -> false, input.zeroLike()
         let reduction = defaultArg reduction "mean"
         if not (reduction = "none" || reduction = "mean" || reduction = "sum") then failwithf "Expecting reduction (%A) to be one of (none, mean, sum)" reduction
-        if input.dim = 2 then
-            let mutable wacc = input.zeroLike()
-            let l = Array.init n (fun i -> 
-                                    let target = int target.[i]
-                                    let w = weight.[target]
-                                    wacc <- wacc + w
-                                    -w*input.[i, target]) |> Tensor.stack
-            if reduction = "none" then
-                l
-            elif reduction = "mean" then
-                if weightSpecified then l.sum()/wacc else l.mean()
-            else // reduction = "sum"
-                l.sum()
-        else
-            let mutable wacc = input.zeroLike()
-            let l = Array.init n (fun i ->
-                                    let aa = input.[i].view([classes; -1])
-                                    let bb = target.[i].view(-1)
-                                    let l = Array.init bb.nelement (fun j ->
-                                                                    let target = int bb.[j]
-                                                                    let w = weight.[target]
-                                                                    wacc <- wacc + w
-                                                                    -w*aa.[target, j]) |> Tensor.stack
-                                    l.view(d)) |> Tensor.stack
-            if reduction = "none" then
-                l
-            elif reduction = "mean" then
-                if weightSpecified then l.sum()/wacc else l.mean()
-            else // reduction = "sum"
-                l.sum()
+        let mutable l = input.gather(1, target.unsqueeze(1)).squeeze(1).neg()
+        if weightSpecified then
+            l <- l * weight
+        if reduction = "none" then
+            l
+        elif reduction = "mean" then
+            if weightSpecified then l.sum()/weight.sum() else l.mean()
+        else // reduction = "sum"
+            l.sum()
 
     /// <summary>Add zero padding to each side of a tensor</summary>
     /// <param name="paddings">The implicit paddings on corresponding sides of the input.</param>
