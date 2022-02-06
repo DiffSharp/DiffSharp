@@ -523,9 +523,17 @@ module rec Shape =
 
     /// Checks if the given shape is appropriate for a gather operation.
     let checkCanGather (shape: Shape) (dim: int) (indicesShape: Shape) (indicesDtype:Dtype) =
-        if shape.Length <> indicesShape.Length then failwithf "Expecting tensorShape (%A) and indicesShape (%A) to have the same number of dimensions" shape indicesShape
-        if dim < 0 || dim > shape.Length-1 then failwithf "Expecting 0<= dim (%A) < tensorShape.Length (%A)" dim shape.Length
-        if indicesShape.[dim] < 1 then failwithf "Expecting indicesShape.[dim] (%A) >= 1" indicesShape.[dim]
+        if shape.Length <> indicesShape.Length then failwithf "Expecting tensor (%A) and indices (%A) to have the same number of dimensions" shape indicesShape
+        if dim < 0 || dim > shape.Length-1 then failwithf "Expecting 0<= dim (%A) < tensor dim (%A)" dim shape.Length
+        if indicesShape.[dim] < 1 then failwithf "Expecting indices shape at dim %A (%A) >= 1" dim indicesShape.[dim]
+        if indicesDtype <> Dtype.Int32 then failwithf "Expecting indices to have type %A" Dtype.Int32
+
+    /// Checks if the given shape is appropriate for a scatter operation.
+    let checkCanScatter (shape: Shape) (dim: int) (indicesShape: Shape) (indicesDtype:Dtype) (destinationShape: Shape)=
+        if shape.Length <> indicesShape.Length then failwithf "Expecting tensor (%A) and indices (%A) to have the same number of dimensions" shape indicesShape
+        if shape.Length <> destinationShape.Length then failwithf "Expecting tensor (%A) and destination (%A) to have the same number of dimensions" shape destinationShape
+        if not (contains shape indicesShape) then failwithf "Expecting tensor shape (%A) to contain indices shape (%A)" shape indicesShape
+        if dim < 0 || dim > shape.Length-1 then failwithf "Expecting 0<= dim (%A) < tensor dim (%A)" dim shape.Length
         if indicesDtype <> Dtype.Int32 then failwithf "Expecting indices to have type %A" Dtype.Int32
 
     /// Checks if the given shape is appropriate for a view operation.
