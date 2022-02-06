@@ -1394,14 +1394,14 @@ type TestDerivatives () =
             let revx = combo.tensor([1,2,3,4,5]).reverseDiff()
             let revz = dsharp.gather(revx, 0, combo.tensor([0,2,3], dtype=Dtype.Int32))
             let revzCorrect = combo.tensor([1,3,4])
-            revz.reverse(combo.tensor([10,30,40]))
+            revz.reverse(combo.tensor([100,300,400]))
             let revxd = revx.derivative
-            let revxdCorrect = combo.tensor([10,  0, 30, 40,  0])
+            let revxdCorrect = combo.tensor([100,  0, 300, 400,  0])
 
-            Assert.CheckEqual(fwdzCorrect, fwdz)
-            Assert.CheckEqual(fwdzdCorrect, fwdzd)
-            Assert.CheckEqual(revzCorrect, revz)
-            Assert.CheckEqual(revxdCorrect, revxd)
+            Assert.True(fwdz.allclose(fwdzCorrect, 0.01))
+            Assert.True(fwdzd.allclose(fwdzdCorrect, 0.01))
+            Assert.True(revz.allclose(revzCorrect, 0.01))
+            Assert.True(revxd.allclose(revxdCorrect, 0.01))
 
             let fwdx = combo.tensor([[1,2,3],[4,5,6]]).forwardDiff(combo.tensor([[10,20,30],[40,50,60]]))
             let fwdz = dsharp.gather(fwdx, 0, combo.tensor([[1,0,1],[0,1,1]], dtype=Dtype.Int32))
@@ -1412,32 +1412,39 @@ type TestDerivatives () =
             let revx = combo.tensor([[1,2,3],[4,5,6]]).reverseDiff()
             let revz = dsharp.gather(revx, 0, combo.tensor([[1,0,1],[0,1,1]], dtype=Dtype.Int32))
             let revzCorrect = combo.tensor([[4,2,6],[1,5,6]])
-            revz.reverse(combo.tensor([[40,20,60],[10,50,60]]))
+            revz.reverse(combo.tensor([[-1.2171,  0.9190,  0.8668],
+                                        [ 0.2156, -1.1744,  0.2439]]))
             let revxd = revx.derivative
-            let revxdCorrect = combo.tensor([[10,20,0],[40,50,120]])
+            let revxdCorrect = combo.tensor([[ 0.2156,  0.9190,  0.0000],
+                                                [-1.2171, -1.1744,  1.1107]])
 
-            Assert.CheckEqual(fwdzCorrect, fwdz)
-            Assert.CheckEqual(fwdzdCorrect, fwdzd)
-            Assert.CheckEqual(revzCorrect, revz)
-            Assert.CheckEqual(revxdCorrect, revxd)
+            Assert.True(fwdz.allclose(fwdzCorrect, 0.01))
+            Assert.True(fwdzd.allclose(fwdzdCorrect, 0.01))
+            Assert.True(revz.allclose(revzCorrect, 0.01))
+            Assert.True(revxd.allclose(revxdCorrect, 0.01))
 
             let fwdx = combo.tensor([[1,2,3],[4,5,6]]).forwardDiff(combo.tensor([[10,20,30],[40,50,60]]))
-            let fwdz = dsharp.gather(fwdx, 1, combo.tensor([[1,0,1],[0,1,1]], dtype=Dtype.Int32))
-            let fwdzCorrect = combo.tensor([[2,1,2],[4,5,5]])
+            let fwdz = dsharp.gather(fwdx, 1, combo.tensor([[1,0,1,2],[0,1,1,2]], dtype=Dtype.Int32))
+            let fwdzCorrect = combo.tensor([[2., 1., 2., 3.],
+         [4., 5., 5., 6.]])
             let fwdzd = fwdz.derivative
-            let fwdzdCorrect = combo.tensor([[20,10,20],[40,50,50]])
+            let fwdzdCorrect = combo.tensor([[20., 10., 20., 30.],
+         [40., 50., 50., 60.]])
 
             let revx = combo.tensor([[1,2,3],[4,5,6]]).reverseDiff()
-            let revz = dsharp.gather(revx, 1, combo.tensor([[1,0,1],[0,1,1]], dtype=Dtype.Int32))
-            let revzCorrect = combo.tensor([[2,1,2],[4,5,5]])
-            revz.reverse(combo.tensor([[20,10,20],[40,50,50]]))
+            let revz = dsharp.gather(revx, 1, combo.tensor([[1,0,1,2],[0,1,1,2]], dtype=Dtype.Int32))
+            let revzCorrect = combo.tensor([[2., 1., 2., 3.],
+         [4., 5., 5., 6.]])
+            revz.reverse(combo.tensor([[-0.0559,  0.2001, -1.5592, -0.5618],
+        [ 1.1183,  1.1555,  3.0931, -1.7019]]))
             let revxd = revx.derivative
-            let revxdCorrect = combo.tensor([[10,40,0],[40,100,0]])
+            let revxdCorrect = combo.tensor([[ 0.2001, -1.6152, -0.5618],
+         [ 1.1183,  4.2487, -1.7019]])
 
-            Assert.CheckEqual(fwdzCorrect, fwdz)
-            Assert.CheckEqual(fwdzdCorrect, fwdzd)
-            Assert.CheckEqual(revzCorrect, revz)
-            Assert.CheckEqual(revxdCorrect, revxd)
+            Assert.True(fwdz.allclose(fwdzCorrect, 0.01))
+            Assert.True(fwdzd.allclose(fwdzdCorrect, 0.01))
+            Assert.True(revz.allclose(revzCorrect, 0.01))
+            Assert.True(revxd.allclose(revxdCorrect, 0.01))
 
     [<Test>]
     member _.TestDerivativeSum () =

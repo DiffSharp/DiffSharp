@@ -2898,28 +2898,27 @@ type Tensor =
                         | StackTs(a,dim) ->
                             push (List.append (Array.zip (td.unstack(dim)) a |> Array.map check |> Array.toList) tt)
                         | UnstackT(a,dim,i) -> 
-                            if a.derivative.dim = 0 then a.derivative <- a.zerosLike() + a.derivative
+                            if a.derivative.dim = 0 then a.derivative <- a.derivative.expandAs(a)
                             a.derivative <- a.derivative.addSlice(Array.init a.dim (fun j -> if j=dim then i else 0), td.unsqueeze(dim))
                             push (check(a.zeroLike(), a) :: tt)
                         | CatTs(a, dim) ->
                             let sizes = a |> Array.map (fun x -> x.shape.[dim])
                             push (List.append (Array.zip (td.split(sizes, dim=dim)) a |> Array.map check |> Array.toList) tt)
                         | SplitT(a,sizes,dim,i) -> 
-                            if a.derivative.dim = 0 then a.derivative <- a.zerosLike() + a.derivative
+                            if a.derivative.dim = 0 then a.derivative <- a.derivative.expandAs(a)
                             let locs = (0,sizes) ||> Array.scan (+)
                             a.derivative <- a.derivative.addSlice(Array.init a.dim (fun j -> if j=dim then locs.[i] else 0), td)
                             push (check(a.zeroLike(), a) :: tt)
                         | GatherT(a,dim,indices) -> 
-                            // TODO: The following is a minimal correct implementation. Faster and more memory efficient implementations should be possible.
+                            // TODO: The following is a minimal correct implementation. A better implementation is possible by implementing "scatter".
                             let tflat = td.flatten()
                             let iflat = indices.flatten()
-                            if a.derivative.dim = 0 then a.derivative <- a.zerosLike() + a.derivative
+                            if a.derivative.dim = 0 then a.derivative <- a.derivative.expandAs(a)
+                            let adimscalar = Array.create a.dim 1
                             for i=0 to tflat.nelement-1 do
-                                let mutable t = tflat.[i]
-                                for k=0 to a.dim-1 do
-                                    t <- t.unsqueeze(0)
-                                let j = iflat.[i].toScalar() :?> int
-                                let loc = flatIndexToIndex a.shape i
+                                let t = tflat.[i].view(adimscalar)
+                                let j = iflat.[i].toInt32()
+                                let loc = flatIndexToIndex indices.shape i
                                 loc.[dim] <- j
                                 a.derivative <- a.derivative.addSlice(loc, t)
                             push (check(a.zeroLike(), a) :: tt)
@@ -2935,7 +2934,7 @@ type Tensor =
                         | ClampT(a, mask) -> push (check(td * mask, a) :: tt)
                         | SliceT(a,bounds) -> 
                             // TODO: a.zerosLike() below is to handle non-scalar TensorRs with a scalar derivative Tensor(0.) (representing the initialization before accumulation). This is correct but can be changed to eliminate the extra op.
-                            if a.derivative.dim = 0 then a.derivative <- a.zerosLike() + a.derivative
+                            if a.derivative.dim = 0 then a.derivative <- a.derivative.expandAs(a)
                             a.derivative <- a.derivative.addSlice(boundsToLocation bounds, td.view(boundsToShape bounds))
                             push (check(a.zeroLike(), a) :: tt)
                         | AddTTSlice(a,location,b) -> 
