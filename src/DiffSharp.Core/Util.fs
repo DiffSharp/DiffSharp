@@ -475,3 +475,9 @@ module UtilAutoOpens =
     /// Given a PNG image file name, returns an HTML image element with the image content included as a Base64 encoded string
     let pngToHtml fileName cssStyle =
         sprintf """<img src="data:image/png;base64,%s" style="%s"/>""" (fileName |> fileToBase64String) cssStyle
+
+    // Avoids warning FS3370 in F# 6
+    let (!) (r: 'T ref)  = r.Value
+
+    // Avoids warning FS3370 in F# 6
+    let (:=) (r: 'T ref) (v: 'T)  = r.Value <- v
