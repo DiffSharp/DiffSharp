@@ -2,7 +2,7 @@
 
   <PropertyGroup>
 
-    <TorchSharpVersion>0.93.5</TorchSharpVersion>
+    <TorchSharpVersion>0.96.0</TorchSharpVersion>
     <FSharpCoreVersion>5.0.2</FSharpCoreVersion>
     <!-- Standard nuget.org location -->
     <RestoreSources>https://api.nuget.org/v3/index.json</RestoreSources>
@@ -33,7 +33,7 @@
   </PropertyGroup>
 
   <PropertyGroup>
-     <Version>1.0.3</Version>
+     <Version>1.0.4</Version>
      <Authors>Atılım Güneş Baydin, Don Syme, Barak A. Pearlmutter, Jeffrey Siskind, and DiffSharp contributors</Authors>
      <Owners>DiffSharp maintainers</Owners>
      <PackageProjectUrl>https://diffsharp.github.io</PackageProjectUrl>
