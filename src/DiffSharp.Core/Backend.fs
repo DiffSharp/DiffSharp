@@ -32,11 +32,14 @@ type Backend =
 
 /// Contains functions and settings related to backend specifications.
 module Backend = 
-    let internal count = ref 0
+    let mutable internal count = 0
     let internal codes = System.Collections.Concurrent.ConcurrentDictionary<string,Backend>()
 
     /// Register a new backend
-    let Register name = codes.GetOrAdd(name, (fun _ -> incr count; Backend.Other(name, count.Value)))
+    let Register name =
+        codes.GetOrAdd(name, (fun _ ->
+            count <- count + 1
+            Backend.Other(name, count)))
 
     /// Get or set the default backend used when creating tensors. Note, use <c>dsharp.config(...)</c> instead.
     let mutable Default = Backend.Reference
