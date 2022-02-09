@@ -5,7 +5,7 @@ open DiffSharp.Backends.Torch
 open TorchSharp
 
 [<AutoOpen>]
-module Extensions =
+module TorchExtensions =
 
     type dsharp with
 
