@@ -943,6 +943,12 @@ type Tensor =
             t.GetSlice(bounds)
 
     /// <summary>
+    /// Creates a new tensor from the raw tensor.
+    /// </summary>
+    /// <param name="rawTensor">The given raw tensor.</param>
+    static member ofRawTensor(rawTensor: RawTensor) = TensorC rawTensor
+
+    /// <summary>
     /// Creates a new tensor from the given data, using the given element type and configuration.
     /// </summary>
     /// <param name="value">The .NET object used to form the initial values for the tensor.</param>
