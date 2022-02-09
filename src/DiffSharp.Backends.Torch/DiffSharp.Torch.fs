@@ -8,28 +8,21 @@ open TorchSharp
 [<AutoOpen>]
 module Extensions =
 
-    type dsharp with
+    type torch.Tensor with
 
         /// <summary>
-        /// Creates a new tensor from the torch tensor.
+        /// Creates a new DiffSharp tensor from the torch tensor.
         /// </summary>
-        /// <param name="tt">The given TorchSharp tensor.</param>
-        static member ofTorchTensor(tt: torch.Tensor) =
+        member tt.toTensor() : Tensor =
             Tensor.ofRawTensor(TorchRawTensor(tt))
-
-        /// <summary>
-        /// Converts the primal of a tensor to a torch tensor.
-        /// </summary>
-        /// <remarks>If the tensor does not use the Torch backend an exception is raised</remarks>
-        static member primalRawTorch(t: Tensor) =
-            match t.primalRaw with
-            | :? TorchRawTensor as trt -> trt.TorchTensor
-            | _ -> failwith $"primalRawTorch: the input is not a DiffSharp.Backends.Torch tensor, its backend is {t.backend}"
 
     type Tensor with
         /// <summary>
         /// Converts the primal of a tensor to a torch tensor.
         /// </summary>
         /// <remarks>If the tensor does not use the Torch backend an exception is raised</remarks>
-        member t.primalRawTorch() = dsharp.primalRawTorch t
+        member t.primalRawTorch() =
+            match t.primalRaw with
+            | :? TorchRawTensor as trt -> trt.TorchTensor
+            | _ -> failwith $"primalRawTorch: the input is not a DiffSharp.Backends.Torch tensor, its backend is {t.backend}"
 
