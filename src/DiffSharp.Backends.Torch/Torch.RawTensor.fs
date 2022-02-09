@@ -67,6 +67,10 @@ module internal Utils =
     type DiffSharp.Device with 
         member x.ToTorch = torch.Device(x.DeviceType.ToTorch, x.DeviceIndex)
 
+    let fromTorchDeviceType (x: TorchSharp.DeviceType) : DiffSharp.DeviceType = enum (int x)
+
+    let fromTorchDevice (x: torch.Device) = DiffSharp.Device(fromTorchDeviceType x.``type``, x.index)
+
     let inline combineHashes (h1 : int) (h2 : int) = ((h1 <<< 5) + h1) ^^^ h2
 
     let torchMoveTo (tt: torch.Tensor) (device: Device) =
@@ -116,6 +120,9 @@ type TorchRawTensor(tt: torch.Tensor, shape: Shape, dtype: Dtype, device: Device
     override t.Device = DiffSharp.Device(t.DeviceType, tt.device_index)
     override _.Backend = Backend.Torch
     override _.Handle = box tt
+
+    new (tt: torch.Tensor) =
+        TorchRawTensor(tt, fromTorchShape tt.shape, fromTorchType tt.dtype, fromTorchDevice tt.device)
 
     member t.MakeLike(tt, ?shape, ?dtype, ?device) : RawTensor =
         upcast TorchRawTensor(tt, defaultArg shape t.Shape, defaultArg dtype t.Dtype, defaultArg device t.Device)

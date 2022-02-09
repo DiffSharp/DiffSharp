@@ -33,7 +33,7 @@
   </PropertyGroup>
 
   <PropertyGroup>
-     <Version>1.0.4</Version>
+     <Version>1.0.5</Version>
      <Authors>Atılım Güneş Baydin, Don Syme, Barak A. Pearlmutter, Jeffrey Siskind, and DiffSharp contributors</Authors>
      <Owners>DiffSharp maintainers</Owners>
      <PackageProjectUrl>https://diffsharp.github.io</PackageProjectUrl>
