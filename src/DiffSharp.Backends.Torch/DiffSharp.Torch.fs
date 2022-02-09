@@ -1,5 +1,4 @@
-﻿/// Defines extensions to the DiffSharp programming model when the Torch backend can be assumed
-namespace DiffSharp
+﻿namespace DiffSharp
 
 open DiffSharp
 open DiffSharp.Backends.Torch
