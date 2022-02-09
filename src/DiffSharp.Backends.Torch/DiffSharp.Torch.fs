@@ -30,5 +30,5 @@ module Extensions =
         member t.toTorch() =
             match t.primalRaw with
             | :? TorchRawTensor as trt -> trt.TorchTensor
-            | _ -> failwith $"primalRawTorch: the input is not a DiffSharp.Backends.Torch tensor, its backend is {t.backend}"
+            | _ -> failwith $"toTorch: the input is not a DiffSharp.Backends.Torch tensor, its backend is {t.backend}"
 
