@@ -9,8 +9,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\DiffSharp-cuda-windows.fsproj" />
-    <ProjectReference Include="..\DiffSharp-cuda-linux.fsproj" />
+    <ProjectReference Include="..\DiffSharp-cuda-windows\DiffSharp-cuda-windows.fsproj" />
+    <ProjectReference Include="..\DiffSharp-cuda-linux\DiffSharp-cuda-linux.fsproj" />
   </ItemGroup>
 
 </Project>
