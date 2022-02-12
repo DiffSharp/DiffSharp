@@ -161,6 +161,9 @@ type dsharp with
     static member gather(dim:int, indices:Tensor) = fun (a:Tensor) -> a.gather(dim, indices)
 
     /// <summary>TBD</summary>
+    static member scatter(dim:int, indices:Tensor, destinationShape:seq<int>) = fun (a:Tensor) -> a.scatter(dim, indices, destinationShape)
+
+    /// <summary>TBD</summary>
     static member transpose(dim0:int, dim1:int) = fun (a:Tensor) -> a.transpose(dim0, dim1)
 
     /// <summary>TBD</summary>

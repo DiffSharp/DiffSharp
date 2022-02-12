@@ -67,6 +67,10 @@ module internal Utils =
     type DiffSharp.Device with 
         member x.ToTorch = torch.Device(x.DeviceType.ToTorch, x.DeviceIndex)
 
+    let fromTorchDeviceType (x: TorchSharp.DeviceType) : DiffSharp.DeviceType = enum (int x)
+
+    let fromTorchDevice (x: torch.Device) = DiffSharp.Device(fromTorchDeviceType x.``type``, x.index)
+
     let inline combineHashes (h1 : int) (h2 : int) = ((h1 <<< 5) + h1) ^^^ h2
 
     let torchMoveTo (tt: torch.Tensor) (device: Device) =
@@ -116,6 +120,9 @@ type TorchRawTensor(tt: torch.Tensor, shape: Shape, dtype: Dtype, device: Device
     override t.Device = DiffSharp.Device(t.DeviceType, tt.device_index)
     override _.Backend = Backend.Torch
     override _.Handle = box tt
+
+    new (tt: torch.Tensor) =
+        TorchRawTensor(tt, fromTorchShape tt.shape, fromTorchType tt.dtype, fromTorchDevice tt.device)
 
     member t.MakeLike(tt, ?shape, ?dtype, ?device) : RawTensor =
         upcast TorchRawTensor(tt, defaultArg shape t.Shape, defaultArg dtype t.Dtype, defaultArg device t.Device)
@@ -373,7 +380,6 @@ type TorchRawTensor(tt: torch.Tensor, shape: Shape, dtype: Dtype, device: Device
 
     override t.GatherT(dim:int, indices) =
         Shape.checkCanGather t.Shape dim indices.Shape indices.Dtype
-        if indices.Dtype <> Dtype.Int32 then opNotSupported "Gather (indices must currently be int32 tensors in DiffSharp" indices.Dtype
 
         // NOTE: DiffSharp currently expects indices as an Int32 tensor, Torch wants Int64
         let indices = indices.Cast(Dtype.Int64)
@@ -384,6 +390,20 @@ type TorchRawTensor(tt: torch.Tensor, shape: Shape, dtype: Dtype, device: Device
             else
                 t.TorchTensor.gather(int64 dim, indices.TorchTensor)
         t.MakeLike(res, indices.Shape)
+
+    override t.ScatterT(dim:int, indices, destinationShape:Shape) =
+        Shape.checkCanScatter t.Shape dim indices.Shape indices.Dtype destinationShape
+        // NOTE: DiffSharp currently expects indices as an Int32 tensor, Torch wants Int64
+        let indices = indices.Cast(Dtype.Int64)
+        let res = t.ZerosLike(destinationShape)
+        // LibTorch Scatter on float16/bfloat16 gives : method_name not implemented for 'BFloat16'
+        if dtype = Dtype.Float16 || dtype = Dtype.BFloat16  then 
+            let res2 = res.TorchTensor.to_type(torch.ScalarType.Float32)
+            res2.scatter_(int64 dim, indices.TorchTensor, t.TorchTensor.to_type(torch.ScalarType.Float32)) |> ignore
+            t.MakeLike(res2.to_type(toTorchType dtype), destinationShape)
+        else
+            res.TorchTensor.scatter_(int64 dim, indices.TorchTensor, t.TorchTensor) |> ignore
+            res
 
     override t.ViewT(shape:Shape) =
         Shape.checkCanView t.Shape shape

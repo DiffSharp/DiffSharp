@@ -748,6 +748,13 @@ type dsharp =
     /// <param name="indices">The the indices of elements to gather.</param>
     static member gather(input:Tensor, dim:int, indices:Tensor) = input.gather(dim, indices)
 
+    /// <summary>Gathers values along an axis specified by dim.</summary>
+    /// <param name="input">The input tensor.</param>
+    /// <param name="dim">The axis along which to index.</param>
+    /// <param name="indices">The the indices of elements to gather.</param>
+    /// <param name="destinationShape">The destination shape.</param>
+    static member scatter(input:Tensor, dim:int, indices:Tensor, destinationShape:seq<int>) = input.scatter(dim, indices, destinationShape)
+
     /// <summary>Returns the original tensor with its dimensions permuted.</summary>
     /// <param name="input">The input tensor.</param>
     /// <param name="permutation">The desired ordering of dimensions.</param>

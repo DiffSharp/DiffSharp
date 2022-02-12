@@ -4123,6 +4123,30 @@ type TestTensor () =
             Assert.CheckEqual(combo.dtype, t2g1.dtype)
 
     [<Test>]
+    member _.TestTensorScatter () =
+        for combo in Combos.All do 
+            let t1 = combo.tensor([0,1,2,3,4])
+            let t1g = dsharp.scatter(t1, 0, combo.tensor([0, 2, 1, 3, 4], dtype=Dtype.Int32), destinationShape=[5])
+            let t1gCorrect = combo.tensor([0., 2., 1., 3., 4.])
+
+            let t2 = combo.tensor([[1,2,3],[4,5,6]])
+            let t2g0 = dsharp.scatter(t2, 0, combo.tensor([[0, 1, 1], [1, 0, 0]], dtype=Dtype.Int32), destinationShape=[2;3])
+            let t2g0Correct = combo.tensor([[1., 5., 6.],
+                                             [4., 2., 3.]])
+            let t2g1 = dsharp.scatter(t2, 1, combo.tensor([[0, 2, 1], [2, 0, 1]], dtype=Dtype.Int32), destinationShape=[2;3])
+            let t2g1Correct = combo.tensor([[1., 3., 2.],
+                                             [5., 6., 4.]])
+
+            Assert.True(t1gCorrect.allclose(t1g, 0.01))
+            Assert.CheckEqual(combo.dtype, t1g.dtype)
+
+            Assert.True(t2g0Correct.allclose(t2g0, 0.01))
+            Assert.CheckEqual(combo.dtype, t2g0.dtype)
+
+            Assert.True(t2g1Correct.allclose(t2g1, 0.01))
+            Assert.CheckEqual(combo.dtype, t2g1.dtype)
+
+    [<Test>]
     member _.TestTensorMaxElementwise () =
         for combo in Combos.All do 
             let t1 = combo.tensor([4.;1.;20.;3.])

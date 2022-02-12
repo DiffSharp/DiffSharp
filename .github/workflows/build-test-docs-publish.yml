@@ -121,3 +121,23 @@ jobs:
       run: dotnet pack --configuration Release --verbosity normal bundles/DiffSharp-cuda-linux
     - name: Publish NuGets
       run: dotnet nuget push "bin/packages/*.nupkg" -s https://api.nuget.org/v3/index.json -k ${{ secrets.NUGET_ORG_TOKEN_2020 }} --skip-duplicate
+
+  # Done in a separate job because it downloads the massive Linux CUDA packages (though only for reference
+  # during the package build, it doesn't actually use them)
+  pack_cuda:
+
+    runs-on: ubuntu-latest
+    needs: build
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Setup dotnet
+      uses: actions/setup-dotnet@v1
+      with:
+        dotnet-version: 6.0.100-preview.5.21302.13
+    - name: Install dependencies
+      run: dotnet restore
+    - name: Pack (DiffSharp-cuda)
+      run: dotnet pack --configuration Release --verbosity normal bundles/DiffSharp-cuda
+    - name: Publish NuGets
+      run: dotnet nuget push "bin/packages/*.nupkg" -s https://api.nuget.org/v3/index.json -k ${{ secrets.NUGET_ORG_TOKEN_2020 }} --skip-duplicate

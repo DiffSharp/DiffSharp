@@ -943,6 +943,12 @@ type Tensor =
             t.GetSlice(bounds)
 
     /// <summary>
+    /// Creates a new tensor from the raw tensor.
+    /// </summary>
+    /// <param name="rawTensor">The given raw tensor.</param>
+    static member ofRawTensor(rawTensor: RawTensor) = TensorC rawTensor
+
+    /// <summary>
     /// Creates a new tensor from the given data, using the given element type and configuration.
     /// </summary>
     /// <param name="value">The .NET object used to form the initial values for the tensor.</param>
@@ -1789,11 +1795,26 @@ type Tensor =
     /// <param name="dim">The axis along which to index.</param>
     /// <param name="indices">The the indices of elements to gather.</param>
     member a.gather(dim:int, indices:Tensor) =
+        let dim = Shape.completeDim a.dim dim  // Handles -1 semantics
         Shape.checkCanGather a.shape dim indices.shape indices.dtype
         let inline fRaw(a:RawTensor) = a.GatherT(dim, indices.primalRaw)
         let inline fTensor(a:Tensor) = a.gather(dim, indices)
         let inline dfFwd(ap,ad:Tensor,fp) = ad.gather(dim, indices)
         let inline dfRev(a) = GatherT(a, dim, indices)
+        Tensor.OpUnary(a, fRaw, fTensor, dfFwd, dfRev)
+
+    /// <summary>Scatter values along an axis specified by dim.</summary>
+    /// <param name="dim">The axis along which to index.</param>
+    /// <param name="indices">The the indices of elements to gather.</param>
+    /// <param name="destinationShape">The destination shape.</param>
+    member a.scatter(dim:int, indices:Tensor, destinationShape:seq<int>) =
+        let destinationShape = destinationShape|>Shape.create
+        let dim = Shape.completeDim a.dim dim  // Handles -1 semantics
+        Shape.checkCanScatter a.shape dim indices.shape indices.dtype destinationShape
+        let inline fRaw(a:RawTensor) = a.ScatterT(dim, indices.primalRaw, destinationShape)
+        let inline fTensor(a:Tensor) = a.scatter(dim, indices, destinationShape)
+        let inline dfFwd(ap,ad:Tensor,fp) = ad.scatter(dim, indices, destinationShape)
+        let inline dfRev(a) = ScatterT(a, dim, indices)
         Tensor.OpUnary(a, fRaw, fTensor, dfFwd, dfRev)
 
     /// <summary>Returns a new tensor with the same data as the self tensor but of a different shape.</summary>
@@ -2224,44 +2245,26 @@ type Tensor =
                 if target.shape.[0] <> n then failwithf "Expecting either: input with shape (N,C) and target with shape (N); or input with shape (N,C,d1,d2,...,dk) and target with shape (N,d1,d2,...,dk). Received input.shape %A and target.shape %A" input.shape target.shape
                 if d <> target.shape.[1..] then failwithf "Expecting either: input with shape (N,C) and target with shape (N); or input with shape (N,C,d1,d2,...,dk) and target with shape (N,d1,d2,...,dk). Received input.shape %A and target.shape %A" input.shape target.shape
                 n, c, d
-        let mutable weightSpecified = false
-        let mutable ww = input.zeroLike()
-        match weight with
-        | Some w -> ww <- w; weightSpecified <- true
-        | None -> ww <- input.onesLike([classes]); weightSpecified <- false
-        let weight = ww
+        let target = target.int()
+        let weightSpecified, weight = 
+            match weight with
+            | Some w -> 
+                if w.dim <> 1 || w.shape.[0] <> classes then failwithf "Expecting weight with shape (C). Received weight.shape %A" w.shape
+                let vv = Array.create input.dim 1
+                vv.[1] <- classes
+                true, w.view(vv).expandAs(input).gather(1, target.unsqueeze(1)).squeeze(1)
+            | None -> false, input.zeroLike()
         let reduction = defaultArg reduction "mean"
         if not (reduction = "none" || reduction = "mean" || reduction = "sum") then failwithf "Expecting reduction (%A) to be one of (none, mean, sum)" reduction
-        if input.dim = 2 then
-            let mutable wacc = input.zeroLike()
-            let l = Array.init n (fun i -> 
-                                    let target = int target.[i]
-                                    let w = weight.[target]
-                                    wacc <- wacc + w
-                                    -w*input.[i, target]) |> Tensor.stack
-            if reduction = "none" then
-                l
-            elif reduction = "mean" then
-                if weightSpecified then l.sum()/wacc else l.mean()
-            else // reduction = "sum"
-                l.sum()
-        else
-            let mutable wacc = input.zeroLike()
-            let l = Array.init n (fun i ->
-                                    let aa = input.[i].view([classes; -1])
-                                    let bb = target.[i].view(-1)
-                                    let l = Array.init bb.nelement (fun j ->
-                                                                    let target = int bb.[j]
-                                                                    let w = weight.[target]
-                                                                    wacc <- wacc + w
-                                                                    -w*aa.[target, j]) |> Tensor.stack
-                                    l.view(d)) |> Tensor.stack
-            if reduction = "none" then
-                l
-            elif reduction = "mean" then
-                if weightSpecified then l.sum()/wacc else l.mean()
-            else // reduction = "sum"
-                l.sum()
+        let mutable l = input.gather(1, target.unsqueeze(1)).squeeze(1).neg()
+        if weightSpecified then
+            l <- l * weight
+        if reduction = "none" then
+            l
+        elif reduction = "mean" then
+            if weightSpecified then l.sum()/weight.sum() else l.mean()
+        else // reduction = "sum"
+            l.sum()
 
     /// <summary>Add zero padding to each side of a tensor</summary>
     /// <param name="paddings">The implicit paddings on corresponding sides of the input.</param>
@@ -2770,6 +2773,7 @@ type Tensor =
                         | CatTs(a,_) -> reset (List.append (a |> List.ofSeq) tt)
                         | SplitT(a,_,_,_) -> reset (a::tt)
                         | GatherT(a,_,_) -> reset (a::tt)
+                        | ScatterT(a,_,_) -> reset (a::tt)
                         | PermuteT(a,_) -> reset (a::tt)
                         | TransposeT(a,_,_) -> reset (a::tt)
                         | TransposeT2(a) -> reset (a::tt)
@@ -2915,31 +2919,19 @@ type Tensor =
                         | StackTs(a,dim) ->
                             push (List.append (Array.zip (td.unstack(dim)) a |> Array.map check |> Array.toList) tt)
                         | UnstackT(a,dim,i) -> 
-                            if a.derivative.dim = 0 then a.derivative <- a.zerosLike() + a.derivative
+                            if a.derivative.dim = 0 then a.derivative <- a.derivative.expandAs(a)
                             a.derivative <- a.derivative.addSlice(Array.init a.dim (fun j -> if j=dim then i else 0), td.unsqueeze(dim))
                             push (check(a.zeroLike(), a) :: tt)
                         | CatTs(a, dim) ->
                             let sizes = a |> Array.map (fun x -> x.shape.[dim])
                             push (List.append (Array.zip (td.split(sizes, dim=dim)) a |> Array.map check |> Array.toList) tt)
                         | SplitT(a,sizes,dim,i) -> 
-                            if a.derivative.dim = 0 then a.derivative <- a.zerosLike() + a.derivative
+                            if a.derivative.dim = 0 then a.derivative <- a.derivative.expandAs(a)
                             let locs = (0,sizes) ||> Array.scan (+)
                             a.derivative <- a.derivative.addSlice(Array.init a.dim (fun j -> if j=dim then locs.[i] else 0), td)
                             push (check(a.zeroLike(), a) :: tt)
-                        | GatherT(a,dim,indices) -> 
-                            // TODO: The following is a minimal correct implementation. Faster and more memory efficient implementations should be possible.
-                            let tflat = td.flatten()
-                            let iflat = indices.flatten()
-                            if a.derivative.dim = 0 then a.derivative <- a.zerosLike() + a.derivative
-                            for i=0 to tflat.nelement-1 do
-                                let mutable t = tflat.[i]
-                                for k=0 to a.dim-1 do
-                                    t <- t.unsqueeze(0)
-                                let j = iflat.[i].toScalar() :?> int
-                                let loc = flatIndexToIndex a.shape i
-                                loc.[dim] <- j
-                                a.derivative <- a.derivative.addSlice(loc, t)
-                            push (check(a.zeroLike(), a) :: tt)
+                        | GatherT(a,dim,indices) -> push (check(td.scatter(dim, indices, a.shape), a) :: tt)
+                        | ScatterT(a,dim,indices) -> push (check(td.gather(dim, indices), a) :: tt)
                         | PermuteT(a, inversePermutation) -> push (check(td.permute(inversePermutation), a) :: tt)
                         | TransposeT(a, dim0, dim1) -> push (check(td.transpose(dim0, dim1), a) :: tt)
                         | TransposeT2(a) -> push (check(td.transpose(), a) :: tt)
@@ -2952,7 +2944,7 @@ type Tensor =
                         | ClampT(a, mask) -> push (check(td * mask, a) :: tt)
                         | SliceT(a,bounds) -> 
                             // TODO: a.zerosLike() below is to handle non-scalar TensorRs with a scalar derivative Tensor(0.) (representing the initialization before accumulation). This is correct but can be changed to eliminate the extra op.
-                            if a.derivative.dim = 0 then a.derivative <- a.zerosLike() + a.derivative
+                            if a.derivative.dim = 0 then a.derivative <- a.derivative.expandAs(a)
                             a.derivative <- a.derivative.addSlice(boundsToLocation bounds, td.view(boundsToShape bounds))
                             push (check(a.zeroLike(), a) :: tt)
                         | AddTTSlice(a,location,b) -> 
@@ -3061,6 +3053,7 @@ and TensorOp =
     | SplitT of Tensor * int[] * dim:int * i:int
     | SliceT of Tensor * int[,]
     | GatherT of Tensor * int * Tensor
+    | ScatterT of Tensor * int * Tensor
     | PermuteT of Tensor * inversePermutation: int[]
     | TransposeT of Tensor * int * int
     | TransposeT2 of Tensor
