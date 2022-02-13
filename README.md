@@ -1,3 +1,7 @@
+**ATTENTION**: This branch is no longer used and it belongs to pre-1.0 versions of DiffSharp. Use the [dev](https://github.com/DiffSharp/DiffSharp/tree/dev) branch for the latest version. The text below and the code in this branch are kept as a historical record.
+
+
+
 DiffSharp: Differentiable Functional Programming
 ------------------------------------------------
 
