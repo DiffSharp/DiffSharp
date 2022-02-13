@@ -119,8 +119,8 @@ You can use DiffSharp in [dotnet interactive](https://github.com/dotnet/interact
 
     // Use one of the following three lines
     #r "nuget: DiffSharp-cpu" // Use the latest version
-    #r "nuget: DiffSharp-cpu,*-*" // Use the latest pre-release version
-    #r "nuget: DiffSharp-cpu,{{fsdocs-package-version}}" // Use a specific version
+    #r "nuget: DiffSharp-cpu, *-*" // Use the latest pre-release version
+    #r "nuget: DiffSharp-cpu, 1.0.1" // Use a specific version
 
     open DiffSharp
 
