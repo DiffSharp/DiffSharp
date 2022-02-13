@@ -69,7 +69,7 @@ data.saveImage("test.png")
 (** *)
 
 (*** hide ***)
-pngToHtml "test.png" ""
+pngToHtml "test.png" 64
 (*** include-it-raw ***)
 
 // Inspect data as ASCII and show label

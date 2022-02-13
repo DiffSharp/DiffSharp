@@ -473,8 +473,8 @@ module UtilAutoOpens =
         System.Convert.ToBase64String(bytes)
 
     /// Given a PNG image file name, returns an HTML image element with the image content included as a Base64 encoded string
-    let pngToHtml fileName cssStyle =
-        sprintf """<img src="data:image/png;base64,%s" style="%s"/>""" (fileName |> fileToBase64String) cssStyle
+    let pngToHtml fileName widthPixels =
+        sprintf """<img src="data:image/png;base64,%s" style="width: %dpx; height: auto"/>""" (fileName |> fileToBase64String) widthPixels
 
     // Avoids warning FS3370 in F# 6
     let (!) (r: 'T ref)  = r.Value
