@@ -36,7 +36,7 @@ To use locally in Jupyter, first install Jupyter and then:
 
 When using .NET Interactive it is best to completely turn off automatic HTML displays of outputs:
 
-    Formatter.SetPreferredMimeTypeFor(typeof<obj>, "text/plain")
+    Formatter.SetPreferredMimeTypesFor(typeof<obj>, "text/plain")
     Formatter.Register(fun x writer -> fprintfn writer "%120A" x )
 
 You can also use DiffSharp from a script or an application.  Here are some example scripts with appropriate package references:
