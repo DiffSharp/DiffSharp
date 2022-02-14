@@ -27,6 +27,8 @@ DiffSharp is a tensor library with support for [differentiable programming](http
 
 You can find the documentation [here](https://diffsharp.github.io/), including information on installation and getting started.
 
+Release notes can be found [here](https://github.com/DiffSharp/DiffSharp/blob/dev/RELEASE_NOTES.md).
+
 ## Communication
 
 Please use [GitHub issues](https://github.com/DiffSharp/DiffSharp/issues) to share bug reports, feature requests, installation issues, suggestions etc.
