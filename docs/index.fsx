@@ -121,8 +121,8 @@ dsharp.grad f (dsharp.tensor([1.8, 2.5]))
 Compute a nested derivative (checking for [perturbation confusion](https://doi.org/10.1007/s10990-008-9037-1)):
 *)
 
-let x0 = dsharp.tensor(1)
-let y0 = dsharp.tensor(2)
+let x0 = dsharp.tensor(1.)
+let y0 = dsharp.tensor(2.)
 dsharp.diff (fun x -> x * dsharp.diff (fun y -> x * y) y0) x0
 (*** include-it ***)
 
