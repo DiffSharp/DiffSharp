@@ -1,7 +1,7 @@
 # 1.0.1
 8 Nov 2021
 
-This release is a complete reimplementation of DiffSharp that supports tensors, a libtorch raw tensor backend, and modern machine learning workflows.
+This release is a complete reimplementation of DiffSharp that supports tensors and modern machine learning workflows. It includes a libtorch raw tensor backend, CUDA support, APIs for backends and extensions, and extensive unit tests.
 
 # 0.8.4
 24 Aug 2019
