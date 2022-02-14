@@ -13,10 +13,10 @@ open DiffSharp.Data
 open DiffSharp.Optim
 
 type ModelStyle1a() =
-    inherit Model()
+    inherit Model() 
     let fc1 = Linear(10, 16)
     let fc2 = Linear(16, 20)
-    do base.add([fc1; fc2], ["fc1"; "fc2"])
+    do base.addModel([fc1; fc2], ["fc1"; "fc2"])
     override __.forward(x) =
         x
         |> fc1.forward
@@ -28,7 +28,8 @@ type ModelStyle1b() =
     let fc1 = Linear(20, 32)
     let fc2 = Linear(32, 30)
     let p = Parameter(dsharp.randn([]))
-    do base.add([fc1; fc2; p], ["fc1"; "fc2"; "p"])
+    do base.addModel([fc1; fc2], ["fc1"; "fc2"])
+    do base.addParameter([p], ["p"])
     override __.forward(x) =
         x
         |> fc1.forward
@@ -40,7 +41,7 @@ type GenericModelFloatFloat() =
     inherit Model<float,float>()
     let fc1 = Linear(1, 2)
     let fc2 = Linear(2, 1)
-    do base.add([fc1; fc2], ["fc1"; "fc2"])
+    do base.addModel([fc1; fc2], ["fc1"; "fc2"])
     do base.init (fun (_, t) -> t.onesLike())
     override __.forward(x) =
         x |> dsharp.tensor
@@ -53,10 +54,10 @@ type GenericModelIntString() =
     inherit Model<int,string>()
     let fc1 = Linear(1, 2)
     let fc2 = Linear(2, 1)
-    do base.add([fc1; fc2], ["fc1"; "fc2"])
+    do base.addModel([fc1; fc2], ["fc1"; "fc2"])
     do base.init (fun (_, t) -> t.onesLike())
     override __.forward(x) =
-        x |> dsharp.tensor
+        x |> float32 |> dsharp.tensor
         |> dsharp.view([1; -1])
         |> fc1.forward
         |> fc2.forward
@@ -91,6 +92,66 @@ type TestModel () =
         Assert.CheckEqual(d1flatCorrect, d3flat)
 
     [<Test>]
+    member _.TestParameterDictFlattenReverseDiff () =
+        let t1p = dsharp.randn([2;5])
+        let t1d = dsharp.randnLike t1p
+        let t2p = dsharp.randn([4])
+        let t2d = dsharp.randnLike t2p
+
+        let p1 = Parameter <| t1p.reverseDiff(t1d)
+        let p2 = Parameter <| t2p.reverseDiff(t2d)
+
+        let d = ParameterDict()
+        d.add(["p1", p1; "p2", p2])
+
+        let dflat = d.flatten()
+        Assert.True(dflat.isReverseDiff)
+
+        let dflatp = dflat.primal
+        let dflatd = dflat.derivative
+        let dflatpCorrect = dsharp.cat([t1p.view(-1); t2p])
+        let dflatdCorrect = dsharp.cat([t1d.view(-1); t2d])
+        
+        Assert.CheckEqual(dflatpCorrect, dflatp)
+        Assert.CheckEqual(dflatdCorrect, dflatd)
+
+    [<Test>]
+    member _.TestParameterDictUnflattenReverseDiff () =
+        let t1p = dsharp.randn([2;5])
+        let t2p = dsharp.randn([4])
+
+        let p1 = Parameter <| t1p
+        let p2 = Parameter <| t2p
+
+        let d = ParameterDict()
+        d.add(["p1", p1; "p2", p2])
+
+        let dflatp = dsharp.randn([14])
+        let dflatd = dsharp.randn([14])
+        let dflat = dflatp.reverseDiff(dflatd)
+
+        Assert.False(d.isReverseDiff)
+        d.unflatten(dflat)
+        Assert.True(d.isReverseDiff)
+
+        let dp1 = d.["p1"]
+        let dp1p = dp1.primal
+        let dp1d = dp1.derivative
+        let dp2 = d.["p2"]
+        let dp2p = dp2.primal
+        let dp2d = dp2.derivative
+
+        let dfp = dflatp.split([2*5; 4])
+        let dp1pCorrect, dp2pCorrect = dfp.[0].view([2;5]), dfp.[1]
+        let dfd = dflatd.split([2*5; 4])
+        let dp1dCorrect, dp2dCorrect = dfd.[0].view([2;5]), dfd.[1]
+
+        Assert.CheckEqual(dp1pCorrect, dp1p)
+        Assert.CheckEqual(dp2pCorrect, dp2p)
+        Assert.CheckEqual(dp1dCorrect, dp1d)
+        Assert.CheckEqual(dp2dCorrect, dp2d)
+
+    [<Test>]
     member _.TestModelCreationStyle1 () =
         let net = ModelStyle1a()
         Assert.CheckEqual(516, net.nparameters)
@@ -102,7 +163,7 @@ type TestModel () =
     member _.TestModelCreationStyle2 () =
         let fc1 = Linear(10, 32)
         let fc2 = Linear(32, 10)
-        let net = Model.create [fc1; fc2] 
+        let net = Model.create [fc1; fc2] [] []
                     (dsharp.view [-1; 10]
                     >> fc1.forward
                     >> dsharp.relu
@@ -112,7 +173,7 @@ type TestModel () =
         let fc1 = Linear(10, 32)
         let fc2 = Linear(32, 10)
         let p = Parameter(dsharp.randn([]))
-        let net2 = Model.create [fc1; fc2; p] 
+        let net2 = Model.create [fc1; fc2] [p] []
                     (dsharp.view [-1; 10]
                     >> fc1.forward
                     >> dsharp.relu
@@ -166,28 +227,56 @@ type TestModel () =
     member _.TestModelParametersDiff () =
         let net = ModelStyle1a()
 
-        Assert.True(net.parametersVector.isNoDiff())
+        Assert.True(net.parametersVector.isNoDiff)
 
         let p = net.parametersVector
         let p = p.forwardDiff(p.onesLike())
         net.parametersVector <- p
-        Assert.True(net.parametersVector.isForwardDiff())
+        Assert.True(net.parametersVector.isForwardDiff)
 
         net.noDiff()
-        Assert.True(net.parametersVector.isNoDiff())
+        Assert.True(net.parametersVector.isNoDiff)
 
         let p = net.parametersVector
         let p = p.reverseDiff()
         net.parametersVector <- p
-        Assert.True(net.parametersVector.isReverseDiff())
+        Assert.True(net.parametersVector.isReverseDiff)
 
         net.noDiff()
-        Assert.True(net.parametersVector.isNoDiff())
+        Assert.True(net.parametersVector.isNoDiff)
 
         let p = net.parametersVector
         let x = dsharp.randn([1;10])
-        ignore <| dsharp.grad (net.asFunction x >> dsharp.sum) p
-        Assert.True(net.parametersVector.isNoDiff())
+        ignore <| dsharp.grad (fun p -> net.asFunction p x |> dsharp.sum) p
+        Assert.True(net.parametersVector.isNoDiff)
+
+    [<Test>]
+    member _.TestModelDiff () =
+        let net = ModelStyle1a()
+
+        let status = net.isNoDiff, net.isForwardDiff, net.isReverseDiff
+        let statusCorrect = true, false, false
+        Assert.AreEqual(statusCorrect, status)
+
+        net.forwardDiff(net.parameters)
+        let status = net.isNoDiff, net.isForwardDiff, net.isReverseDiff
+        let statusCorrect = false, true, false
+        Assert.AreEqual(statusCorrect, status)
+
+        net.noDiff()
+        let status = net.isNoDiff, net.isForwardDiff, net.isReverseDiff
+        let statusCorrect = true, false, false
+        Assert.AreEqual(statusCorrect, status)
+
+        net.reverseDiff()
+        let status = net.isNoDiff, net.isForwardDiff, net.isReverseDiff
+        let statusCorrect = false, false, true
+        Assert.AreEqual(statusCorrect, status)
+
+        net.noDiff()
+        let status = net.isNoDiff, net.isForwardDiff, net.isReverseDiff
+        let statusCorrect = true, false, false
+        Assert.AreEqual(statusCorrect, status)
 
     [<Test>]
     member _.TestModelForwardParameters () =
@@ -195,41 +284,41 @@ type TestModel () =
         let f = net.asFunction
         let p = net.parametersVector
         let x = dsharp.randn([1;10])
-        let y = f x p
+        let y = f p x
         Assert.CheckEqual([|1;20|], y.shape)
 
     [<Test>]
     member _.TestModelForwardCompose () =
         let net = ModelStyle1a()
-        let f x p = net.asFunction x p |> dsharp.sin
+        let f p x = net.asFunction p x |> dsharp.sin
         let p = net.parametersVector
         let x = dsharp.randn([1;10])
-        let y = f x p
+        let y = f p x
         Assert.CheckEqual([|1;20|], y.shape)
 
     [<Test>]
     member _.TestModelForwardLoss () =
         let net = ModelStyle1a()
-        let f t x p = net.asFunction x p |> dsharp.mseLoss t
+        let f p x t = net.asFunction p x |> dsharp.mseLoss t
         let p = net.parametersVector
         let x = dsharp.randn([1;10])
         let t = dsharp.randn([1;20])
-        let y = f t x p
+        let y = f p x t
         Assert.CheckEqual(([| |]: int array), y.shape)
 
     [<Test>]
-    member _.TestModelSaveLoadParameters () =
+    member _.TestModelSaveLoadState () =
         let net1 = ModelStyle1a()
-        let p1 = net1.parametersVector
+        let p1 = net1.stateVector
         let fileName = System.IO.Path.GetTempFileName()
-        net1.saveParameters(fileName)
+        net1.saveState(fileName)
 
         let net2 = ModelStyle1a()
-        let p2 = net2.parametersVector
+        let p2 = net2.stateVector
         Assert.AreNotEqual(p1, p2)
 
-        net2.loadParameters(fileName)
-        let p2 = net2.parametersVector
+        net2.loadState(fileName)
+        let p2 = net2.stateVector
         Assert.CheckEqual(p1, p2)
 
         let x = dsharp.randn([1;10])
@@ -254,19 +343,65 @@ type TestModel () =
         Assert.CheckEqual(y1, y2)
 
     [<Test>]
+    member _.TestModelSaveLoadStateNoDiff () =
+        let net = ModelStyle1a()
+        net.reverseDiff()
+        Assert.True(net.isReverseDiff)
+
+        let fileName = System.IO.Path.GetTempFileName()
+        net.saveState(fileName)
+        Assert.True(net.isReverseDiff)
+
+        net.loadState(fileName)
+        Assert.True(net.isNoDiff)
+
+        net.reverseDiff()
+        net.saveState(fileName, noDiff=false)
+        net.loadState(fileName)
+        Assert.True(net.isReverseDiff)
+
+    [<Test>]
+    member _.TestModelSaveLoadNoDiff () =
+        let net = ModelStyle1a()
+        net.reverseDiff()
+        Assert.True(net.isReverseDiff)
+
+        let fileName = System.IO.Path.GetTempFileName()
+        net.save(fileName)
+        Assert.True(net.isReverseDiff)
+
+        let net2 = Model.load(fileName)
+        Assert.True(net2.isNoDiff)
+
+        net2.reverseDiff()
+        net2.save(fileName, noDiff=false)
+        let net3 = Model.load(fileName)
+        Assert.True(net3.isReverseDiff)
+
+    [<Test>]
     member _.TestModelMove () =
         for combo1 in Combos.FloatingPointExcept16s do
             use _holder = dsharp.useConfig(combo1.dtype, combo1.device, combo1.backend)
             let net = dsharp.view [-1; 2] --> Linear(2, 4) --> dsharp.relu --> Linear(4, 1)
-            Assert.CheckEqual(combo1.dtype, net.parametersVector.dtype)
+
             Assert.CheckEqual(combo1.device, net.parametersVector.device)
+            Assert.CheckEqual(combo1.dtype, net.parametersVector.dtype)
             Assert.CheckEqual(combo1.backend, net.parametersVector.backend)
+
+            Assert.CheckEqual(combo1.device, net.device)
+            Assert.CheckEqual(combo1.dtype, net.dtype)
+            Assert.CheckEqual(combo1.backend, net.backend)
+
             for combo2 in Combos.FloatingPointExcept16s do
-                // printfn "\n%A %A" (combo1.dtype, combo1.device, combo1.backend) (combo2.dtype, combo2.device, combo2.backend)
-                net.move(combo2.dtype, combo2.device, combo2.backend)
-                Assert.CheckEqual(combo2.dtype, net.parametersVector.dtype)
+                net.move(combo2.device, combo2.dtype, combo2.backend)
+
                 Assert.CheckEqual(combo2.device, net.parametersVector.device)
+                Assert.CheckEqual(combo2.dtype, net.parametersVector.dtype)
                 Assert.CheckEqual(combo2.backend, net.parametersVector.backend)
+
+                Assert.CheckEqual(combo2.device, net.device)
+                Assert.CheckEqual(combo2.dtype, net.dtype)
+                Assert.CheckEqual(combo2.backend, net.backend)
 
     [<Test>]
     member _.TestModelClone () =
@@ -300,21 +435,93 @@ type TestModel () =
     member _.TestModelTrainEval () =
         let m = Linear(1, 2) --> Linear(2, 3) --> Linear(3, 4)
         Assert.CheckEqual(Mode.Train, m.mode)
-        Assert.CheckEqual(Mode.Train, m.allModels.[0].mode)
-        Assert.CheckEqual(Mode.Train, m.allModels.[1].mode)
-        Assert.CheckEqual(Mode.Train, m.allModels.[2].mode)
+        Assert.CheckEqual(Mode.Train, m.descendants.[0].mode)
+        Assert.CheckEqual(Mode.Train, m.descendants.[1].mode)
+        Assert.CheckEqual(Mode.Train, m.descendants.[2].mode)
 
         m.eval()
         Assert.CheckEqual(Mode.Eval, m.mode)
-        Assert.CheckEqual(Mode.Eval, m.allModels.[0].mode)
-        Assert.CheckEqual(Mode.Eval, m.allModels.[1].mode)
-        Assert.CheckEqual(Mode.Eval, m.allModels.[2].mode)
+        Assert.CheckEqual(Mode.Eval, m.descendants.[0].mode)
+        Assert.CheckEqual(Mode.Eval, m.descendants.[1].mode)
+        Assert.CheckEqual(Mode.Eval, m.descendants.[2].mode)
 
         m.train()
         Assert.CheckEqual(Mode.Train, m.mode)
-        Assert.CheckEqual(Mode.Train, m.allModels.[0].mode)
-        Assert.CheckEqual(Mode.Train, m.allModels.[1].mode)
-        Assert.CheckEqual(Mode.Train, m.allModels.[2].mode)
+        Assert.CheckEqual(Mode.Train, m.descendants.[0].mode)
+        Assert.CheckEqual(Mode.Train, m.descendants.[1].mode)
+        Assert.CheckEqual(Mode.Train, m.descendants.[2].mode)
+
+    [<Test>]
+    member _.TestModelChildrenModels () =
+        let m0 = Linear(2, 2)
+        let m1 = Sequential([m0])
+        let m2 = Sequential([m1])
+
+        let m0children = m0.children
+        let m1children = m1.children
+        let m2children = m2.children
+
+        let m0childrenCorrect:list<ModelBase> = []
+        let m1childrenCorrect:list<ModelBase> = [m0]
+        let m2childrenCorrect:list<ModelBase> = [m1]
+
+        Assert.CheckEqual(m0childrenCorrect, m0children)
+        Assert.CheckEqual(m1childrenCorrect, m1children)
+        Assert.CheckEqual(m2childrenCorrect, m2children)
+
+        let m0models = m0.descendants
+        let m1models = m1.descendants
+        let m2models = m2.descendants
+
+        let m0modelsCorrect:list<ModelBase> = [m0]
+        let m1modelsCorrect:list<ModelBase> = [m1;m0]
+        let m2modelsCorrect:list<ModelBase> = [m2;m1;m0]
+
+        Assert.CheckEqual(m0modelsCorrect, m0models)
+        Assert.CheckEqual(m1modelsCorrect, m1models)
+        Assert.CheckEqual(m2modelsCorrect, m2models)
+
+    [<Test>]
+    member _.TestModelChildrenParameters () =
+        let l1 = Linear(1, 2)
+        let l2 = Linear(2, 3)
+        let l3 = Linear(3, 4)
+
+        // ModelBase
+        // |-ModelBase
+        //   |-ModelBase
+        //     |-ModelBase
+        //       |- l1
+        //     |-l2
+        // |-l3
+        let m1 = l1 --> dsharp.relu --> l2 --> dsharp.relu --> l3 --> dsharp.flatten(1)
+
+        // ModelBase
+        // |-ModelBase
+        //   |-l1
+        //   |-l2
+        // |-l3 
+        let m2 = l1 --> l2 --> l3
+
+        // ModelBase
+        // |-l1
+        // |-l2
+        // |-l3
+        let m3 = Sequential([l1; l2; l3])
+
+        let childrenParams (m:Model) = 
+            m.children |> List.map (fun c -> c.nparameters) |> List.sum
+
+        let m1Params = m1.nparameters
+        let m2Params = m2.nparameters
+        let m3Params = m3.nparameters
+        let m1ChildrenParams = childrenParams m1
+        let m2ChildrenParams = childrenParams m2
+        let m3ChildrenParams = childrenParams m3
+
+        Assert.CheckEqual(m1Params, m1ChildrenParams)
+        Assert.CheckEqual(m2Params, m2ChildrenParams)
+        Assert.CheckEqual(m3Params, m3ChildrenParams)
 
     [<Test>]
     member _.TestModelLinear () =
@@ -325,12 +532,27 @@ type TestModel () =
         let net = Linear(din, dout)
 
         let lr, steps = 1e-2, 1000
-        let loss inputs p = net.asFunction inputs p |> dsharp.mseLoss targets
+        let loss inputs p = net.asFunction p inputs |> dsharp.mseLoss targets
         for _ in 0..steps do
             let g = dsharp.grad (loss inputs) net.parametersVector
             net.parametersVector <- net.parametersVector - lr * g
         let y = net.forward inputs
         Assert.True(targets.allclose(y, 0.01))
+
+    [<Test>]
+    member _.TestModelSequential () =
+        let m1 = Linear(1, 2)
+        let m2 = Linear(2, 3)
+        let m3 = Linear(3, 4)
+
+        let m = m1 --> m2 --> m3
+        let mSequential = Sequential([m1;m2;m3])
+
+        let x = dsharp.randn([1;1])
+        let y = x --> m
+        let ySequential = x --> mSequential
+
+        Assert.True(ySequential.allclose(y))
 
     [<Test>]
     member _.TestModelConv1d () =
@@ -340,8 +562,8 @@ type TestModel () =
         let conv1 = Conv1d(cin, cout, k)
         let fcin = inputs.[0] --> dsharp.unsqueeze 0 --> conv1 --> dsharp.nelement
         let net = conv1 --> dsharp.relu --> dsharp.flatten 1 --> Linear(fcin, 2)
-        let targets = dsharp.tensor([0; 1])
-        let targetsp = dsharp.tensor([[1,0],[0,1]])
+        let targets = dsharp.tensor([0.; 1.])
+        let targetsp = dsharp.tensor([[1.,0.],[0.,1.]])
         let dataset = TensorDataset(inputs, targets)
         let dataloader = dataset.loader(8, shuffle=true)        
         let lr, iters = 1e-2, 250
@@ -357,8 +579,8 @@ type TestModel () =
         let conv1 = Conv2d(cin, cout, k)
         let fcin = inputs.[0] --> dsharp.unsqueeze 0 --> conv1 --> dsharp.nelement
         let net = conv1 --> dsharp.relu --> dsharp.flatten 1 --> Linear(fcin, 2)
-        let targets = dsharp.tensor([0; 1])
-        let targetsp = dsharp.tensor([[1,0],[0,1]])
+        let targets = dsharp.tensor([0.; 1.])
+        let targetsp = dsharp.tensor([[1.,0.],[0.,1.]])
         let dataset = TensorDataset(inputs, targets)
         let dataloader = dataset.loader(8, shuffle=true)        
         let lr, iters = 1e-2, 250
@@ -374,8 +596,8 @@ type TestModel () =
         let conv1 = Conv3d(cin, cout, k)
         let fcin = inputs.[0] --> dsharp.unsqueeze 0 --> conv1 --> dsharp.nelement
         let net = conv1 --> dsharp.relu --> dsharp.flatten 1 --> Linear(fcin, 2)
-        let targets = dsharp.tensor([0; 1])
-        let targetsp = dsharp.tensor([[1,0],[0,1]])
+        let targets = dsharp.tensor([0.; 1.])
+        let targetsp = dsharp.tensor([[1.,0.],[0.,1.]])
         let dataset = TensorDataset(inputs, targets)
         let dataloader = dataset.loader(8, shuffle=true)        
         let lr, iters = 1e-2, 250
@@ -936,13 +1158,36 @@ type TestModel () =
         Assert.True(zEvalCorrect.allclose(zEval, 0.1, 0.1))
     
     [<Test>]
-    member _.TestModelVAE () =
-        // Fits a little VAE to structured noise
+    member _.TestModelVAEMLP () =
+        // Fits a little VAEMLP to structured noise
         let xdim, zdim, n = 8, 4, 16
-        let m = VAE(xdim*xdim, zdim)
+        let m = VAEMLP(xdim*xdim, zdim)
         let x = dsharp.stack(Array.init n (fun _ -> dsharp.eye(xdim)*dsharp.rand([xdim;xdim])))
 
         let lr, steps = 1e-2, 50
+        let optimizer = Adam(m, lr=dsharp.tensor(lr))
+        let loss0 = float <| m.loss(x)
+        let mutable loss = loss0
+        for _ in 0..steps do
+            m.reverseDiff()
+            let l = m.loss(x)
+            l.reverse()
+            optimizer.step()
+            loss <- float l
+
+        Assert.Less(loss, loss0/2.)
+    
+    [<Test>]
+    member _.TestModelVAE () =
+        // Fits a little VAE to structured noise
+        let xdim, zdim, n = 28, 4, 16
+        let encoder = dsharp.flatten(1) --> Linear(xdim*xdim, 8) --> dsharp.relu
+        let decoder = Linear(8, xdim*xdim) --> dsharp.sigmoid
+
+        let m = VAE([xdim;xdim], zdim, encoder, decoder)
+        let x = dsharp.stack(Array.init n (fun _ -> dsharp.eye(xdim)*dsharp.rand([xdim;xdim])))
+
+        let lr, steps = 1e-2, 25
         let optimizer = Adam(m, lr=dsharp.tensor(lr))
         let loss0 = float <| m.loss(x)
         let mutable loss = loss0
@@ -958,15 +1203,15 @@ type TestModel () =
     [<Test>]
     member _.TestModelParameterNames () =
         let lin1 = Linear(10, 10)
-        let lin1Names = lin1.parameters.values.Keys |> Seq.toArray
+        let lin1Names = lin1.parameters |> Seq.map fst |> Seq.toArray
         let lin1NamesCorrect = [|"Linear-weight"; "Linear-bias"|]
 
         let lin2 = lin1 --> lin1
-        let lin2Names = lin2.parameters.values.Keys |> Seq.toArray
+        let lin2Names = lin2.parameters |> Seq.map fst |> Seq.toArray
         let lin2NamesCorrect = [|"Linear-weight__1"; "Linear-bias__1"; "Linear-weight__2"; "Linear-bias__2"|]
 
         let lin3 = lin1 --> lin1 --> lin1
-        let lin3Names = lin3.parameters.values.Keys |> Seq.toArray
+        let lin3Names = lin3.parameters |> Seq.map fst |> Seq.toArray
         let lin3NamesCorrect = [|"Linear-weight__1"; "Linear-bias__1"; "Linear-weight__2"; "Linear-bias__2"; "Linear-weight__3"; "Linear-bias__3"|]
 
         Assert.AreEqual(lin1NamesCorrect, lin1Names)

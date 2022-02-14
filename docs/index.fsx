@@ -15,7 +15,7 @@ DiffSharp.dsharp.seed(123)
 (*** condition: ipynb ***)
 #if IPYNB
 // Google Colab only: uncomment and run the following to install dotnet and the F# kernel
-// !bash <(curl -Ls https://raw.githubusercontent.com/gbaydin/scripts/main/colab_dotnet5.sh)
+// !bash <(curl -Ls https://raw.githubusercontent.com/gbaydin/scripts/main/colab_dotnet6.sh)
 #endif // IPYNB
 (*** condition: ipynb ***)
 #if IPYNB
@@ -23,7 +23,7 @@ DiffSharp.dsharp.seed(123)
 #r "nuget: DiffSharp-lite,{{fsdocs-package-version}}"
 
 // Set dotnet interactive formatter to plaintext
-Formatter.SetPreferredMimeTypeFor(typeof<obj>, "text/plain")
+Formatter.SetPreferredMimeTypesFor(typeof<obj>, "text/plain")
 Formatter.Register(fun (x:obj) (writer: TextWriter) -> fprintfn writer "%120A" x )
 #endif // IPYNB
 
@@ -133,6 +133,7 @@ Define a model and optimize it:
 (*** do-not-eval-file ***)
 open DiffSharp.Data
 open DiffSharp.Model
+open DiffSharp.Compose
 open DiffSharp.Util
 open DiffSharp.Optim
 
@@ -146,7 +147,24 @@ let trainLoader = trainSet.loader(batchSize=batchSize, shuffle=true)
 let validSet = MNIST("../data", train=false, transform=id)
 let validLoader = validSet.loader(batchSize=batchSize, shuffle=false)
 
-let model = VAE(28*28, 20, [400])
+let encoder =
+    Conv2d(1, 32, 4, 2)
+    --> dsharp.relu
+    --> Conv2d(32, 64, 4, 2)
+    --> dsharp.relu
+    --> Conv2d(64, 128, 4, 2)
+    --> dsharp.flatten(1)
+
+let decoder =
+    dsharp.unflatten(1, [128;1;1])
+    --> ConvTranspose2d(128, 64, 4, 2)
+    --> dsharp.relu
+    --> ConvTranspose2d(64, 32, 4, 3)
+    --> dsharp.relu
+    --> ConvTranspose2d(32, 1, 4, 2)
+    --> dsharp.sigmoid
+
+let model = VAE([1;28;28], 64, encoder, decoder)
 
 let lr = dsharp.tensor(0.001)
 let optimizer = Adam(model, lr=lr)

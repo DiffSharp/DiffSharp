@@ -18,7 +18,7 @@ open DiffSharp.Util
 (*** condition: ipynb ***)
 #if IPYNB
 // Google Colab only: uncomment and run the following to install dotnet and the F# kernel
-// !bash <(curl -Ls https://raw.githubusercontent.com/gbaydin/scripts/main/colab_dotnet5.sh)
+// !bash <(curl -Ls https://raw.githubusercontent.com/gbaydin/scripts/main/colab_dotnet6.sh)
 #endif // IPYNB
 (*** condition: ipynb ***)
 #if IPYNB
@@ -27,7 +27,7 @@ open DiffSharp.Util
 #r "nuget: SixLabors.ImageSharp,1.0.1"
 
 // Set dotnet interactive formatter to plaintext
-Formatter.SetPreferredMimeTypeFor(typeof<obj>, "text/plain")
+Formatter.SetPreferredMimeTypesFor(typeof<obj>, "text/plain")
 Formatter.Register(fun (x:obj) (writer: TextWriter) -> fprintfn writer "%120A" x )
 #endif // IPYNB
 
@@ -69,7 +69,7 @@ data.saveImage("test.png")
 (** *)
 
 (*** hide ***)
-pngToHtml "test.png"
+pngToHtml "test.png" 64
 (*** include-it-raw ***)
 
 // Inspect data as ASCII and show label
@@ -127,7 +127,7 @@ type Generator(nz: int) =
     let fc2 = Linear(256, 512)
     let fc3 = Linear(512, 1024)
     let fc4 = Linear(1024, 28*28)
-    do base.add([fc1; fc2; fc3; fc4])
+    do base.addModel([fc1; fc2; fc3; fc4])
     override self.forward(x) =
         x
         |> dsharp.view([-1;nz])
@@ -147,7 +147,7 @@ type Discriminator(nz:int) =
     let fc2 = Linear(1024, 512)
     let fc3 = Linear(512, 256)
     let fc4 = Linear(256, 1)
-    do base.add([fc1; fc2; fc3; fc4])
+    do base.addModel([fc1; fc2; fc3; fc4])
     override self.forward(x) =
         x
         |> dsharp.view([-1;28*28])

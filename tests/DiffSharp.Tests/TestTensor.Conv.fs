@@ -844,7 +844,6 @@ type TestTensorConvolutions () =
             Assert.True(t3d2Correct.allclose(t3d2, 0.01))
             Assert.True(t3p2d3Correct.allclose(t3p2d3, 0.01))
             Assert.True(t3s3p6d3Correct.allclose(t3s3p6d3, 0.01, 0.01))
-            printfn "done"
 
     [<Test>]
     member _.TestTensorConvTranspose2D () =

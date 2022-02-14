@@ -15,7 +15,7 @@ DiffSharp.dsharp.seed(123)
 (*** condition: ipynb ***)
 #if IPYNB
 // Google Colab only: uncomment and run the following to install dotnet and the F# kernel
-// !bash <(curl -Ls https://raw.githubusercontent.com/gbaydin/scripts/main/colab_dotnet5.sh)
+// !bash <(curl -Ls https://raw.githubusercontent.com/gbaydin/scripts/main/colab_dotnet6.sh)
 #endif // IPYNB
 (*** condition: ipynb ***)
 #if IPYNB
@@ -23,7 +23,7 @@ DiffSharp.dsharp.seed(123)
 #r "nuget: DiffSharp-lite,{{fsdocs-package-version}}"
 
 // Set dotnet interactive formatter to plaintext
-Formatter.SetPreferredMimeTypeFor(typeof<obj>, "text/plain")
+Formatter.SetPreferredMimeTypesFor(typeof<obj>, "text/plain")
 Formatter.Register(fun (x:obj) (writer: TextWriter) -> fprintfn writer "%120A" x )
 #endif // IPYNB
 
@@ -51,9 +51,14 @@ We provide several package bundles for a variety of use cases.
 
 ### Using local LibTorch binaries (optional)
 
-You can combine the `DiffSharp-lite` package bundle with existing local native binaries of LibTorch installed through other means (for example, by installing [PyTorch](https://pytorch.org/) using a Python package manager). If your GPU works in this PyTorch installation without any issues, it will also work in DiffSharp.
+You can combine the `DiffSharp-lite` package bundle with existing local native binaries of LibTorch for your OS (Linux, Mac, or Windows) installed through other means. 
 
-Before using the `Torch` backend in DiffSharp, you will have to add an explicit load of the LibTorch native library, which you can do as follows. In order to find the location of LibTorch binaries, searching for `libtorch.so` in your system might be helpful.
+LibTorch is the main tensor computation core implemented in C++/CUDA and it is used by PyTorch in Python and by other projects in various programming languages. The following are two common ways of having LibTorch in your system.
+
+* If you use Python and have [PyTorch](https://pytorch.org/) installed, this comes with LibTorch as a part of the PyTorch distribution. If your GPU works in this PyTorch installation without any issues, it will also work in DiffSharp.
+* You can download the native LibTorch package without Python by following the [get started](https://pytorch.org/get-started/locally/) instructions in the PyTorch website, and extracting the downloaded archive to a folder in your system.
+
+Before using the `Torch` backend in DiffSharp, you will have to add an explicit load of the LibTorch native library, which you can do as follows. In order to find the location of LibTorch binaries, searching for `libtorch.so` in your system might be helpful. Note that this file is called `libtorch.so` in Linux, `libtorch.dylib` in macOS, and `torch.dll` in Windows.
 
     open System.Runtime.InteropServices
     NativeLibrary.Load("/home/user/anaconda3/lib/python3.8/site-packages/torch/lib/libtorch.so")
@@ -114,8 +119,8 @@ You can use DiffSharp in [dotnet interactive](https://github.com/dotnet/interact
 
     // Use one of the following three lines
     #r "nuget: DiffSharp-cpu" // Use the latest version
-    #r "nuget: DiffSharp-cpu,*-*" // Use the latest pre-release version
-    #r "nuget: DiffSharp-cpu,{{fsdocs-package-version}}" // Use a specific version
+    #r "nuget: DiffSharp-cpu, *-*" // Use the latest pre-release version
+    #r "nuget: DiffSharp-cpu, 1.0.1" // Use a specific version
 
     open DiffSharp
 

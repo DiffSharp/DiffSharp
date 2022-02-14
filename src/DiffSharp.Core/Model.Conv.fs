@@ -14,10 +14,10 @@ type Conv1d(inChannels:int, outChannels:int, kernelSize:int, ?stride:int, ?paddi
     let k = 1./ sqrt (float (inChannels*kernelSize))
     let w = Parameter <| Weight.uniform([|outChannels; inChannels; kernelSize|], k)
     let b = Parameter <| if bias then Weight.uniform([|outChannels|], k) else dsharp.tensor([])
-    do base.add([w;b],["Conv1d-weight";"Conv1d-bias"])
+    do base.addParameter([w;b],["Conv1d-weight";"Conv1d-bias"])
 
     /// <summary>TBD</summary>
-    override _.getString() = sprintf "Conv1d(%A, %A, %A)" inChannels outChannels kernelSize
+    override _.ToString() = sprintf "Conv1d(%A, %A, %A)" inChannels outChannels kernelSize
 
     /// <summary>TBD</summary>
     override _.forward(value) =
@@ -33,10 +33,10 @@ type Conv2d(inChannels:int, outChannels:int, ?kernelSize:int, ?stride:int, ?padd
     let k = 1./ sqrt (float (inChannels*kernelSizes.[0]*kernelSizes.[1]))
     let w = Parameter <| Weight.uniform([|outChannels; inChannels; kernelSizes.[0]; kernelSizes.[1]|], k)
     let b = Parameter <| if bias then Weight.uniform([|outChannels|], k) else dsharp.tensor([])
-    do base.add([w;b],["Conv2d-weight";"Conv2d-bias"])
+    do base.addParameter([w;b],["Conv2d-weight";"Conv2d-bias"])
 
     /// <summary>TBD</summary>
-    override _.getString() = sprintf "Conv2d(%A, %A, %A)" inChannels outChannels kernelSizes
+    override _.ToString() = sprintf "Conv2d(%A, %A, %A)" inChannels outChannels kernelSizes
 
     /// <summary>TBD</summary>
     override _.forward(value) =
@@ -52,10 +52,10 @@ type Conv3d(inChannels:int, outChannels:int, ?kernelSize:int, ?stride:int, ?padd
     let k = 1./ sqrt (float (inChannels*kernelSizes.[0]*kernelSizes.[1]*kernelSizes.[2]))
     let w = Parameter <| Weight.uniform([|outChannels; inChannels; kernelSizes.[0]; kernelSizes.[1]; kernelSizes.[2]|], k)
     let b = Parameter <| if bias then Weight.uniform([|outChannels|], k) else dsharp.tensor([])
-    do base.add([w;b],["Conv3d-weight";"Conv3d-bias"])
+    do base.addParameter([w;b],["Conv3d-weight";"Conv3d-bias"])
 
     /// <summary>TBD</summary>
-    override _.getString() = sprintf "Conv3d(%A, %A, %A)" inChannels outChannels kernelSizes
+    override _.ToString() = sprintf "Conv3d(%A, %A, %A)" inChannels outChannels kernelSizes
 
     /// <summary>TBD</summary>
     override _.forward(value) =

@@ -7,8 +7,9 @@
 
 // Libtorch binaries
 // Option A: you can use a platform-specific nuget package
-// #r "nuget: libtorch-cuda-11.1-win-x64, 1.8.0.7"
-#r "nuget: libtorch-cuda-11.1-linux-x64, 1.8.0.7"
+#r "nuget: TorchSharp-cpu, 0.96.0"
+// #r "nuget: TorchSharp-cuda-linux, 0.96.0"
+// #r "nuget: TorchSharp-cuda-windows, 0.96.0"
 // Option B: you can use a local libtorch installation
 // System.Runtime.InteropServices.NativeLibrary.Load("/home/gunes/anaconda3/lib/python3.8/site-packages/torch/lib/libtorch.so")
 
@@ -43,12 +44,12 @@ let languageModel =
     --> dsharp.view([-1; 512])
     --> Linear(512, dataset.numChars)
 
-print languageModel
+printfn "%s" (languageModel.summary())
 
 let modelFileName = "rnn_language_model.params"
 if File.Exists(modelFileName) then 
     printfn "Resuming training from existing model params found: %A" modelFileName
-    languageModel.loadParameters(modelFileName)
+    languageModel.loadState(modelFileName)
 
 let predict (text:string) len =
     rnn.reset()
@@ -85,7 +86,7 @@ for epoch = 1 to epochs do
         if i % validInterval = 0 then
             printfn "\nSample from language model:\n%A\n" (predict "We " 512)
 
-            languageModel.saveParameters(modelFileName)
+            languageModel.saveState(modelFileName)
 
             let plt = Pyplot()
             plt.plot(losses |> dsharp.tensor)

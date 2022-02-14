@@ -14,10 +14,10 @@ type Linear(inFeatures, outFeatures, ?bias:bool) =
     let w = Parameter(Weight.kaiming(inFeatures, outFeatures))
     let k = 1./sqrt (float outFeatures)
     let b = Parameter(if bias then Weight.uniform([|outFeatures|], k) else dsharp.tensor([]))
-    do base.add([w;b],["Linear-weight";"Linear-bias"])
+    do base.addParameter([w;b],["Linear-weight";"Linear-bias"])
 
     /// <summary>TBD</summary>
-    override _.getString() = sprintf "Linear(%A, %A)" inFeatures outFeatures
+    override _.ToString() = sprintf "Linear(%A, %A)" inFeatures outFeatures
 
     /// <summary>TBD</summary>
     override _.forward(value) =

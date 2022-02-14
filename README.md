@@ -25,7 +25,7 @@ To use locally in [Visual Studio Code](https://code.visualstudio.com/):
 
 - Install [.NET Interactive Notebooks for VS Code](https://marketplace.visualstudio.com/items?itemName=ms-dotnettools.dotnet-interactive-vscode)
 
-- After opening an `.ipynb` execute `Ctrl-Shift-P` for the command palette and chose `Reopen Editoer With...` then `.NET Interactive Notebooks`
+- After opening an `.ipynb` execute `Ctrl-Shift-P` for the command palette and chose `Reopen Editor With...` then `.NET Interactive Notebooks`
 
 - To restart the kernel use `restart` from the command palette.
 
@@ -36,7 +36,7 @@ To use locally in Jupyter, first install Jupyter and then:
 
 When using .NET Interactive it is best to completely turn off automatic HTML displays of outputs:
 
-    Formatter.SetPreferredMimeTypeFor(typeof<obj>, "text/plain")
+    Formatter.SetPreferredMimeTypesFor(typeof<obj>, "text/plain")
     Formatter.Register(fun x writer -> fprintfn writer "%120A" x )
 
 You can also use DiffSharp from a script or an application.  Here are some example scripts with appropriate package references:
@@ -53,7 +53,7 @@ Now reference an appropriate nuget package from https://nuget.org:
 
 * [`DiffSharp-cpu`](https://www.nuget.org/packages/DiffSharp-cpu) - This includes the Torch backend using CPU only.
 
-* [`DiffSharp-cuda-linux`](https://www.nuget.org/packages/DiffSharp-cuda-linux) - This includes the Torch CPU/CUDA 11.1 backend for Windows. Large download. Requires .NET 6 SDK, version `6.0.100-preview.5.21302.13` or greater.
+* [`DiffSharp-cuda-linux`](https://www.nuget.org/packages/DiffSharp-cuda-linux) - This includes the Torch CPU/CUDA 11.1 backend for Linux. Large download. Requires .NET 6 SDK, version `6.0.100-preview.5.21302.13` or greater.
 
 * [`DiffSharp-cuda-windows`](https://www.nuget.org/packages/DiffSharp-cuda-windows) - This includes the Torch CPU/CUDA 11.1 backend for Windows. Large download.
 

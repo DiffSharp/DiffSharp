@@ -8,6 +8,7 @@
     <Compile Include="Backend.fs" />
     <Compile Include="Device.fs" />
     <Compile Include="Dtype.fs" />
+    <Compile Include="Printer.fs" />
     <Compile Include="Shape.fs" />
     <Compile Include="Util.fs" />
     <Compile Include="Scalar.fs" />
@@ -27,10 +28,15 @@
     <Compile Include="Model.Dropout.fs" />
     <Compile Include="Model.BatchNorm.fs" />
     <Compile Include="Model.Recurrent.fs" />
+    <Compile Include="Model.Sequential.fs" />
     <Compile Include="Model.VAE.fs" />
     <Compile Include="Optim.fs" />
     <Compile Include="Op.AvgPool.fs" />
     <Compile Include="Op.BMM.fs" />
+    <Compile Include="Op.Inv.fs" />
+    <Compile Include="Op.Norm.fs" />
+    <Compile Include="Op.Outer.fs" />
+    <Compile Include="Op.Solve.fs" />
 	  <PackageReference Update="FSharp.Core" Version="$(FSharpCoreVersion)" />
   </ItemGroup>
 </Project>

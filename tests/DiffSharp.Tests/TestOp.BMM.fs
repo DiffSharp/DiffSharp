@@ -257,7 +257,7 @@ type TestDerivativesBMM () =
                                              [[-1.1680,  2.3531, -0.5124,  1.2818],
                                               [ 0.2488, -0.9225,  0.7615,  0.2879],
                                               [-1.1806,  2.8380, -1.2293,  0.6840]]])
-            let revyd = revy.isNoDiff()
+            let revyd = revy.isNoDiff
             let revydCorrect = true
 
             Assert.True(fwdz.allclose(fwdzCorrect, 0.01))
@@ -342,7 +342,7 @@ type TestDerivativesBMM () =
                                         [[ 1.0658,  0.5892],
                                          [ 0.2221, -0.6175],
                                          [ 0.5876,  1.1322]]]))
-            let revxd = revx.isNoDiff()
+            let revxd = revx.isNoDiff
             let revxdCorrect = true
             let revyd = revy.derivative
             let revydCorrect = combo.tensor([[[ -7.3228,  -0.9167],

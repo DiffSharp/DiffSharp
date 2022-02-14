@@ -52,7 +52,7 @@ type SGD(model, ?lr:Tensor, ?momentum:Tensor, ?nesterov:bool, ?weightDecay:Tenso
         match momentum with
         | Some mom ->
             if not momInit then 
-                momBuffer <- model.parameters.map(fun (t:Tensor) -> t.derivative)
+                momBuffer <- model.parameters.map(fun (p:Parameter) -> Parameter(p.value.derivative))
                 momInit <- true
             let mb = momBuffer.[name]
             let mb = mb.mul(mom).add(d)
@@ -71,8 +71,8 @@ type Adam(model, ?lr:Tensor, ?beta1:Tensor, ?beta2:Tensor, ?eps:Tensor, ?weightD
     let beta2 = defaultArg beta2 (dsharp.tensor(0.999))
     let eps = defaultArg eps (dsharp.tensor(1e-8))
     let reversible = defaultArg reversible false
-    let stateExpAvg = model.parameters.map(fun (t:Tensor) -> t.zerosLike())
-    let stateExpAvgSq = model.parameters.map(fun (t:Tensor) -> t.zerosLike())
+    let stateExpAvg = model.parameters.map(fun (p:Parameter) -> Parameter(p.value.zerosLike()))
+    let stateExpAvgSq = model.parameters.map(fun (p:Parameter) -> Parameter(p.value.zerosLike()))
 
     /// <summary>TBD</summary>
     override o.updateRule name t =

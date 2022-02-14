@@ -15,10 +15,10 @@ type ConvTranspose1d(inChannels:int, outChannels:int, kernelSize:int, ?stride:in
     let k = 1./ sqrt (float (inChannels*kernelSize))
     let w = Parameter <| Weight.uniform([|inChannels; outChannels; kernelSize|], k)
     let b = Parameter <| if bias then Weight.uniform([|outChannels|], k) else dsharp.tensor([])
-    do base.add([w;b],["ConvTranspose1d-weight";"ConvTranspose1d-bias"])
+    do base.addParameter([w;b],["ConvTranspose1d-weight";"ConvTranspose1d-bias"])
 
     /// <summary>TBD</summary>
-    override _.getString() = sprintf "ConvTranspose1d(%A, %A, %A)" inChannels outChannels kernelSize
+    override _.ToString() = sprintf "ConvTranspose1d(%A, %A, %A)" inChannels outChannels kernelSize
 
     /// <summary>TBD</summary>
     override _.forward(value) =
@@ -34,10 +34,10 @@ type ConvTranspose2d(inChannels:int, outChannels:int, ?kernelSize:int, ?stride:i
     let k = 1./ sqrt (float (inChannels*kernelSizes.[0]*kernelSizes.[1]))
     let w = Parameter <| Weight.uniform([|inChannels; outChannels; kernelSizes.[0]; kernelSizes.[1]|], k)
     let b = Parameter <| if bias then Weight.uniform([|outChannels|], k) else dsharp.tensor([])
-    do base.add([w;b],["ConvTranspose2d-weight";"ConvTranspose2d-bias"])
+    do base.addParameter([w;b],["ConvTranspose2d-weight";"ConvTranspose2d-bias"])
 
     /// <summary>TBD</summary>
-    override _.getString() = sprintf "ConvTranspose2d(%A, %A, %A)" inChannels outChannels kernelSizes
+    override _.ToString() = sprintf "ConvTranspose2d(%A, %A, %A)" inChannels outChannels kernelSizes
 
     /// <summary>TBD</summary>
     override _.forward(value) =
@@ -53,10 +53,10 @@ type ConvTranspose3d(inChannels:int, outChannels:int, ?kernelSize:int, ?stride:i
     let k = 1./ sqrt (float (inChannels*kernelSizes.[0]*kernelSizes.[1]*kernelSizes.[2]))
     let w = Parameter <| Weight.uniform([|inChannels; outChannels; kernelSizes.[0]; kernelSizes.[1]; kernelSizes.[2]|], k)
     let b = Parameter <| if bias then Weight.uniform([|outChannels|], k) else dsharp.tensor([])
-    do base.add([w;b],["ConvTranspose3d-weight";"ConvTranspose3d-bias"])
+    do base.addParameter([w;b],["ConvTranspose3d-weight";"ConvTranspose3d-bias"])
 
     /// <summary>TBD</summary>
-    override _.getString() = sprintf "ConvTranspose3d(%A, %A, %A)" inChannels outChannels kernelSizes
+    override _.ToString() = sprintf "ConvTranspose3d(%A, %A, %A)" inChannels outChannels kernelSizes
 
     /// <summary>TBD</summary>
     override _.forward(value) =

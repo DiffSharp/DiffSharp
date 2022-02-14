@@ -7,8 +7,9 @@
 
 // Libtorch binaries
 // Option A: you can use a platform-specific nuget package
-// #r "nuget: libtorch-cuda-11.1-win-x64, 1.8.0.7"
-#r "nuget: libtorch-cuda-11.1-linux-x64, 1.8.0.7"
+#r "nuget: TorchSharp-cpu, 0.96.0"
+// #r "nuget: TorchSharp-cuda-linux, 0.96.0"
+// #r "nuget: TorchSharp-cuda-windows, 0.96.0"
 // Option B: you can use a local libtorch installation
 // System.Runtime.InteropServices.NativeLibrary.Load("/home/gunes/anaconda3/lib/python3.8/site-packages/torch/lib/libtorch.so")
 
@@ -33,8 +34,8 @@ type VAE(xDim:int, zDim:int, ?hDims:seq<int>, ?nonlinearity:Tensor->Tensor, ?non
     let enc = Array.append [|for i in 0..dims.Length-2 -> Linear(dims.[i], dims.[i+1])|] [|Linear(dims.[dims.Length-2], dims.[dims.Length-1])|]
     let dec = [|for i in 0..dims.Length-2 -> Linear(dims.[i+1], dims.[i])|] |> Array.rev
     do 
-        base.add([for m in enc -> box m])
-        base.add([for m in dec -> box m])
+        base.addModel([for m in enc -> box m])
+        base.addModel([for m in dec -> box m])
 
     let encode x =
         let mutable x = x
@@ -100,7 +101,7 @@ let validSet = MNIST("../data", urls=urls, train=false, transform=id)
 let validLoader = validSet.loader(batchSize=batchSize, shuffle=false)
 
 let model = VAE(28*28, 20, [400])
-printfn "Model: %A" model
+printfn "Model\n%s" (model.summary())
 
 let optimizer = Adam(model, lr=dsharp.tensor(0.001))
 

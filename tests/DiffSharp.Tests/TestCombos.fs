@@ -25,7 +25,7 @@ module Dtypes =
     let IntegralAndFloatingPointExcept16s = FloatingPointExcept16s @ Integral
     let IntegralAndFloatingPoint = FloatingPoint @ Integral
     let IntegralAndBool = Integral @ Bool
-    let AllMinusFloat16s = FloatingPointExcept16s @ Integral @ Bool
+    let AllExceptFloat16s = FloatingPointExcept16s @ Integral @ Bool
     let All = FloatingPoint @ Integral @ Bool
 
 module Combos =

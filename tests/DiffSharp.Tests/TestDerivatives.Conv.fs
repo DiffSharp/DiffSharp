@@ -463,7 +463,7 @@ type TestDerivativesConv () =
                                             [[ 34.6019;   0.7992; -24.1050; -39.5052];
                                              [ 10.1808;  21.8231; -13.9067;  15.8920];
                                              [ 12.5828;  -8.3376;  16.9365;   9.9666]]])
-            let revyd = revy.isNoDiff()
+            let revyd = revy.isNoDiff
             let revydCorrect = true
 
             Assert.True(fwdz.allclose(fwdzCorrect, 0.01))
@@ -536,7 +536,7 @@ type TestDerivativesConv () =
 
                                         [[ 1.7997; -1.2354;  4.6313];
                                          [-4.0646;  0.0384;  4.1437]]]))            
-            let revxd = revx.isNoDiff()
+            let revxd = revx.isNoDiff
             let revxdCorrect = true
             let revyd = revy.derivative
             let revydCorrect = combo.tensor([[[ -1.8835;  15.7019];
@@ -2045,7 +2045,7 @@ type TestDerivativesConv () =
               [ 2.5431e+01,  8.4768e+00,  1.2704e+02,  9.8819e+01],
               [-3.4615e+01, -6.0232e+01, -1.0465e+02, -5.7172e+01],
               [-1.5058e+01, -3.2852e+01,  1.3887e+01,  2.7381e+01]]]])
-            let revyd = revy.isNoDiff()
+            let revyd = revy.isNoDiff
             let revydCorrect = true
 
             Assert.True(fwdz.allclose(fwdzCorrect, 0.05))
@@ -2241,7 +2241,7 @@ type TestDerivativesConv () =
              [[ -1.4849,   3.4750,   1.1084],
               [ -5.1601,   0.4057,  -4.7773],
               [ -4.0470,  -3.2604,   4.7280]]]]))            
-            let revxd = revx.isNoDiff()
+            let revxd = revx.isNoDiff
             let revxdCorrect = true
             let revyd = revy.derivative
             let revydCorrect = combo.tensor([[[[ -45.0676,  -19.8231],
@@ -3060,7 +3060,6 @@ type TestDerivativesConv () =
                [-3.1639, -2.1265, -2.0348],
                [ 1.2052,  0.3915, -0.0322]]]]).unsqueeze(0)
 
-            printfn "%A %A %A" fwdx.shape fwdy.shape fwdz.shape
             let fwdzd = fwdz.derivative
             let fwdzdCorrect = combo.tensor([[[[-1.7395,  7.9394, -3.6845],
                [ 1.6466,  4.5153, -5.6526],
@@ -4136,7 +4135,7 @@ type TestDerivativesConv () =
                                                   [ 0.0305,  0.8666, -1.4122,  0.1128],
                                                   [ 0.4095, -0.4576, -0.4234, -4.5267],
                                                   [ 0.4325, -1.9277,  1.8246, -2.8056]]]]).unsqueeze(0)
-            let revyd = revy.isNoDiff()
+            let revyd = revy.isNoDiff
             let revydCorrect = true
 
             Assert.True(fwdz.allclose(fwdzCorrect, 0.05))
@@ -4326,7 +4325,7 @@ type TestDerivativesConv () =
                                  
                                            [[ 0.4078, -0.4072],
                                             [ 0.6948, -2.6370]]]]).unsqueeze(0))            
-            let revxd = revx.isNoDiff()
+            let revxd = revx.isNoDiff
             let revxdCorrect = true
             let revyd = revy.derivative
             let revydCorrect = combo.tensor([[[[-0.8636,  1.4133, -0.4328],
@@ -4354,7 +4353,6 @@ type TestDerivativesConv () =
                                                   [-2.7707, -0.8894,  3.5974],
                                                   [-1.2403,  3.5118,  0.2221]]]]).unsqueeze(0)
 
-            printfn "%A" fwdzd
             Assert.True(fwdz.allclose(fwdzCorrect, 0.05))
             Assert.True(fwdzd.allclose(fwdzdCorrect, 0.05))
             Assert.True(revz.allclose(revzCorrect, 0.05))

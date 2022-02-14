@@ -25,12 +25,12 @@ type dsharp =
     ///  The data is converted from arrays, sequences, lists and tuples of primitive values to a tensor whose shape is inferred from the data.
     /// </remarks>
     /// <param name="value">The .NET object used to form the initial values for the tensor.</param>
-    /// <param name="dtype">The desired element type of returned tensor. Default: if None, uses Dtype.Default.</param>
     /// <param name="device">The desired device of returned tensor. Default: if None, uses Device.Default.</param>
+    /// <param name="dtype">The desired element type of returned tensor. Default: if None, uses Dtype.Default.</param>
     /// <param name="backend">The desired backend of returned tensor. Default: if None, uses Backend.Default.</param>
     /// <remarks>The fastest creation technique is a one dimensional array matching the desired dtype. Then use 'view' to reshape.</remarks>
-    static member tensor(value:obj, ?dtype:Dtype, ?device:Device, ?backend:Backend) =
-        Tensor.create(value=value, ?dtype=dtype, ?device=device, ?backend=backend)
+    static member tensor(value:obj, ?device:Device, ?dtype:Dtype, ?backend:Backend) =
+        Tensor.create(value=value, ?device=device, ?dtype=dtype, ?backend=backend)
 
     /// <summary>Seeds all backends with the given random seed, or a new seed based on the current time if no seed is specified.</summary>
     static member seed(?seed:int) = BackendTensorStatics.Seed(?seed=seed)
@@ -48,8 +48,8 @@ type dsharp =
     /// <summary>Loads the tensor from the given file using the given element type and configuration.</summary>
     ///
     /// <param name="fileName">The file from which to load the tensor.</param>
-    /// <param name="dtype">The element type of the resulting tensor. Defaults to the element type of the saved tensor.</param>
     /// <param name="device">The device of the resulting tensor. Default: if None, uses Device.Default.</param>
+    /// <param name="dtype">The element type of the resulting tensor. Defaults to the element type of the saved tensor.</param>
     /// <param name="backend">The device of the resulting tensor. Default: if None, uses Backend.Default.</param>
     ///
     /// <remarks>
@@ -57,96 +57,96 @@ type dsharp =
     ///    The tensor is first loaded into that backend and then moved. As a result, intermediate tensors may be created
     ///    in the process of reloading.
     /// </remarks>
-    static member load(fileName, ?dtype:Dtype, ?device:Device, ?backend:Backend) =
-        Tensor.load(fileName, ?dtype=dtype, ?device=device, ?backend=backend)
+    static member load(fileName, ?device:Device, ?dtype:Dtype, ?backend:Backend) =
+        Tensor.load(fileName, ?device=device, ?dtype=dtype, ?backend=backend)
 
     /// <summary>Returns a new uninitialized tensor filled with arbitrary values for the given shape, element type and configuration</summary>
     /// <param name="shape">The desired shape of returned tensor.</param>
-    /// <param name="dtype">The desired element type of returned tensor. Default: if None, uses Dtype.Default.</param>
     /// <param name="device">The desired device of returned tensor. Default: if None, uses Device.Default.</param>
+    /// <param name="dtype">The desired element type of returned tensor. Default: if None, uses Dtype.Default.</param>
     /// <param name="backend">The desired backend of returned tensor. Default: if None, uses Backend.Default.</param>
-    static member empty(shape:seq<int>, ?dtype:Dtype, ?device:Device, ?backend:Backend) =
-        TensorC(RawTensor.Empty(shape|>Seq.toArrayQuick, ?dtype=dtype, ?device=device, ?backend=backend))
+    static member empty(shape:seq<int>, ?device:Device, ?dtype:Dtype, ?backend:Backend) =
+        TensorC(RawTensor.Empty(shape|>Seq.toArrayQuick, ?device=device, ?dtype=dtype, ?backend=backend))
 
     /// <summary>Returns a new uninitialized tensor filled with arbitrary values for the given length, element type and configuration</summary>
     /// <param name="length">The length of the returned tensor.</param>
-    /// <param name="dtype">The desired element type of returned tensor. Default: if None, uses Dtype.Default.</param>
     /// <param name="device">The desired device of returned tensor. Default: if None, uses Device.Default.</param>
+    /// <param name="dtype">The desired element type of returned tensor. Default: if None, uses Dtype.Default.</param>
     /// <param name="backend">The desired backend of returned tensor. Default: if None, uses Backend.Default.</param>
-    static member empty(length:int, ?dtype:Dtype, ?device:Device, ?backend:Backend) =
-        TensorC(RawTensor.Empty([|length|], ?dtype=dtype, ?device=device, ?backend=backend))
+    static member empty(length:int, ?device:Device, ?dtype:Dtype, ?backend:Backend) =
+        TensorC(RawTensor.Empty([|length|], ?device=device, ?dtype=dtype, ?backend=backend))
 
     /// <summary>Get the scalar zero tensor for the given configuration</summary>
-    /// <param name="dtype">The desired element type of returned tensor. Default: if None, uses Dtype.Default.</param>
     /// <param name="device">The desired device of returned tensor. Default: if None, uses Device.Default.</param>
+    /// <param name="dtype">The desired element type of returned tensor. Default: if None, uses Dtype.Default.</param>
     /// <param name="backend">The desired backend of returned tensor. Default: if None, uses Backend.Default.</param>
-    static member zero(?dtype:Dtype, ?device:Device, ?backend:Backend) =
-        TensorC(RawTensor.Zero(?dtype=dtype, ?device=device, ?backend=backend))
+    static member zero(?device:Device, ?dtype:Dtype, ?backend:Backend) =
+        TensorC(RawTensor.Zero(?device=device, ?dtype=dtype, ?backend=backend))
 
     /// <summary>Returns a new tensor filled with '0' values for the given shape, element type and configuration</summary>
     /// <param name="shape">The desired shape of returned tensor.</param>
-    /// <param name="dtype">The desired element type of returned tensor. Default: if None, uses Dtype.Default.</param>
     /// <param name="device">The desired device of returned tensor. Default: if None, uses Device.Default.</param>
+    /// <param name="dtype">The desired element type of returned tensor. Default: if None, uses Dtype.Default.</param>
     /// <param name="backend">The desired backend of returned tensor. Default: if None, uses Backend.Default.</param>
-    static member zeros(shape:seq<int>, ?dtype:Dtype, ?device:Device, ?backend:Backend) =
-        TensorC(RawTensor.Zeros(shape|>Shape.create, ?dtype=dtype, ?device=device, ?backend=backend))
+    static member zeros(shape:seq<int>, ?device:Device, ?dtype:Dtype, ?backend:Backend) =
+        TensorC(RawTensor.Zeros(shape|>Shape.create, ?device=device, ?dtype=dtype, ?backend=backend))
 
     /// <summary>Returns a new tensor filled with '0' values for the given length, element type and configuration</summary>
     /// <param name="length">The length of the returned tensor.</param>
-    /// <param name="dtype">The desired element type of returned tensor. Default: if None, uses Dtype.Default.</param>
     /// <param name="device">The desired device of returned tensor. Default: if None, uses Device.Default.</param>
+    /// <param name="dtype">The desired element type of returned tensor. Default: if None, uses Dtype.Default.</param>
     /// <param name="backend">The desired backend of returned tensor. Default: if None, uses Backend.Default.</param>
-    static member zeros(length:int, ?dtype:Dtype, ?device:Device, ?backend:Backend) =
-        TensorC(RawTensor.Zeros([|length|], ?dtype=dtype, ?device=device, ?backend=backend))
+    static member zeros(length:int, ?device:Device, ?dtype:Dtype, ?backend:Backend) =
+        TensorC(RawTensor.Zeros([|length|], ?device=device, ?dtype=dtype, ?backend=backend))
 
     /// <summary>Get the scalar '1' tensor for the given configuration</summary>
-    /// <param name="dtype">The desired element type of returned tensor. Default: if None, uses Dtype.Default.</param>
     /// <param name="device">The desired device of returned tensor. Default: if None, uses Device.Default.</param>
+    /// <param name="dtype">The desired element type of returned tensor. Default: if None, uses Dtype.Default.</param>
     /// <param name="backend">The desired backend of returned tensor. Default: if None, uses Backend.Default.</param>
-    static member one(?dtype:Dtype, ?device:Device, ?backend:Backend) =
-        TensorC(RawTensor.One(?dtype=dtype, ?device=device, ?backend=backend))
+    static member one(?device:Device, ?dtype:Dtype, ?backend:Backend) =
+        TensorC(RawTensor.One(?device=device, ?dtype=dtype, ?backend=backend))
 
     /// <summary>Returns a new tensor filled with '1' values for the given shape, element type and configuration</summary>
     /// <param name="shape">The desired shape of returned tensor.</param>
-    /// <param name="dtype">The desired element type of returned tensor. Default: if None, uses Dtype.Default.</param>
     /// <param name="device">The desired device of returned tensor. Default: if None, uses Device.Default.</param>
+    /// <param name="dtype">The desired element type of returned tensor. Default: if None, uses Dtype.Default.</param>
     /// <param name="backend">The desired backend of returned tensor. Default: if None, uses Backend.Default.</param>
-    static member ones(shape:seq<int>, ?dtype:Dtype, ?device:Device, ?backend:Backend) =
-        TensorC(RawTensor.Ones(shape|>Shape.create, ?dtype=dtype, ?device=device, ?backend=backend))
+    static member ones(shape:seq<int>, ?device:Device, ?dtype:Dtype, ?backend:Backend) =
+        TensorC(RawTensor.Ones(shape|>Shape.create, ?device=device, ?dtype=dtype, ?backend=backend))
 
     /// <summary>Returns a new tensor of the given length filled with '1' values for the given element type and configuration</summary>
     /// <param name="length">The length of the returned tensor.</param>
-    /// <param name="dtype">The desired element type of returned tensor. Default: if None, uses Dtype.Default.</param>
     /// <param name="device">The desired device of returned tensor. Default: if None, uses Device.Default.</param>
+    /// <param name="dtype">The desired element type of returned tensor. Default: if None, uses Dtype.Default.</param>
     /// <param name="backend">The desired backend of returned tensor. Default: if None, uses Backend.Default.</param>
-    static member ones(length:int, ?dtype:Dtype, ?device:Device, ?backend:Backend) =
-        TensorC(RawTensor.Ones([|length|], ?dtype=dtype, ?device=device, ?backend=backend))
+    static member ones(length:int, ?device:Device, ?dtype:Dtype, ?backend:Backend) =
+        TensorC(RawTensor.Ones([|length|], ?device=device, ?dtype=dtype, ?backend=backend))
 
     /// <summary>Returns a new tensor filled with the scalar <paramref name="value" />, for the given shape, element type and configuration</summary>
     /// <param name="shape">The desired shape of returned tensor.</param>
     /// <param name="value">The scalar used to form the initial values for the tensor.</param>
-    /// <param name="dtype">The desired element type of returned tensor. Default: if None, uses Dtype.Default.</param>
     /// <param name="device">The desired device of returned tensor. Default: if None, uses Device.Default.</param>
+    /// <param name="dtype">The desired element type of returned tensor. Default: if None, uses Dtype.Default.</param>
     /// <param name="backend">The desired backend of returned tensor. Default: if None, uses Backend.Default.</param>
-    static member full(shape:seq<int>, value:scalar, ?dtype:Dtype, ?device:Device, ?backend:Backend) =
-        TensorC(RawTensor.Full(shape|>Shape.create, value, ?dtype=dtype, ?device=device, ?backend=backend))
+    static member full(shape:seq<int>, value:scalar, ?device:Device, ?dtype:Dtype, ?backend:Backend) =
+        TensorC(RawTensor.Full(shape|>Shape.create, value, ?device=device, ?dtype=dtype, ?backend=backend))
 
     /// <summary>Returns a new tensor of the given length filled with <paramref name="value" />, for the given element type and configuration</summary>
     /// <param name="length">The length of the returned tensor.</param>
     /// <param name="value">The scalar giving the the initial values for the tensor.</param>
-    /// <param name="dtype">The desired element type of returned tensor. Default: if None, uses Dtype.Default.</param>
     /// <param name="device">The desired device of returned tensor. Default: if None, uses Device.Default.</param>
+    /// <param name="dtype">The desired element type of returned tensor. Default: if None, uses Dtype.Default.</param>
     /// <param name="backend">The desired backend of returned tensor. Default: if None, uses Backend.Default.</param>
-    static member full(length:int, value:scalar, ?dtype:Dtype, ?device:Device, ?backend:Backend) =
-        dsharp.zero(?dtype=dtype, ?device=device, ?backend=backend).fullLike(value, [|length|])
+    static member full(length:int, value:scalar, ?device:Device, ?dtype:Dtype, ?backend:Backend) =
+        dsharp.zero(?device=device, ?dtype=dtype, ?backend=backend).fullLike(value, [|length|])
 
     /// <summary>Returns a new scalar tensor with the value <paramref name="value" />, for the given element type and configuration</summary>
     /// <param name="value">The scalar giving the the initial values for the tensor.</param>
-    /// <param name="dtype">The desired element type of returned tensor. Default: if None, uses Dtype.Default.</param>
     /// <param name="device">The desired device of returned tensor. Default: if None, uses Device.Default.</param>
+    /// <param name="dtype">The desired element type of returned tensor. Default: if None, uses Dtype.Default.</param>
     /// <param name="backend">The desired backend of returned tensor. Default: if None, uses Backend.Default.</param>
-    static member scalar(value:scalar, ?dtype:Dtype, ?device:Device, ?backend:Backend) =
-        dsharp.full(Shape.scalar, value, ?dtype=dtype, ?device=device, ?backend=backend)
+    static member scalar(value:scalar, ?device:Device, ?dtype:Dtype, ?backend:Backend) =
+        dsharp.full(Shape.scalar, value, ?device=device, ?dtype=dtype, ?backend=backend)
 
     /// <summary>
     /// Returns a 1-D tensor of size \(\left\lceil \frac{\text{end} - \text{start}}{\text{step}} \right\rceil\)
@@ -159,11 +159,11 @@ type dsharp =
     /// <param name="endVal">The ending value for the set of points.</param>
     /// <param name="startVal">The starting value for the set of points. Default: 0.</param>
     /// <param name="step">The gap between each pair of adjacent points. Default: 1.</param>
-    /// <param name="dtype">The desired element type of returned tensor. Default: if None, uses Dtype.Default.</param>
     /// <param name="device">The desired device of returned tensor. Default: if None, uses Device.Default.</param>
+    /// <param name="dtype">The desired element type of returned tensor. Default: if None, uses Dtype.Default.</param>
     /// <param name="backend">The desired backend of returned tensor. Default: if None, uses Backend.Default.</param>
-    static member arange(endVal:float, ?startVal:float, ?step:float, ?dtype:Dtype, ?device:Device, ?backend:Backend) =
-        dsharp.zero(?dtype=dtype, ?device=device, ?backend=backend).arangeLike(endVal=endVal, ?startVal=startVal, ?step=step)
+    static member arange(endVal:float, ?startVal:float, ?step:float, ?device:Device, ?dtype:Dtype, ?backend:Backend) =
+        dsharp.zero(?device=device, ?dtype=dtype, ?backend=backend).arangeLike(endVal=endVal, ?startVal=startVal, ?step=step)
 
     /// <summary>
     /// Returns a 1-D tensor of size \(\left\lceil \frac{\text{end} - \text{start}}{\text{step}} \right\rceil\)
@@ -172,99 +172,173 @@ type dsharp =
     /// <param name="endVal">The ending value for the set of points.</param>
     /// <param name="startVal">The starting value for the set of points. Default: 0.</param>
     /// <param name="step">The gap between each pair of adjacent points. Default: 1.</param>
-    /// <param name="dtype">The desired element type of returned tensor. Default: if None, uses Dtype.Default.</param>
     /// <param name="device">The desired device of returned tensor. Default: if None, uses Device.Default.</param>
+    /// <param name="dtype">The desired element type of returned tensor. Default: if None, uses Dtype.Default.</param>
     /// <param name="backend">The desired backend of returned tensor. Default: if None, uses Backend.Default.</param>
-    static member arange(endVal:int, ?startVal:int, ?step:int, ?dtype:Dtype, ?device:Device, ?backend:Backend) =
-        dsharp.zero(?dtype=dtype, ?device=device, ?backend=backend).arangeLike(endVal=endVal, ?startVal=startVal, ?step=step)
+    static member arange(endVal:int, ?startVal:int, ?step:int, ?device:Device, ?dtype:Dtype, ?backend:Backend) =
+        dsharp.zero(?device=device, ?dtype=dtype, ?backend=backend).arangeLike(endVal=endVal, ?startVal=startVal, ?step=step)
+
+    /// <summary>
+    /// Returns a 1-D tensor of size <paramref name="steps"/> whose values are evenly spaced from <paramref name="startVal"/> to <paramref name="endVal"/>. The values are going to be: \(
+    /// (\text{startVal},
+    /// \text{startVal} + \frac{\text{endVal} - \text{startVal}}{\text{steps} - 1},
+    /// \ldots,
+    /// \text{startVal} + (\text{steps} - 2) * \frac{\text{endVal} - \text{startVal}}{\text{steps} - 1},
+    /// \text{endVal}) 
+    /// \)
+    /// </summary>
+    /// <param name="startVal">The starting value for the set of points.</param>
+    /// <param name="endVal">The ending value for the set of points.</param>
+    /// <param name="steps">The size of the returned tensor.</param>
+    /// <param name="device">The desired device of returned tensor. Default: if None, uses Device.Default.</param>
+    /// <param name="dtype">The desired element type of returned tensor. Default: if None, uses Dtype.Default.</param>
+    /// <param name="backend">The desired backend of returned tensor. Default: if None, uses Backend.Default.</param>
+    static member linspace(startVal:float, endVal:float, steps:int, ?device:Device, ?dtype:Dtype, ?backend:Backend) =
+        dsharp.zero(?device=device, ?dtype=dtype, ?backend=backend).linspaceLike(startVal=startVal, endVal=endVal, steps=steps)
+
+    /// <summary>
+    /// Returns a 1-D tensor of size <paramref name="steps"/> whose values are evenly spaced from <paramref name="startVal"/> to <paramref name="endVal"/>. The values are going to be: \(
+    /// (\text{startVal},
+    /// \text{startVal} + \frac{\text{endVal} - \text{startVal}}{\text{steps} - 1},
+    /// \ldots,
+    /// \text{startVal} + (\text{steps} - 2) * \frac{\text{endVal} - \text{startVal}}{\text{steps} - 1},
+    /// \text{endVal}) 
+    /// \)
+    /// </summary>
+    /// <param name="startVal">The starting value for the set of points.</param>
+    /// <param name="endVal">The ending value for the set of points.</param>
+    /// <param name="steps">The size of the returned tensor.</param>
+    /// <param name="device">The desired device of returned tensor. Default: if None, uses Device.Default.</param>
+    /// <param name="dtype">The desired element type of returned tensor. Default: if None, uses Dtype.Default.</param>
+    /// <param name="backend">The desired backend of returned tensor. Default: if None, uses Backend.Default.</param>
+    static member linspace(startVal:int, endVal:int, steps:int, ?device:Device, ?dtype:Dtype, ?backend:Backend) =
+        dsharp.zero(?device=device, ?dtype=dtype, ?backend=backend).linspaceLike(startVal=startVal, endVal=endVal, steps=steps)
+
+    /// <summary>
+    /// Returns a 1-D tensor of size <paramref name="steps"/> whose values are evenly spaced logarithmically from \(\text{baseVal}^{\text{startVal}}\) to \(\text{baseVal}^{\text{endVal}}\). The values are going to be: \(
+    /// (\text{baseVal}^{\text{startVal}},
+    /// \text{baseVal}^{(\text{startVal} + \frac{\text{endVal} - \text{startVal}}{ \text{steps} - 1})},
+    /// \ldots,
+    /// \text{baseVal}^{(\text{startVal} + (\text{steps} - 2) * \frac{\text{endVal} - \text{startVal}}{ \text{steps} - 1})},
+    /// \text{baseVal}^{\text{endVal}})
+    /// \)
+    /// </summary>
+    /// <param name="startVal">The starting value for the set of points.</param>
+    /// <param name="endVal">The ending value for the set of points.</param>
+    /// <param name="steps">The size of the returned tensor.</param>
+    /// <param name="baseVal">The base of the logarithm. Default: 10.0.</param>
+    /// <param name="device">The desired device of returned tensor. Default: if None, uses Device.Default.</param>
+    /// <param name="dtype">The desired element type of returned tensor. Default: if None, uses Dtype.Default.</param>
+    /// <param name="backend">The desired backend of returned tensor. Default: if None, uses Backend.Default.</param>
+    static member logspace(startVal:float, endVal:float, steps:int, ?baseVal:float, ?device:Device, ?dtype:Dtype, ?backend:Backend) =
+        dsharp.zero(?device=device, ?dtype=dtype, ?backend=backend).logspaceLike(startVal=startVal, endVal=endVal, steps=steps, ?baseVal=baseVal)
+
+    /// <summary>
+    /// Returns a 1-D tensor of size <paramref name="steps"/> whose values are evenly spaced logarithmically from \(\text{baseVal}^{\text{startVal}}\) to \(\text{baseVal}^{\text{endVal}}\). The values are going to be: \(
+    /// (\text{baseVal}^{\text{startVal}},
+    /// \text{baseVal}^{(\text{startVal} + \frac{\text{endVal} - \text{startVal}}{ \text{steps} - 1})},
+    /// \ldots,
+    /// \text{baseVal}^{(\text{startVal} + (\text{steps} - 2) * \frac{\text{endVal} - \text{startVal}}{ \text{steps} - 1})},
+    /// \text{baseVal}^{\text{endVal}})
+    /// \)
+    /// </summary>
+    /// <param name="startVal">The starting value for the set of points.</param>
+    /// <param name="endVal">The ending value for the set of points.</param>
+    /// <param name="steps">The size of the returned tensor.</param>
+    /// <param name="baseVal">The base of the logarithm. Default: 10.</param>
+    /// <param name="device">The desired device of returned tensor. Default: if None, uses Device.Default.</param>
+    /// <param name="dtype">The desired element type of returned tensor. Default: if None, uses Dtype.Default.</param>
+    /// <param name="backend">The desired backend of returned tensor. Default: if None, uses Backend.Default.</param>
+    static member logspace(startVal:int, endVal:int, steps:int, ?baseVal:int, ?device:Device, ?dtype:Dtype, ?backend:Backend) =
+        dsharp.zero(?device=device, ?dtype=dtype, ?backend=backend).logspaceLike(startVal=startVal, endVal=endVal, steps=steps, ?baseVal=baseVal)
 
     /// <summary>Returns a 2-D tensor with ones on the diagonal and zeros elsewhere.</summary>
     /// <param name="rows">The number of rows</param>
     /// <param name="cols">The number of columns with default being n</param>
-    /// <param name="dtype">The desired element type of returned tensor. Default: if None, uses Dtype.Default.</param>
     /// <param name="device">The desired device of returned tensor. Default: if None, uses Device.Default.</param>
+    /// <param name="dtype">The desired element type of returned tensor. Default: if None, uses Dtype.Default.</param>
     /// <param name="backend">The desired backend of returned tensor. Default: if None, uses Backend.Default.</param>
-    static member eye(rows:int, ?cols:int, ?dtype:Dtype, ?device:Device, ?backend:Backend) =
-        Tensor.eye(rows=rows, ?cols=cols, ?dtype=dtype, ?device=device, ?backend=backend)
+    static member eye(rows:int, ?cols:int, ?device:Device, ?dtype:Dtype, ?backend:Backend) =
+        Tensor.eye(rows=rows, ?cols=cols, ?device=device, ?dtype=dtype, ?backend=backend)
 
     /// <summary>Returns a one-hot tensor, with one location set to 1, and all others 0.</summary>
     /// <param name="length">The length of the returned tensor.</param>
     /// <param name="hot">The location to set to 1.</param>
-    /// <param name="dtype">The desired element type of returned tensor. Default: if None, uses Dtype.Default.</param>
     /// <param name="device">The desired device of returned tensor. Default: if None, uses Device.Default.</param>
+    /// <param name="dtype">The desired element type of returned tensor. Default: if None, uses Dtype.Default.</param>
     /// <param name="backend">The desired backend of returned tensor. Default: if None, uses Backend.Default.</param>
-    static member onehot(length:int, hot:int, ?dtype:Dtype, ?device:Device, ?backend:Backend) = 
-        dsharp.zero(?dtype=dtype, ?device=device, ?backend=backend).onehotLike(length, hot)
+    static member onehot(length:int, hot:int, ?device:Device, ?dtype:Dtype, ?backend:Backend) = 
+        dsharp.zero(?device=device, ?dtype=dtype, ?backend=backend).onehotLike(length, hot)
 
     /// <summary>Returns a tensor filled with random numbers from a uniform distribution on the interval [0, 1)</summary>
     /// <param name="shape">The desired shape of returned tensor.</param>
-    /// <param name="dtype">The desired element type of returned tensor. Default: if None, uses Dtype.Default.</param>
     /// <param name="device">The desired device of returned tensor. Default: if None, uses Device.Default.</param>
+    /// <param name="dtype">The desired element type of returned tensor. Default: if None, uses Dtype.Default.</param>
     /// <param name="backend">The desired backend of returned tensor. Default: if None, uses Backend.Default.</param>
-    static member rand(shape:seq<int>, ?dtype:Dtype, ?device:Device, ?backend:Backend) =
-        TensorC(RawTensor.Random(shape|>Shape.create, ?dtype=dtype, ?device=device, ?backend=backend))
+    static member rand(shape:seq<int>, ?device:Device, ?dtype:Dtype, ?backend:Backend) =
+        TensorC(RawTensor.Random(shape|>Shape.create, ?device=device, ?dtype=dtype, ?backend=backend))
 
     /// <summary>Returns a tensor filled with random numbers from a uniform distribution on the interval [0, 1)</summary>
     /// <param name="length">The length of the returned tensor.</param>
-    /// <param name="dtype">The desired element type of returned tensor. Default: if None, uses Dtype.Default.</param>
     /// <param name="device">The desired device of returned tensor. Default: if None, uses Device.Default.</param>
+    /// <param name="dtype">The desired element type of returned tensor. Default: if None, uses Dtype.Default.</param>
     /// <param name="backend">The desired backend of returned tensor. Default: if None, uses Backend.Default.</param>
-    static member rand(length:int, ?dtype:Dtype, ?device:Device, ?backend:Backend) =
-        TensorC(RawTensor.Random([|length|], ?dtype=dtype, ?device=device, ?backend=backend))
+    static member rand(length:int, ?device:Device, ?dtype:Dtype, ?backend:Backend) =
+        TensorC(RawTensor.Random([|length|], ?device=device, ?dtype=dtype, ?backend=backend))
 
     /// <summary>Returns a tensor filled with random numbers from a normal distribution with mean 0 and variance 1 (also called the standard normal distribution).</summary>
     /// <param name="shape">The desired shape of returned tensor.</param>
-    /// <param name="dtype">The desired element type of returned tensor. Default: if None, uses Dtype.Default.</param>
     /// <param name="device">The desired device of returned tensor. Default: if None, uses Device.Default.</param>
+    /// <param name="dtype">The desired element type of returned tensor. Default: if None, uses Dtype.Default.</param>
     /// <param name="backend">The desired backend of returned tensor. Default: if None, uses Backend.Default.</param>
-    static member randn(shape:seq<int>, ?dtype:Dtype, ?device:Device, ?backend:Backend) =
-        TensorC(RawTensor.RandomNormal(shape|>Shape.create, ?dtype=dtype, ?device=device, ?backend=backend))
+    static member randn(shape:seq<int>, ?device:Device, ?dtype:Dtype, ?backend:Backend) =
+        TensorC(RawTensor.RandomNormal(shape|>Shape.create, ?device=device, ?dtype=dtype, ?backend=backend))
 
     /// <summary>Returns a tensor filled with random numbers from a normal distribution with mean 0 and variance 1 (also called the standard normal distribution).</summary>
     /// <param name="length">The length of the returned tensor.</param>
-    /// <param name="dtype">The desired element type of returned tensor. Default: if None, uses Dtype.Default.</param>
     /// <param name="device">The desired device of returned tensor. Default: if None, uses Device.Default.</param>
+    /// <param name="dtype">The desired element type of returned tensor. Default: if None, uses Dtype.Default.</param>
     /// <param name="backend">The desired backend of returned tensor. Default: if None, uses Backend.Default.</param>
-    static member randn(length:int, ?dtype:Dtype, ?device:Device, ?backend:Backend) =
-        TensorC(RawTensor.RandomNormal([|length|], ?dtype=dtype, ?device=device, ?backend=backend))
+    static member randn(length:int, ?device:Device, ?dtype:Dtype, ?backend:Backend) =
+        TensorC(RawTensor.RandomNormal([|length|], ?device=device, ?dtype=dtype, ?backend=backend))
 
     /// <summary>Returns a tensor filled with random integers generated uniformly between low (inclusive) and high (exclusive).</summary>
     /// <param name="low">Lowest integer to be drawn from the distribution. Default: 0..</param>
     /// <param name="high">One above the highest integer to be drawn from the distribution.</param>
     /// <param name="shape">The desired shape of returned tensor.</param>
-    /// <param name="dtype">The desired element type of returned tensor. Default: if None, uses Dtype.Default.</param>
     /// <param name="device">The desired device of returned tensor. Default: if None, uses Device.Default.</param>
+    /// <param name="dtype">The desired element type of returned tensor. Default: if None, uses Dtype.Default.</param>
     /// <param name="backend">The desired backend of returned tensor. Default: if None, uses Backend.Default.</param>
-    static member randint(low:int, high:int, shape:seq<int>, ?dtype:Dtype, ?device:Device, ?backend:Backend) =
-        TensorC(RawTensor.RandomInt(shape|>Shape.create, low, high, ?dtype=dtype, ?device=device, ?backend=backend))
+    static member randint(low:int, high:int, shape:seq<int>, ?device:Device, ?dtype:Dtype, ?backend:Backend) =
+        TensorC(RawTensor.RandomInt(shape|>Shape.create, low, high, ?device=device, ?dtype=dtype, ?backend=backend))
 
     /// <summary>Returns a tensor filled with random integers generated uniformly between low (inclusive) and high (exclusive).</summary>
     /// <param name="low">Lowest integer to be drawn from the distribution. Default: 0..</param>
     /// <param name="high">One above the highest integer to be drawn from the distribution.</param>
     /// <param name="length">The length of the returned tensor.</param>
-    /// <param name="dtype">The desired element type of returned tensor. Default: if None, uses Dtype.Default.</param>
     /// <param name="device">The desired device of returned tensor. Default: if None, uses Device.Default.</param>
+    /// <param name="dtype">The desired element type of returned tensor. Default: if None, uses Dtype.Default.</param>
     /// <param name="backend">The desired backend of returned tensor. Default: if None, uses Backend.Default.</param>
-    static member randint(low:int, high:int, length:int, ?dtype:Dtype, ?device:Device, ?backend:Backend) =
-        TensorC(RawTensor.RandomInt([|length|], low, high, ?dtype=dtype, ?device=device, ?backend=backend))
+    static member randint(low:int, high:int, length:int, ?device:Device, ?dtype:Dtype, ?backend:Backend) =
+        TensorC(RawTensor.RandomInt([|length|], low, high, ?device=device, ?dtype=dtype, ?backend=backend))
 
     /// <summary>Returns a tensor where each row contains numSamples indices sampled from the multinomial probability distribution located in the corresponding row of tensor input.</summary>
     /// <param name="probs">The input tensor containing probabilities.</param>
     /// <param name="numSamples">The number of samples to draw.</param>
     /// <param name="normalize">Indicates where the probabilities should first be normalized by their sum.</param>
-    /// <param name="dtype">The desired element type of returned tensor. Default: if None, uses Dtype.Default.</param>
     /// <param name="device">The desired device of returned tensor. Default: if None, uses Device.Default.</param>
+    /// <param name="dtype">The desired element type of returned tensor. Default: if None, uses Dtype.Default.</param>
     /// <param name="backend">The desired backend of returned tensor. Default: if None, uses Backend.Default.</param>
-    static member multinomial(probs:Tensor, numSamples:int, ?normalize:bool, ?dtype:Dtype, ?device:Device, ?backend:Backend) =
-        probs.multinomial(numSamples, ?normalize=normalize, ?dtype=dtype, ?device=device, ?backend=backend)
+    static member multinomial(probs:Tensor, numSamples:int, ?normalize:bool, ?device:Device, ?dtype:Dtype, ?backend:Backend) =
+        probs.multinomial(numSamples, ?normalize=normalize, ?device=device, ?dtype=dtype, ?backend=backend)
 
     /// <summary>Draws binary random numbers (0 or 1) from a Bernoulli distribution</summary>
     /// <param name="probs">The input tensor of probability values for the Bernoulli distribution.</param>
-    /// <param name="dtype">The desired element type of returned tensor. Default: if None, uses Dtype.Default.</param>
     /// <param name="device">The desired device of returned tensor. Default: if None, uses Device.Default.</param>
+    /// <param name="dtype">The desired element type of returned tensor. Default: if None, uses Dtype.Default.</param>
     /// <param name="backend">The desired backend of returned tensor. Default: if None, uses Backend.Default.</param>
-    static member bernoulli(probs:Tensor, ?dtype:Dtype, ?device:Device, ?backend:Backend) =
-        probs.bernoulli(?dtype=dtype, ?device=device, ?backend=backend)
+    static member bernoulli(probs:Tensor, ?device:Device, ?dtype:Dtype, ?backend:Backend) =
+        probs.bernoulli(?device=device, ?dtype=dtype, ?backend=backend)
 
     /// <summary>Randomly zeroes some of the elements of the input tensor with probability p using samples from a Bernoulli distribution</summary>
     /// <param name="input">The input tensor.</param>
@@ -284,30 +358,30 @@ type dsharp =
     /// <summary>Returns a new tensor filled with '0' values with characteristics based on the input tensor.</summary>
     /// <param name="input">The shape and characteristics of input will determine those of the output tensor.</param>
     /// <param name="shape">The desired shape of returned tensor. Default: If None, the shape of the input tensor is used.</param>
-    /// <param name="dtype">The desired element type of returned tensor. Default: if None, the element type of the input tensor is used.</param>
     /// <param name="device">The desired device of returned tensor. Default: if None, the device of the input tensor is used.</param>
+    /// <param name="dtype">The desired element type of returned tensor. Default: if None, the element type of the input tensor is used.</param>
     /// <param name="backend">The desired backend of returned tensor. Default: if None, the backend of the input tensor is used.</param>
-    static member zerosLike(input:Tensor, ?shape:seq<int>, ?dtype, ?device, ?backend) =
-        input.zerosLike(?shape=shape, ?dtype=dtype, ?device=device, ?backend=backend)
+    static member zerosLike(input:Tensor, ?shape:seq<int>, ?device, ?dtype, ?backend) =
+        input.zerosLike(?shape=shape, ?device=device, ?dtype=dtype, ?backend=backend)
 
     /// <summary>Returns a new tensor filled with '1' values with characteristics based on the input tensor.</summary>
     /// <param name="input">The shape and characteristics of input will determine those of the output tensor.</param>
     /// <param name="shape">The desired shape of returned tensor. Default: If None, the shape of the input tensor is used.</param>
-    /// <param name="dtype">The desired element type of returned tensor. Default: if None, the element type of the input tensor is used.</param>
     /// <param name="device">The desired device of returned tensor. Default: if None, the device of the input tensor is used.</param>
+    /// <param name="dtype">The desired element type of returned tensor. Default: if None, the element type of the input tensor is used.</param>
     /// <param name="backend">The desired backend of returned tensor. Default: if None, the backend of the input tensor is used.</param>
-    static member onesLike(input:Tensor, ?shape:seq<int>, ?dtype, ?device, ?backend) =
-        input.onesLike(?shape=shape, ?dtype=dtype, ?device=device, ?backend=backend)
+    static member onesLike(input:Tensor, ?shape:seq<int>, ?device, ?dtype, ?backend) =
+        input.onesLike(?shape=shape, ?device=device, ?dtype=dtype, ?backend=backend)
 
     /// <summary>Returns a new tensor filled with the given scalar value with characteristics based on the input tensor.</summary>
     /// <param name="input">The shape and characteristics of input will determine those of the output tensor.</param>
     /// <param name="value">The scalar giving the the initial values for the tensor.</param>
     /// <param name="shape">The desired shape of returned tensor. Default: If None, the shape of the input tensor is used.</param>
-    /// <param name="dtype">The desired element type of returned tensor. Default: if None, the element type of the input tensor is used.</param>
     /// <param name="device">The desired device of returned tensor. Default: if None, the device of the input tensor is used.</param>
+    /// <param name="dtype">The desired element type of returned tensor. Default: if None, the element type of the input tensor is used.</param>
     /// <param name="backend">The desired backend of returned tensor. Default: if None, the backend of the input tensor is used.</param>
-    static member fullLike(input:Tensor, value:scalar, ?shape:seq<int>, ?dtype, ?device, ?backend) =
-        input.fullLike(value, ?shape=shape, ?dtype=dtype, ?device=device, ?backend=backend)
+    static member fullLike(input:Tensor, value:scalar, ?shape:seq<int>, ?device, ?dtype, ?backend) =
+        input.fullLike(value, ?shape=shape, ?device=device, ?dtype=dtype, ?backend=backend)
 
     /// <summary>
     /// A version of dsharp.arange with characteristics based on the input tensor.
@@ -317,11 +391,11 @@ type dsharp =
     /// <param name="endVal">The ending value for the set of points.</param>
     /// <param name="startVal">The starting value for the set of points. Default: 0.</param>
     /// <param name="step">The gap between each pair of adjacent points. Default: 1.</param>
-    /// <param name="dtype">The desired element type of returned tensor. Default: if None, the element type of the input tensor is used.</param>
     /// <param name="device">The desired device of returned tensor. Default: if None, the device of the input tensor is used.</param>
+    /// <param name="dtype">The desired element type of returned tensor. Default: if None, the element type of the input tensor is used.</param>
     /// <param name="backend">The desired backend of returned tensor. Default: if None, the backend of the input tensor is used.</param>
-    static member arangeLike(input:Tensor, endVal:float, ?startVal:float, ?step:float, ?dtype:Dtype, ?device:Device, ?backend:Backend) =
-        input.arangeLike(endVal=endVal, ?startVal=startVal, ?step=step, ?dtype=dtype, ?device=device, ?backend=backend)
+    static member arangeLike(input:Tensor, endVal:float, ?startVal:float, ?step:float, ?device:Device, ?dtype:Dtype, ?backend:Backend) =
+        input.arangeLike(endVal=endVal, ?startVal=startVal, ?step=step, ?device=device, ?dtype=dtype, ?backend=backend)
 
     /// <summary>
     /// A version of dsharp.arange with characteristics based on the input tensor.
@@ -331,11 +405,11 @@ type dsharp =
     /// <param name="endVal">The ending value for the set of points.</param>
     /// <param name="startVal">The starting value for the set of points. Default: 0.</param>
     /// <param name="step">The gap between each pair of adjacent points. Default: 1.</param>
-    /// <param name="dtype">The desired element type of returned tensor. Default: if None, the element type of the input tensor is used.</param>
     /// <param name="device">The desired device of returned tensor. Default: if None, the device of the input tensor is used.</param>
+    /// <param name="dtype">The desired element type of returned tensor. Default: if None, the element type of the input tensor is used.</param>
     /// <param name="backend">The desired backend of returned tensor. Default: if None, the backend of the input tensor is used.</param>
-    static member arangeLike(input:Tensor, endVal:int, ?startVal:int, ?step:int, ?dtype:Dtype, ?device:Device, ?backend:Backend) =
-        input.arangeLike(endVal=endVal, ?startVal=startVal, ?step=step, ?dtype=dtype, ?device=device, ?backend=backend)
+    static member arangeLike(input:Tensor, endVal:int, ?startVal:int, ?step:int, ?device:Device, ?dtype:Dtype, ?backend:Backend) =
+        input.arangeLike(endVal=endVal, ?startVal=startVal, ?step=step, ?device=device, ?dtype=dtype, ?backend=backend)
 
     /// <summary>
     /// A version of dsharp.onehot with characteristics based on the input tensor.
@@ -344,56 +418,56 @@ type dsharp =
     /// <param name="input">The shape and characteristics of input will determine those of the output tensor.</param>
     /// <param name="length">The length of the returned tensor.</param>
     /// <param name="hot">The location to set to 1.</param>
-    /// <param name="dtype">The desired element type of returned tensor. Default: if None, the element type of the input tensor is used.</param>
     /// <param name="device">The desired device of returned tensor. Default: if None, the device of the input tensor is used.</param>
+    /// <param name="dtype">The desired element type of returned tensor. Default: if None, the element type of the input tensor is used.</param>
     /// <param name="backend">The desired backend of returned tensor. Default: if None, the backend of the input tensor is used.</param>
-    static member onehotLike(input:Tensor, length:int, hot:int, ?dtype, ?device, ?backend) =
-        input.onehotLike(length, hot, ?dtype=dtype, ?device=device, ?backend=backend)
+    static member onehotLike(input:Tensor, length:int, hot:int, ?device, ?dtype, ?backend) =
+        input.onehotLike(length, hot, ?device=device, ?dtype=dtype, ?backend=backend)
 
     /// <summary>Returns a tensor filled with random numbers from a uniform distribution on the interval [0, 1) with characteristics based on the input tensor</summary>
     /// <param name="input">The shape and characteristics of input will determine those of the output tensor.</param>
     /// <param name="shape">The desired shape of returned tensor. Default: If None, the shape of the input tensor is used.</param>
-    /// <param name="dtype">The desired element type of returned tensor. Default: if None, the element type of the input tensor is used.</param>
     /// <param name="device">The desired device of returned tensor. Default: if None, the device of the input tensor is used.</param>
+    /// <param name="dtype">The desired element type of returned tensor. Default: if None, the element type of the input tensor is used.</param>
     /// <param name="backend">The desired backend of returned tensor. Default: if None, the backend of the input tensor is used.</param>
-    static member randLike(input:Tensor, ?shape:seq<int>, ?dtype, ?device, ?backend) =
-            input.randLike(?shape=shape, ?dtype=dtype, ?device=device, ?backend=backend)
+    static member randLike(input:Tensor, ?shape:seq<int>, ?device, ?dtype, ?backend) =
+            input.randLike(?shape=shape, ?device=device, ?dtype=dtype, ?backend=backend)
 
     /// <summary>Returns a tensor filled with random numbers from a normal distribution with mean 0 and variance 1 (also called the standard normal distribution) with characteristics based on the input tensor.</summary>
     /// <param name="input">The shape and characteristics of input will determine those of the output tensor.</param>
     /// <param name="shape">The desired shape of returned tensor. Default: If None, the shape of the input tensor is used.</param>
-    /// <param name="dtype">The desired element type of returned tensor. Default: if None, the element type of the input tensor is used.</param>
     /// <param name="device">The desired device of returned tensor. Default: if None, the device of the input tensor is used.</param>
+    /// <param name="dtype">The desired element type of returned tensor. Default: if None, the element type of the input tensor is used.</param>
     /// <param name="backend">The desired backend of returned tensor. Default: if None, the backend of the input tensor is used.</param>
-    static member randnLike(input:Tensor, ?shape:seq<int>, ?dtype, ?device, ?backend) =
-        input.randnLike(?shape=shape, ?dtype=dtype, ?device=device, ?backend=backend)
+    static member randnLike(input:Tensor, ?shape:seq<int>, ?device, ?dtype, ?backend) =
+        input.randnLike(?shape=shape, ?device=device, ?dtype=dtype, ?backend=backend)
 
     /// <summary>Returns a tensor with the same shape as Tensor input filled with random integers generated uniformly between low (inclusive) and high (exclusive) with characteristics based on the input tensor.</summary>
     /// <param name="input">The shape and characteristics of input will determine those of the output tensor.</param>
     /// <param name="low">Lowest integer to be drawn from the distribution. Default: 0..</param>
     /// <param name="high">One above the highest integer to be drawn from the distribution.</param>
     /// <param name="shape">The desired shape of returned tensor. Default: If None, the shape of the input tensor is used.</param>
-    /// <param name="dtype">The desired element type of returned tensor. Default: if None, the element type of the input tensor is used.</param>
     /// <param name="device">The desired device of returned tensor. Default: if None, the device of the input tensor is used.</param>
+    /// <param name="dtype">The desired element type of returned tensor. Default: if None, the element type of the input tensor is used.</param>
     /// <param name="backend">The desired backend of returned tensor. Default: if None, the backend of the input tensor is used.</param>
-    static member randintLike(input:Tensor, low:int, high:int, ?shape:seq<int>, ?dtype, ?device, ?backend) =
-        input.randintLike(low=low, high=high, ?shape=shape, ?dtype=dtype, ?device=device, ?backend=backend)
+    static member randintLike(input:Tensor, low:int, high:int, ?shape:seq<int>, ?device, ?dtype, ?backend) =
+        input.randintLike(low=low, high=high, ?shape=shape, ?device=device, ?dtype=dtype, ?backend=backend)
 
     /// <summary>Returns the '0' scalar tensor with characteristics based on the input tensor.</summary>
     /// <param name="input">The shape and characteristics of input will determine those of the output tensor.</param>
-    /// <param name="dtype">The desired element type of returned tensor. Default: if None, the element type of the input tensor is used.</param>
     /// <param name="device">The desired device of returned tensor. Default: if None, the device of the input tensor is used.</param>
+    /// <param name="dtype">The desired element type of returned tensor. Default: if None, the element type of the input tensor is used.</param>
     /// <param name="backend">The desired backend of returned tensor. Default: if None, the backend of the input tensor is used.</param>
-    static member zeroLike(input:Tensor, ?dtype, ?device, ?backend) =
-        input.zeroLike(?dtype=dtype, ?device=device, ?backend=backend)
+    static member zeroLike(input:Tensor, ?device, ?dtype, ?backend) =
+        input.zeroLike(?device=device, ?dtype=dtype, ?backend=backend)
 
     /// <summary>Returns the '0' scalar tensor with characteristics based on the input tensor.</summary>
     /// <param name="input">The shape and characteristics of input will determine those of the output tensor.</param>
-    /// <param name="dtype">The desired element type of returned tensor. Default: if None, the element type of the input tensor is used.</param>
     /// <param name="device">The desired device of returned tensor. Default: if None, the device of the input tensor is used.</param>
+    /// <param name="dtype">The desired element type of returned tensor. Default: if None, the element type of the input tensor is used.</param>
     /// <param name="backend">The desired backend of returned tensor. Default: if None, the backend of the input tensor is used.</param>
-    static member oneLike(input:Tensor, ?dtype, ?device, ?backend) =
-        input.oneLike(?dtype=dtype, ?device=device, ?backend=backend)
+    static member oneLike(input:Tensor, ?device, ?dtype, ?backend) =
+        input.oneLike(?device=device, ?dtype=dtype, ?backend=backend)
 
     /// <summary>Returns the total number of elements in the input tensor.</summary>
     /// <param name="input">The input tensor.</param>
@@ -402,11 +476,11 @@ type dsharp =
     /// <summary>Returns a new tensor based on the given .NET value with characteristics based on the input tensor.</summary>
     /// <param name="input">The shape and characteristics of input will determine those of the output tensor.</param>
     /// <param name="value">The .NET object giving the the initial values for the tensor.</param>
-    /// <param name="dtype">The desired element type of returned tensor. Default: if None, the element type of the input tensor is used.</param>
     /// <param name="device">The desired device of returned tensor. Default: if None, the device of the input tensor is used.</param>
+    /// <param name="dtype">The desired element type of returned tensor. Default: if None, the element type of the input tensor is used.</param>
     /// <param name="backend">The desired backend of returned tensor. Default: if None, the backend of the input tensor is used.</param>
-    static member like(input:Tensor, value:obj, ?dtype, ?device, ?backend) =
-        input.like(value, ?dtype=dtype, ?device=device, ?backend=backend)
+    static member like(input:Tensor, value:obj, ?device, ?dtype, ?backend) =
+        input.like(value, ?device=device, ?dtype=dtype, ?backend=backend)
 
     /// <summary>Returns a new tensor with the same characteristics and storage cloned.</summary>
     /// <param name="input">The input tensor.</param>
@@ -442,6 +516,12 @@ type dsharp =
     /// <param name="b">The second tensor.</param>
     static member eq(a:Tensor, b:Tensor) = a.eq(b)    
 
+    /// <summary>Returns a boolean tensor for the element-wise non-equality comparison of the elements in the two tensors.</summary>
+    /// <remarks>The shapes of input and other don’t need to match, but they must be broadcastable.</remarks>
+    /// <param name="a">The first tensor.</param>
+    /// <param name="b">The second tensor.</param>
+    static member ne(a:Tensor, b:Tensor) = a.ne(b)    
+
     /// <summary>Returns a boolean tensor where each element indicates if the corresponding element in the input tensor is an infinity value.</summary>
     /// <param name="input">The input tensor.</param>
     static member isinf(input:Tensor) = input.isinf()
@@ -466,12 +546,12 @@ type dsharp =
     /// <param name="input">The input tensor.</param>
     static member argmin(input:Tensor) = input.argmin()
 
-    /// <summary>Returns the maximum value of all elements in the input tensor</summary>
+    /// <summary>Returns the maximum value of all elements in the input tensor.</summary>
     /// <param name="input">The input tensor.</param>
     static member max(input:Tensor) = input.max()
 
-    /// <summary>Returns the minimum value of all elements in the input tensor</summary>
-/// <param name="input">The input tensor.</param>
+    /// <summary>Returns the minimum value of all elements in the input tensor.</summary>
+    /// <param name="input">The input tensor.</param>
     static member min(input:Tensor) = input.min()
 
     /// <summary>Each element of the tensor input is compared with the corresponding element of the tensor other and an element-wise maximum is taken.</summary>
@@ -485,6 +565,18 @@ type dsharp =
     /// <param name="a">The first tensor.</param>
     /// <param name="b">The second tensor.</param>
     static member min(a:Tensor, b:Tensor) = a.min(b)
+
+    /// <summary>Returns the maximum value of all elements in the input tensor along the given dimension.</summary>
+    /// <param name="a">The tensor.</param>
+    /// <param name="dim">The dimension.</param>
+    /// <param name="keepDim">Whether the output tensor has dim retained or not.</param>
+    static member max(a:Tensor, dim:int, ?keepDim:bool) = a.max(dim=dim, ?keepDim=keepDim)
+
+    /// <summary>Returns the minimum value of all elements in the input tensor along the given dimension.</summary>
+    /// <param name="a">The tensor.</param>
+    /// <param name="dim">The dimension.</param>
+    /// <param name="keepDim">Whether the output tensor has dim retained or not.</param>
+    static member min(a:Tensor, dim:int, ?keepDim:bool) = a.min(dim=dim, ?keepDim=keepDim)
 
     /// <summary>Clamp all elements in input into the range [ low..high] and return a resulting tensor</summary>
     /// <param name="input">The input tensor.</param>
@@ -656,6 +748,13 @@ type dsharp =
     /// <param name="indices">The the indices of elements to gather.</param>
     static member gather(input:Tensor, dim:int, indices:Tensor) = input.gather(dim, indices)
 
+    /// <summary>Gathers values along an axis specified by dim.</summary>
+    /// <param name="input">The input tensor.</param>
+    /// <param name="dim">The axis along which to index.</param>
+    /// <param name="indices">The the indices of elements to gather.</param>
+    /// <param name="destinationShape">The destination shape.</param>
+    static member scatter(input:Tensor, dim:int, indices:Tensor, destinationShape:seq<int>) = input.scatter(dim, indices, destinationShape)
+
     /// <summary>Returns the original tensor with its dimensions permuted.</summary>
     /// <param name="input">The input tensor.</param>
     /// <param name="permutation">The desired ordering of dimensions.</param>
@@ -681,6 +780,11 @@ type dsharp =
     /// <param name="input">The input tensor.</param>
     /// <param name="dim">The index at which to insert the singleton dimension.</param>
     static member unsqueeze(input:Tensor, dim:int) = input.unsqueeze(dim)
+
+    /// <summary>Returns a new tensor with dimensions of size one appended to the end until the number of dimensions is the same as the other tensor.</summary>
+    /// <param name="input">The input tensor.</param>
+    /// <param name="other">The other tensor.</param>
+    static member unsqueezeAs(input:Tensor, other:Tensor) = input.unsqueezeAs(other)
 
     /// <summary>Reverse the order of a n-D tensor along given axis in dims</summary>
     /// <param name="input">The input tensor.</param>
@@ -746,6 +850,12 @@ type dsharp =
     /// <param name="startDim">The first dim to flatten.</param>
     /// <param name="endDim">The last dim to flatten.</param>
     static member flatten(input:Tensor, ?startDim:int, ?endDim:int) = input.flatten(?startDim=startDim, ?endDim=endDim)
+
+    /// <summary>Unflattens a tensor dimension by expanding it to the given shape.</summary>
+    /// <param name="input">The input tensor.</param>
+    /// <param name="dim">The dimension to unflatten.</param>
+    /// <param name="unflattenedShape">New shape of the unflattened dimenension.</param>
+    static member unflatten(input:Tensor, dim:int, unflattenedShape:seq<int>) = input.unflatten(dim, unflattenedShape)
 
     /// <summary>Returns a new tensor with the signs of the elements of input.</summary>
     /// <remarks>The tensor will have the same element type as the input tensor.</remarks>
@@ -1097,44 +1207,72 @@ type dsharp =
     /// <summary>Move the tensor to a difference device, backend and/or change its element type.</summary>
     /// <remarks>If the characteristics are unchanged the input tensor will be returned.</remarks>
     /// <param name="input">The input tensor.</param>
-    /// <param name="dtype">The desired element type of returned tensor. Default: if None, the element type of the input tensor is used.</param>
     /// <param name="device">The desired device of returned tensor. Default: if None, the device of the input tensor is used.</param>
+    /// <param name="dtype">The desired element type of returned tensor. Default: if None, the element type of the input tensor is used.</param>
     /// <param name="backend">The desired backend of returned tensor. Default: if None, the backend of the input tensor is used.</param>
-    static member move(input:Tensor, ?dtype, ?device, ?backend) =
-        input.move(?dtype=dtype, ?device=device, ?backend=backend)
+    static member move(input:Tensor, ?device, ?dtype, ?backend) =
+        input.move(?device=device, ?dtype=dtype, ?backend=backend)
 
-    /// <summary>Configure the default element type, device and/or backend.</summary>
-    /// <param name="dtype">The new default element type.</param>
+    /// <summary>Configure the default device, dtype, and/or backend.</summary>
     /// <param name="device">The new default device.</param>
+    /// <param name="dtype">The new default element type. Only floating point dtypes are supported as the default.</param>
     /// <param name="backend">The new default backend.</param>
-    static member config(?dtype: Dtype, ?device: Device, ?backend: Backend) = 
-        dtype |> Option.iter (fun d -> Dtype.Default <- d)
+    /// <param name="printer">The new default printer.</param>
+    static member config(?device: Device, ?dtype: Dtype, ?backend: Backend, ?printer: Printer) = 
+        if dtype.IsSome then 
+            if not dtype.Value.IsFloatingPoint then failwithf "Only floating point types are supported as the default type."
         device |> Option.iter (fun d -> Device.Default <- d)
+        dtype |> Option.iter (fun d -> Dtype.Default <- d)
         backend |> Option.iter (fun d -> Backend.Default <- d)
-        dsharp.tensor(0.) |> ignore // We need this to ensure the backend assemblies are loaded and backend is ready to set the random seed immediately after config
+        printer |> Option.iter (fun d -> Printer.Default <- d)
+        dsharp.tensor([0f], Device.Default, Dtype.Default, Backend.Default) |> ignore // We need this to ensure the backend assemblies are loaded and backend is ready to set the random seed immediately after config
 
-    /// <summary>Return the current default element type, device and backend.</summary>
-    static member config() = Dtype.Default, Device.Default, Backend.Default
+    /// <summary>Return the current default device, element type, backend, and printer.</summary>
+    static member config() = Device.Default, Dtype.Default, Backend.Default, Printer.Default
 
-    /// <summary>Configure the default element type, device and/or backend.</summary>
-    /// <param name="configuration">A tuple of the new default element type, default device and default backend.</param>
-    static member config(configuration: (Dtype * Device * Backend)) =
-        let (dtype,device,backend) = configuration
-        dsharp.config(dtype, device, backend)
+    /// <summary>Configure the default device, element type, backend, printer. Only floating point dtypes are supported as the default.</summary>
+    /// <param name="configuration">A tuple of the new default device, default element type, default backend, and default printer.</param>
+    static member config(configuration: (Device * Dtype * Backend * Printer)) =
+        let (device,dtype,backend,printer) = configuration
+        dsharp.config(device, dtype, backend, printer)
 
-    /// <summary>Return the list of available devices.</summary>
-    /// <param name="deviceType">If given, only return devices for this device type.</param>
+    /// <summary>Returns the list of available backends.</summary>
+    static member backends() =
+        let backends = [|Backend.Reference; Backend.Torch|]
+        let backendsAvailable = Array.zeroCreate<bool> backends.Length
+        for i = 0 to backends.Length-1 do
+            try
+                // Try to create a tensor in the given backend, hence testing the whole underlying process
+                let _ = dsharp.tensor([0f], device=Device.CPU, dtype=Dtype.Float32, backend=backends.[i])
+                backendsAvailable.[i] <- true
+            with
+            | _ -> ()
+        [for i = 0 to backends.Length-1 do if backendsAvailable.[i] then yield backends.[i]]
+
+    /// <summary>Returns the list of available devices for a given backend.</summary>
     /// <param name="backend">Return information for this backend. Defaults to Backend.Default.</param>
-    static member devices(?deviceType, ?backend) = BackendTensorStatics.Get(?backend=backend).GetDevices(?deviceType=deviceType)
+    /// <param name="deviceType">If given, only return devices for this device type.</param>
+    static member devices(?backend, ?deviceType) = BackendTensorStatics.Get(?backend=backend).GetDevices(?deviceType=deviceType)
 
-    /// <summary>Indicates if the given device type is supported.</summary>
+    /// <summary>Returns the list of available backends and devices available for each backend.</summary>
+    static member backendsAndDevices() = [for b in dsharp.backends() do yield b, dsharp.devices(backend=b)]
+
+    /// <summary>Indicates if a given backend is available.</summary>
+    static member isBackendAvailable(backend) = dsharp.backends() |> List.contains backend
+
+    /// <summary>Indicates if a given device is available for a given backend.</summary>
+    /// <param name="device">The requested device.</param>
+    /// <param name="backend">Return information for this backend. Defaults to Backend.Default.</param>
+    static member isDeviceAvailable(device, ?backend) = dsharp.devices(?backend=backend) |> List.contains device
+
+    /// <summary>Indicates if a given device type is available for a given backend.</summary>
     /// <param name="deviceType">The requested device type.</param>
     /// <param name="backend">Return information for this backend. Defaults to Backend.Default.</param>
-    static member isDeviceTypeSupported(deviceType, ?backend) = BackendTensorStatics.Get(?backend=backend).IsDeviceTypeSupported(deviceType)
+    static member isDeviceTypeAvailable(deviceType, ?backend) = BackendTensorStatics.Get(?backend=backend).IsDeviceTypeAvailable(deviceType)
 
-    /// <summary>Indicates if CUDA is supported.</summary>
+    /// <summary>Indicates if CUDA is available for a given backend.</summary>
     /// <param name="backend">Return information for this backend. Defaults to Backend.Default.</param>
-    static member isCudaSupported(?backend) = BackendTensorStatics.Get(?backend=backend).IsDeviceTypeSupported(DeviceType.CUDA)
+    static member isCudaAvailable(?backend) = BackendTensorStatics.Get(?backend=backend).IsDeviceTypeAvailable(DeviceType.CUDA)
 
 
 // Differentiable methods mirroring F# collection modules
@@ -1261,15 +1399,15 @@ type dsharp with
     static member noDiff (tensor:Tensor) = tensor.noDiff()
 
     /// <summary>Produce a new tensor suitable for calculating the forward-mode derivative at the given level tag.</summary>
-    /// <param name="tag">The level tag.</param>
+    /// <param name="nestingTag">The level tag.</param>
     /// <param name="derivative">The derivative of the input.</param>
     /// <param name="tensor">The input.</param>
-    static member forwardDiff (tag:uint32) (derivative:Tensor) (tensor:Tensor) = tensor.forwardDiff(derivative, tag)
+    static member forwardDiff (nestingTag:uint32) (derivative:Tensor) (tensor:Tensor) = tensor.forwardDiff(derivative, nestingTag)
 
     /// <summary>Produce a new tensor suitable for calculating the reverse-mode derivative at the given level tag.</summary>
-    /// <param name="tag">The level tag.</param>
+    /// <param name="nestingTag">The level tag.</param>
     /// <param name="tensor">The output tensor.</param>
-    static member reverseDiff (tag:uint32) (tensor:Tensor) = tensor.reverseDiff(tag)
+    static member reverseDiff (nestingTag:uint32) (tensor:Tensor) = tensor.reverseDiff(nestingTag=nestingTag)
 
     /// <summary>Reset the reverse mode computation associated with the given output tensor.</summary>
     /// <param name="tensor">The output tensor.</param>

@@ -59,7 +59,7 @@ type TestDerivatives () =
               revz.reverse(combo.tensor([100., 200., 300.]))
               let revxd = revx.derivative
               let revxdCorrect = combo.tensor([100., 200., 300.])
-              let revyd = revy.isNoDiff()
+              let revyd = revy.isNoDiff
               let revydCorrect = true
 
               Assert.CheckEqual(fwdzCorrect, fwdz)
@@ -113,7 +113,7 @@ type TestDerivatives () =
                 revz.reverse(combo.tensor([100., 200., 300.]))
                 let revxd = revx.derivative
                 let revxdCorrect = combo.tensor([100., 200., 300.])
-                let revyd = revy.isNoDiff()
+                let revyd = revy.isNoDiff
                 let revydCorrect = true
 
                 Assert.CheckEqual(fwdzCorrect, fwdz)
@@ -138,7 +138,7 @@ type TestDerivatives () =
                 let revz = if swap then revy + revx else revx + revy
                 let revzCorrect = combo.tensor([5., 6., 7.])
                 revz.reverse(combo.tensor([100., 200., 300.]))
-                let revxd = revx.isNoDiff()
+                let revxd = revx.isNoDiff
                 let revxdCorrect = true
                 let revyd = revy.derivative
                 let revydCorrect = combo.tensor(600.)
@@ -194,7 +194,7 @@ type TestDerivatives () =
                 revz.reverse(combo.tensor([[100., 200.], [300., 400.]]))
                 let revxd = revx.derivative
                 let revxdCorrect = combo.tensor([[100., 200.], [300., 400.]])
-                let revyd = revy.isNoDiff()
+                let revyd = revy.isNoDiff
                 let revydCorrect = true
 
                 Assert.CheckEqual(fwdzCorrect, fwdz)
@@ -219,7 +219,7 @@ type TestDerivatives () =
                 let revz = if swap then revy + revx else revx + revy
                 let revzCorrect = combo.tensor([[6., 8.], [8., 10.]])
                 revz.reverse(combo.tensor([[100., 200.], [300., 400.]]))
-                let revxd = revx.isNoDiff()
+                let revxd = revx.isNoDiff
                 let revxdCorrect = true
                 let revyd = revy.derivative
                 let revydCorrect = combo.tensor([400., 600.])
@@ -369,7 +369,7 @@ type TestDerivatives () =
             revz.reverse(combo.tensor([100., 200., 300.]))
             let revxd = revx.derivative
             let revxdCorrect = combo.tensor([100., 200., 300.])
-            let revyd = revy.isNoDiff()
+            let revyd = revy.isNoDiff
             let revydCorrect = true
 
             Assert.CheckEqual(fwdzCorrect, fwdz)
@@ -393,7 +393,7 @@ type TestDerivatives () =
             let revz = revx - revy
             let revzCorrect = combo.tensor([-3., -3., -3.])
             revz.reverse(combo.tensor([100., 200., 300.]))
-            let revxd = revx.isNoDiff()
+            let revxd = revx.isNoDiff
             let revxdCorrect = true
             let revyd = revy.derivative
             let revydCorrect = combo.tensor([-100., -200., -300.])
@@ -447,7 +447,7 @@ type TestDerivatives () =
             revz.reverse(combo.tensor([100., 200., 300.]))
             let revxd = revx.derivative
             let revxdCorrect = combo.tensor(600.)
-            let revyd = revy.isNoDiff()
+            let revyd = revy.isNoDiff
             let revydCorrect = true
 
             Assert.CheckEqual(fwdzCorrect, fwdz)
@@ -471,7 +471,7 @@ type TestDerivatives () =
             let revz = revx - revy
             let revzCorrect = combo.tensor([-3., -4., -5.])
             revz.reverse(combo.tensor([100., 200., 300.]))
-            let revxd = revx.isNoDiff()
+            let revxd = revx.isNoDiff
             let revxdCorrect = true
             let revyd = revy.derivative
             let revydCorrect = combo.tensor([-100., -200., -300.])
@@ -525,7 +525,7 @@ type TestDerivatives () =
             revz.reverse(combo.tensor([100., 200., 300.]))
             let revxd = revx.derivative
             let revxdCorrect = combo.tensor([100., 200., 300.])
-            let revyd = revy.isNoDiff()
+            let revyd = revy.isNoDiff
             let revydCorrect = true
 
             Assert.CheckEqual(fwdzCorrect, fwdz)
@@ -549,7 +549,7 @@ type TestDerivatives () =
             let revz = revx - revy
             let revzCorrect = combo.tensor([-3., -2., -1.])
             revz.reverse(combo.tensor([100., 200., 300.]))
-            let revxd = revx.isNoDiff()
+            let revxd = revx.isNoDiff
             let revxdCorrect = true
             let revyd = revy.derivative
             let revydCorrect = combo.tensor(-600.)
@@ -605,7 +605,7 @@ type TestDerivatives () =
               revz.reverse(combo.tensor([100., 200., 300.]))
               let revxd = revx.derivative
               let revxdCorrect = combo.tensor([400., 1000., 1800.])
-              let revyd = revy.isNoDiff()
+              let revyd = revy.isNoDiff
               let revydCorrect = true
 
               Assert.CheckEqual(fwdzCorrect, fwdz)
@@ -659,7 +659,7 @@ type TestDerivatives () =
                 revz.reverse(combo.tensor([100., 200., 300.]))
                 let revxd = revx.derivative
                 let revxdCorrect = combo.tensor([400., 800., 1200.])
-                let revyd = revy.isNoDiff()
+                let revyd = revy.isNoDiff
                 let revydCorrect = true
 
                 Assert.CheckEqual(fwdzCorrect, fwdz)
@@ -684,7 +684,7 @@ type TestDerivatives () =
                 let revz = if swap then revy * revx else revx * revy
                 let revzCorrect = combo.tensor([4., 8., 12.])
                 revz.reverse(combo.tensor([100., 200., 300.]))
-                let revxd = revx.isNoDiff()
+                let revxd = revx.isNoDiff
                 let revxdCorrect = true
                 let revyd = revy.derivative
                 let revydCorrect = combo.tensor(1400.)
@@ -738,7 +738,7 @@ type TestDerivatives () =
             revz.reverse(combo.tensor([1000., 2000., 3000.]))
             let revxd = revx.derivative
             let revxdCorrect = combo.tensor([250., 400., 500.])
-            let revyd = revy.isNoDiff()
+            let revyd = revy.isNoDiff
             let revydCorrect = true
 
             Assert.CheckEqual(fwdzCorrect, fwdz)
@@ -762,7 +762,7 @@ type TestDerivatives () =
             let revz = revx / revy
             let revzCorrect = combo.tensor([0.2500, 0.4000, 0.5000])
             revz.reverse(combo.tensor([1000., 2000., 3000.]))
-            let revxd = revx.isNoDiff()
+            let revxd = revx.isNoDiff
             let revxdCorrect = true
             let revyd = revy.derivative
             let revydCorrect = combo.tensor([ -62.5000, -160.0000, -250.0000])
@@ -816,7 +816,7 @@ type TestDerivatives () =
             revz.reverse(combo.tensor([1000., 2000., 3000.]))
             let revxd = revx.derivative
             let revxdCorrect = combo.tensor(1150.)
-            let revyd = revy.isNoDiff()
+            let revyd = revy.isNoDiff
             let revydCorrect = true
 
             Assert.True(fwdz.allclose(fwdzCorrect, 0.01))
@@ -840,7 +840,7 @@ type TestDerivatives () =
             let revz = revx / revy
             let revzCorrect = combo.tensor([0.2500, 0.2000, 0.1667])
             revz.reverse(combo.tensor([1000., 2000., 3000.]))
-            let revxd = revx.isNoDiff()
+            let revxd = revx.isNoDiff
             let revxdCorrect = true
             let revyd = revy.derivative
             let revydCorrect = combo.tensor([-62.5000, -80.0000, -83.3333])
@@ -894,7 +894,7 @@ type TestDerivatives () =
             revz.reverse(combo.tensor([1000., 2000., 3000.]))
             let revxd = revx.derivative
             let revxdCorrect = combo.tensor([250., 500., 750.])
-            let revyd = revy.isNoDiff()
+            let revyd = revy.isNoDiff
             let revydCorrect = true
 
             Assert.CheckEqual(fwdzCorrect, fwdz)
@@ -918,7 +918,7 @@ type TestDerivatives () =
             let revz = revx / revy
             let revzCorrect = combo.tensor([0.2500, 0.5000, 0.7500])
             revz.reverse(combo.tensor([1000., 2000., 3000.]))
-            let revxd = revx.isNoDiff()
+            let revxd = revx.isNoDiff
             let revxdCorrect = true
             let revyd = revy.derivative
             let revydCorrect = combo.tensor(-875.)
@@ -972,7 +972,7 @@ type TestDerivatives () =
             revz.reverse(combo.tensor([3.1,3.2,3.3]))
             let revxd = revx.derivative
             let revxdCorrect = combo.tensor([  12.4000,  256.0000, 4811.3999])
-            let revyd = revy.isNoDiff()
+            let revyd = revy.isNoDiff
             let revydCorrect = true
 
             Assert.True(fwdz.allclose(fwdzCorrect, 0.01))
@@ -996,7 +996,7 @@ type TestDerivatives () =
             let revz = revx ** revy
             let revzCorrect = combo.tensor([  1.,  32., 729.])
             revz.reverse(combo.tensor([3.1,3.2,3.3]))
-            let revxd = revx.isNoDiff()
+            let revxd = revx.isNoDiff
             let revxdCorrect = true
             let revyd = revy.derivative
             let revydCorrect = combo.tensor([   0.0000,   70.9783, 2642.9316])
@@ -1050,7 +1050,7 @@ type TestDerivatives () =
             revz.reverse(combo.tensor([3.1,3.2,3.3]))
             let revxd = revx.derivative
             let revxdCorrect = combo.tensor(273.2062)
-            let revyd = revy.isNoDiff()
+            let revyd = revy.isNoDiff
             let revydCorrect = true
 
             Assert.True(fwdz.allclose(fwdzCorrect, 0.01))
@@ -1074,7 +1074,7 @@ type TestDerivatives () =
             let revz = revx ** revy
             let revzCorrect = combo.tensor([ 5.0625,  7.5938, 11.3906])
             revz.reverse(combo.tensor([3.1,3.2,3.3]))
-            let revxd = revx.isNoDiff()
+            let revxd = revx.isNoDiff
             let revxdCorrect = true
             let revyd = revy.derivative
             let revydCorrect = combo.tensor([ 6.3633,  9.8528, 15.2411])
@@ -1128,7 +1128,7 @@ type TestDerivatives () =
             revz.reverse(combo.tensor([3.1, 3.2, 3.3]))
             let revxd = revx.derivative
             let revxdCorrect = combo.tensor([ 12.4000, 102.4000, 356.4000])
-            let revyd = revy.isNoDiff()
+            let revyd = revy.isNoDiff
             let revydCorrect = true
 
             Assert.True(fwdz.allclose(fwdzCorrect, 0.01))
@@ -1152,7 +1152,7 @@ type TestDerivatives () =
             let revz = revx ** revy
             let revzCorrect = combo.tensor([ 1., 16., 81.])
             revz.reverse(combo.tensor([3.1, 3.2, 3.3]))
-            let revxd = revx.isNoDiff()
+            let revxd = revx.isNoDiff
             let revxdCorrect = true
             let revyd = revy.derivative
             let revydCorrect = combo.tensor(329.1482)
@@ -1266,7 +1266,7 @@ type TestDerivatives () =
             let revxdCorrect = combo.tensor([[33.4050, 46.2136,  0.6191, 55.9696, 37.6556],
                 [41.2370, 28.2842, 12.0266, 23.6085, 28.0854],
                 [65.6689, 62.6571, 12.2551, 65.4497, 55.9926]])
-            let revyd = revy.isNoDiff()
+            let revyd = revy.isNoDiff
             let revydCorrect = true
 
             Assert.True(fwdz.allclose(fwdzCorrect, 0.01))
@@ -1315,7 +1315,7 @@ type TestDerivatives () =
             revz.reverse(combo.tensor([[7.3984, 0.1849],
                 [1.2520, 9.5731],
                 [6.8201, 9.5221]]))            
-            let revxd = revx.isNoDiff()
+            let revxd = revx.isNoDiff
             let revxdCorrect = true
             let revyd = revy.derivative
             let revydCorrect = combo.tensor([[ 82.9549,129.8180],
@@ -1384,59 +1384,141 @@ type TestDerivatives () =
 
     [<Test>]
     member _.TestDerivativeGather () =
-        let fwdx = dsharp.tensor([1,2,3,4,5]).forwardDiff(dsharp.tensor([10,20,30,40,50]))
-        let fwdz = dsharp.gather(fwdx, 0, dsharp.tensor([0,2,3], dtype=Dtype.Int32))
-        let fwdzCorrect = dsharp.tensor([1,3,4])
-        let fwdzd = fwdz.derivative
-        let fwdzdCorrect = dsharp.tensor([10,30,40])
+        for combo in Combos.FloatingPoint do
+            let fwdx = combo.tensor([1,2,3,4,5]).forwardDiff(combo.tensor([10,20,30,40,50]))
+            let fwdz = dsharp.gather(fwdx, 0, combo.tensor([0,2,3], dtype=Dtype.Int32))
+            let fwdzCorrect = combo.tensor([1,3,4])
+            let fwdzd = fwdz.derivative
+            let fwdzdCorrect = combo.tensor([10,30,40])
 
-        let revx = dsharp.tensor([1,2,3,4,5]).reverseDiff()
-        let revz = dsharp.gather(revx, 0, dsharp.tensor([0,2,3], dtype=Dtype.Int32))
-        let revzCorrect = dsharp.tensor([1,3,4])
-        revz.reverse(dsharp.tensor([10,30,40]))
-        let revxd = revx.derivative
-        let revxdCorrect = dsharp.tensor([10.,  0., 30., 40.,  0.])
+            let revx = combo.tensor([1,2,3,4,5]).reverseDiff()
+            let revz = dsharp.gather(revx, 0, combo.tensor([0,2,3], dtype=Dtype.Int32))
+            let revzCorrect = combo.tensor([1,3,4])
+            revz.reverse(combo.tensor([100,300,400]))
+            let revxd = revx.derivative
+            let revxdCorrect = combo.tensor([100,  0, 300, 400,  0])
 
-        Assert.CheckEqual(fwdzCorrect, fwdz)
-        Assert.CheckEqual(fwdzdCorrect, fwdzd)
-        Assert.CheckEqual(revzCorrect, revz)
-        Assert.CheckEqual(revxdCorrect, revxd)
+            Assert.True(fwdz.allclose(fwdzCorrect, 0.01))
+            Assert.True(fwdzd.allclose(fwdzdCorrect, 0.01))
+            Assert.True(revz.allclose(revzCorrect, 0.01))
+            Assert.True(revxd.allclose(revxdCorrect, 0.01))
 
-        let fwdx = dsharp.tensor([[1,2,3],[4,5,6]]).forwardDiff(dsharp.tensor([[10,20,30],[40,50,60]]))
-        let fwdz = dsharp.gather(fwdx, 0, dsharp.tensor([[1,0,1],[0,1,1]], dtype=Dtype.Int32))
-        let fwdzCorrect = dsharp.tensor([[4,2,6],[1,5,6]])
-        let fwdzd = fwdz.derivative
-        let fwdzdCorrect = dsharp.tensor([[40,20,60],[10,50,60]])
+            let fwdx = combo.tensor([[1,2,3],[4,5,6]]).forwardDiff(combo.tensor([[  2.0831, -14.9606,  -2.2840],
+                                                                                    [  7.9815,   5.1029,  -5.1874]]))
+            let fwdz = dsharp.gather(fwdx, 0, combo.tensor([[1, 0, 1], [0, 1, 0]], dtype=Dtype.Int32))
+            let fwdzCorrect = combo.tensor([[4., 2., 6.],
+                                            [1., 5., 3.]])
+            let fwdzd = fwdz.derivative
+            let fwdzdCorrect = combo.tensor([[  7.9815, -14.9606,  -5.1874],
+                                                [  2.0831,   5.1029,  -2.2840]])
 
-        let revx = dsharp.tensor([[1,2,3],[4,5,6]]).reverseDiff()
-        let revz = dsharp.gather(revx, 0, dsharp.tensor([[1,0,1],[0,1,1]], dtype=Dtype.Int32))
-        let revzCorrect = dsharp.tensor([[4,2,6],[1,5,6]])
-        revz.reverse(dsharp.tensor([[40,20,60],[10,50,60]]))
-        let revxd = revx.derivative
-        let revxdCorrect = dsharp.tensor([[10,20,0],[40,50,120]])
+            let revx = combo.tensor([[1,2,3],[4,5,6]]).reverseDiff()
+            let revz = dsharp.gather(revx, 0, combo.tensor([[1, 0, 1], [0, 1, 0]], dtype=Dtype.Int32))
+            let revzCorrect = combo.tensor([[4., 2., 6.],
+                                             [1., 5., 3.]])
+            revz.reverse(combo.tensor([[-7.1748, 10.5891,  4.2761],
+                                        [ 1.4465,  1.4483,  3.1286]]))
+            let revxd = revx.derivative
+            let revxdCorrect = combo.tensor([[ 1.4465, 10.5891,  3.1286],
+                                               [-7.1748,  1.4483,  4.2761]])
 
-        Assert.CheckEqual(fwdzCorrect, fwdz)
-        Assert.CheckEqual(fwdzdCorrect, fwdzd)
-        Assert.CheckEqual(revzCorrect, revz)
-        Assert.CheckEqual(revxdCorrect, revxd)
+            Assert.True(fwdz.allclose(fwdzCorrect, 0.01))
+            Assert.True(fwdzd.allclose(fwdzdCorrect, 0.01))
+            Assert.True(revz.allclose(revzCorrect, 0.01))
+            Assert.True(revxd.allclose(revxdCorrect, 0.01))
 
-        let fwdx = dsharp.tensor([[1,2,3],[4,5,6]]).forwardDiff(dsharp.tensor([[10,20,30],[40,50,60]]))
-        let fwdz = dsharp.gather(fwdx, 1, dsharp.tensor([[1,0,1],[0,1,1]], dtype=Dtype.Int32))
-        let fwdzCorrect = dsharp.tensor([[2,1,2],[4,5,5]])
-        let fwdzd = fwdz.derivative
-        let fwdzdCorrect = dsharp.tensor([[20,10,20],[40,50,50]])
+            let fwdx = combo.tensor([[1,2,3],[4,5,6]]).forwardDiff(combo.tensor([[ -3.5134,   2.6154, -17.9585],
+                                                                                   [ -7.2321,  -3.0912,   9.2400]]))
+            let fwdz = dsharp.gather(fwdx, 1, combo.tensor([[1, 0, 2], [2, 1, 0]], dtype=Dtype.Int32))
+            let fwdzCorrect = combo.tensor([[2., 1., 3.],
+                                            [6., 5., 4.]])
+            let fwdzd = fwdz.derivative
+            let fwdzdCorrect = combo.tensor([[  2.6154,  -3.5134, -17.9585],
+                                               [  9.2400,  -3.0912,  -7.2321]])
 
-        let revx = dsharp.tensor([[1,2,3],[4,5,6]]).reverseDiff()
-        let revz = dsharp.gather(revx, 1, dsharp.tensor([[1,0,1],[0,1,1]], dtype=Dtype.Int32))
-        let revzCorrect = dsharp.tensor([[2,1,2],[4,5,5]])
-        revz.reverse(dsharp.tensor([[20,10,20],[40,50,50]]))
-        let revxd = revx.derivative
-        let revxdCorrect = dsharp.tensor([[10,40,0],[40,100,0]])
+            let revx = combo.tensor([[1,2,3],[4,5,6]]).reverseDiff()
+            let revz = dsharp.gather(revx, 1, combo.tensor([[1, 0, 2], [2, 1, 0]], dtype=Dtype.Int32))
+            let revzCorrect = combo.tensor([[2., 1., 3.],
+                                               [6., 5., 4.]])
+            revz.reverse(combo.tensor([[  1.7885, -13.7320, -10.1177],
+                                          [  5.9928,   8.0476, -10.4298]]))
+            let revxd = revx.derivative
+            let revxdCorrect = combo.tensor([[-13.7320,   1.7885, -10.1177],
+                                                [-10.4298,   8.0476,   5.9928]])
 
-        Assert.CheckEqual(fwdzCorrect, fwdz)
-        Assert.CheckEqual(fwdzdCorrect, fwdzd)
-        Assert.CheckEqual(revzCorrect, revz)
-        Assert.CheckEqual(revxdCorrect, revxd)
+            Assert.True(fwdz.allclose(fwdzCorrect, 0.01))
+            Assert.True(fwdzd.allclose(fwdzdCorrect, 0.01))
+            Assert.True(revz.allclose(revzCorrect, 0.01))
+            Assert.True(revxd.allclose(revxdCorrect, 0.01))
+
+    [<Test>]
+    member _.TestDerivativeScatter () =
+        for combo in Combos.FloatingPointExcept16s do
+            let fwdx = combo.tensor([1,2,3,4,5]).forwardDiff(combo.tensor([  2.6719,  -5.3861, -20.9622,  -7.7542,  -2.1062]))
+            let fwdz = dsharp.scatter(fwdx, 0, combo.tensor([0, 2, 1, 3, 4], dtype=Dtype.Int32), destinationShape=[5])
+            let fwdzCorrect = combo.tensor([1., 3., 2., 4., 5.])
+            let fwdzd = fwdz.derivative
+            let fwdzdCorrect = combo.tensor([  2.6719, -20.9622,  -5.3861,  -7.7542,  -2.1062])
+
+            let revx = combo.tensor([1,2,3,4,5]).reverseDiff()
+            let revz = dsharp.scatter(revx, 0, combo.tensor([0, 2, 1, 3, 4], dtype=Dtype.Int32), destinationShape=[5])
+            let revzCorrect = combo.tensor([1., 3., 2., 4., 5.])
+            revz.reverse(combo.tensor([-1.5513, 14.3743, -6.9504, 25.6049,  7.9926]))
+            let revxd = revx.derivative
+            let revxdCorrect = combo.tensor([-1.5513, -6.9504, 14.3743, 25.6049,  7.9926])
+    
+            Assert.True(fwdz.allclose(fwdzCorrect, 0.01))
+            Assert.True(fwdzd.allclose(fwdzdCorrect, 0.01))
+            Assert.True(revz.allclose(revzCorrect, 0.01))
+            Assert.True(revxd.allclose(revxdCorrect, 0.01))
+
+            let fwdx = combo.tensor([[1,2,3],[4,5,6]]).forwardDiff(combo.tensor([[-6.7638, -0.5457,  4.1573],
+                                                                                    [-0.9820,  9.7577,  2.6486]]))
+            let fwdz = dsharp.scatter(fwdx, 0, combo.tensor([[0, 1, 1], [1, 0, 0]], dtype=Dtype.Int32), destinationShape=[2;3])
+            let fwdzCorrect = combo.tensor([[1., 5., 6.],
+                                            [4., 2., 3.]])
+            let fwdzd = fwdz.derivative
+            let fwdzdCorrect = combo.tensor([[-6.7638,  9.7577,  2.6486],
+                                                [-0.9820, -0.5457,  4.1573]])
+
+            let revx = combo.tensor([[1,2,3],[4,5,6]]).reverseDiff()
+            let revz = dsharp.scatter(revx, 0, combo.tensor([[0, 1, 1], [1, 0, 0]], dtype=Dtype.Int32), destinationShape=[2;3])
+            let revzCorrect = combo.tensor([[1., 5., 6.],
+                                            [4., 2., 3.]])
+            revz.reverse(combo.tensor([[-5.0974, -7.3700, -0.4655],
+                                        [ 8.7558,  3.4842, 10.1008]]))
+            let revxd = revx.derivative
+            let revxdCorrect = combo.tensor([[-5.0974,  3.4842, 10.1008],
+                                                [ 8.7558, -7.3700, -0.4655]])
+    
+            Assert.True(fwdz.allclose(fwdzCorrect, 0.01))
+            Assert.True(fwdzd.allclose(fwdzdCorrect, 0.01))
+            Assert.True(revz.allclose(revzCorrect, 0.01))
+            Assert.True(revxd.allclose(revxdCorrect, 0.01))
+
+            let fwdx = combo.tensor([[1,2,3],[4,5,6]]).forwardDiff(combo.tensor([[ -2.0990,  18.1338, -10.6345],
+        [ 20.8588,   7.4650, -27.9411]]))
+            let fwdz = dsharp.scatter(fwdx, 1, combo.tensor([[0, 2, 1], [1, 2, 0]], dtype=Dtype.Int32), destinationShape=[2;3])
+            let fwdzCorrect = combo.tensor([[1., 3., 2.],
+         [6., 4., 5.]])
+            let fwdzd = fwdz.derivative
+            let fwdzdCorrect = combo.tensor([[ -2.0990, -10.6345,  18.1338],
+         [-27.9411,  20.8588,   7.4650]])
+
+            let revx = combo.tensor([[1,2,3],[4,5,6]]).reverseDiff()
+            let revz = dsharp.scatter(revx, 1, combo.tensor([[0, 2, 1], [1, 2, 0]], dtype=Dtype.Int32), destinationShape=[2;3])
+            let revzCorrect = combo.tensor([[1., 3., 2.],
+         [6., 4., 5.]])
+            revz.reverse(combo.tensor([[ -8.3813,   3.3064,  15.2274],
+        [-16.8449,  -9.2485,  11.2618]]))
+            let revxd = revx.derivative
+            let revxdCorrect = combo.tensor([[ -8.3813,  15.2274,   3.3064],
+         [ -9.2485,  11.2618, -16.8449]])
+    
+            Assert.True(fwdz.allclose(fwdzCorrect, 0.01))
+            Assert.True(fwdzd.allclose(fwdzdCorrect, 0.01))
+            Assert.True(revz.allclose(revzCorrect, 0.01))
+            Assert.True(revxd.allclose(revxdCorrect, 0.01))
 
     [<Test>]
     member _.TestDerivativeSum () =
@@ -1460,16 +1542,342 @@ type TestDerivatives () =
             Assert.CheckEqual(revxdCorrect, revxd)
 
     [<Test>]
+    member _.TestDerivativeSum2x3x4dim0 () =
+        for combo in Combos.AllDevicesAndBackendsFloat32 do
+            let fwdx = combo.tensor([[[ 1.,  2.,  3.,  4.],
+                                         [ 5.,  6.,  7.,  8.],
+                                         [ 9., 10., 11., 12.]],
+
+                                        [[13., 14., 15., 16.],
+                                         [17., 18., 19., 20.],
+                                         [21., 22., 23., 24.]]]).forwardDiff(combo.tensor([[[ 0.1138,  0.5501, -0.0263, -0.5208],
+                                                                                             [-0.3892,  1.7672, -1.2217, -0.6333],
+                                                                                             [-0.1153, -0.4039,  0.5586,  0.1626]],
+
+                                                                                            [[-0.2180,  1.3924,  0.4169,  0.1901],
+                                                                                             [-1.5694,  0.5159, -0.3269, -0.6268],
+                                                                                             [-0.5364,  0.0050,  1.8137,  1.5181]]]))
+            let fwdz = fwdx.sum(0)
+            let fwdzCorrect = combo.tensor([[14., 16., 18., 20.],
+                                            [22., 24., 26., 28.],
+                                            [30., 32., 34., 36.]])
+            let fwdzd = fwdz.derivative
+            let fwdzdCorrect = combo.tensor([[-0.1041,  1.9425,  0.3906, -0.3308],
+                                                [-1.9586,  2.2830, -1.5487, -1.2601],
+                                                [-0.6517, -0.3989,  2.3723,  1.6807]])
+
+            let revx = combo.tensor([[[ 1.,  2.,  3.,  4.],
+                                         [ 5.,  6.,  7.,  8.],
+                                         [ 9., 10., 11., 12.]],
+
+                                        [[13., 14., 15., 16.],
+                                         [17., 18., 19., 20.],
+                                         [21., 22., 23., 24.]]]).reverseDiff()
+            let revz = revx.sum(0)
+            let revzCorrect = combo.tensor([[14., 16., 18., 20.],
+                                            [22., 24., 26., 28.],
+                                            [30., 32., 34., 36.]])
+            revz.reverse(combo.tensor([[ 0.0031, -0.4845,  0.6591, -2.3865],
+                                        [ 0.5401,  0.8070, -0.5671, -0.1760],
+                                        [-0.9309, -1.5661, -0.1140,  0.9125]]))
+            let revxd = revx.derivative
+            let revxdCorrect = combo.tensor([[[ 0.0031, -0.4845,  0.6591, -2.3865],
+                                             [ 0.5401,  0.8070, -0.5671, -0.1760],
+                                             [-0.9309, -1.5661, -0.1140,  0.9125]],
+
+                                            [[ 0.0031, -0.4845,  0.6591, -2.3865],
+                                             [ 0.5401,  0.8070, -0.5671, -0.1760],
+                                             [-0.9309, -1.5661, -0.1140,  0.9125]]])
+
+            Assert.True(fwdz.allclose(fwdzCorrect, 0.01))
+            Assert.True(fwdzd.allclose(fwdzdCorrect, 0.01))
+            Assert.True(revz.allclose(revzCorrect, 0.01))
+            Assert.True(revxd.allclose(revxdCorrect, 0.01))
+
+    [<Test>]
+    member _.TestDerivativeSum2x3x4dim1 () =
+        for combo in Combos.AllDevicesAndBackendsFloat32 do
+            let fwdx = combo.tensor([[[ 1.,  2.,  3.,  4.],
+                                         [ 5.,  6.,  7.,  8.],
+                                         [ 9., 10., 11., 12.]],
+
+                                        [[13., 14., 15., 16.],
+                                         [17., 18., 19., 20.],
+                                         [21., 22., 23., 24.]]]).forwardDiff(combo.tensor([[[ 0.1138,  0.5501, -0.0263, -0.5208],
+                                                                                             [-0.3892,  1.7672, -1.2217, -0.6333],
+                                                                                             [-0.1153, -0.4039,  0.5586,  0.1626]],
+
+                                                                                            [[-0.2180,  1.3924,  0.4169,  0.1901],
+                                                                                             [-1.5694,  0.5159, -0.3269, -0.6268],
+                                                                                             [-0.5364,  0.0050,  1.8137,  1.5181]]]))
+            let fwdz = fwdx.sum(1)
+            let fwdzCorrect = combo.tensor([[15., 18., 21., 24.],
+        [51., 54., 57., 60.]])
+            let fwdzd = fwdz.derivative
+            let fwdzdCorrect = combo.tensor([[-0.3907,  1.9134, -0.6894, -0.9915],
+        [-2.3237,  1.9133,  1.9037,  1.0814]])
+
+            let revx = combo.tensor([[[ 1.,  2.,  3.,  4.],
+                                         [ 5.,  6.,  7.,  8.],
+                                         [ 9., 10., 11., 12.]],
+
+                                        [[13., 14., 15., 16.],
+                                         [17., 18., 19., 20.],
+                                         [21., 22., 23., 24.]]]).reverseDiff()
+            let revz = revx.sum(1)
+            let revzCorrect = combo.tensor([[15., 18., 21., 24.],
+        [51., 54., 57., 60.]])
+            revz.reverse(combo.tensor([[ 0.7342, -1.2292,  0.6172,  0.9769],
+        [ 0.3462, -0.5971, -0.6652, -1.7245]]))
+            let revxd = revx.derivative
+            let revxdCorrect = combo.tensor([[[ 0.7342, -1.2292,  0.6172,  0.9769],
+         [ 0.7342, -1.2292,  0.6172,  0.9769],
+         [ 0.7342, -1.2292,  0.6172,  0.9769]],
+
+        [[ 0.3462, -0.5971, -0.6652, -1.7245],
+         [ 0.3462, -0.5971, -0.6652, -1.7245],
+         [ 0.3462, -0.5971, -0.6652, -1.7245]]])
+
+            Assert.True(fwdz.allclose(fwdzCorrect, 0.01))
+            Assert.True(fwdzd.allclose(fwdzdCorrect, 0.01))
+            Assert.True(revz.allclose(revzCorrect, 0.01))
+            Assert.True(revxd.allclose(revxdCorrect, 0.01))
+
+    [<Test>]
+    member _.TestDerivativeSum2x3x4dim2 () =
+        for combo in Combos.AllDevicesAndBackendsFloat32 do
+            let fwdx = combo.tensor([[[ 1.,  2.,  3.,  4.],
+                                         [ 5.,  6.,  7.,  8.],
+                                         [ 9., 10., 11., 12.]],
+
+                                        [[13., 14., 15., 16.],
+                                         [17., 18., 19., 20.],
+                                         [21., 22., 23., 24.]]]).forwardDiff(combo.tensor([[[ 0.1138,  0.5501, -0.0263, -0.5208],
+                                                                                             [-0.3892,  1.7672, -1.2217, -0.6333],
+                                                                                             [-0.1153, -0.4039,  0.5586,  0.1626]],
+
+                                                                                            [[-0.2180,  1.3924,  0.4169,  0.1901],
+                                                                                             [-1.5694,  0.5159, -0.3269, -0.6268],
+                                                                                             [-0.5364,  0.0050,  1.8137,  1.5181]]]))
+            let fwdz = fwdx.sum(2)
+            let fwdzCorrect = combo.tensor([[10., 26., 42.],
+                                            [58., 74., 90.]])
+            let fwdzd = fwdz.derivative
+            let fwdzdCorrect = combo.tensor([[ 0.1168, -0.4771,  0.2020],
+                                                [ 1.7815, -2.0072,  2.8004]])
+
+            let revx = combo.tensor([[[ 1.,  2.,  3.,  4.],
+                                         [ 5.,  6.,  7.,  8.],
+                                         [ 9., 10., 11., 12.]],
+
+                                        [[13., 14., 15., 16.],
+                                         [17., 18., 19., 20.],
+                                         [21., 22., 23., 24.]]]).reverseDiff()
+            let revz = revx.sum(2)
+            let revzCorrect = combo.tensor([[10., 26., 42.],
+                                            [58., 74., 90.]])
+            revz.reverse(combo.tensor([[-0.6781,  0.8850, -0.6500],
+                                        [-0.1039, -0.3919,  0.3043]]))
+            let revxd = revx.derivative
+            let revxdCorrect = combo.tensor([[[-0.6781, -0.6781, -0.6781, -0.6781],
+                                                 [ 0.8850,  0.8850,  0.8850,  0.8850],
+                                                 [-0.6500, -0.6500, -0.6500, -0.6500]],
+
+                                                [[-0.1039, -0.1039, -0.1039, -0.1039],
+                                                 [-0.3919, -0.3919, -0.3919, -0.3919],
+                                                 [ 0.3043,  0.3043,  0.3043,  0.3043]]])
+
+            Assert.True(fwdz.allclose(fwdzCorrect, 0.01))
+            Assert.True(fwdzd.allclose(fwdzdCorrect, 0.01))
+            Assert.True(revz.allclose(revzCorrect, 0.01))
+            Assert.True(revxd.allclose(revxdCorrect, 0.01))
+
+    [<Test>]
+    member _.TestDerivativeSum2x3x4dim0keepdim () =
+        for combo in Combos.AllDevicesAndBackendsFloat32 do
+            let fwdx = combo.tensor([[[ 1.,  2.,  3.,  4.],
+                                         [ 5.,  6.,  7.,  8.],
+                                         [ 9., 10., 11., 12.]],
+
+                                        [[13., 14., 15., 16.],
+                                         [17., 18., 19., 20.],
+                                         [21., 22., 23., 24.]]]).forwardDiff(combo.tensor([[[ 0.1138,  0.5501, -0.0263, -0.5208],
+                                                                                             [-0.3892,  1.7672, -1.2217, -0.6333],
+                                                                                             [-0.1153, -0.4039,  0.5586,  0.1626]],
+
+                                                                                            [[-0.2180,  1.3924,  0.4169,  0.1901],
+                                                                                             [-1.5694,  0.5159, -0.3269, -0.6268],
+                                                                                             [-0.5364,  0.0050,  1.8137,  1.5181]]]))
+            let fwdz = fwdx.sum(0, keepDim=true)
+            let fwdzCorrect = combo.tensor([[[14., 16., 18., 20.],
+                                             [22., 24., 26., 28.],
+                                             [30., 32., 34., 36.]]])
+            let fwdzd = fwdz.derivative
+            let fwdzdCorrect = combo.tensor([[[-0.1041,  1.9425,  0.3906, -0.3308],
+                                                 [-1.9586,  2.2830, -1.5487, -1.2601],
+                                                 [-0.6517, -0.3989,  2.3723,  1.6807]]])
+
+            let revx = combo.tensor([[[ 1.,  2.,  3.,  4.],
+                                         [ 5.,  6.,  7.,  8.],
+                                         [ 9., 10., 11., 12.]],
+
+                                        [[13., 14., 15., 16.],
+                                         [17., 18., 19., 20.],
+                                         [21., 22., 23., 24.]]]).reverseDiff()
+            let revz = revx.sum(0, keepDim=true)
+            let revzCorrect = combo.tensor([[[14., 16., 18., 20.],
+                                             [22., 24., 26., 28.],
+                                             [30., 32., 34., 36.]]])
+            revz.reverse(combo.tensor([[[-0.2128,  1.3167,  0.2201, -0.2129],
+                                         [-1.2951,  0.2504, -0.8851,  0.4580],
+                                         [ 1.1743,  0.8201,  0.0099,  0.2480]]]))
+            let revxd = revx.derivative
+            let revxdCorrect = combo.tensor([[[-0.2128,  1.3167,  0.2201, -0.2129],
+                                                 [-1.2951,  0.2504, -0.8851,  0.4580],
+                                                 [ 1.1743,  0.8201,  0.0099,  0.2480]],
+
+                                                [[-0.2128,  1.3167,  0.2201, -0.2129],
+                                                 [-1.2951,  0.2504, -0.8851,  0.4580],
+                                                 [ 1.1743,  0.8201,  0.0099,  0.2480]]])
+
+            Assert.True(fwdz.allclose(fwdzCorrect, 0.01))
+            Assert.True(fwdzd.allclose(fwdzdCorrect, 0.01))
+            Assert.True(revz.allclose(revzCorrect, 0.01))
+            Assert.True(revxd.allclose(revxdCorrect, 0.01))
+
+    [<Test>]
+    member _.TestDerivativeSum2x3x4dim1keepdim () =
+        for combo in Combos.AllDevicesAndBackendsFloat32 do
+            let fwdx = combo.tensor([[[ 1.,  2.,  3.,  4.],
+                                         [ 5.,  6.,  7.,  8.],
+                                         [ 9., 10., 11., 12.]],
+
+                                        [[13., 14., 15., 16.],
+                                         [17., 18., 19., 20.],
+                                         [21., 22., 23., 24.]]]).forwardDiff(combo.tensor([[[ 0.1138,  0.5501, -0.0263, -0.5208],
+                                                                                             [-0.3892,  1.7672, -1.2217, -0.6333],
+                                                                                             [-0.1153, -0.4039,  0.5586,  0.1626]],
+
+                                                                                            [[-0.2180,  1.3924,  0.4169,  0.1901],
+                                                                                             [-1.5694,  0.5159, -0.3269, -0.6268],
+                                                                                             [-0.5364,  0.0050,  1.8137,  1.5181]]]))
+            let fwdz = fwdx.sum(1, keepDim=true)
+            let fwdzCorrect = combo.tensor([[[15., 18., 21., 24.]],
+
+                                            [[51., 54., 57., 60.]]])
+            let fwdzd = fwdz.derivative
+            let fwdzdCorrect = combo.tensor([[[-0.3907,  1.9134, -0.6894, -0.9915]],
+
+                                                [[-2.3237,  1.9133,  1.9037,  1.0814]]])
+
+            let revx = combo.tensor([[[ 1.,  2.,  3.,  4.],
+                                         [ 5.,  6.,  7.,  8.],
+                                         [ 9., 10., 11., 12.]],
+
+                                        [[13., 14., 15., 16.],
+                                         [17., 18., 19., 20.],
+                                         [21., 22., 23., 24.]]]).reverseDiff()
+            let revz = revx.sum(1, keepDim=true)
+            let revzCorrect = combo.tensor([[[15., 18., 21., 24.]],
+
+                                            [[51., 54., 57., 60.]]])
+            revz.reverse(combo.tensor([[[-0.4120, -0.9329, -1.0173,  0.5821]],
+
+                                        [[ 0.0552,  1.6049,  0.4000, -2.3932]]]))
+            let revxd = revx.derivative
+            let revxdCorrect = combo.tensor([[[-0.4120, -0.9329, -1.0173,  0.5821],
+                                                 [-0.4120, -0.9329, -1.0173,  0.5821],
+                                                 [-0.4120, -0.9329, -1.0173,  0.5821]],
+
+                                                [[ 0.0552,  1.6049,  0.4000, -2.3932],
+                                                 [ 0.0552,  1.6049,  0.4000, -2.3932],
+                                                 [ 0.0552,  1.6049,  0.4000, -2.3932]]])
+
+            Assert.True(fwdz.allclose(fwdzCorrect, 0.01))
+            Assert.True(fwdzd.allclose(fwdzdCorrect, 0.01))
+            Assert.True(revz.allclose(revzCorrect, 0.01))
+            Assert.True(revxd.allclose(revxdCorrect, 0.01))
+
+    [<Test>]
+    member _.TestDerivativeSum2x3x4dim2keepdim () =
+        for combo in Combos.AllDevicesAndBackendsFloat32 do
+            let fwdx = combo.tensor([[[ 1.,  2.,  3.,  4.],
+                                         [ 5.,  6.,  7.,  8.],
+                                         [ 9., 10., 11., 12.]],
+
+                                        [[13., 14., 15., 16.],
+                                         [17., 18., 19., 20.],
+                                         [21., 22., 23., 24.]]]).forwardDiff(combo.tensor([[[ 0.1138,  0.5501, -0.0263, -0.5208],
+                                                                                             [-0.3892,  1.7672, -1.2217, -0.6333],
+                                                                                             [-0.1153, -0.4039,  0.5586,  0.1626]],
+
+                                                                                            [[-0.2180,  1.3924,  0.4169,  0.1901],
+                                                                                             [-1.5694,  0.5159, -0.3269, -0.6268],
+                                                                                             [-0.5364,  0.0050,  1.8137,  1.5181]]]))
+            let fwdz = fwdx.sum(2, keepDim=true)
+            let fwdzCorrect = combo.tensor([[[10.],
+                                             [26.],
+                                             [42.]],
+
+                                            [[58.],
+                                             [74.],
+                                             [90.]]])
+            let fwdzd = fwdz.derivative
+            let fwdzdCorrect = combo.tensor([[[ 0.1168],
+                                                 [-0.4771],
+                                                 [ 0.2020]],
+
+                                                [[ 1.7815],
+                                                 [-2.0072],
+                                                 [ 2.8004]]])
+
+            let revx = combo.tensor([[[ 1.,  2.,  3.,  4.],
+                                         [ 5.,  6.,  7.,  8.],
+                                         [ 9., 10., 11., 12.]],
+
+                                        [[13., 14., 15., 16.],
+                                         [17., 18., 19., 20.],
+                                         [21., 22., 23., 24.]]]).reverseDiff()
+            let revz = revx.sum(2, keepDim=true)
+            let revzCorrect = combo.tensor([[[10.],
+                                             [26.],
+                                             [42.]],
+
+                                            [[58.],
+                                             [74.],
+                                             [90.]]])
+            revz.reverse(combo.tensor([[[-0.0969],
+                                         [-0.3427],
+                                         [-0.1718]],
+
+                                        [[ 1.4555],
+                                         [ 1.1485],
+                                         [-1.2085]]]))
+            let revxd = revx.derivative
+            let revxdCorrect = combo.tensor([[[-0.0969, -0.0969, -0.0969, -0.0969],
+                                                 [-0.3427, -0.3427, -0.3427, -0.3427],
+                                                 [-0.1718, -0.1718, -0.1718, -0.1718]],
+
+                                                [[ 1.4555,  1.4555,  1.4555,  1.4555],
+                                                 [ 1.1485,  1.1485,  1.1485,  1.1485],
+                                                 [-1.2085, -1.2085, -1.2085, -1.2085]]])
+
+            Assert.True(fwdz.allclose(fwdzCorrect, 0.01))
+            Assert.True(fwdzd.allclose(fwdzdCorrect, 0.01))
+            Assert.True(revz.allclose(revzCorrect, 0.01))
+            Assert.True(revxd.allclose(revxdCorrect, 0.01))
+
+    [<Test>]
     member _.TestDerivativeSumT2Dim0 () =
         for combo in Combos.AllDevicesAndBackendsFloat32 do
             let fwdx = combo.tensor([[1.; 2.]; [3.; 4.]]).forwardDiff(combo.tensor([[2.; 3.]; [4.; 5.]]))
-            let fwdz = fwdx.sumT2Dim0()
+            let fwdz = fwdx.sum(0)
             let fwdzCorrect = combo.tensor([4.; 6.])
             let fwdzd = fwdz.derivative
             let fwdzdCorrect = combo.tensor([6.; 8.])
 
             let revx = combo.tensor([[1.; 2.]; [3.; 4.]]).reverseDiff()
-            let revz = revx.sumT2Dim0()
+            let revz = revx.sum(0)
             let revzCorrect = combo.tensor([4.; 6.])
             revz.reverse(combo.tensor([5.; 6.]))
             let revxd = revx.derivative
@@ -1565,6 +1973,552 @@ type TestDerivatives () =
 
             Assert.CheckEqual(revzCorrect, revz)
             Assert.CheckEqual(revxdCorrect, revxd)
+
+    [<Test>]
+    member _.TestDerivativeVariance3x4x5dim0 () =
+        for combo in Combos.AllDevicesAndBackendsFloat32 do
+            let fwdx = combo.tensor([[[  12.2887, -124.2559,  -52.7272,  114.2419,   -1.4264],
+         [  -6.8527,   16.9581,   81.0657,  -70.5103, -179.5075],
+         [-143.7535,    6.8404,  136.9686,  -17.5498,   99.8140],
+         [ -19.5357,   84.2359, -162.9163,  -34.7652, -154.6033]],
+
+        [[-158.9860, -164.1908, -176.9966,   15.6294,  -94.1457],
+         [ -32.6161,  103.1001,   15.4024,  -69.1296, -101.3873],
+         [  95.1630,  -35.6618,   22.2831,   65.5144,  164.5470],
+         [  70.5986,   11.5431, -222.7342,  -31.0782,  -74.5307]],
+
+        [[  28.5503,   31.2357,  -43.3269,   76.8341,  -62.3500],
+         [ -84.7127,  -20.8504,   -4.7001,   86.7561,   15.4886],
+         [-160.7065, -135.9692,  -23.1987,  109.5910,  -59.4152],
+         [-137.4213,   61.7889,   -7.9040,   86.4179, -119.8093]]]).forwardDiff(combo.tensor([[[-0.2018, -0.1041, -1.4143,  0.5899,  1.9902],
+         [ 1.3994,  0.2818,  0.3825,  0.5614,  0.4695],
+         [ 1.1079, -1.0540, -0.0070,  1.1769, -0.0804],
+         [-0.5819, -1.1139,  1.1382, -0.7441,  1.2409]],
+
+        [[ 1.0826, -1.5065, -0.9816,  0.7011,  0.1583],
+         [-0.3210, -1.2465,  0.6185, -0.4356,  1.1717],
+         [-1.9160,  0.8670,  0.8507,  1.8093, -0.9532],
+         [-0.4961, -0.4367,  0.9074, -0.5528, -0.5268]],
+
+        [[-0.0027, -1.7200,  0.1368,  1.6846, -0.8406],
+         [-2.2005,  0.6316,  0.0512, -0.9567, -1.1787],
+         [-1.0725, -1.0259, -0.3348, -0.0872, -2.0366],
+         [-1.0987, -0.1846, -0.7413,  1.1284, -1.3934]]]))
+            let fwdz = fwdx.variance(0, keepDim=false)
+            let fwdzCorrect = combo.tensor([[10794.8887, 10660.6611,  5566.4722,  2478.2983,  2219.9167],
+        [ 1573.3340,  4035.6096,  2011.9272,  8172.4951,  9631.0381],
+        [20472.9551,  5377.0923,  6812.4814,  4167.8657, 13283.8936],
+        [10882.2490,  1385.4567, 12293.1738,  4750.7139,  1612.0673]])
+            let fwdzd = fwdz.derivative
+            let fwdzdCorrect = combo.tensor([[-140.0910,  -78.9964,   36.7655,    2.7586,  103.5180],
+        [ 140.8442, -125.8886,    8.1067, -107.1141, -180.4103],
+        [-300.4409,   34.7350,    2.6895,  -63.9258,  165.8755],
+        [  64.6684,  -19.1403, -210.5787,  141.7153,  -64.6558]])
+
+            let revx = combo.tensor([[[  12.2887, -124.2559,  -52.7272,  114.2419,   -1.4264],
+         [  -6.8527,   16.9581,   81.0657,  -70.5103, -179.5075],
+         [-143.7535,    6.8404,  136.9686,  -17.5498,   99.8140],
+         [ -19.5357,   84.2359, -162.9163,  -34.7652, -154.6033]],
+
+        [[-158.9860, -164.1908, -176.9966,   15.6294,  -94.1457],
+         [ -32.6161,  103.1001,   15.4024,  -69.1296, -101.3873],
+         [  95.1630,  -35.6618,   22.2831,   65.5144,  164.5470],
+         [  70.5986,   11.5431, -222.7342,  -31.0782,  -74.5307]],
+
+        [[  28.5503,   31.2357,  -43.3269,   76.8341,  -62.3500],
+         [ -84.7127,  -20.8504,   -4.7001,   86.7561,   15.4886],
+         [-160.7065, -135.9692,  -23.1987,  109.5910,  -59.4152],
+         [-137.4213,   61.7889,   -7.9040,   86.4179, -119.8093]]]).reverseDiff()
+            let revz = revx.variance(0, keepDim=false)
+            let revzCorrect = combo.tensor([[10794.8887, 10660.6611,  5566.4722,  2478.2983,  2219.9167],
+        [ 1573.3340,  4035.6096,  2011.9272,  8172.4951,  9631.0381],
+        [20472.9551,  5377.0923,  6812.4814,  4167.8657, 13283.8936],
+        [10882.2490,  1385.4567, 12293.1738,  4750.7139,  1612.0673]])
+            revz.reverse(combo.tensor([[-0.2957, -0.5984,  0.4151, -0.1659, -0.7192],
+        [-0.8853, -1.8005,  1.0803, -0.1818,  0.2924],
+        [-0.1874, -0.5039,  0.0378,  0.9512, -0.5961],
+        [ 1.6145, -0.3021,  1.1666,  2.1508,  0.4294]]))
+            let revxd = revx.derivative
+            let revxdCorrect = combo.tensor([[[ -15.2789,   23.0483,   15.8949,   -7.5199,  -36.8343],
+         [ -30.5801,   29.0086,   54.5283,    9.6151,  -26.6213],
+         [  13.8631,  -31.1267,    3.4615,  -66.6463,  -18.7776],
+         [  14.9353,   -9.5817,  -37.0167,  -89.5221,  -16.4428]],
+
+        [[  35.3662,   46.9438,  -35.6921,    8.8355,   29.8512],
+         [  -7.7712, -126.0925,  -16.4061,    9.3641,   -3.7776],
+         [ -30.9027,   -9.7095,   -0.8715,   12.3612,  -57.3673],
+         [ 160.4606,   12.3813, -106.7981,  -81.5922,   17.9436]],
+
+        [[ -20.0873,  -69.9920,   19.7972,   -1.3156,    6.9831],
+         [  38.3513,   97.0839,  -38.1223,  -18.9792,   30.3990],
+         [  17.0396,   40.8361,   -2.5899,   54.2851,   76.1448],
+         [-175.3959,   -2.7997,  143.8148,  171.1144,   -1.5008]]])
+
+            Assert.True(fwdz.allclose(fwdzCorrect, 0.01))
+            Assert.True(fwdzd.allclose(fwdzdCorrect, 0.01))
+            Assert.True(revz.allclose(revzCorrect, 0.01))
+            Assert.True(revxd.allclose(revxdCorrect, 0.01))
+
+    [<Test>]
+    member _.TestDerivativeVariance3x4x5dim1 () =
+        for combo in Combos.AllDevicesAndBackendsFloat32 do
+            let fwdx = combo.tensor([[[  12.2887, -124.2559,  -52.7272,  114.2419,   -1.4264],
+         [  -6.8527,   16.9581,   81.0657,  -70.5103, -179.5075],
+         [-143.7535,    6.8404,  136.9686,  -17.5498,   99.8140],
+         [ -19.5357,   84.2359, -162.9163,  -34.7652, -154.6033]],
+
+        [[-158.9860, -164.1908, -176.9966,   15.6294,  -94.1457],
+         [ -32.6161,  103.1001,   15.4024,  -69.1296, -101.3873],
+         [  95.1630,  -35.6618,   22.2831,   65.5144,  164.5470],
+         [  70.5986,   11.5431, -222.7342,  -31.0782,  -74.5307]],
+
+        [[  28.5503,   31.2357,  -43.3269,   76.8341,  -62.3500],
+         [ -84.7127,  -20.8504,   -4.7001,   86.7561,   15.4886],
+         [-160.7065, -135.9692,  -23.1987,  109.5910,  -59.4152],
+         [-137.4213,   61.7889,   -7.9040,   86.4179, -119.8093]]]).forwardDiff(combo.tensor([[[-0.2018, -0.1041, -1.4143,  0.5899,  1.9902],
+         [ 1.3994,  0.2818,  0.3825,  0.5614,  0.4695],
+         [ 1.1079, -1.0540, -0.0070,  1.1769, -0.0804],
+         [-0.5819, -1.1139,  1.1382, -0.7441,  1.2409]],
+
+        [[ 1.0826, -1.5065, -0.9816,  0.7011,  0.1583],
+         [-0.3210, -1.2465,  0.6185, -0.4356,  1.1717],
+         [-1.9160,  0.8670,  0.8507,  1.8093, -0.9532],
+         [-0.4961, -0.4367,  0.9074, -0.5528, -0.5268]],
+
+        [[-0.0027, -1.7200,  0.1368,  1.6846, -0.8406],
+         [-2.2005,  0.6316,  0.0512, -0.9567, -1.1787],
+         [-1.0725, -1.0259, -0.3348, -0.0872, -2.0366],
+         [-1.0987, -0.1846, -0.7413,  1.1284, -1.3934]]]))
+            let fwdz = fwdx.variance(1, keepDim=false)
+            let fwdzCorrect = combo.tensor([[ 5005.0933,  7601.2646, 18217.4922,  6507.0361, 17399.5547],
+        [13404.5303, 12392.6992, 16300.9668,  3396.7710, 16329.9658],
+        [ 7107.3867,  7566.1460,   311.5293,   193.4870,  3077.7136]])
+            let fwdzd = fwdz.derivative
+            let fwdzdCorrect = combo.tensor([[ -61.2990,  -60.9345,  -53.9108,   24.2770,  -49.0920],
+        [-259.7747,   22.2698,   84.2454,  122.6920, -170.1531],
+        [  81.4803,   16.3485,   -6.7405,  -16.4330,    9.3993]])
+
+            let revx = combo.tensor([[[  12.2887, -124.2559,  -52.7272,  114.2419,   -1.4264],
+         [  -6.8527,   16.9581,   81.0657,  -70.5103, -179.5075],
+         [-143.7535,    6.8404,  136.9686,  -17.5498,   99.8140],
+         [ -19.5357,   84.2359, -162.9163,  -34.7652, -154.6033]],
+
+        [[-158.9860, -164.1908, -176.9966,   15.6294,  -94.1457],
+         [ -32.6161,  103.1001,   15.4024,  -69.1296, -101.3873],
+         [  95.1630,  -35.6618,   22.2831,   65.5144,  164.5470],
+         [  70.5986,   11.5431, -222.7342,  -31.0782,  -74.5307]],
+
+        [[  28.5503,   31.2357,  -43.3269,   76.8341,  -62.3500],
+         [ -84.7127,  -20.8504,   -4.7001,   86.7561,   15.4886],
+         [-160.7065, -135.9692,  -23.1987,  109.5910,  -59.4152],
+         [-137.4213,   61.7889,   -7.9040,   86.4179, -119.8093]]]).reverseDiff()
+            let revz = revx.variance(1, keepDim=false)
+            let revzCorrect = combo.tensor([[ 5005.0933,  7601.2646, 18217.4922,  6507.0361, 17399.5547],
+        [13404.5303, 12392.6992, 16300.9668,  3396.7710, 16329.9658],
+        [ 7107.3867,  7566.1460,   311.5293,   193.4870,  3077.7136]])
+            revz.reverse(combo.tensor([[ 1.1624,  0.3387, -0.0605,  0.7078,  0.1988],
+        [ 0.3989,  2.5134,  0.2398, -1.4177, -0.9216],
+        [ 0.7414, -0.5387,  0.2162,  1.6354, -0.2892]]))
+            let revxd = revx.derivative
+            let revxdCorrect = combo.tensor([[[  40.1038,  -27.1453,    2.1492,   54.9206,    7.6193],
+         [  25.2707,    4.7455,   -3.2432,  -32.2596,  -15.9765],
+         [ -80.8168,    2.4606,   -5.4963,   -7.2688,   21.0337],
+         [  15.4424,   19.9391,    6.5903,  -15.3923,  -12.6766]],
+
+        [[ -40.5575, -239.4233,  -13.8242,  -19.2766,   41.6355],
+         [  -6.9550,  208.4483,   16.9298,   60.8329,   46.0847],
+         [  27.0222,  -24.0607,   18.0296,  -66.4251, -117.3043],
+         [  20.4904,   55.0357,  -21.1352,   24.8688,   29.5841]],
+
+        [[  57.8873,  -16.9453,   -3.3934,  -14.2448,    1.1238],
+         [   1.9077,    1.7603,    2.1737,   -3.4274,  -13.8840],
+         [ -35.6518,   43.1029,   -0.4924,   21.4683,    0.5579],
+         [ -24.1432,  -27.9179,    1.7120,   -3.7961,   12.2023]]])
+
+            Assert.True(fwdz.allclose(fwdzCorrect, 0.01))
+            Assert.True(fwdzd.allclose(fwdzdCorrect, 0.01))
+            Assert.True(revz.allclose(revzCorrect, 0.01))
+            Assert.True(revxd.allclose(revxdCorrect, 0.01))
+
+    [<Test>]
+    member _.TestDerivativeVariance3x4x5dim2 () =
+        for combo in Combos.AllDevicesAndBackendsFloat32 do
+            let fwdx = combo.tensor([[[  12.2887, -124.2559,  -52.7272,  114.2419,   -1.4264],
+         [  -6.8527,   16.9581,   81.0657,  -70.5103, -179.5075],
+         [-143.7535,    6.8404,  136.9686,  -17.5498,   99.8140],
+         [ -19.5357,   84.2359, -162.9163,  -34.7652, -154.6033]],
+
+        [[-158.9860, -164.1908, -176.9966,   15.6294,  -94.1457],
+         [ -32.6161,  103.1001,   15.4024,  -69.1296, -101.3873],
+         [  95.1630,  -35.6618,   22.2831,   65.5144,  164.5470],
+         [  70.5986,   11.5431, -222.7342,  -31.0782,  -74.5307]],
+
+        [[  28.5503,   31.2357,  -43.3269,   76.8341,  -62.3500],
+         [ -84.7127,  -20.8504,   -4.7001,   86.7561,   15.4886],
+         [-160.7065, -135.9692,  -23.1987,  109.5910,  -59.4152],
+         [-137.4213,   61.7889,   -7.9040,   86.4179, -119.8093]]]).forwardDiff(combo.tensor([[[-0.2018, -0.1041, -1.4143,  0.5899,  1.9902],
+         [ 1.3994,  0.2818,  0.3825,  0.5614,  0.4695],
+         [ 1.1079, -1.0540, -0.0070,  1.1769, -0.0804],
+         [-0.5819, -1.1139,  1.1382, -0.7441,  1.2409]],
+
+        [[ 1.0826, -1.5065, -0.9816,  0.7011,  0.1583],
+         [-0.3210, -1.2465,  0.6185, -0.4356,  1.1717],
+         [-1.9160,  0.8670,  0.8507,  1.8093, -0.9532],
+         [-0.4961, -0.4367,  0.9074, -0.5528, -0.5268]],
+
+        [[-0.0027, -1.7200,  0.1368,  1.6846, -0.8406],
+         [-2.2005,  0.6316,  0.0512, -0.9567, -1.1787],
+         [-1.0725, -1.0259, -0.3348, -0.0872, -2.0366],
+         [-1.0987, -0.1846, -0.7413,  1.1284, -1.3934]]]))
+            let fwdz = fwdx.variance(2, keepDim=false)
+            let fwdzCorrect = combo.tensor([[ 7721.4170,  9763.5957, 12096.9463, 10647.2148],
+        [ 6423.5762,  6389.1211,  5685.6533, 12281.3975],
+        [ 3316.8809,  3846.6858, 11461.3164, 10463.2148]])
+            let fwdzd = fwdz.derivative
+            let fwdzdCorrect = combo.tensor([[  79.2487,    0.3256, -107.4668, -218.6879],
+        [  90.9122, -100.4024, -136.8122, -120.0738],
+        [  63.3553,   32.9453,   92.6304,  178.1714]])
+
+            let revx = combo.tensor([[[  12.2887, -124.2559,  -52.7272,  114.2419,   -1.4264],
+         [  -6.8527,   16.9581,   81.0657,  -70.5103, -179.5075],
+         [-143.7535,    6.8404,  136.9686,  -17.5498,   99.8140],
+         [ -19.5357,   84.2359, -162.9163,  -34.7652, -154.6033]],
+
+        [[-158.9860, -164.1908, -176.9966,   15.6294,  -94.1457],
+         [ -32.6161,  103.1001,   15.4024,  -69.1296, -101.3873],
+         [  95.1630,  -35.6618,   22.2831,   65.5144,  164.5470],
+         [  70.5986,   11.5431, -222.7342,  -31.0782,  -74.5307]],
+
+        [[  28.5503,   31.2357,  -43.3269,   76.8341,  -62.3500],
+         [ -84.7127,  -20.8504,   -4.7001,   86.7561,   15.4886],
+         [-160.7065, -135.9692,  -23.1987,  109.5910,  -59.4152],
+         [-137.4213,   61.7889,   -7.9040,   86.4179, -119.8093]]]).reverseDiff()
+            let revz = revx.variance(2, keepDim=false)
+            let revzCorrect = combo.tensor([[ 7721.4170,  9763.5957, 12096.9463, 10647.2148],
+        [ 6423.5762,  6389.1211,  5685.6533, 12281.3975],
+        [ 3316.8809,  3846.6858, 11461.3164, 10463.2148]])
+            revz.reverse(combo.tensor([[-2.2340,  1.9269, -1.3627,  1.0702],
+        [-0.0392,  0.2825,  0.1660, -1.0542],
+        [-1.0419, -0.5050,  0.7766, -0.7129]]))
+            let revxd = revx.derivative
+            let revxdCorrect = combo.tensor([[[ -25.3159,  127.2025,   47.3059, -139.1961,   -9.9963],
+         [  24.0064,   46.9473,  108.7130,  -37.3256, -142.3410],
+         [ 109.1648,    6.5571,  -82.1063,   23.1754,  -56.7909],
+         [  20.3231,   75.8496,  -56.3974,   12.1741,  -51.9493]],
+
+        [[   0.8468,    0.9487,    1.1994,   -2.5721,   -0.4228],
+         [  -2.2159,   16.9511,    4.5657,   -7.3726,  -11.9283],
+         [   2.7224,   -8.1382,   -3.3278,    0.2611,    8.4825],
+         [ -63.1680,  -32.0394,   91.4500,   -9.5734,   13.3308]],
+
+        [[ -11.6497,  -13.0487,   25.7960,  -36.8041,   35.7065],
+         [  20.9843,    4.8596,    0.7818,  -22.3101,   -4.3157],
+         [ -41.4596,  -31.8536,   11.9373,   63.5021,   -2.1262],
+         [  40.6495,  -30.3615,   -5.5186,  -39.1408,   34.3714]]])
+
+            Assert.True(fwdz.allclose(fwdzCorrect, 0.01))
+            Assert.True(fwdzd.allclose(fwdzdCorrect, 0.01))
+            Assert.True(revz.allclose(revzCorrect, 0.01))
+            Assert.True(revxd.allclose(revxdCorrect, 0.01))
+
+    [<Test>]
+    member _.TestDerivativeVariance3x4x5dim0keepdim () =
+        for combo in Combos.AllDevicesAndBackendsFloat32 do
+            let fwdx = combo.tensor([[[  12.2887, -124.2559,  -52.7272,  114.2419,   -1.4264],
+         [  -6.8527,   16.9581,   81.0657,  -70.5103, -179.5075],
+         [-143.7535,    6.8404,  136.9686,  -17.5498,   99.8140],
+         [ -19.5357,   84.2359, -162.9163,  -34.7652, -154.6033]],
+
+        [[-158.9860, -164.1908, -176.9966,   15.6294,  -94.1457],
+         [ -32.6161,  103.1001,   15.4024,  -69.1296, -101.3873],
+         [  95.1630,  -35.6618,   22.2831,   65.5144,  164.5470],
+         [  70.5986,   11.5431, -222.7342,  -31.0782,  -74.5307]],
+
+        [[  28.5503,   31.2357,  -43.3269,   76.8341,  -62.3500],
+         [ -84.7127,  -20.8504,   -4.7001,   86.7561,   15.4886],
+         [-160.7065, -135.9692,  -23.1987,  109.5910,  -59.4152],
+         [-137.4213,   61.7889,   -7.9040,   86.4179, -119.8093]]]).forwardDiff(combo.tensor([[[-0.2018, -0.1041, -1.4143,  0.5899,  1.9902],
+         [ 1.3994,  0.2818,  0.3825,  0.5614,  0.4695],
+         [ 1.1079, -1.0540, -0.0070,  1.1769, -0.0804],
+         [-0.5819, -1.1139,  1.1382, -0.7441,  1.2409]],
+
+        [[ 1.0826, -1.5065, -0.9816,  0.7011,  0.1583],
+         [-0.3210, -1.2465,  0.6185, -0.4356,  1.1717],
+         [-1.9160,  0.8670,  0.8507,  1.8093, -0.9532],
+         [-0.4961, -0.4367,  0.9074, -0.5528, -0.5268]],
+
+        [[-0.0027, -1.7200,  0.1368,  1.6846, -0.8406],
+         [-2.2005,  0.6316,  0.0512, -0.9567, -1.1787],
+         [-1.0725, -1.0259, -0.3348, -0.0872, -2.0366],
+         [-1.0987, -0.1846, -0.7413,  1.1284, -1.3934]]]))
+            let fwdz = fwdx.variance(0, keepDim=true)
+            let fwdzCorrect = combo.tensor([[[10794.8887, 10660.6611,  5566.4722,  2478.2983,  2219.9167],
+         [ 1573.3340,  4035.6096,  2011.9272,  8172.4951,  9631.0381],
+         [20472.9551,  5377.0923,  6812.4814,  4167.8657, 13283.8936],
+         [10882.2490,  1385.4567, 12293.1738,  4750.7139,  1612.0673]]])
+            let fwdzd = fwdz.derivative
+            let fwdzdCorrect = combo.tensor([[[-140.0910,  -78.9964,   36.7655,    2.7586,  103.5180],
+         [ 140.8442, -125.8886,    8.1067, -107.1141, -180.4103],
+         [-300.4409,   34.7350,    2.6895,  -63.9258,  165.8755],
+         [  64.6684,  -19.1403, -210.5787,  141.7153,  -64.6558]]])
+
+            let revx = combo.tensor([[[  12.2887, -124.2559,  -52.7272,  114.2419,   -1.4264],
+         [  -6.8527,   16.9581,   81.0657,  -70.5103, -179.5075],
+         [-143.7535,    6.8404,  136.9686,  -17.5498,   99.8140],
+         [ -19.5357,   84.2359, -162.9163,  -34.7652, -154.6033]],
+
+        [[-158.9860, -164.1908, -176.9966,   15.6294,  -94.1457],
+         [ -32.6161,  103.1001,   15.4024,  -69.1296, -101.3873],
+         [  95.1630,  -35.6618,   22.2831,   65.5144,  164.5470],
+         [  70.5986,   11.5431, -222.7342,  -31.0782,  -74.5307]],
+
+        [[  28.5503,   31.2357,  -43.3269,   76.8341,  -62.3500],
+         [ -84.7127,  -20.8504,   -4.7001,   86.7561,   15.4886],
+         [-160.7065, -135.9692,  -23.1987,  109.5910,  -59.4152],
+         [-137.4213,   61.7889,   -7.9040,   86.4179, -119.8093]]]).reverseDiff()
+            let revz = revx.variance(0, keepDim=true)
+            let revzCorrect = combo.tensor([[[10794.8887, 10660.6611,  5566.4722,  2478.2983,  2219.9167],
+         [ 1573.3340,  4035.6096,  2011.9272,  8172.4951,  9631.0381],
+         [20472.9551,  5377.0923,  6812.4814,  4167.8657, 13283.8936],
+         [10882.2490,  1385.4567, 12293.1738,  4750.7139,  1612.0673]]])
+            revz.reverse(combo.tensor([[[ 1.2325,  1.6082,  0.1428,  0.4234, -0.6071],
+         [-1.4745,  0.5807,  2.0655,  0.2852,  1.4344],
+         [ 1.4532,  0.8813, -2.1640,  0.0141,  0.4531],
+         [ 0.1771, -0.1893, -0.0594,  1.9851,  1.3877]]]))
+            let revxd = revx.derivative
+            let revxdCorrect = combo.tensor([[[ 6.3686e+01, -6.1944e+01,  5.4690e+00,  1.9198e+01, -3.1092e+01],
+         [-5.0933e+01, -9.3551e+00,  1.0426e+02, -1.5082e+01, -1.3059e+02],
+         [-1.0752e+02,  5.4438e+01, -1.9826e+02, -9.8877e-01,  1.4273e+01],
+         [ 1.6380e+00, -6.0047e+00,  1.8863e+00, -8.2627e+01, -5.3133e+01]],
+
+        [[-1.4742e+02, -1.2617e+02, -1.2281e+01, -2.2557e+01,  2.5198e+01],
+         [-1.2943e+01,  4.0664e+01, -3.1369e+01, -1.4688e+01, -1.8531e+01],
+         [ 2.3968e+02,  1.6981e+01,  4.9919e+01,  1.8339e-01,  4.3605e+01],
+         [ 1.7598e+01,  7.7592e+00,  5.4423e+00, -7.5308e+01,  5.7982e+01]],
+
+        [[ 8.3729e+01,  1.8811e+02,  6.8117e+00,  3.3587e+00,  5.8945e+00],
+         [ 6.3876e+01, -3.1309e+01, -7.2892e+01,  2.9770e+01,  1.4912e+02],
+         [-1.3216e+02, -7.1419e+01,  1.4834e+02,  8.0538e-01, -5.7878e+01],
+         [-1.9236e+01, -1.7545e+00, -7.3287e+00,  1.5793e+02, -4.8497e+00]]])
+
+            Assert.True(fwdz.allclose(fwdzCorrect, 0.01))
+            Assert.True(fwdzd.allclose(fwdzdCorrect, 0.01))
+            Assert.True(revz.allclose(revzCorrect, 0.01))
+            Assert.True(revxd.allclose(revxdCorrect, 0.01))
+
+    [<Test>]
+    member _.TestDerivativeVariance3x4x5dim1keepdim () =
+        for combo in Combos.AllDevicesAndBackendsFloat32 do
+            let fwdx = combo.tensor([[[  12.2887, -124.2559,  -52.7272,  114.2419,   -1.4264],
+         [  -6.8527,   16.9581,   81.0657,  -70.5103, -179.5075],
+         [-143.7535,    6.8404,  136.9686,  -17.5498,   99.8140],
+         [ -19.5357,   84.2359, -162.9163,  -34.7652, -154.6033]],
+
+        [[-158.9860, -164.1908, -176.9966,   15.6294,  -94.1457],
+         [ -32.6161,  103.1001,   15.4024,  -69.1296, -101.3873],
+         [  95.1630,  -35.6618,   22.2831,   65.5144,  164.5470],
+         [  70.5986,   11.5431, -222.7342,  -31.0782,  -74.5307]],
+
+        [[  28.5503,   31.2357,  -43.3269,   76.8341,  -62.3500],
+         [ -84.7127,  -20.8504,   -4.7001,   86.7561,   15.4886],
+         [-160.7065, -135.9692,  -23.1987,  109.5910,  -59.4152],
+         [-137.4213,   61.7889,   -7.9040,   86.4179, -119.8093]]]).forwardDiff(combo.tensor([[[-0.2018, -0.1041, -1.4143,  0.5899,  1.9902],
+         [ 1.3994,  0.2818,  0.3825,  0.5614,  0.4695],
+         [ 1.1079, -1.0540, -0.0070,  1.1769, -0.0804],
+         [-0.5819, -1.1139,  1.1382, -0.7441,  1.2409]],
+
+        [[ 1.0826, -1.5065, -0.9816,  0.7011,  0.1583],
+         [-0.3210, -1.2465,  0.6185, -0.4356,  1.1717],
+         [-1.9160,  0.8670,  0.8507,  1.8093, -0.9532],
+         [-0.4961, -0.4367,  0.9074, -0.5528, -0.5268]],
+
+        [[-0.0027, -1.7200,  0.1368,  1.6846, -0.8406],
+         [-2.2005,  0.6316,  0.0512, -0.9567, -1.1787],
+         [-1.0725, -1.0259, -0.3348, -0.0872, -2.0366],
+         [-1.0987, -0.1846, -0.7413,  1.1284, -1.3934]]]))
+            let fwdz = fwdx.variance(1, keepDim=true)
+            let fwdzCorrect = combo.tensor([[[ 5005.0933,  7601.2646, 18217.4922,  6507.0361, 17399.5547]],
+
+        [[13404.5303, 12392.6992, 16300.9668,  3396.7710, 16329.9658]],
+
+        [[ 7107.3867,  7566.1460,   311.5293,   193.4870,  3077.7136]]])
+            let fwdzd = fwdz.derivative
+            let fwdzdCorrect = combo.tensor([[[ -61.2990,  -60.9345,  -53.9108,   24.2770,  -49.0920]],
+
+        [[-259.7747,   22.2698,   84.2454,  122.6920, -170.1531]],
+
+        [[  81.4803,   16.3485,   -6.7405,  -16.4330,    9.3993]]])
+
+            let revx = combo.tensor([[[  12.2887, -124.2559,  -52.7272,  114.2419,   -1.4264],
+         [  -6.8527,   16.9581,   81.0657,  -70.5103, -179.5075],
+         [-143.7535,    6.8404,  136.9686,  -17.5498,   99.8140],
+         [ -19.5357,   84.2359, -162.9163,  -34.7652, -154.6033]],
+
+        [[-158.9860, -164.1908, -176.9966,   15.6294,  -94.1457],
+         [ -32.6161,  103.1001,   15.4024,  -69.1296, -101.3873],
+         [  95.1630,  -35.6618,   22.2831,   65.5144,  164.5470],
+         [  70.5986,   11.5431, -222.7342,  -31.0782,  -74.5307]],
+
+        [[  28.5503,   31.2357,  -43.3269,   76.8341,  -62.3500],
+         [ -84.7127,  -20.8504,   -4.7001,   86.7561,   15.4886],
+         [-160.7065, -135.9692,  -23.1987,  109.5910,  -59.4152],
+         [-137.4213,   61.7889,   -7.9040,   86.4179, -119.8093]]]).reverseDiff()
+            let revz = revx.variance(1, keepDim=true)
+            let revzCorrect = combo.tensor([[[ 5005.0933,  7601.2646, 18217.4922,  6507.0361, 17399.5547]],
+
+        [[13404.5303, 12392.6992, 16300.9668,  3396.7710, 16329.9658]],
+
+        [[ 7107.3867,  7566.1460,   311.5293,   193.4870,  3077.7136]]])
+            revz.reverse(combo.tensor([[[ 0.2855, -0.3991, -1.1480, -0.8643,  0.0800]],
+
+        [[-0.2888,  1.5648,  1.0319,  0.9465,  0.4948]],
+
+        [[ 0.6685,  0.0741, -0.1208, -1.5493,  0.3746]]]))
+            let revxd = revx.derivative
+            let revxdCorrect = combo.tensor([[[   9.8509,   31.9776,   40.8121,  -67.0634,    3.0651],
+         [   6.2073,   -5.5903,  -61.5860,   39.3920,   -6.4270],
+         [ -19.8513,   -2.8987, -104.3711,    8.8759,    8.4615],
+         [   3.7932,  -23.4886,  125.1450,   18.7955,   -5.0996]],
+
+        [[  29.3653, -149.0655,  -59.4938,   12.8697,  -22.3557],
+         [   5.0357,  129.7804,   72.8588,  -40.6142,  -24.7447],
+         [ -19.5652,  -14.9802,   77.5921,   44.3478,   62.9852],
+         [ -14.8358,   34.2654,  -90.9571,  -16.6033,  -15.8849]],
+
+        [[  52.1998,    2.3295,    1.8966,   13.4950,   -1.4555],
+         [   1.7203,   -0.2420,   -1.2149,    3.2470,   17.9818],
+         [ -32.1489,   -5.9254,    0.2752,  -20.3383,   -0.7226],
+         [ -21.7711,    3.8379,   -0.9568,    3.5963,  -15.8038]]])
+
+            Assert.True(fwdz.allclose(fwdzCorrect, 0.01))
+            Assert.True(fwdzd.allclose(fwdzdCorrect, 0.01))
+            Assert.True(revz.allclose(revzCorrect, 0.01))
+            Assert.True(revxd.allclose(revxdCorrect, 0.01))
+
+    [<Test>]
+    member _.TestDerivativeVariance3x4x5dim2keepdim () =
+        for combo in Combos.AllDevicesAndBackendsFloat32 do
+            let fwdx = combo.tensor([[[  12.2887, -124.2559,  -52.7272,  114.2419,   -1.4264],
+         [  -6.8527,   16.9581,   81.0657,  -70.5103, -179.5075],
+         [-143.7535,    6.8404,  136.9686,  -17.5498,   99.8140],
+         [ -19.5357,   84.2359, -162.9163,  -34.7652, -154.6033]],
+
+        [[-158.9860, -164.1908, -176.9966,   15.6294,  -94.1457],
+         [ -32.6161,  103.1001,   15.4024,  -69.1296, -101.3873],
+         [  95.1630,  -35.6618,   22.2831,   65.5144,  164.5470],
+         [  70.5986,   11.5431, -222.7342,  -31.0782,  -74.5307]],
+
+        [[  28.5503,   31.2357,  -43.3269,   76.8341,  -62.3500],
+         [ -84.7127,  -20.8504,   -4.7001,   86.7561,   15.4886],
+         [-160.7065, -135.9692,  -23.1987,  109.5910,  -59.4152],
+         [-137.4213,   61.7889,   -7.9040,   86.4179, -119.8093]]]).forwardDiff(combo.tensor([[[-0.2018, -0.1041, -1.4143,  0.5899,  1.9902],
+         [ 1.3994,  0.2818,  0.3825,  0.5614,  0.4695],
+         [ 1.1079, -1.0540, -0.0070,  1.1769, -0.0804],
+         [-0.5819, -1.1139,  1.1382, -0.7441,  1.2409]],
+
+        [[ 1.0826, -1.5065, -0.9816,  0.7011,  0.1583],
+         [-0.3210, -1.2465,  0.6185, -0.4356,  1.1717],
+         [-1.9160,  0.8670,  0.8507,  1.8093, -0.9532],
+         [-0.4961, -0.4367,  0.9074, -0.5528, -0.5268]],
+
+        [[-0.0027, -1.7200,  0.1368,  1.6846, -0.8406],
+         [-2.2005,  0.6316,  0.0512, -0.9567, -1.1787],
+         [-1.0725, -1.0259, -0.3348, -0.0872, -2.0366],
+         [-1.0987, -0.1846, -0.7413,  1.1284, -1.3934]]]))
+            let fwdz = fwdx.variance(2, keepDim=true)
+            let fwdzCorrect = combo.tensor([[[ 7721.4170],
+         [ 9763.5957],
+         [12096.9463],
+         [10647.2148]],
+
+        [[ 6423.5762],
+         [ 6389.1211],
+         [ 5685.6533],
+         [12281.3975]],
+
+        [[ 3316.8809],
+         [ 3846.6858],
+         [11461.3164],
+         [10463.2148]]])
+            let fwdzd = fwdz.derivative
+            let fwdzdCorrect = combo.tensor([[[  79.2487],
+         [   0.3256],
+         [-107.4668],
+         [-218.6879]],
+
+        [[  90.9122],
+         [-100.4024],
+         [-136.8122],
+         [-120.0738]],
+
+        [[  63.3553],
+         [  32.9453],
+         [  92.6304],
+         [ 178.1714]]])
+
+            let revx = combo.tensor([[[  12.2887, -124.2559,  -52.7272,  114.2419,   -1.4264],
+         [  -6.8527,   16.9581,   81.0657,  -70.5103, -179.5075],
+         [-143.7535,    6.8404,  136.9686,  -17.5498,   99.8140],
+         [ -19.5357,   84.2359, -162.9163,  -34.7652, -154.6033]],
+
+        [[-158.9860, -164.1908, -176.9966,   15.6294,  -94.1457],
+         [ -32.6161,  103.1001,   15.4024,  -69.1296, -101.3873],
+         [  95.1630,  -35.6618,   22.2831,   65.5144,  164.5470],
+         [  70.5986,   11.5431, -222.7342,  -31.0782,  -74.5307]],
+
+        [[  28.5503,   31.2357,  -43.3269,   76.8341,  -62.3500],
+         [ -84.7127,  -20.8504,   -4.7001,   86.7561,   15.4886],
+         [-160.7065, -135.9692,  -23.1987,  109.5910,  -59.4152],
+         [-137.4213,   61.7889,   -7.9040,   86.4179, -119.8093]]]).reverseDiff()
+            let revz = revx.variance(2, keepDim=true)
+            let revzCorrect = combo.tensor([[[ 7721.4170],
+         [ 9763.5957],
+         [12096.9463],
+         [10647.2148]],
+
+        [[ 6423.5762],
+         [ 6389.1211],
+         [ 5685.6533],
+         [12281.3975]],
+
+        [[ 3316.8809],
+         [ 3846.6858],
+         [11461.3164],
+         [10463.2148]]])
+            revz.reverse(combo.tensor([[[-3.2121e-01],
+         [ 5.9253e-01],
+         [-1.8960e-01],
+         [ 4.6536e-01]],
+
+        [[-6.8197e-01],
+         [-5.8972e-01],
+         [-5.3173e-01],
+         [-3.8366e-01]],
+
+        [[-6.7375e-01],
+         [ 1.1434e-03],
+         [ 8.3231e-01],
+         [ 1.1913e+00]]]))
+            let revxd = revx.derivative
+            let revxdCorrect = combo.tensor([[[-3.6400e+00,  1.8290e+01,  6.8018e+00, -2.0014e+01, -1.4373e+00],
+         [ 7.3819e+00,  1.4436e+01,  3.3429e+01, -1.1478e+01, -4.3770e+01],
+         [ 1.5189e+01,  9.1231e-01, -1.1424e+01,  3.2245e+00, -7.9015e+00],
+         [ 8.8376e+00,  3.2983e+01, -2.4525e+01,  5.2939e+00, -2.2590e+01]],
+
+        [[ 1.4747e+01,  1.6522e+01,  2.0888e+01, -4.4794e+01, -7.3626e+00],
+         [ 4.6263e+00, -3.5391e+01, -9.5323e+00,  1.5393e+01,  2.4904e+01],
+         [-8.7187e+00,  2.6063e+01,  1.0657e+01, -8.3622e-01, -2.7166e+01],
+         [-2.2988e+01, -1.1660e+01,  3.3281e+01, -3.4840e+00,  4.8514e+00]],
+
+        [[-7.5331e+00, -8.4378e+00,  1.6681e+01, -2.3799e+01,  2.3089e+01],
+         [-4.7514e-02, -1.1004e-02, -1.7702e-03,  5.0516e-02,  9.7718e-03],
+         [-4.4431e+01, -3.4137e+01,  1.2793e+01,  6.8054e+01, -2.2786e+00],
+         [-6.7925e+01,  5.0734e+01,  9.2215e+00,  6.5404e+01, -5.7434e+01]]])
+
+            Assert.True(fwdz.allclose(fwdzCorrect, 0.01))
+            Assert.True(fwdzd.allclose(fwdzdCorrect, 0.01))
+            Assert.True(revz.allclose(revzCorrect, 0.01))
+            Assert.True(revxd.allclose(revxdCorrect, 0.01))
 
     [<Test>]
     member _.TestDerivativeStddev () =
@@ -2416,6 +3370,39 @@ type TestDerivatives () =
             Assert.True(revxd.allclose(revxdCorrect, 0.01))
 
     [<Test>]
+    member _.TestDerivativeSplitTWithDim () =
+        for combo in Combos.AllDevicesAndBackendsFloat32 do
+            let fwdx = combo.tensor([[1,2,3],[4,5,6]]).forwardDiff(combo.tensor([[10,20,30],[40,50,60]]))
+            let fwdz = fwdx.split([| 1;2 |], dim=1)
+            let fwdza = fwdz.[0]
+            let fwdzb = fwdz.[1]
+            let fwdzda = fwdza.derivative
+            let fwdzdb = fwdzb.derivative
+            let fwdzaCorrect = combo.tensor([[1], [4]])
+            let fwdzbCorrect = combo.tensor([[2, 3], [5, 6]])
+            let fwdzdaCorrect = combo.tensor([[10], [40]])
+            let fwdzdbCorrect = combo.tensor([[20, 30], [50, 60]])
+
+            let revx = combo.tensor([[1,2,3],[4,5,6]]).reverseDiff()
+            let revz = revx.split([| 1;2 |], dim=1)
+            let revza = revz.[0]
+            let revzb = revz.[1]
+            let revzaCorrect = combo.tensor([[1], [4]])
+            let revzbCorrect = combo.tensor([[2, 3], [5, 6]])
+            revza.reverse(combo.tensor([[10], [40]]))
+            revzb.reverse(combo.tensor([[20, 30], [50, 60]]), zeroDerivatives=false)
+            let revxd = revx.derivative
+            let revxdCorrect = combo.tensor([[10,20,30],[40,50,60]])
+
+            Assert.True(fwdza.allclose(fwdzaCorrect, 0.01))
+            Assert.True(fwdzb.allclose(fwdzbCorrect, 0.01))
+            Assert.True(fwdzda.allclose(fwdzdaCorrect, 0.01))
+            Assert.True(fwdzdb.allclose(fwdzdbCorrect, 0.01))
+            Assert.True(revza.allclose(revzaCorrect, 0.01))
+            Assert.True(revzb.allclose(revzbCorrect, 0.01))
+            Assert.True(revxd.allclose(revxdCorrect, 0.01))
+
+    [<Test>]
     member _.TestDerivativeSliceT () =
         for combo in Combos.AllDevicesAndBackendsFloat32 do
             let fwdx = combo.tensor([54.7919; 70.6440; 16.0868; 74.5486; 82.9318]).forwardDiff(combo.tensor([8.8405; 2.7188; 1.5814; 8.7951; 0.1119]))
@@ -2626,7 +3613,7 @@ type TestDerivatives () =
                 [ 1.2203; -0.8378; -0.3876];
                 [ 0.3626; -0.1200; -0.1496];
                 [-0.6304;  1.0198; -0.4969]])
-            let revyd = revy.isNoDiff()
+            let revyd = revy.isNoDiff
             let revydCorrect = true
 
             Assert.True(fwdz.allclose(fwdzCorrect, 0.01))
@@ -2672,7 +3659,7 @@ type TestDerivatives () =
                 [ 1.2203; -0.8378; -0.3876];
                 [ 0.3626; -0.1200; -0.1496];
                 [-0.6304;  1.0198; -0.4969]]))
-            let revxd = revx.isNoDiff()
+            let revxd = revx.isNoDiff
             let revxdCorrect = true
             let revyd = revy.derivative
             let revydCorrect = combo.tensor([[1.2199; -0.5281]; [-0.8378; -0.3876]])
@@ -2790,7 +3777,7 @@ type TestDerivatives () =
 
     [<Test>]
     member _.TestDerivativeClampT () =
-        for combo in Combos.SignedIntegralAndFloatingPointExcept16s do 
+        for combo in Combos.FloatingPointExcept16s do 
             let fwdx = combo.tensor([-4,-3,-2,-1,0,1,2,3,4]).forwardDiff(combo.tensor([10, 20, 30, 40, 50, 60, 70, 80, 90]))
             let fwdz = fwdx.clamp(-2, 3)
             let fwdzCorrect = combo.tensor([-2, -2, -2, -1,  0,  1,  2,  3,  3])
