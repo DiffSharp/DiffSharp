@@ -37,7 +37,6 @@
     <Authors>Atılım Güneş Baydin, Don Syme, Barak A. Pearlmutter, Jeffrey Siskind, and DiffSharp contributors</Authors>
     <Owners>DiffSharp maintainers</Owners>
     <PackageProjectUrl>https://diffsharp.github.io</PackageProjectUrl>
-    <PackageReadmeFile>README.md</PackageReadmeFile>
     <RepositoryUrl>https://github.com/DiffSharp/DiffSharp/</RepositoryUrl>
     <RepositoryBranch>dev</RepositoryBranch>
     <PackageLicenseExpression>BSD-2-Clause</PackageLicenseExpression>
