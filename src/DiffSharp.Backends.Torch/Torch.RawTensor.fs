@@ -319,6 +319,11 @@ type TorchRawTensor(tt: torch.Tensor, shape: Shape, dtype: Dtype, device: Device
         let result = tt.inverse()
         t.MakeLike(result, shape=t.Shape)
 
+    override t.DetT() =
+        Shape.checkCanDet t.Shape
+        let result = torch.linalg.det(tt)
+        t.MakeLike(result)
+
     override t1.SolveTT(t2) =
         let newShape = Shape.checkCanSolve t1.Shape t2.Shape
         let result = torch.linalg.solve(tt, t2.TorchTensor)
