@@ -738,7 +738,7 @@ module internal RawTensorCPU =
                 t.UnstackT(0)
                 |> Array.map (fun v -> let lu, _, toggle = LUDecomposition(v.ToArray() :?> ^T[,]) in lu, toggle)
                 |> Array.map (fun (lu, toggle) -> toggle * (prod (diagonal lu)))
-                |> Array.map (fun v -> t.MakeLike([|v|], [|t.Shape.[0]|]))
+                |> Array.map (fun v -> t.MakeLike([|v|], [||]))
             t.StackTs(tdets, 0) :?> RawTensorCPU<'T>
 
     let inline SolveTT(a: RawTensorCPU< ^T >, b: RawTensor) : RawTensorCPU< ^T > =
