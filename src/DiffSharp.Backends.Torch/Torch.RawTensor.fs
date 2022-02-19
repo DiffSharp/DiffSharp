@@ -322,7 +322,8 @@ type TorchRawTensor(tt: torch.Tensor, shape: Shape, dtype: Dtype, device: Device
     override t.DetT() =
         Shape.checkCanDet t.Shape
         let result = torch.linalg.det(tt)
-        t.MakeLike(result)
+        let shape = result.shape |> Array.map int32
+        t.MakeLike(result, shape=shape)
 
     override t1.SolveTT(t2) =
         let newShape = Shape.checkCanSolve t1.Shape t2.Shape

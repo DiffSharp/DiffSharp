@@ -718,21 +718,28 @@ module internal RawTensorCPU =
                 |> Array.map (fun v -> t.MakeLike(v, [|t.Shape.[1]; t.Shape.[2]|]))
             t.StackTs(tinvs, 0) :?> RawTensorCPU<'T>
     
+    let inline diagonal(square: ^T[,]) =
+        let n = square.GetLength(0)
+        if n <> square.GetLength(1) then failwith "Expecting a square array"
+        Array.init n (fun i -> square.[i, i])
+
+    let inline prod(t: ^T[]) =
+        Array.fold (fun s x -> s * x) LanguagePrimitives.GenericOne<'T> t
+
     let inline DetT(t: RawTensorCPU< ^T >) : RawTensorCPU< ^T > =
         Shape.checkCanDet t.Shape
         let dim = t.Shape.Length
         if dim = 2 then
             let lu, _, toggle = LUDecomposition(t.ToArray() :?> ^T[,])
-            let n = t.Shape.[1]
-            let luDiagonal = Array.init n (fun i -> lu.[i, i])
-            let d:^T = toggle * (Array.fold (fun s x -> s * x) LanguagePrimitives.GenericOne<'T> (luDiagonal))
+            let d:^T = toggle * (prod (diagonal lu))
             t.MakeLike([|d|], [||]) :?> RawTensorCPU<'T>
         else
-            // let tdets = 
-            //     t.UnstackT(0)
-            //     |> Array.map (fun v -> DetT(v :?> RawTensorCPU< ^T > ) :> RawTensor)
-            // t.StackTs(tdets, 0) :?> RawTensorCPU<'T>
-            failwith "Not implemented"
+            let tdets = 
+                t.UnstackT(0)
+                |> Array.map (fun v -> let lu, _, toggle = LUDecomposition(v.ToArray() :?> ^T[,]) in lu, toggle)
+                |> Array.map (fun (lu, toggle) -> toggle * (prod (diagonal lu)))
+                |> Array.map (fun v -> t.MakeLike([|v|], [|t.Shape.[0]|]))
+            t.StackTs(tdets, 0) :?> RawTensorCPU<'T>
 
     let inline SolveTT(a: RawTensorCPU< ^T >, b: RawTensor) : RawTensorCPU< ^T > =
         let newShape = Shape.checkCanSolve a.Shape b.Shape
