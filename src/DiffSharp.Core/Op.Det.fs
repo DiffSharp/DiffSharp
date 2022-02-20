@@ -14,10 +14,25 @@ module OpDetExtensions =
             Tensor.Op
                 { new UnaryOp("det") with 
                     member _.fRaw(a) = a.DetT()
-                    member _.ad_dfda(a:Tensor,ad,f) = f * dsharp.trace(a.inv() * ad)
-                    member _.fd_dfda(a,f,fd) = fd * f * a.inv().transpose()
+                    member _.ad_dfda(a:Tensor,ad,f) = 
+                        if a.dim = 2 then
+                            // The following differs from Jacobi's formula which has a trace instead of a sum
+                            // But it is confirmed to be correct by reverse-mode-based forward-mode eval and also finite differences
+                            f * (a.inv().transpose() * ad).sum()
+                        else
+                            f * (a.inv().transpose(-1, -2) * ad).flatten(1).sum(-1)
+                    member _.fd_dfda(a,f,fd) = 
+                        if a.dim = 2 then 
+                            fd * f * a.inv().transpose()
+                        else
+                            // Ugly but correct
+                            let v1 = fd.unsqueeze(1).unsqueeze(1)
+                            let v2 = f.unsqueeze(1).unsqueeze(1)
+                            let v3 = a.inv().transpose(-1, 2)
+                            let v4 = v1 * v2 * v3
+                            v4.transpose(-1, -2)
                 }
                 (a)
 
     type dsharp with
-        static member inv(a:Tensor) = a.det()
+        static member det(a:Tensor) = a.det()
