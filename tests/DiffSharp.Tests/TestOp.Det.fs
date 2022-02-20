@@ -7,7 +7,7 @@ namespace Tests
 
 open NUnit.Framework
 open DiffSharp
-open DiffSharp.Numerical
+
 
 [<TestFixture>]
 type TestTensorDet () =
