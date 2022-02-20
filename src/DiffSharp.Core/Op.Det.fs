@@ -26,11 +26,7 @@ module OpDetExtensions =
                             fd * f * a.inv().transpose()
                         else
                             // Ugly but correct
-                            let v1 = fd.unsqueeze(1).unsqueeze(1)
-                            let v2 = f.unsqueeze(1).unsqueeze(1)
-                            let v3 = a.inv().transpose(-1, 2)
-                            let v4 = v1 * v2 * v3
-                            v4.transpose(-1, -2)
+                            fd.unsqueeze(1).unsqueeze(1) * f.unsqueeze(1).unsqueeze(1) * a.inv().transpose(-1, -2)
                 }
                 (a)
 
