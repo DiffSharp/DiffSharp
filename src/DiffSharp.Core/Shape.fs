@@ -463,6 +463,13 @@ module rec Shape =
         if dim = 2 then if shape.[0] <> shape.[1] then failwith "Expecting a square matrix"
         if dim = 3 then if shape.[1] <> shape.[2] then failwith "Expecting square matrices"
     
+    /// Checks if the given shape is appropriate for a determinant operation.
+    let checkCanDet (shape: Shape) =
+        let dim = shape.Length
+        if not (dim = 2 || dim = 3) then failwith "Expecting 2d tensor (a square matrix) or a 3d tensor (a batch of square matrices)."
+        if dim = 2 then if shape.[0] <> shape.[1] then failwith "Expecting a square matrix"
+        if dim = 3 then if shape.[1] <> shape.[2] then failwith "Expecting square matrices"
+    
     /// Checks if the given shapes are appropriate for a linear solve operation, and returns the resulting shape of the solution
     let checkCanSolve (shapeA: Shape) (shapeB: Shape) =
         let dimA = shapeA.Length

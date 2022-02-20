@@ -4,8 +4,6 @@
 
 -----------------------------------------
 
-[Documentation](https://diffsharp.github.io/)
-
 [![Build Status](https://github.com/DiffSharp/DiffSharp/workflows/Build/test/docs/publish/badge.svg)](https://github.com/DiffSharp/DiffSharp/actions)
 [![Coverage Status](https://coveralls.io/repos/github/DiffSharp/DiffSharp/badge.svg?branch=)](https://coveralls.io/github/DiffSharp/DiffSharp?branch=)
 
@@ -13,74 +11,39 @@ This is the development branch of DiffSharp 1.0.
 
 > **NOTE: This branch is undergoing development. It has incomplete code, functionality, and design that are likely to change without notice.**
 
-## Getting Started
+DiffSharp is a tensor library with support for [differentiable programming](https://en.wikipedia.org/wiki/Differentiable_programming). It is designed for use in machine learning, probabilistic programming, optimization and other domains.
 
-DiffSharp is normally used from an F# Jupyter notebook.  You can simply open examples directly in the browser, e.g.
+**Key features**
 
-* [index.ipynb](https://mybinder.org/v2/gh/diffsharp/diffsharp.github.io/master?filepath=index.ipynb)
+* Nested and mixed-mode differentiation
+* Common optimizers, model elements, differentiable probability distributions
+* F# for robust functional programming
+* PyTorch familiar naming and idioms, efficient LibTorch CUDA/C++ tensors with GPU support
+* Linux, macOS, Windows supported
+* Use interactive notebooks in Jupyter and Visual Studio Code
+* 100% open source
 
-* [getting-started-install.ipynb](https://mybinder.org/v2/gh/diffsharp/diffsharp.github.io/master?filepath=getting-started-install.ipynb)
+## Documentation
 
-To use locally in [Visual Studio Code](https://code.visualstudio.com/):
+You can find the documentation [here](https://diffsharp.github.io/), including information on installation and getting started.
 
-- Install [.NET Interactive Notebooks for VS Code](https://marketplace.visualstudio.com/items?itemName=ms-dotnettools.dotnet-interactive-vscode)
+Release notes can be found [here](https://github.com/DiffSharp/DiffSharp/blob/dev/RELEASE_NOTES.md).
 
-- After opening an `.ipynb` execute `Ctrl-Shift-P` for the command palette and chose `Reopen Editor With...` then `.NET Interactive Notebooks`
+## Communication
 
-- To restart the kernel use `restart` from the command palette.
+Please use [GitHub issues](https://github.com/DiffSharp/DiffSharp/issues) to share bug reports, feature requests, installation issues, suggestions etc.
 
-To use locally in Jupyter, first install Jupyter and then:
+## Contributing
 
-    dotnet tool install -g microsoft.dotnet-interactive
-    dotnet interactive jupyter install
+We welcome all contributions.
 
-When using .NET Interactive it is best to completely turn off automatic HTML displays of outputs:
+* Bug fixes: if you encounter a bug, please open an [issue](https://github.com/DiffSharp/DiffSharp/issues) describing the bug. If you are planning to contribute a bug fix, please feel free to do so in a pull request.
+* New features: if you plan to contribute new features, please first open an [issue](https://github.com/DiffSharp/DiffSharp/issues) to discuss the feature before creating a pull request.
 
-    Formatter.SetPreferredMimeTypeFor(typeof<obj>, "text/plain")
-    Formatter.Register(fun x writer -> fprintfn writer "%120A" x )
+## The Team
 
-You can also use DiffSharp from a script or an application.  Here are some example scripts with appropriate package references:
+DiffSharp is developed by [Atılım Güneş Baydin](http://www.robots.ox.ac.uk/~gunes/), [Don Syme](https://www.microsoft.com/en-us/research/people/dsyme/) and other contributors, having started as a project supervised by the automatic differentiation wizards [Barak Pearlmutter](https://scholar.google.com/citations?user=AxFrw0sAAAAJ&hl=en) and [Jeffrey Siskind](https://scholar.google.com/citations?user=CgSBtPYAAAAJ&hl=en).
 
-* [docs/index.fsx](http://diffsharp.github.io/index.fsx)
+## License
 
-* [docs/getting-started-install.fsx](http://diffsharp.github.io/getting-started-install.fsx)
-
-## Available packages and backends
-
-Now reference an appropriate nuget package from https://nuget.org:
-
-* [`DiffSharp-lite`](https://www.nuget.org/packages/DiffSharp-lite) - This is the reference backend.
-
-* [`DiffSharp-cpu`](https://www.nuget.org/packages/DiffSharp-cpu) - This includes the Torch backend using CPU only.
-
-* [`DiffSharp-cuda-linux`](https://www.nuget.org/packages/DiffSharp-cuda-linux) - This includes the Torch CPU/CUDA 11.1 backend for Linux. Large download. Requires .NET 6 SDK, version `6.0.100-preview.5.21302.13` or greater.
-
-* [`DiffSharp-cuda-windows`](https://www.nuget.org/packages/DiffSharp-cuda-windows) - This includes the Torch CPU/CUDA 11.1 backend for Windows. Large download.
-
-For all but `DiffSharp-lite` add the following to your code:
-
-    dsharp.config(backend=Backend.Torch)
-
-## Using a pre-installed or self-built LibTorch 1.8.0
-
-The Torch CPU and CUDA packages above are large.  If you already have `libtorch` 1.8.0 available on your machine you can
-
-1. reference `DiffSharp-lite`
-
-2. set `LD_LIBRARY_PATH` to include a directory containing the relevant `torch.so`, `torch_cpu.so` and `torch_cuda.so`, or
-   execute [NativeLibrary.Load](https://docs.microsoft.com/en-us/dotnet/api/system.runtime.interopservices.nativelibrary.load?view=net-5.0) on
-   `torch.so`.
-
-3. use `dsharp.config(backend=Backend.Torch)`
-
-## Developing DiffSharp Libraries
-
-To develop libraries built on DiffSharp, do the following:
-
-1. reference `DiffSharp.Core` and `DiffSharp.Data` in your library code.
-
-2. reference `DiffSharp.Backends.Reference` in your correctness testing code.
-
-3. reference `DiffSharp.Backends.Torch` and `libtorch-cpu` in your CPU testing code.
-
-4. reference `DiffSharp.Backends.Torch` and `libtorch-cuda-linux` or `libtorch-cuda-windows` in your (optional) GPU testing code.
+DiffSharp is licensed under the BSD 2-Clause "Simplified" License, which you can find in the [LICENSE](https://github.com/DiffSharp/DiffSharp/blob/dev/LICENSE) file in this repository.

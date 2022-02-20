@@ -15,7 +15,7 @@ DiffSharp.dsharp.seed(123)
 (*** condition: ipynb ***)
 #if IPYNB
 // Google Colab only: uncomment and run the following to install dotnet and the F# kernel
-// !bash <(curl -Ls https://raw.githubusercontent.com/gbaydin/scripts/main/colab_dotnet5.sh)
+// !bash <(curl -Ls https://raw.githubusercontent.com/gbaydin/scripts/main/colab_dotnet6.sh)
 #endif // IPYNB
 (*** condition: ipynb ***)
 #if IPYNB
@@ -23,7 +23,7 @@ DiffSharp.dsharp.seed(123)
 #r "nuget: DiffSharp-lite,{{fsdocs-package-version}}"
 
 // Set dotnet interactive formatter to plaintext
-Formatter.SetPreferredMimeTypeFor(typeof<obj>, "text/plain")
+Formatter.SetPreferredMimeTypesFor(typeof<obj>, "text/plain")
 Formatter.Register(fun (x:obj) (writer: TextWriter) -> fprintfn writer "%120A" x )
 #endif // IPYNB
 
@@ -38,4 +38,27 @@ Formatter.Register(fun (x:obj) (writer: TextWriter) -> fprintfn writer "%120A" x
 * The `cref:T:DiffSharp.Tensor` type
 
 Saving tensors as image and loading images as tensors
+
+
+## Converting between Tensors and arrays
+
+System.Array and F# arrays
+
 *)
+
+open DiffSharp
+
+// Tensor
+let t1 = dsharp.tensor [ 0.0 .. 0.2 .. 1.0 ]
+
+// System.Array
+let a1 = t1.toArray()
+
+// []<float32>
+let a1b = t1.toArray() :?> float32[]
+
+// Tensor
+let t2 = dsharp.randn([3;3;3])
+
+// [,,]<float32>
+let a2 = t2.toArray() :?> float32[,,]

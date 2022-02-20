@@ -4359,7 +4359,7 @@ type TestTensor () =
             let t1Argmax = t1.argmax(0)
             let t1ArgmaxCorrect = combo.tensor(2, dtype=Dtype.Int32)
 
-            let t1ArgmaxKeepDim = t1.argmax(0, keepDim=true)
+            let t1ArgmaxKeepDim = dsharp.argmax(t1, 0, keepDim=true)
             let t1ArgmaxKeepDimCorrect = combo.tensor([2], dtype=Dtype.Int32)
 
             let t2 = combo.tensor([[1.;4.];[2.;3.]])
@@ -4452,7 +4452,7 @@ type TestTensor () =
             let t1Argmin = t1.argmin(0)
             let t1ArgminCorrect = combo.tensor(1, dtype=Dtype.Int32)
 
-            let t1ArgminKeepDim = t1.argmin(0, keepDim=true)
+            let t1ArgminKeepDim = dsharp.argmin(t1, 0, keepDim=true)
             let t1ArgminKeepDimCorrect = combo.tensor([1], dtype=Dtype.Int32)
 
             let t2 = combo.tensor([[1.;4.];[2.;3.]])

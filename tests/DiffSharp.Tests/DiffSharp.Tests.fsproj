@@ -39,6 +39,7 @@
     <Compile Include="TestOp.AvgPool.fs" />
     <Compile Include="TestOp.BMM.fs" />
     <Compile Include="TestOp.Inv.fs" />
+    <Compile Include="TestOp.Det.fs" />
     <Compile Include="TestOp.Norm.fs" />
     <Compile Include="TestOp.Outer.fs" />
     <Compile Include="TestOp.Solve.fs" />

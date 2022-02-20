@@ -15,7 +15,7 @@ DiffSharp.dsharp.seed(123)
 (*** condition: ipynb ***)
 #if IPYNB
 // Google Colab only: uncomment and run the following to install dotnet and the F# kernel
-// !bash <(curl -Ls https://raw.githubusercontent.com/gbaydin/scripts/main/colab_dotnet5.sh)
+// !bash <(curl -Ls https://raw.githubusercontent.com/gbaydin/scripts/main/colab_dotnet6.sh)
 #endif // IPYNB
 (*** condition: ipynb ***)
 #if IPYNB
@@ -23,7 +23,7 @@ DiffSharp.dsharp.seed(123)
 #r "nuget: DiffSharp-lite,{{fsdocs-package-version}}"
 
 // Set dotnet interactive formatter to plaintext
-Formatter.SetPreferredMimeTypeFor(typeof<obj>, "text/plain")
+Formatter.SetPreferredMimeTypesFor(typeof<obj>, "text/plain")
 Formatter.Register(fun (x:obj) (writer: TextWriter) -> fprintfn writer "%120A" x )
 #endif // IPYNB
 
@@ -37,16 +37,43 @@ Formatter.Register(fun (x:obj) (writer: TextWriter) -> fprintfn writer "%120A" x
 
 DiffSharp runs on [dotnet](https://dotnet.microsoft.com/), a cross-platform, open-source platform supported on Linux, macOS, and Windows.
 
+There are various ways in which you can run DiffSharp, the main ones being: [interactive notebooks](https://github.com/dotnet/interactive) supporting [Visual Studio Code](https://code.visualstudio.com/) and [Jupyter](https://jupyter.org/); running in a [REPL](https://github.com/jonsequitur/dotnet-repl); running [script files](https://docs.microsoft.com/en-us/dotnet/fsharp/tools/fsharp-interactive/); and [compiling, packing, and publishing](https://docs.microsoft.com/en-us/dotnet/core/introduction) performant binaries.
+
+
+## Interactive Notebooks and Scripts
+
+You can use DiffSharp in [dotnet interactive](https://github.com/dotnet/interactive) notebooks in [Visual Studio Code](https://code.visualstudio.com/) or [Jupyter](https://jupyter.org/), or in F# scripts (`.fsx` files), by referencing the package as follows:
+
+    // Use one of the following three lines
+    #r "nuget: DiffSharp-cpu" // Use the latest version
+    #r "nuget: DiffSharp-cpu, *-*" // Use the latest pre-release version
+    #r "nuget: DiffSharp-cpu, 1.0.1" // Use a specific version
+
+    open DiffSharp
+
+</br>
+<img src="img/anim-intro-1.gif" width="85%" />
+
+## Dotnet Applications
+
+You can add DiffSharp to your dotnet application using the [dotnet](https://dotnet.microsoft.com/) command-line interface (CLI).
+
+For example, the following creates a new F# console application and adds the latest pre-release version of the `DiffSharp-cpu` package as a dependency.
+
+    dotnet new console -lang "F#" -o src/app
+    cd src/app
+    dotnet add package --prerelease DiffSharp-cpu
+    dotnet run
 
 ## Packages
 
 We provide several package bundles for a variety of use cases.
 
-* [`DiffSharp-cpu`](https://www.nuget.org/packages/DiffSharp-cpu)</br>
+* [DiffSharp-cpu](https://www.nuget.org/packages/DiffSharp-cpu)</br>
   Includes LibTorch CPU binaries for Linux, macOS, and Windows.
-* [`DiffSharp-cuda-linux`](https://www.nuget.org/packages/DiffSharp-cuda-linux) / [`DiffSharp-cuda-windows`](https://www.nuget.org/packages/DiffSharp-cuda-windows)</br>
+* [DiffSharp-cuda-linux](https://www.nuget.org/packages/DiffSharp-cuda-linux) / [DiffSharp-cuda-windows](https://www.nuget.org/packages/DiffSharp-cuda-windows)</br>
   Include LibTorch CPU and CUDA GPU binaries for Linux and Windows. Large download.
-* [`DiffSharp-lite`](https://www.nuget.org/packages/DiffSharp-lite)</br>
+* [DiffSharp-lite](https://www.nuget.org/packages/DiffSharp-lite)</br>
   Includes the Torch backend but not the LibTorch binaries. 
 
 ### Using local LibTorch binaries (optional)
@@ -111,30 +138,13 @@ Tensors can be moved between devices (for example from CPU to GPU) using `cref:M
 let t2 = t.move(Device.GPU)
 
 (**
-## Using the DiffSharp Package
+## Developing DiffSharp Libraries
 
-### Interactive Notebooks and Scripts
+To develop libraries built on DiffSharp, you can use the following guideline to reference the various packages.
 
-You can use DiffSharp in [dotnet interactive](https://github.com/dotnet/interactive) notebooks in [Visual Studio Code](https://code.visualstudio.com/) or [Jupyter](https://jupyter.org/), or in F# scripts (`.fsx` files), by referencing the package as follows:
+* Reference `DiffSharp.Core` and `DiffSharp.Data` in your library code.
+* Reference `DiffSharp.Backends.Reference` in your correctness testing code.
+* Reference `DiffSharp.Backends.Torch` and `libtorch-cpu` in your CPU testing code.
+* Reference `DiffSharp.Backends.Torch` and `libtorch-cuda-linux` or `libtorch-cuda-windows` in your (optional) GPU testing code.
 
-    // Use one of the following three lines
-    #r "nuget: DiffSharp-cpu" // Use the latest version
-    #r "nuget: DiffSharp-cpu, *-*" // Use the latest pre-release version
-    #r "nuget: DiffSharp-cpu, 1.0.1" // Use a specific version
-
-    open DiffSharp
-
-</br>
-<img src="img/anim-intro-1.gif" width="85%" />
-
-### Dotnet Applications
-
-You can add DiffSharp to your dotnet application using the [dotnet](https://dotnet.microsoft.com/) command-line interface (CLI).
-
-For example, the following creates a new F# console application and adds the latest pre-release version of the `DiffSharp-cpu` package as a dependency.
-
-    dotnet new console -lang "F#" -o src/app
-    cd src/app
-    dotnet add package --prerelease DiffSharp-cpu
-    dotnet run
 *)

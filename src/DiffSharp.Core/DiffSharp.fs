@@ -542,9 +542,21 @@ type dsharp =
     /// <param name="input">The input tensor.</param>
     static member argmax(input:Tensor) = input.argmax()
 
+    /// <summary>Returns the indices of the maximum value of all elements in the input tensor.</summary>
+    /// <param name="input">The input tensor.</param>
+    /// <param name="dim">The dimension.</param>
+    /// <param name="keepDim">Whether the output tensor has dim retained or not.</param>
+    static member argmax(input:Tensor, dim:int, ?keepDim:bool) = input.argmax(dim=dim, ?keepDim=keepDim)
+
     /// <summary>Returns the indices of the minimum value of all elements in the input tensor.</summary>
     /// <param name="input">The input tensor.</param>
     static member argmin(input:Tensor) = input.argmin()
+
+    /// <summary>Returns the indices of the minimum value of all elements in the input tensor.</summary>
+    /// <param name="input">The input tensor.</param>
+    /// <param name="dim">The dimension.</param>
+    /// <param name="keepDim">Whether the output tensor has dim retained or not.</param>
+    static member argmin(input:Tensor, dim:int, ?keepDim:bool) = input.argmin(dim=dim, ?keepDim=keepDim)
 
     /// <summary>Returns the maximum value of all elements in the input tensor.</summary>
     /// <param name="input">The input tensor.</param>

@@ -15,7 +15,7 @@ DiffSharp.dsharp.seed(123)
 (*** condition: ipynb ***)
 #if IPYNB
 // Google Colab only: uncomment and run the following to install dotnet and the F# kernel
-// !bash <(curl -Ls https://raw.githubusercontent.com/gbaydin/scripts/main/colab_dotnet5.sh)
+// !bash <(curl -Ls https://raw.githubusercontent.com/gbaydin/scripts/main/colab_dotnet6.sh)
 #endif // IPYNB
 (*** condition: ipynb ***)
 #if IPYNB
@@ -23,7 +23,7 @@ DiffSharp.dsharp.seed(123)
 #r "nuget: DiffSharp-lite,{{fsdocs-package-version}}"
 
 // Set dotnet interactive formatter to plaintext
-Formatter.SetPreferredMimeTypeFor(typeof<obj>, "text/plain")
+Formatter.SetPreferredMimeTypesFor(typeof<obj>, "text/plain")
 Formatter.Register(fun (x:obj) (writer: TextWriter) -> fprintfn writer "%120A" x )
 #endif // IPYNB
 
@@ -72,7 +72,7 @@ DiffSharp comes with a [LibTorch](https://pytorch.org/cppdocs/) backend, using t
 
 The DiffSharp API is designed to be similar to [the PyTorch Python API](https://pytorch.org/docs/stable/index.html) through very similar naming and idioms, and where elements have similar names the PyTorch documentation can generally be used as a guide.
 
-DiffSharp uses [the incredible F# programming language](https://fsharp.org) for tensor programming. F# code is generally faster and more robust than equivalent Python code, while still being succinct and compact like Python, making it an ideal modern AI and machine learning implementation language. This allows fluent and productive code for tensor programming.
+DiffSharp uses [the incredible F# programming language](https://dot.net/fsharp) for tensor programming. F# code is generally faster and more robust than equivalent Python code, while still being succinct and compact like Python, making it an ideal modern AI and machine learning implementation language. This allows fluent and productive code for tensor programming.
 
 </br>
 <iframe width="85%" src="https://www.youtube.com/embed/_QnbV6CAWXc" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
@@ -121,8 +121,8 @@ dsharp.grad f (dsharp.tensor([1.8, 2.5]))
 Compute a nested derivative (checking for [perturbation confusion](https://doi.org/10.1007/s10990-008-9037-1)):
 *)
 
-let x0 = dsharp.tensor(1)
-let y0 = dsharp.tensor(2)
+let x0 = dsharp.tensor(1.)
+let y0 = dsharp.tensor(2.)
 dsharp.diff (fun x -> x * dsharp.diff (fun y -> x * y) y0) x0
 (*** include-it ***)
 
