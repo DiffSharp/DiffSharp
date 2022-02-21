@@ -163,22 +163,23 @@ type TestModel () =
     member _.TestModelCreationStyle2 () =
         let fc1 = Linear(10, 32)
         let fc2 = Linear(32, 10)
-        let net = Model.create [fc1; fc2] [] []
-                    (dsharp.view [-1; 10]
-                    >> fc1.forward
-                    >> dsharp.relu
-                    >> fc2.forward)
+        let net = Model(dsharp.view [-1; 10]
+                        >> fc1.forward
+                        >> dsharp.relu
+                        >> fc2.forward, 
+                        models=[fc1; fc2])
         Assert.CheckEqual(682, net.nparameters)
 
         let fc1 = Linear(10, 32)
         let fc2 = Linear(32, 10)
         let p = Parameter(dsharp.randn([]))
-        let net2 = Model.create [fc1; fc2] [p] []
-                    (dsharp.view [-1; 10]
-                    >> fc1.forward
-                    >> dsharp.relu
-                    >> fc2.forward
-                    >> dsharp.mul p.value)
+        let net2 = Model(dsharp.view [-1; 10]
+                        >> fc1.forward
+                        >> dsharp.relu
+                        >> fc2.forward
+                        >> dsharp.mul p.value, 
+                        parameters=[p], 
+                        models=[fc1; fc2])
         Assert.CheckEqual(683, net2.nparameters)
 
     [<Test>]
@@ -1352,8 +1353,8 @@ type TestModel () =
 
     [<Test>]
     member _.TestModelFunc () =
-        let f (x:Tensor )= x + 3
-        let m = Func(f)
+        let f (x:Tensor) = x + 3
+        let m = Model(f)
         let x = dsharp.tensor([1,2,3], dtype=Dtype.Int32)
         let fx = x |> f
         let mx = x --> m

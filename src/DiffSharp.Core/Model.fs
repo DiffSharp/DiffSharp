@@ -491,12 +491,21 @@ type ModelBase() =
 
 
 /// <summary>Represents a model, primarily a collection of named parameters and sub-models and a function governed by them.</summary>
-[<AbstractClass>]
-type Model<'In, 'Out>() =
+// [<AbstractClass>]
+type Model<'In, 'Out>(?f:'In->'Out, ?parameters: seq<Parameter>, ?buffers: seq<Parameter>, ?models: seq<obj>) =
     inherit ModelBase()
+
+    do
+        base.addParameter(defaultArg parameters Seq.empty)
+        base.addBuffer(defaultArg buffers Seq.empty)
+        base.addModel(defaultArg models Seq.empty)
 
     /// <summary>TBD</summary>
     abstract member forward: 'In -> 'Out
+    default _.forward x =
+        match f with
+        | Some(f) -> f x
+        | _ -> failwithf "Model.forward not implemented"
 
     /// <summary>Use the model as a function of its parameters and input.</summary>
     /// <remarks>
@@ -512,25 +521,17 @@ type Model<'In, 'Out>() =
             m.parametersVector <- old
     
     /// <summary>TBD</summary>
-    static member create (models: seq<obj>) (parameters: seq<Parameter>) (buffers: seq<Parameter>) (f: 'In -> 'Out) : Model<'In, 'Out> =
-        let model = { new Model<'In, 'Out>() with override _.forward(x:'In) : 'Out = f x}
-        model.addModel(models)
-        model.addParameter(parameters)
-        model.addBuffer(buffers)
-        model
-
-    /// <summary>TBD</summary>
     static member compose (model1:Model<'In, 'Out>) (model2:Model<'Out, 'Out2>) : Model<'In, 'Out2> =
-        Model<'In, 'Out2>.create [box model1; box model2] [] [] (model1.forward >> model2.forward)
+        Model<'In, 'Out2>(model1.forward >> model2.forward, models=[box model1; box model2])
 
     /// <summary>TBD</summary>
     static member (-->) (model1:Model<'In, 'Out>, model2:Model<'Out, 'Out2>) = Model<'In, 'Out>.compose model1 model2
     
     /// <summary>TBD</summary>
-    static member (-->) (model:Model<'In, 'Out>, f:'Out->'Out2) = Model<'In, 'Out2>.create [model] [] [] (model.forward >> f)
+    static member (-->) (model:Model<'In, 'Out>, f:'Out->'Out2) = Model<'In, 'Out2>(model.forward >> f, models=[model])
 
     /// <summary>TBD</summary>
-    static member (-->) (f:'In->'Out, model:Model<'Out, 'Out2>) = Model<'In, 'Out2>.create [model] [] [] (f >> model.forward)
+    static member (-->) (f:'In->'Out, model:Model<'Out, 'Out2>) = Model<'In, 'Out2>(f >> model.forward, models=[model])
 
     /// <summary>TBD</summary>
     static member (-->) (t:'In, model:Model<'In, 'Out>) = model.forward t
