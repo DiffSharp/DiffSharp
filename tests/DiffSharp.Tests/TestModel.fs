@@ -1349,3 +1349,12 @@ type TestModel () =
         Assert.AreEqual(hiddenDepthAfterCorrect, hiddenDepthAfter)
         Assert.AreEqual(cellDepthBeforeCorrect, cellDepthBefore)
         Assert.AreEqual(cellDepthAfterCorrect, cellDepthAfter)
+
+    [<Test>]
+    member _.TestModelFunc () =
+        let f (x:Tensor )= x + 3
+        let m = Func(f)
+        let x = dsharp.tensor([1,2,3], dtype=Dtype.Int32)
+        let fx = x |> f
+        let mx = x --> m
+        Assert.AreEqual(fx, mx)

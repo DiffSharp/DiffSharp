@@ -27,6 +27,7 @@
     <Compile Include="Model.ConvTranspose.fs" />
     <Compile Include="Model.Dropout.fs" />
     <Compile Include="Model.BatchNorm.fs" />
+    <Compile Include="Model.Func.fs" />
     <Compile Include="Model.Recurrent.fs" />
     <Compile Include="Model.Sequential.fs" />
     <Compile Include="Model.VAE.fs" />
