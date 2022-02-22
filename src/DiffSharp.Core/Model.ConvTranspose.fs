@@ -17,11 +17,15 @@ type ConvTranspose1d(inChannels:int, outChannels:int, kernelSize:int, ?stride:in
     let b = Parameter <| if biasv then Weight.uniform([|outChannels|], k) else dsharp.tensor([])
     do base.addParameter([w;b],["ConvTranspose1d-weight";"ConvTranspose1d-bias"])
 
-    /// <summary>Get the weight parameter of the model</summary>
-    member _.weight = w.value
+    /// <summary>Get or set the weight parameter of the model</summary>
+    member _.weight
+        with get() = w.value
+        and set v = w.value <- v
 
-    /// <summary>Get the bias parameter of the model</summary>
-    member _.bias = b.value
+    /// <summary>Get or set the bias parameter of the model</summary>
+    member _.bias
+        with get() = b.value
+        and set v = b.value <- v
 
     /// <summary>TBD</summary>
     override _.ToString() = sprintf "ConvTranspose1d(%A, %A, %A)" inChannels outChannels kernelSize
@@ -42,11 +46,15 @@ type ConvTranspose2d(inChannels:int, outChannels:int, ?kernelSize:int, ?stride:i
     let b = Parameter <| if biasv then Weight.uniform([|outChannels|], k) else dsharp.tensor([])
     do base.addParameter([w;b],["ConvTranspose2d-weight";"ConvTranspose2d-bias"])
 
-    /// <summary>Get the weight parameter of the model</summary>
-    member _.weight = w.value
+    /// <summary>Get or set the weight parameter of the model</summary>
+    member _.weight
+        with get() = w.value
+        and set v = w.value <- v
 
-    /// <summary>Get the bias parameter of the model</summary>
-    member _.bias = b.value
+    /// <summary>Get or set the bias parameter of the model</summary>
+    member _.bias
+        with get() = b.value
+        and set v = b.value <- v
 
     /// <summary>TBD</summary>
     override _.ToString() = sprintf "ConvTranspose2d(%A, %A, %A)" inChannels outChannels kernelSizes
@@ -67,11 +75,15 @@ type ConvTranspose3d(inChannels:int, outChannels:int, ?kernelSize:int, ?stride:i
     let b = Parameter <| if biasv then Weight.uniform([|outChannels|], k) else dsharp.tensor([])
     do base.addParameter([w;b],["ConvTranspose3d-weight";"ConvTranspose3d-bias"])
 
-    /// <summary>Get the weight parameter of the model</summary>
-    member _.weight = w.value
+    /// <summary>Get or set the weight parameter of the model</summary>
+    member _.weight
+        with get() = w.value
+        and set v = w.value <- v
 
-    /// <summary>Get the bias parameter of the model</summary>
-    member _.bias = b.value
+    /// <summary>Get or set the bias parameter of the model</summary>
+    member _.bias
+        with get() = b.value
+        and set v = b.value <- v
 
     /// <summary>TBD</summary>
     override _.ToString() = sprintf "ConvTranspose3d(%A, %A, %A)" inChannels outChannels kernelSizes

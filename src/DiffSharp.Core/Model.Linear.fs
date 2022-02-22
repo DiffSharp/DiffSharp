@@ -16,11 +16,15 @@ type Linear(inFeatures, outFeatures, ?bias:bool) =
     let b = Parameter(if biasv then Weight.uniform([|outFeatures|], k) else dsharp.tensor([]))
     do base.addParameter([w;b],["Linear-weight";"Linear-bias"])
 
-    /// <summary>Get the weight parameter of the model</summary>
-    member _.weight = w.value
+    /// <summary>Get or set the weight parameter of the model</summary>
+    member _.weight
+        with get() = w.value
+        and set v = w.value <- v
 
-    /// <summary>Get the bias parameter of the model</summary>
-    member _.bias = b.value
+    /// <summary>Get or set the bias parameter of the model</summary>
+    member _.bias
+        with get() = b.value
+        and set v = b.value <- v
 
     /// <summary>TBD</summary>
     override _.ToString() = sprintf "Linear(%A, %A)" inFeatures outFeatures

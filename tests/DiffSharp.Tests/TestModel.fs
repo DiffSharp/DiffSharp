@@ -169,6 +169,10 @@ type TestModel () =
                     >> dsharp.relu
                     >> fc2.forward)
         Assert.CheckEqual(682, net.nparameters)
+        
+        // check these properties exist
+        fc1.weight |> ignore
+        fc1.bias |> ignore
 
         let fc1 = Linear(10, 32)
         let fc2 = Linear(32, 10)
@@ -560,6 +564,9 @@ type TestModel () =
         let din, cin, cout, k = 16, 1, 2, 3
         let inputs  = dsharp.randn([2; cin; din])
         let conv1 = Conv1d(cin, cout, k)
+        // check these properties exist
+        conv1.weight |> ignore
+        conv1.bias |> ignore
         let fcin = inputs.[0] --> dsharp.unsqueeze 0 --> conv1 --> dsharp.nelement
         let net = conv1 --> dsharp.relu --> dsharp.flatten 1 --> Linear(fcin, 2)
         let targets = dsharp.tensor([0.; 1.])
@@ -577,6 +584,9 @@ type TestModel () =
         let cin, hin, win, cout, k = 1, 6, 6, 2, 3
         let inputs  = dsharp.randn([2; cin; hin; win])
         let conv1 = Conv2d(cin, cout, k)
+        // check these properties exist
+        conv1.weight |> ignore
+        conv1.bias |> ignore
         let fcin = inputs.[0] --> dsharp.unsqueeze 0 --> conv1 --> dsharp.nelement
         let net = conv1 --> dsharp.relu --> dsharp.flatten 1 --> Linear(fcin, 2)
         let targets = dsharp.tensor([0.; 1.])
@@ -594,6 +604,9 @@ type TestModel () =
         let cin, din, hin, win, cout, k = 1, 6, 6, 6, 2, 3
         let inputs  = dsharp.randn([2; cin; din; hin; win])
         let conv1 = Conv3d(cin, cout, k)
+        // check these properties exist
+        conv1.weight |> ignore
+        conv1.bias |> ignore
         let fcin = inputs.[0] --> dsharp.unsqueeze 0 --> conv1 --> dsharp.nelement
         let net = conv1 --> dsharp.relu --> dsharp.flatten 1 --> Linear(fcin, 2)
         let targets = dsharp.tensor([0.; 1.])
