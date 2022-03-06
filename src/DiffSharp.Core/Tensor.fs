@@ -1649,7 +1649,7 @@ type Tensor =
                 checkWeightDims "fweights" fw
                 match fw.dtype with
                 | Dtype.Integral -> Some fw
-                | _ -> failwith "fweights.dtype should be integral but it is {fw.dtype}."
+                | _ -> failwith $"fweights.dtype should be integral but it is {fw.dtype}."
         let aweights = 
             match aweights with
             | None -> None
