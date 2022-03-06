@@ -770,7 +770,7 @@ type dsharp =
     /// If both weight types are provided \(w=\text{fweights}\times\text{aweights}\). 
     /// \(\mu_x^* = \frac{\sum^{N}_{i = 1}w_ix_{i} }{\sum^{N}_{i = 1}w_i}\)
     /// is the weighted mean of variables.
-    /// The normalization factor is \(\sum^{N}_(i=1} w_i\) if only fweights are provided or if aweights are provided and <c>correction=0</c>. 
+    /// The normalization factor is \(\sum^{N}_{i=1} w_i\) if only fweights are provided or if aweights are provided and <c>correction=0</c>. 
     /// Otherwise if aweights \(aw\) are provided the normalization factor is
     ///  \(\sum^N_{i=1} w_i - \text{correction}\times\frac{\sum^N_{i=1} w_i aw_i}{\sum^N_{i=1} w_i}\) 
     /// </remarks>
