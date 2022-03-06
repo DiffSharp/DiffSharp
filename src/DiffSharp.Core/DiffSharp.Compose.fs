@@ -158,6 +158,12 @@ type dsharp with
     static member stddev(dim:int, ?keepDim:bool, ?unbiased:bool) = fun (a:Tensor) -> a.stddev(dim, ?keepDim=keepDim, ?unbiased=unbiased)
 
     /// <summary>TBD</summary>
+    static member covariance(?correction:int64, ?fweights:Tensor, ?aweights:Tensor) = fun (a:Tensor) -> a.covariance(?correction=correction,?fweights=fweights,?aweights=aweights)
+
+    /// <summary>TBD</summary>
+    static member corrcoef() = fun (a:Tensor) -> a.corrcoef()
+
+    /// <summary>TBD</summary>
     static member gather(dim:int, indices:Tensor) = fun (a:Tensor) -> a.gather(dim, indices)
 
     /// <summary>TBD</summary>
