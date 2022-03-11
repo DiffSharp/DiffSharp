@@ -2595,11 +2595,11 @@ type TestDerivatives () =
                 let deriv = deriv.view(t.shape)
                 let out = 
                     [ for ix in 0..t.shape.[0]-1 do 
-                    for iy in 0..t.shape.[0]-1 do
-                    [ for i in 0..t.shape.[1]-1 do 
+                      for iy in 0..t.shape.[0]-1 do
+                      [ for i in 0..t.shape.[1]-1 do 
                         deriv.[ix,i]*(dfdxi t.[ix] i t.[iy] correction fw aw) 
                         deriv.[iy,i]*(dfdxi t.[iy] i t.[ix] correction fw aw) ]
-                    |> dsharp.stack |> dsharp.sum ]
+                      |> dsharp.stack |> dsharp.sum ]
                     |> dsharp.stack
                 out.view([t.shape.[0];t.shape.[0]])
 
