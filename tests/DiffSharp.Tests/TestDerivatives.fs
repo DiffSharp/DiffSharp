@@ -2773,6 +2773,35 @@ type TestDerivatives () =
 
             Assert.True(revxdAweightsCorrect.allclose(revxdAweights,0.001,0.001))
 
+    [<Test>]
+    member _.TestDerivativeCorrCoef () =
+        for combo in Combos.AllDevicesAndBackendsFloat32 do
+            // reverse diff
+            (* Python:
+            import torch
+            t = torch.tensor([[0.3787,0.7515,0.2252,0.3416],
+                [0.6078,0.4742,0.7844,0.0967],
+                [0.1416,0.1559,0.6452,0.1417]],
+                requires_grad=True)
+            out = t.corrcoef()
+            out.backward(torch.tensor([[1.,2.,3.],[4.,5.,6.],[7.,8.,9.]]))
+            t.grad
+            --> tensor([[ -6.0388,   6.8508,  22.2001, -23.0120],
+                [-13.4996,   3.0057,   8.3830,   2.1109],
+                [  7.5015,  20.5121,  -0.5770, -27.4366]])
+            *)
+            let revx = combo.tensor([[0.3787,0.7515,0.2252,0.3416],
+                [0.6078,0.4742,0.7844,0.0967],
+                [0.1416,0.1559,0.6452,0.1417]]).reverseDiff()
+            let revz = revx.corrcoef()
+            revz.reverse(combo.tensor([[1.,2.,3.],[4.,5.,6.],[7.,8.,9.]]))
+            let revxd = revx.derivative
+            let revxdCorrect = combo.tensor(
+                [[ -6.0388,   6.8508,  22.2001, -23.0120],
+                 [-13.4996,   3.0057,   8.3830,   2.1109],
+                 [  7.5015,  20.5121,  -0.5770, -27.4366]]) 
+            
+            Assert.True(revxdCorrect.allclose(revxd,0.001))
 
     [<Test>]
     member _.TestDerivativePermuteT () =
