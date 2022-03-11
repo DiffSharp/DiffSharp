@@ -3055,7 +3055,7 @@ type TestTensor () =
             let fweights = combo.tensor([1;7;7;4],dtype=Dtype.Int32)
             let aweights = combo.tensor([0.7241; 0.2481; 0.4878; 0.6862])
 
-            // to suppress printfn from this test "Warning: Warning: degress of freedom <= 0"
+            // to suppress printfn from this test "Warning: degress of freedom <= 0"
             Console.SetOut(IO.TextWriter.Null)
             let t0Unbiased = t0.covariance()
             Assert.True(t0Unbiased.isnan().toBool())
@@ -3063,8 +3063,7 @@ type TestTensor () =
             let stdout = new IO.StreamWriter(Console.OpenStandardOutput())
             stdout.AutoFlush <- true
             Console.SetOut(stdout)
-
-
+            
             let t0Biased = t0.covariance(correction= int64 0)
             let t0BiasedCorrect = combo.tensor(0)
             Assert.True(t0Biased.allclose(t0BiasedCorrect,0.01,0.01))

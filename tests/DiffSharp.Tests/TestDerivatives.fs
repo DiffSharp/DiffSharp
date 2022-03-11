@@ -2551,6 +2551,230 @@ type TestDerivatives () =
             Assert.CheckEqual(revxdCorrect, revxd)
 
     [<Test>]
+    member _.TestDerivativeCovariance () =
+        for combo in Combos.AllDevicesAndBackendsFloat32 do
+            (* Functions for calculating forward derivatives manually,
+            covariance is
+
+            f = w_1(x_1-mu_x)(y_1-mu_y)/d + ... + w_N(x_N-mu_x)(y_N-mu_y)/d
+            
+            where w_i is a weight, mu_x and mu_y are weighted 
+            averages (\sum x_i w_i / \sum w_i), and d is a normalization factor.
+
+            df/dx_1 = w_1(1 - w_1/w.sum())(y_1-mu_y)/d +
+                    w_2(0 - w_1/w.sum())(y_2-mu_y)/d+
+                    ...
+            df/dx_2 = w_1(0 - w_2/w.sum())(y_1-mu_y)/d +
+                    w_2(1 - w_2/w.sum())(y_2-mu_y)/d +
+                    ...
+            df/dx_N = w_1(0 - w_N/w.sum())(y_1-mu_y)/d +
+                    ...
+                    w_N(1 - w_N/w.sum())(y_N-mu_y)/d
+            *)
+
+            // partial derivative of covariance with respect to x_1, df/dx_1
+            let dfdxi (x:Tensor) (i:int) (y:Tensor) (correction:int) (fw:Tensor Option) (aw:Tensor Option) =
+                let w =
+                    let fw = defaultArg fw (dsharp.onesLike(x))
+                    let aw = defaultArg aw (dsharp.onesLike(x))
+                    fw*aw
+                let d =
+                    match aw with
+                    | Some aw -> w.sum() - correction * (w * aw).sum() / w.sum()
+                    | _ -> w.sum() - correction
+                let dxi = 
+                    [ for j in 0..x.nelement-1 do 
+                        let dmu = w.[i] / w.sum()
+                        if j = i then 1.0 - dmu else -dmu ]
+                    |> combo.tensor
+                (w * dxi * (y-y.mean())).sum().div(d)
+
+            // For each entry in the vcov matrix, sum all partials.
+            let dfd (t:Tensor) (correction:int)  (fw:Tensor Option) (aw: Tensor Option) (deriv:Tensor) =
+                let t = if t.dim = 1 then t.view([1;-1]) else t
+                let deriv = deriv.view(t.shape)
+                let out = 
+                    [ for ix in 0..t.shape.[0]-1 do 
+                    for iy in 0..t.shape.[0]-1 do
+                    [ for i in 0..t.shape.[1]-1 do 
+                        deriv.[ix,i]*(dfdxi t.[ix] i t.[iy] correction fw aw) 
+                        deriv.[iy,i]*(dfdxi t.[iy] i t.[ix] correction fw aw) ]
+                    |> dsharp.stack |> dsharp.sum ]
+                    |> dsharp.stack
+                out.view([t.shape.[0];t.shape.[0]])
+
+            // Checking vs. Variance because 1D covariance = variance
+            let fwdx = combo.tensor([1.; 2.; 3.]).forwardDiff(combo.tensor([2.; 3.; 4.]))
+            let fwdz = fwdx.covariance()
+            let fwdzCorrect = fwdx.variance()
+            let fwdzd = fwdz.derivative
+            let fwdzdCorrect = fwdzCorrect.derivative
+
+            Assert.CheckEqual(fwdzCorrect, fwdz)
+            Assert.CheckEqual(fwdzdCorrect, fwdzd)
+
+            let revx = combo.tensor([1.; 2.; 3.]).reverseDiff()
+            let revz = revx.covariance()
+            let revzCorrect = revx.variance()
+            revz.reverse(combo.tensor(3.))
+            let revxd = revx.derivative
+            let revxdCorrect = combo.tensor([-3.; 0.; 3.])
+
+            Assert.CheckEqual(revzCorrect, revz)
+            Assert.CheckEqual(revxdCorrect, revxd)
+
+            (* Python:
+            import torch
+            t = torch.tensor([[0.3787,0.7515,0.2252,0.3416],
+                [0.6078,0.4742,0.7844,0.0967],
+                [0.1416,0.1559,0.6452,0.1417]])
+            fweights = torch.tensor([1,7,7,4])
+            aweights = torch.tensor([0.7241, 0.2481, 0.4878, 0.6862])
+            deriv = torch.tensor([x for x in range(1,13,1)]).view([3,-1])
+            *)
+            let t = combo.tensor([[0.3787,0.7515,0.2252,0.3416],
+                                  [0.6078,0.4742,0.7844,0.0967],
+                                  [0.1416,0.1559,0.6452,0.1417]])
+            let fweights = combo.tensor([1,7,7,4],dtype=Dtype.Int32)
+            let aweights = combo.tensor([0.7241, 0.2481, 0.4878, 0.6862])
+            let deriv = combo.tensor([1. .. 12.]).view([3;-1])
+
+            // Unbiased forward diff
+            let fwdxUnbiased = t.forwardDiff(deriv)
+            let fwdzUnbiased = fwdxUnbiased.covariance()
+            let fwdzdUnbiased = fwdzUnbiased.derivative
+            let fwdzdUnbiasedCorrect = dfd fwdxUnbiased.primalDeep 1 None None deriv
+
+            Assert.True(fwdzdUnbiasedCorrect.allclose(fwdzdUnbiased,0.001))
+            
+            // Unbiased reverse diff
+            (* Python:
+            import torch
+            t = torch.tensor([[0.3787,0.7515,0.2252,0.3416],
+                [0.6078,0.4742,0.7844,0.0967],
+                [0.1416,0.1559,0.6452,0.1417]],
+                requires_grad=True)
+            out = t.cov()
+            out.backward(torch.tensor([[1.,2.,3.],[4.,5.,6.],[7.,8.,9.]]))
+            t.grad
+            --> tensor([[-0.2280, -0.1990,  1.7015, -1.2746],
+                    [-0.3054,  0.0617,  2.3264, -2.0827],
+                    [-0.3827,  0.3223,  2.9513, -2.8909]])
+            *)
+            let revxUnbiased = t.reverseDiff()
+            let revzUnbiased = revxUnbiased.covariance()
+            revzUnbiased.reverse(combo.tensor([[1.,2.,3.],[4.,5.,6.],[7.,8.,9.]]))
+            let revxdUnbiased = revxUnbiased.derivative
+            let revxdUnbiasedCorrect = combo.tensor(
+                [[-0.2280, -0.1990,  1.7015, -1.2746],
+                 [-0.3054,  0.0617,  2.3264, -2.0827],
+                 [-0.3827,  0.3223,  2.9513, -2.8909]]) 
+            
+            Assert.True(revxdUnbiasedCorrect.allclose(revxdUnbiased,0.001))
+
+            // Biased forward diff
+            let fwdxBiased = t.forwardDiff(deriv)
+            let fwdzBiased = fwdxBiased.covariance(correction= int64 0)
+            let fwdzdBiased = fwdzBiased.derivative
+            let fwdzdBiasedCorrect = dfd fwdxBiased.primalDeep 0 None None deriv
+
+            Assert.True(fwdzdBiasedCorrect.allclose(fwdzdBiased,0.001))  
+            
+            // Biased reverse diff
+            (* Python:
+            import torch
+            t = torch.tensor([[0.3787,0.7515,0.2252,0.3416],
+                [0.6078,0.4742,0.7844,0.0967],
+                [0.1416,0.1559,0.6452,0.1417]],
+                requires_grad=True)
+            out = t.cov(correction=0)
+            out.backward(torch.tensor([[1.,2.,3.],[4.,5.,6.],[7.,8.,9.]]))
+            t.grad
+            --> tensor([[-0.1710, -0.1492,  1.2762, -0.9559],
+                    [-0.2290,  0.0462,  1.7448, -1.5621],
+                    [-0.2870,  0.2417,  2.2135, -2.1682]])
+            *)            
+            let revxBiased = t.reverseDiff()
+            let revzBiased = revxBiased.covariance(correction= int64 0)
+            revzBiased.reverse(combo.tensor([[1.,2.,3.],[4.,5.,6.],[7.,8.,9.]]))
+            let revxdBiased = revxBiased.derivative
+            let revxdBiasedCorrect = combo.tensor(
+                [[-0.1710, -0.1492,  1.2762, -0.9559],
+                 [-0.2290,  0.0462,  1.7448, -1.5621],
+                 [-0.2870,  0.2417,  2.2135, -2.1682]])
+
+            Assert.True(revxdBiasedCorrect.allclose(revxdBiased,0.001))
+
+            // fweights forward diff
+            let fwdxFweights = t.forwardDiff(deriv)
+            let fwdzFweights = fwdxFweights.covariance(fweights=fweights)
+            let fwdzdFweights = fwdzFweights.derivative
+            let fwdzdFweightsCorrect = dfd fwdxFweights.primalDeep 1 (Some fweights) None deriv
+
+            Assert.True(fwdzdFweightsCorrect.allclose(fwdzdFweights,0.001))
+
+            // fweights reverse diff
+            (* Python:
+            import torch
+            t = torch.tensor([[0.3787,0.7515,0.2252,0.3416],
+                [0.6078,0.4742,0.7844,0.0967],
+                [0.1416,0.1559,0.6452,0.1417]],
+                requires_grad=True)
+            fweights = torch.tensor([1,7,7,4])    
+            out = t.cov(fweights=fweights)
+            out.backward(torch.tensor([[1.,2.,3.],[4.,5.,6.],[7.,8.,9.]]))
+            t.grad
+            --> tensor([[-0.0835, -0.5509,  1.6664, -1.0319],
+                    [-0.1218, -0.4242,  2.2180, -1.6720],
+                    [-0.1600, -0.2975,  2.7697, -2.3122]])
+            *)              
+            let revxFweights = t.reverseDiff()
+            let revzFweights = revxFweights.covariance(fweights=fweights)
+            revzFweights.reverse(combo.tensor([[1.,2.,3.],[4.,5.,6.],[7.,8.,9.]]))
+            let revxdFweights = revxFweights.derivative
+            let revxdFweightsCorrect = combo.tensor(
+                [[-0.0835, -0.5509,  1.6664, -1.0319],
+                 [-0.1218, -0.4242,  2.2180, -1.6720],
+                 [-0.1600, -0.2975,  2.7697, -2.3122]])
+
+            Assert.True(revxdFweightsCorrect.allclose(revxdFweights,0.001))
+
+            // aweights forward diff
+            let fwdxAweights = t.forwardDiff(deriv)
+            let fwdzAweights = fwdxAweights.covariance(aweights=aweights)
+            let fwdzdAweights = fwdzAweights.derivative
+            let fwdzdAweightsCorrect = dfd fwdxAweights.primalDeep 1 None (Some aweights) deriv
+
+            Assert.True(fwdzdAweightsCorrect.allclose(fwdzdAweights,0.001))
+
+            // aweights reverse diff
+            (* Python:
+            import torch
+            t = torch.tensor([[0.3787,0.7515,0.2252,0.3416],
+                [0.6078,0.4742,0.7844,0.0967],
+                [0.1416,0.1559,0.6452,0.1417]],
+                requires_grad=True)
+            aweights = torch.tensor([0.7241, 0.2481, 0.4878, 0.6862])
+            out = t.cov(aweights=aweights)
+            out.backward(torch.tensor([[1.,2.,3.],[4.,5.,6.],[7.,8.,9.]]))
+            t.grad
+            --> tensor([[-0.1510, -0.0378,  1.7283, -1.5395],
+                    [-0.1018,  0.1422,  2.4275, -2.4679],
+                    [-0.0526,  0.3221,  3.1268, -3.3963]])
+            *)
+            let revxAweights = t.reverseDiff()
+            let revzAweights = revxAweights.covariance(aweights=aweights)
+            revzAweights.reverse(combo.tensor([[1.,2.,3.],[4.,5.,6.],[7.,8.,9.]]))
+            let revxdAweights = revxAweights.derivative
+            let revxdAweightsCorrect = combo.tensor(
+                [[-0.1510, -0.0378,  1.7283, -1.5395],
+                 [-0.1018,  0.1422,  2.4275, -2.4679],
+                 [-0.0526,  0.3221,  3.1268, -3.3963]])
+
+            Assert.True(revxdAweightsCorrect.allclose(revxdAweights,0.001,0.001))
+
+
+    [<Test>]
     member _.TestDerivativePermuteT () =
         for combo in Combos.AllDevicesAndBackendsFloat32 do
             let fwdx = combo.tensor([[[ 0.,  1.],
