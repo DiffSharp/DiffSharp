@@ -1546,7 +1546,7 @@ type Tensor =
     /// <summary>Returns the variance of all elements in the input tensor.</summary>
     /// <remarks>If unbiased is False, then the variance will be calculated via the biased estimator. Otherwise, Bessel’s correction will be used.</remarks>
     /// <param name="unbiased">Whether to use the unbiased estimation or not.</param>
-    member a.variance(?unbiased:bool) = 
+    member a.var(?unbiased:bool) = 
         // This is the two-pass algorithm, see https://en.wikipedia.org/wiki/Algorithms_for_calculating_variance
         let unbiased = defaultArg unbiased true  // Use Bessel's correction if unbiased=true
         let n = if unbiased then a.nelement - 1 else a.nelement
@@ -1560,7 +1560,7 @@ type Tensor =
     /// <param name="dim">The dimension to reduce.</param>
     /// <param name="keepDim">Whether the output tensor has dim retained or not.</param>
     /// <param name="unbiased">Whether to use the unbiased estimation or not.</param>
-    member a.variance(dim:int, ?keepDim:bool, ?unbiased:bool) =
+    member a.var(dim:int, ?keepDim:bool, ?unbiased:bool) =
         // This is the two-pass algorithm, see https://en.wikipedia.org/wiki/Algorithms_for_calculating_variance
         let unbiased = defaultArg unbiased true  // Use Bessel's correction if unbiased=true
         let dim = Shape.completeDim a.dim dim  // Handles -1 semantics
@@ -1575,12 +1575,12 @@ type Tensor =
     /// <param name="dim">The dimension to reduce.</param>
     /// <param name="keepDim">Whether the output tensor has dim retained or not.</param>
     /// <param name="unbiased">Whether to use the unbiased estimation or not.</param>
-    member a.stddev(dim, ?keepDim, ?unbiased) = a.variance(dim, ?keepDim=keepDim, ?unbiased=unbiased) |> Tensor.Sqrt
+    member a.stddev(dim, ?keepDim, ?unbiased) = a.var(dim, ?keepDim=keepDim, ?unbiased=unbiased) |> Tensor.Sqrt
 
     /// <summary>Returns the standard deviation of all elements in the input tensor.</summary>
     /// <remarks>If unbiased is False, then the standard deviation will be calculated via the biased estimator. Otherwise, Bessel’s correction will be used.</remarks>
     /// <param name="unbiased">Whether to use the unbiased estimation or not.</param>
-    member a.stddev(?unbiased) = a.variance(?unbiased=unbiased) |> Tensor.Sqrt
+    member a.stddev(?unbiased) = a.var(?unbiased=unbiased) |> Tensor.Sqrt
 
     /// <summary>
     /// Estimates the covariance matrix of the given tensor. The tensor's first

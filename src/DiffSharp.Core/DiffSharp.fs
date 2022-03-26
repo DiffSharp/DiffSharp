@@ -722,7 +722,7 @@ type dsharp =
     /// </remarks>
     /// <param name="input">The input tensor.</param>
     /// <param name="unbiased">Whether to use the unbiased estimation or not.</param>
-    static member variance(input:Tensor, ?unbiased:bool) = input.variance(?unbiased=unbiased)
+    static member var(input:Tensor, ?unbiased:bool) = input.var(?unbiased=unbiased)
 
     /// <summary>Returns the variance of each row of the input tensor in the given dimension dim. If dim is a list of dimensions, reduce over all of them.</summary>
     /// <remarks>
@@ -733,7 +733,7 @@ type dsharp =
     /// <param name="dim">The dimension to reduce.</param>
     /// <param name="keepDim">Whether the output tensor has dim retained or not.</param>
     /// <param name="unbiased">Whether to use the unbiased estimation or not.</param>
-    static member variance(input:Tensor, dim:int, ?keepDim:bool, ?unbiased:bool) = input.variance(dim, ?keepDim=keepDim, ?unbiased=unbiased)
+    static member var(input:Tensor, dim:int, ?keepDim:bool, ?unbiased:bool) = input.var(dim, ?keepDim=keepDim, ?unbiased=unbiased)
 
     /// <summary>Returns the standard deviation of all elements in the input tensor.</summary>
     /// <remarks>

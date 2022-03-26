@@ -152,7 +152,7 @@ type dsharp with
     static member mean(dim:int, ?keepDim:bool) = fun (a:Tensor) -> a.mean(dim, ?keepDim=keepDim)
 
     /// <summary>TBD</summary>
-    static member variance(dim:int, ?keepDim:bool, ?unbiased:bool) = fun (a:Tensor) -> a.variance(dim, ?keepDim=keepDim, ?unbiased=unbiased)
+    static member var(dim:int, ?keepDim:bool, ?unbiased:bool) = fun (a:Tensor) -> a.var(dim, ?keepDim=keepDim, ?unbiased=unbiased)
 
     /// <summary>TBD</summary>
     static member stddev(dim:int, ?keepDim:bool, ?unbiased:bool) = fun (a:Tensor) -> a.stddev(dim, ?keepDim=keepDim, ?unbiased=unbiased)
