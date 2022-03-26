@@ -681,20 +681,20 @@ type RawTensor() =
                 if shape.Length = 1 then
                     sb.Append("[") |> ignore
                     let mutable prefix = ""
-                    if (shape.[0] >= threshold) && (edgeItems*2 < shape.[0]) then
+                    if (shape[0] >= threshold) && (edgeItems*2 < shape[0]) then
                         for i=0 to edgeItems-1 do
                             let globalCoords = Array.append externalCoords [|i|]
                             sb.Append(prefix) |> ignore
                             sb.Append(printVal (t.GetItem(globalCoords))) |> ignore
                             prefix <- ", "
                         sb.Append(", ...") |> ignore
-                        for i=shape.[0]-edgeItems to shape.[0]-1 do
+                        for i=shape[0]-edgeItems to shape[0]-1 do
                             let globalCoords = Array.append externalCoords [|i|]
                             sb.Append(prefix) |> ignore
                             sb.Append(printVal (t.GetItem(globalCoords))) |> ignore
                             // prefix <- ", "
                     else
-                        for i=0 to shape.[0]-1 do
+                        for i=0 to shape[0]-1 do
                             let globalCoords = Array.append externalCoords [|i|]
                             sb.Append(prefix) |> ignore
                             sb.Append(printVal (t.GetItem(globalCoords))) |> ignore
@@ -704,21 +704,21 @@ type RawTensor() =
                     sb.Append("[") |> ignore
                     let mutable prefix = ""
                     let prefix2 = sprintf ",%s%s" (String.replicate (max 1 (shape.Length-1)) "\n       ") (String.replicate (externalCoords.Length+1) " ")
-                    if (shape.[0] >= threshold) && (edgeItems*2 < shape.[0]) then
+                    if (shape[0] >= threshold) && (edgeItems*2 < shape[0]) then
                         for i=0 to edgeItems-1 do
                             sb.Append(prefix) |> ignore
-                            print shape.[1..] (Array.append externalCoords [|i|])
+                            print shape[1..] (Array.append externalCoords [|i|])
                             prefix <- prefix2
                         sb.Append(prefix) |> ignore
                         sb.Append("...") |> ignore
-                        for i=shape.[0]-edgeItems to shape.[0]-1 do
+                        for i=shape[0]-edgeItems to shape[0]-1 do
                             sb.Append(prefix) |> ignore
-                            print shape.[1..] (Array.append externalCoords [|i|])
+                            print shape[1..] (Array.append externalCoords [|i|])
                             // prefix <- prefix2
                     else
-                        for i=0 to shape.[0]-1 do
+                        for i=0 to shape[0]-1 do
                             sb.Append(prefix) |> ignore
-                            print shape.[1..] (Array.append externalCoords [|i|])
+                            print shape[1..] (Array.append externalCoords [|i|])
                             prefix <- prefix2
                     sb.Append("]") |> ignore
             print t.Shape [||]
@@ -749,7 +749,7 @@ type RawTensor() =
             | _ -> failwithf "Cannot compare RawTensor with object of type %A" (yobj.GetType())
 
     default t.GetItem(indexes) =
-        let t0 = t.GetSlice(Array2D.init indexes.Length 3 (fun i j -> if j = 0 || j = 1 then indexes.[i] else 1))
+        let t0 = t.GetSlice(Array2D.init indexes.Length 3 (fun i j -> if j = 0 || j = 1 then indexes[i] else 1))
         t0.ToScalar()
 
     /// Returns a .NET object for the value of a scalar tensor

@@ -196,7 +196,7 @@ type Categorical(?probs:Tensor, ?logits:Tensor) =
     member d.logits = _logits.cast(_dtype)
 
     /// <summary>TBD</summary>
-    override d.batchShape = if d.probs.dim = 1 then Shape.scalar else [|d.probs.shape.[0]|]
+    override d.batchShape = if d.probs.dim = 1 then Shape.scalar else [|d.probs.shape[0]|]
 
     /// <summary>TBD</summary>
     override d.eventShape = Shape.scalar
@@ -215,10 +215,10 @@ type Categorical(?probs:Tensor, ?logits:Tensor) =
         if value.shape <> d.batchShape then failwithf "Expecting a value with shape %A, received %A" d.batchShape value.shape
         if d.batchShape.Length = 0 then
             let i = int value
-            _logits.[i].cast(_dtype)
+            _logits[i].cast(_dtype)
         else
             let is = value.int().toArray() :?> int[]
-            let lp = Array.init d.batchShape.[0] (fun i -> _logits.[i, is.[i]]) |> dsharp.stack
+            let lp = Array.init d.batchShape[0] (fun i -> _logits[i, is[i]]) |> dsharp.stack
             lp.cast(_dtype)
 
     override d.ToString() = sprintf "Categorical(probs:%A)" d.probs
@@ -248,11 +248,11 @@ type Empirical<'T when 'T:equality>(values:seq<'T>, ?weights:Tensor, ?logWeights
                 if _weighted then
                     let uniques = Dictionary<'T, Tensor>()
                     for i = 0 to _values.Length-1 do
-                        let v, lw = _values.[i], _categorical.logits.[i]
+                        let v, lw = _values[i], _categorical.logits[i]
                         if uniques.ContainsKey(v) then
-                            let lw2 = uniques.[v]
-                            uniques.[v] <- dsharp.stack([lw; lw2]).logsumexp(dim=0)
-                        else uniques.[v] <- lw
+                            let lw2 = uniques[v]
+                            uniques[v] <- dsharp.stack([lw; lw2]).logsumexp(dim=0)
+                        else uniques[v] <- lw
                     Dictionary.copyKeys uniques, dsharp.stack(Dictionary.copyValues uniques).view(-1)
                 else
                     let vals, counts = _values |> Array.getUniqueCounts false
@@ -282,13 +282,13 @@ type Empirical<'T when 'T:equality>(values:seq<'T>, ?weights:Tensor, ?logWeights
 
     /// <summary>TBD</summary>
     member d.Item
-        with get(i) = d.values.[i], d.weights.[i]
+        with get(i) = d.values[i], d.weights[i]
 
     /// <summary>TBD</summary>
     member d.GetSlice(start, finish) =
         let start = defaultArg start 0
         let finish = defaultArg finish d.length - 1
-        Empirical(d.values.[start..finish], logWeights=d.logWeights.[start..finish])
+        Empirical(d.values[start..finish], logWeights=d.logWeights[start..finish])
 
     /// <summary>TBD</summary>
     member d.unweighted() = Empirical(d.values)
@@ -299,7 +299,7 @@ type Empirical<'T when 'T:equality>(values:seq<'T>, ?weights:Tensor, ?logWeights
     /// <summary>TBD</summary>
     member d.filter (predicate:'T->bool) =
         let results = ResizeArray<'T*Tensor>()
-        Array.iteri (fun i v -> if predicate v then results.Add(v, d.logWeights.[i])) d.values
+        Array.iteri (fun i v -> if predicate v then results.Add(v, d.logWeights[i])) d.values
         let v, lw = results.ToArray() |> Array.unzip
         Empirical(v, logWeights=dsharp.stack(lw))
 
@@ -311,9 +311,9 @@ type Empirical<'T when 'T:equality>(values:seq<'T>, ?weights:Tensor, ?logWeights
             if minIndex < 0 || minIndex > d.length then failwithf "Expecting 0 <= minIndex (%A) <= %A" minIndex d.length
             if maxIndex < 0 || maxIndex > d.length then failwithf "Expecting 0 <= maxIndex (%A) <= %A" maxIndex d.length
             if minIndex >= maxIndex then failwithf "Expecting minIndex (%A) < maxIndex (%A)" minIndex maxIndex
-            d.[minIndex..maxIndex].sample()
+            d[minIndex..maxIndex].sample()
         else
-            let i = _categorical.sample() |> int in d.values.[i]
+            let i = _categorical.sample() |> int in d.values[i]
 
     /// <summary>TBD</summary>
     member d.resample(numSamples, ?minIndex:int, ?maxIndex:int) = Array.init numSamples (fun _ -> d.sample(?minIndex=minIndex, ?maxIndex=maxIndex)) |> Empirical
@@ -326,7 +326,7 @@ type Empirical<'T when 'T:equality>(values:seq<'T>, ?weights:Tensor, ?logWeights
         let step = max 1 (int(floor (float (maxIndex - minIndex)) / (float numSamples)))
         let results = ResizeArray<'T>()
         for i in 0..step..d.length-1 do
-            let v = d.values.[i]
+            let v = d.values[i]
             results.Add(v)
         Empirical(results.ToArray())
 
@@ -335,7 +335,7 @@ type Empirical<'T when 'T:equality>(values:seq<'T>, ?weights:Tensor, ?logWeights
 
     /// <summary>TBD</summary>
     member d.expectation (f:Tensor->Tensor) =
-        if d.isWeighted then d.valuesTensor.unstack() |> Seq.mapi (fun i v -> d.weights.[i]*(f v)) |> dsharp.stack |> dsharp.sum(0)
+        if d.isWeighted then d.valuesTensor.unstack() |> Seq.mapi (fun i v -> d.weights[i]*(f v)) |> dsharp.stack |> dsharp.sum(0)
         else d.valuesTensor.unstack() |> Seq.map f |> dsharp.stack |> dsharp.mean(0)
 
     /// <summary>TBD</summary>
@@ -351,10 +351,10 @@ type Empirical<'T when 'T:equality>(values:seq<'T>, ?weights:Tensor, ?logWeights
     member d.mode =
         if d.isWeighted then 
             let dCombined = d.combineDuplicates()
-            let i = dCombined.logWeights.argmax() in dCombined.values.[i.[0]]
+            let i = dCombined.logWeights.argmax() in dCombined.values[i[0]]
         else
             let vals, _ = d.values |> Array.getUniqueCounts true
-            vals.[0]
+            vals[0]
 
     /// <summary>TBD</summary>
     member d.min = d.valuesTensor.min()

@@ -20,14 +20,14 @@ let main args =
               if case.Descriptor <> null && 
                case.Descriptor.Categories <> null &&
                case.Descriptor.Categories.Length > 0 then
-                if summary <> null && (try (summary.[case] |> ignore); true with _ -> false) then 
-                    let report = summary.[case]
-                    let tensorSize = case.Parameters.["tensorSize"] :?> int
-                    let dtypeName = case.Parameters.["dtypeName"] :?> string
-                    let deviceName = case.Parameters.["deviceName"] :?> string 
+                if summary <> null && (try (summary[case] |> ignore); true with _ -> false) then 
+                    let report = summary[case]
+                    let tensorSize = case.Parameters["tensorSize"] :?> int
+                    let dtypeName = case.Parameters["dtypeName"] :?> string
+                    let deviceName = case.Parameters["deviceName"] :?> string 
                     // get the time in milliseconds
                     let runtime = report.ResultStatistics.Mean / 1000000.0 |> int64
-                    let nm = case.Descriptor.Categories.[0]
+                    let nm = case.Descriptor.Categories[0]
                     let key = nm + string tensorSize + dtypeName + deviceName
                     Some (sprintf "%s,%d" key runtime)
                 else 

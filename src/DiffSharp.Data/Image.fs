@@ -22,10 +22,10 @@ module ImageUtil =
             for x=0 to w-1 do
                 let r, g, b = 
                     if c = 1 then
-                        let v = float32(pixels.[0, y, x])
+                        let v = float32(pixels[0, y, x])
                         v, v, v
                     else
-                        float32(pixels.[0, y, x]), float32(pixels.[1, y, x]), float32(pixels.[2, y, x])
+                        float32(pixels[0, y, x]), float32(pixels[1, y, x]), float32(pixels[2, y, x])
                 image.Item(x, y) <- PixelFormats.RgbaVector(r, g, b)
         let fs = new FileStream(fileName, FileMode.Create)
         let encoder =

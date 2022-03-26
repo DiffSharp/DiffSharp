@@ -882,11 +882,11 @@ type TestTensor () =
         Assert.CheckEqual(3, (t1slice1.GetItem(0) |> Convert.ToInt32))
         Assert.CheckEqual(4, (t1slice1.GetItem(1) |> Convert.ToInt32))
         Assert.CheckEqual(1, t1slice1.Dim)
-        Assert.CheckEqual(2, t1slice1.Shape.[0])
+        Assert.CheckEqual(2, t1slice1.Shape[0])
 
         Assert.CheckEqual(3, (t1slice2.GetItem(0) |> Convert.ToInt32))
         Assert.CheckEqual(1, t1slice2.Dim)
-        Assert.CheckEqual(1, t1slice2.Shape.[0])
+        Assert.CheckEqual(1, t1slice2.Shape[0])
 
         // TODO: slicing reducing down to scalar
         //let t1slice3 = t1.primalRaw.GetSlice(array2D [ [ 3; 3; 1 ] ])
@@ -925,31 +925,31 @@ type TestTensor () =
         Assert.CheckEqual(2.0, t0.toDouble())
 
         let t1 = combo.tensor([2., 3., 4., 5., 6.])
-        let t1_0 = t1.[0]
-        let t1_1 = t1.[1]
+        let t1_0 = t1[0]
+        let t1_1 = t1[1]
         let t1_0_s = t1_0.toDouble()
         let t1_1_s = t1_1.toDouble()
         Assert.CheckEqual(2.0, t1_0_s)
         Assert.CheckEqual(3.0, t1_1_s)
-        Assert.CheckEqual(4.0, (t1.[2].toDouble()))
-        Assert.CheckEqual(5.0, (t1.[3].toDouble()))
+        Assert.CheckEqual(4.0, (t1[2].toDouble()))
+        Assert.CheckEqual(5.0, (t1[3].toDouble()))
 
         let t2 = combo.tensor([[2.]; [3.]])
-        Assert.CheckEqual(2.0, (t2.[0,0].toDouble()))
-        Assert.CheckEqual(3.0, (t2.[1,0].toDouble()))
+        Assert.CheckEqual(2.0, (t2[0,0].toDouble()))
+        Assert.CheckEqual(3.0, (t2[1,0].toDouble()))
 
         let t2b = combo.tensor([[1.;2.]; [3.;4.]])
-        Assert.CheckEqual(1.0, (t2b.[0,0].toDouble()))
-        Assert.CheckEqual(2.0, (t2b.[0,1].toDouble()))
-        Assert.CheckEqual(3.0, (t2b.[1,0].toDouble()))
-        Assert.CheckEqual(4.0, (t2b.[1,1].toDouble()))
+        Assert.CheckEqual(1.0, (t2b[0,0].toDouble()))
+        Assert.CheckEqual(2.0, (t2b[0,1].toDouble()))
+        Assert.CheckEqual(3.0, (t2b[1,0].toDouble()))
+        Assert.CheckEqual(4.0, (t2b[1,1].toDouble()))
 
         let t3 = combo.tensor([[[2.; 3.]]])
-        Assert.CheckEqual(2.0, (t3.[0,0,0].toDouble()))
-        Assert.CheckEqual(3.0, (t3.[0,0,1].toDouble()))
+        Assert.CheckEqual(2.0, (t3[0,0,0].toDouble()))
+        Assert.CheckEqual(3.0, (t3[0,0,1].toDouble()))
 
         let t4 = combo.tensor([[[[1.]]]])
-        Assert.CheckEqual(1.0, (t4.[0,0,0,0].toDouble()))
+        Assert.CheckEqual(1.0, (t4[0,0,0,0].toDouble()))
 
     [<Test>]
     member _.TestTensorArange () =
@@ -2013,9 +2013,9 @@ type TestTensor () =
                                       if p3 > 0 then p3])
                           |> Seq.toList 
                       let t6Correct = 
-                          [if p1 > 0 then combo.tensor(t6vs.[0..p1-1]);
-                           if p2 > 0 then combo.tensor(t6vs.[p1..p1+p2-1]);
-                           if p3 > 0 then combo.tensor(t6vs.[p1+p2..])]
+                          [if p1 > 0 then combo.tensor(t6vs[0..p1-1]);
+                           if p2 > 0 then combo.tensor(t6vs[p1..p1+p2-1]);
+                           if p3 > 0 then combo.tensor(t6vs[p1+p2..])]
 
                       Assert.CheckEqual(t6Correct, t6)
 
@@ -2034,9 +2034,9 @@ type TestTensor () =
                            if p3 > 0 then p3]
                       let t7 = t7in.split(sizes,dim=1) |> Seq.toList 
                       let t7Correct = 
-                          [if p1 > 0 then combo.tensor([ t7vs1.[0..p1-1];     t7vs2.[0..p1-1] ]);
-                           if p2 > 0 then combo.tensor([ t7vs1.[p1..p1+p2-1]; t7vs2.[p1..p1+p2-1] ]);
-                           if p3 > 0 then combo.tensor([ t7vs1.[p1+p2..];     t7vs2.[p1+p2..] ])]
+                          [if p1 > 0 then combo.tensor([ t7vs1[0..p1-1];     t7vs2[0..p1-1] ]);
+                           if p2 > 0 then combo.tensor([ t7vs1[p1..p1+p2-1]; t7vs2[p1..p1+p2-1] ]);
+                           if p3 > 0 then combo.tensor([ t7vs1[p1+p2..];     t7vs2[p1+p2..] ])]
 
                       Assert.CheckEqual(t7Correct, t7)
 
@@ -2831,7 +2831,7 @@ type TestTensor () =
             // mean, dim={0,1,2}
             (* Python:
             import pytorch as torch
-            input = np.[[[1.,2.,3.,4.], [5.,6.,7.,8.], [9.,10.,11.,12.]], [[13.,14.,15.,16.], [17.,18.,19.,20.], [21.,22.,23.,24.]]]
+            input = np[[[1.,2.,3.,4.], [5.,6.,7.,8.], [9.,10.,11.,12.]], [[13.,14.,15.,16.], [17.,18.,19.,20.], [21.,22.,23.,24.]]]
             input.mean(1)
             --> array([[15., 18., 21., 24.],[51., 54., 57., 60.]])
             input.sum(2)
@@ -3601,24 +3601,24 @@ type TestTensor () =
     member _.TestTensorSlice () =
         for combo in Combos.All do 
             let t1 = combo.tensor([1.;2.])
-            let t1s1 = t1.[0]
-            let t1s2 = t1.[*]
-            let t1s3 = t1.[1..]
-            let t1s4 = t1.[..0] // In Python this is [:1] because in Python upper limits are exclusive whereas in F# they are inclusive
+            let t1s1 = t1[0]
+            let t1s2 = t1[*]
+            let t1s3 = t1[1..]
+            let t1s4 = t1[..0] // In Python this is [:1] because in Python upper limits are exclusive whereas in F# they are inclusive
             let t1s1Correct = combo.tensor(1.)
             let t1s2Correct = combo.tensor([1.;2.])
             let t1s3Correct = combo.tensor([2.])
             let t1s4Correct = combo.tensor([1.])
 
             let t2 = combo.tensor([[1.;2.];[3.;4.]])
-            let t2s1 = t2.[0]
-            let t2s2 = t2.[*]
-            let t2s3 = t2.[0,0]
-            let t2s4 = t2.[0,*]
-            let t2s5 = t2.[*,0]
-            let t2s6 = t2.[*,*]
-            let t2s7 = t2.[1..]
-            let t2s8 = t2.[..0] // In Python this is [:1] because in Python upper limits are exclusive whereas in F# they are inclusive
+            let t2s1 = t2[0]
+            let t2s2 = t2[*]
+            let t2s3 = t2[0,0]
+            let t2s4 = t2[0,*]
+            let t2s5 = t2[*,0]
+            let t2s6 = t2[*,*]
+            let t2s7 = t2[1..]
+            let t2s8 = t2[..0] // In Python this is [:1] because in Python upper limits are exclusive whereas in F# they are inclusive
             let t2s1Correct = combo.tensor([1.;2.])
             let t2s2Correct = combo.tensor([[1.;2.];[3.;4.]])
             let t2s3Correct = combo.tensor(1.)
@@ -3629,26 +3629,26 @@ type TestTensor () =
             let t2s8Correct = combo.tensor([[1.; 2.]])
 
             let t2b = combo.tensor([[1.;2.;3.;4.]; [5.;6.;7.;8.]; [9.;10.;11.;12.]])
-            let t2bs1 = t2b.[1..,2..]
+            let t2bs1 = t2b[1..,2..]
             let t2bs1Correct = combo.tensor([[7.;8.];[11.;12.]])
-            let t2bs2 = t2b.[1..2,2..3]
+            let t2bs2 = t2b[1..2,2..3]
             let t2bs2Correct = combo.tensor([[7.;8.];[11.;12.]])
 
             let t3 = combo.tensor([[[1.;2.];[3.;4.]];[[5.;6.];[7.;8.]]])
-            let t3s1  = t3.[0]
-            let t3s2  = t3.[*]
-            let t3s3  = t3.[0,0]
-            let t3s4  = t3.[0,*]
-            let t3s5  = t3.[*,0]
-            let t3s6  = t3.[*,*]
-            let t3s7  = t3.[0,0,0]
-            let t3s8  = t3.[0,0,*]
-            let t3s9  = t3.[0,*,0]
-            let t3s10 = t3.[0,*,*]
-            let t3s11 = t3.[*,0,0]
-            let t3s12 = t3.[*,0,*]
-            let t3s13 = t3.[*,*,0]
-            let t3s14 = t3.[*,*,*]
+            let t3s1  = t3[0]
+            let t3s2  = t3[*]
+            let t3s3  = t3[0,0]
+            let t3s4  = t3[0,*]
+            let t3s5  = t3[*,0]
+            let t3s6  = t3[*,*]
+            let t3s7  = t3[0,0,0]
+            let t3s8  = t3[0,0,*]
+            let t3s9  = t3[0,*,0]
+            let t3s10 = t3[0,*,*]
+            let t3s11 = t3[*,0,0]
+            let t3s12 = t3[*,0,*]
+            let t3s13 = t3[*,*,0]
+            let t3s14 = t3[*,*,*]
             let t3s1Correct  = combo.tensor([[1.;2.];[3.;4.]])
             let t3s2Correct  = combo.tensor([[[1.;2.];[3.;4.]];[[5.;6.];[7.;8.]]])
             let t3s3Correct  = combo.tensor([1.;2.])
@@ -3670,8 +3670,8 @@ type TestTensor () =
                                     [[[4.]]; 
                                      [[5.]]; 
                                      [[6.]]]])
-            let t4s1 = t4.[0]
-            let t4s2 = t4.[0,*,*,*]
+            let t4s1 = t4[0]
+            let t4s2 = t4[0,*,*,*]
             let t4s1Correct = combo.tensor([[[1]];
                                              [[2]];
                                              [[3]]])
@@ -5211,9 +5211,9 @@ type TestTensor () =
     member _.TestTensorIEnumerable () =
         for combo in Combos.All do 
             let t1 = combo.tensor([1,2,3])
-            t1.unstack() |> Seq.iteri (fun i v -> Assert.CheckEqual(t1.[i], v))
+            t1.unstack() |> Seq.iteri (fun i v -> Assert.CheckEqual(t1[i], v))
             let t2 = combo.tensor([[1,2,3], [4,5,6]])
-            t2.unstack() |> Seq.iteri (fun i v -> Assert.CheckEqual(t2.[i,*], v))
+            t2.unstack() |> Seq.iteri (fun i v -> Assert.CheckEqual(t2[i,*], v))
 
     [<Test>]
     member _.TestTensorFSharpCoreOps () =

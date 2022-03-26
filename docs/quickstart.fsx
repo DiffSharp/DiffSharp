@@ -1,5 +1,5 @@
 (*** condition: prepare ***)
-#I "../tests/DiffSharp.Tests/bin/Debug/net5.0"
+#I "../tests/DiffSharp.Tests/bin/Debug/net6.0"
 #r "DiffSharp.Core.dll"
 #r "DiffSharp.Data.dll"
 #r "DiffSharp.Backends.Reference.dll"
@@ -61,7 +61,7 @@ open DiffSharp.Data
 let dataset = MNIST("../data", train=true, transform=id, n=10)
 
 // Inspect a single image and label
-let data, label = dataset.[7]
+let data, label = dataset[7]
 
 // Save image to file
 data.saveImage("test.png")

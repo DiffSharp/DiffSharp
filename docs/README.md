@@ -22,8 +22,8 @@ To use a local build of FSharp.Formatting:
 
 Then:
 
-       ..\FSharp.Formatting\src\FSharp.Formatting.CommandTool\bin\Debug\net5.0\fsdocs.exe watch
-       ..\FSharp.Formatting\src\FSharp.Formatting.CommandTool\bin\Debug\net5.0\fsdocs.exe build --clean --eval
+       ..\FSharp.Formatting\src\FSharp.Formatting.CommandTool\bin\Debug\net6.0\fsdocs.exe watch
+       ..\FSharp.Formatting\src\FSharp.Formatting.CommandTool\bin\Debug\net6.0\fsdocs.exe build --clean --eval
 
 ## Generated Notebooks
 

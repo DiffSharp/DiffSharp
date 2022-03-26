@@ -16,13 +16,13 @@ open DiffSharp.Numerical.Shorten
 type TestDiffSharp () =
 
     let rosenbrock (x:Tensor) = 
-        let x, y = x.[0], x.[1]
+        let x, y = x[0], x[1]
         (1. - x)**2 + 100. * (y - x**2)**2
     let rosenbrockGrad (x:Tensor) = 
-        let x, y = x.[0], x.[1]
+        let x, y = x[0], x[1]
         dsharp.tensor([-2*(1-x)-400*x*(-(x**2) + y); 200*(-(x**2) + y)])
     let rosenbrockHessian (x:Tensor) = 
-        let x, y = x.[0], x.[1]
+        let x, y = x[0], x[1]
         dsharp.tensor([[2.+1200.*x*x-400.*y, -400.*x],[-400.*x, 200.*dsharp.one()]])
 
     let fscalarscalar (x:Tensor) = dsharp.sin x
@@ -34,32 +34,32 @@ type TestDiffSharp () =
     let fscalarvect3Diff3 (x:Tensor) = dsharp.stack([-cos x; exp x; sin x])
 
     let fvect2vect2 (x:Tensor) = 
-        let x, y = x.[0], x.[1]
+        let x, y = x[0], x[1]
         dsharp.stack([x*x*y; 5*x+sin y])
     let fvect2vect2Jacobian (x:Tensor) = 
-        let x, y = x.[0], x.[1]
+        let x, y = x[0], x[1]
         dsharp.tensor([[2*x*y; x*x];[dsharp.tensor(5.); cos y]])
 
     let fvect3vect2 (x:Tensor) = 
-        let x, y, z = x.[0], x.[1], x.[2]
+        let x, y, z = x[0], x[1], x[2]
         dsharp.stack([x*y+2*y*z;2*x*y*y*z])
     let fvect3vect2Jacobian (x:Tensor) = 
-        let x, y, z = x.[0], x.[1], x.[2]
+        let x, y, z = x[0], x[1], x[2]
         dsharp.tensor([[y;x+2*z;2*y];[2*y*y*z;4*x*y*z;2*x*y*y]])
 
     let fvect3vect3 (x:Tensor) = 
-        let r, theta, phi = x.[0], x.[1], x.[2]
+        let r, theta, phi = x[0], x[1], x[2]
         dsharp.stack([r*(sin phi)*(cos theta); r*(sin phi)*(sin theta); r*cos phi])
     let fvect3vect3Jacobian (x:Tensor) = 
-        let r, theta, phi = x.[0], x.[1], x.[2]
+        let r, theta, phi = x[0], x[1], x[2]
         dsharp.tensor([[(sin phi)*(cos theta); -r*(sin phi)*(sin theta); r*(cos phi)*(cos theta)];[(sin phi)*(sin theta); r*(sin phi)*(cos theta); r*(cos phi)*(sin theta)];[cos phi; dsharp.zero(); -r*sin phi]])
 
     let fvect3vect4 (x:Tensor) =
-        let y1, y2, y3, y4 = x.[0], 5*x.[2], 4*x.[1]*x.[1]-2*x.[2],x.[2]*sin x.[0]
+        let y1, y2, y3, y4 = x[0], 5*x[2], 4*x[1]*x[1]-2*x[2],x[2]*sin x[0]
         dsharp.stack([y1;y2;y3;y4])
     let fvect3vect4Jacobian (x:Tensor) =
         let z, o = dsharp.zero(), dsharp.one()
-        dsharp.tensor([[o,z,z],[z,z,5*o],[z,8*x.[1],-2*o],[x.[2]*cos x.[0],z,sin x.[0]]])
+        dsharp.tensor([[o,z,z],[z,z,5*o],[z,8*x[1],-2*o],[x[2]*cos x[0],z,sin x[0]]])
 
     [<SetUp>]
     member this.Setup () =
@@ -136,7 +136,7 @@ type TestDiffSharp () =
     member this.TestSlice () =
         let t = dsharp.tensor([1, 2, 3])
         let tSlice = t |> dsharp.slice([0])
-        let tSliceCorrect = t.[0]
+        let tSliceCorrect = t[0]
         Assert.CheckEqual(tSliceCorrect, tSlice)
 
     [<Test>]
