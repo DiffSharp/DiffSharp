@@ -194,7 +194,7 @@ type dsharp with
     static member repeat(dim:int, times:int) = fun (a:Tensor) -> a.repeat(dim, times)
 
     /// <summary>TBD</summary>
-    static member slice(index:seq<int>) = fun (a:Tensor) -> a.[index |> Seq.toArray]
+    static member slice(index:seq<int>) = fun (a:Tensor) -> a[index |> Seq.toArray]
 
     /// <summary>TBD</summary>
     static member view(shape:seq<int>) = fun (a:Tensor) -> a.view(shape)

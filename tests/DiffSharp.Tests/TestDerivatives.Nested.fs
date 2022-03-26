@@ -73,14 +73,14 @@ type TestDerivativesNested () =
 
             let mutable x = x0
             let mutable x' = x'0
-            while float x.[1] > 0. do
+            while float x[1] > 0. do
                 let x'' = -dsharp.grad p x
                 x <- x + dt * x'
                 x' <- x' + dt * x''
 
-            let dtf = (0-x.[1]) /x'.[1]
+            let dtf = (0-x[1]) /x'[1]
             let xtf = x+dtf*x'
-            xtf.[0]*xtf.[0]
+            xtf[0]*xtf[0]
 
         let argminNewton f x =
             let rec iter i x =
@@ -102,12 +102,12 @@ type TestDerivativesNested () =
         // Compares Hessian-vector product to vector-Hessian product
         
         let rosenbrock (x:Tensor) = 
-            let x, y = x.[0], x.[1]
+            let x, y = x[0], x[1]
             (1. - x)**2 + 100. * (y - x**2)**2
 
         // Analytical Hessian for Rosenbrock
         let rosenbrockHessian (x:Tensor) = 
-            let x, y = x.[0], x.[1]
+            let x, y = x[0], x[1]
             dsharp.tensor([[2.+1200.*x*x-400.*y, -400.*x],[-400.*x, 200.*dsharp.one()]])
 
         // Jacobian-vector product (fwd)

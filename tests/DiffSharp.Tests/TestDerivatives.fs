@@ -3477,9 +3477,9 @@ type TestDerivatives () =
         for combo in Combos.AllDevicesAndBackendsFloat32 do
             let fwdx = combo.tensor([[1.;2.];[3.;4.];[5.;6.]]).forwardDiff(combo.tensor([[10.;20.];[30.;40.];[50.;60.]]))
             let fwdz = dsharp.unstack(fwdx) |> Seq.toArray
-            let fwdza = fwdz.[0]
-            let fwdzb = fwdz.[1]
-            let fwdzc = fwdz.[2]
+            let fwdza = fwdz[0]
+            let fwdzb = fwdz[1]
+            let fwdzc = fwdz[2]
             let fwdzda = fwdza.derivative
             let fwdzdb = fwdzb.derivative
             let fwdzdc = fwdzc.derivative
@@ -3492,9 +3492,9 @@ type TestDerivatives () =
 
             let revx = combo.tensor([[1.;2.];[3.;4.];[5.;6.]]).reverseDiff()
             let revz = dsharp.unstack(revx) |> Seq.toArray
-            let revza = revz.[0]
-            let revzb = revz.[1]
-            let revzc = revz.[2]
+            let revza = revz[0]
+            let revzb = revz[1]
+            let revzc = revz[2]
             let revzaCorrect = combo.tensor([1.; 2.])
             let revzbCorrect = combo.tensor([3.; 4.])
             let revzcCorrect = combo.tensor([5.; 6.])
@@ -3520,8 +3520,8 @@ type TestDerivatives () =
         for combo in Combos.AllDevicesAndBackendsFloat32 do
             let fwdx = combo.tensor([[1.;2.];[3.;4.];[5.;6.]]).forwardDiff(combo.tensor([[10.;20.];[30.;40.];[50.;60.]]))
             let fwdz = fwdx.unstack(dim=1) |> Seq.toArray
-            let fwdza = fwdz.[0]
-            let fwdzb = fwdz.[1]
+            let fwdza = fwdz[0]
+            let fwdzb = fwdz[1]
             let fwdzda = fwdza.derivative
             let fwdzdb = fwdzb.derivative
             let fwdzaCorrect = combo.tensor([1.; 3.; 5.])
@@ -3531,8 +3531,8 @@ type TestDerivatives () =
 
             let revx = combo.tensor([[1.;2.];[3.;4.];[5.;6.]]).reverseDiff()
             let revz = revx.unstack(dim=1) |> Seq.toArray
-            let revza = revz.[0]
-            let revzb = revz.[1]
+            let revza = revz[0]
+            let revzb = revz[1]
             let revzaCorrect = combo.tensor([1.; 3.; 5.])
             let revzbCorrect = combo.tensor([2.; 4.; 6.])
             revza.reverse(combo.tensor([10.; 30.; 50.]))
@@ -3584,9 +3584,9 @@ type TestDerivatives () =
         for combo in Combos.AllDevicesAndBackendsFloat32 do
             let fwdx = combo.tensor([1.;2.;3.;4.;5.;6.]).forwardDiff(combo.tensor([10.;20.;30.;40.;50.;60.]))
             let fwdz = fwdx.split([| 1;3;2 |])
-            let fwdza = fwdz.[0]
-            let fwdzb = fwdz.[1]
-            let fwdzc = fwdz.[2]
+            let fwdza = fwdz[0]
+            let fwdzb = fwdz[1]
+            let fwdzc = fwdz[2]
             let fwdzda = fwdza.derivative
             let fwdzdb = fwdzb.derivative
             let fwdzdc = fwdzc.derivative
@@ -3599,9 +3599,9 @@ type TestDerivatives () =
 
             let revx = combo.tensor([1.;2.;3.;4.;5.;6.]).reverseDiff()
             let revz = revx.split([| 1;3;2 |])
-            let revza = revz.[0]
-            let revzb = revz.[1]
-            let revzc = revz.[2]
+            let revza = revz[0]
+            let revzb = revz[1]
+            let revzc = revz[2]
             let revzaCorrect = combo.tensor([1.])
             let revzbCorrect = combo.tensor([2.;3.; 4.])
             let revzcCorrect = combo.tensor([5.; 6.])
@@ -3627,8 +3627,8 @@ type TestDerivatives () =
         for combo in Combos.AllDevicesAndBackendsFloat32 do
             let fwdx = combo.tensor([[1,2,3],[4,5,6]]).forwardDiff(combo.tensor([[10,20,30],[40,50,60]]))
             let fwdz = fwdx.split([| 1;2 |], dim=1)
-            let fwdza = fwdz.[0]
-            let fwdzb = fwdz.[1]
+            let fwdza = fwdz[0]
+            let fwdzb = fwdz[1]
             let fwdzda = fwdza.derivative
             let fwdzdb = fwdzb.derivative
             let fwdzaCorrect = combo.tensor([[1], [4]])
@@ -3638,8 +3638,8 @@ type TestDerivatives () =
 
             let revx = combo.tensor([[1,2,3],[4,5,6]]).reverseDiff()
             let revz = revx.split([| 1;2 |], dim=1)
-            let revza = revz.[0]
-            let revzb = revz.[1]
+            let revza = revz[0]
+            let revzb = revz[1]
             let revzaCorrect = combo.tensor([[1], [4]])
             let revzbCorrect = combo.tensor([[2, 3], [5, 6]])
             revza.reverse(combo.tensor([[10], [40]]))
@@ -3659,13 +3659,13 @@ type TestDerivatives () =
     member _.TestDerivativeSliceT () =
         for combo in Combos.AllDevicesAndBackendsFloat32 do
             let fwdx = combo.tensor([54.7919; 70.6440; 16.0868; 74.5486; 82.9318]).forwardDiff(combo.tensor([8.8405; 2.7188; 1.5814; 8.7951; 0.1119]))
-            let fwdz = fwdx.[2..]
+            let fwdz = fwdx[2..]
             let fwdzCorrect = combo.tensor([16.0868; 74.5486; 82.9318])
             let fwdzd = fwdz.derivative
             let fwdzdCorrect = combo.tensor([1.5814; 8.7951; 0.1119])
 
             let revx = combo.tensor([54.7919; 70.6440; 16.0868; 74.5486; 82.9318]).reverseDiff()
-            let revz = revx.[2..]
+            let revz = revx[2..]
             let revzCorrect = combo.tensor([16.0868; 74.5486; 82.9318])
             revz.reverse(combo.tensor([0.9360; 0.8748; 0.4353]))
             let revxd = revx.derivative
@@ -3678,13 +3678,13 @@ type TestDerivatives () =
 
         for combo in Combos.AllDevicesAndBackendsFloat32 do
             let fwdx = combo.tensor([1; 2; 3]).forwardDiff(combo.tensor([10; 20; 30]))
-            let fwdz = fwdx.[..0] // In Python this is [:1] because in Python upper limits are exclusive whereas in F# they are inclusive
+            let fwdz = fwdx[..0] // In Python this is [:1] because in Python upper limits are exclusive whereas in F# they are inclusive
             let fwdzCorrect = combo.tensor([1])
             let fwdzd = fwdz.derivative
             let fwdzdCorrect = combo.tensor([10])
 
             let revx = combo.tensor([1; 2; 3]).reverseDiff()
-            let revz = revx.[..0] // In Python this is [:1] because in Python upper limits are exclusive whereas in F# they are inclusive
+            let revz = revx[..0] // In Python this is [:1] because in Python upper limits are exclusive whereas in F# they are inclusive
             let revzCorrect = combo.tensor([1])
             revz.reverse(combo.tensor([10]))
             let revxd = revx.derivative
@@ -3697,13 +3697,13 @@ type TestDerivatives () =
 
         for combo in Combos.AllDevicesAndBackendsFloat32 do
             let fwdx = combo.tensor([1; 2; 3]).forwardDiff(combo.tensor([10; 20; 30]))
-            let fwdz = fwdx.[2..]
+            let fwdz = fwdx[2..]
             let fwdzCorrect = combo.tensor([3])
             let fwdzd = fwdz.derivative
             let fwdzdCorrect = combo.tensor([30])
 
             let revx = combo.tensor([1; 2; 3]).reverseDiff()
-            let revz = revx.[2..]
+            let revz = revx[2..]
             let revzCorrect = combo.tensor([3])
             revz.reverse(combo.tensor([30]))
             let revxd = revx.derivative
@@ -3716,13 +3716,13 @@ type TestDerivatives () =
 
         for combo in Combos.AllDevicesAndBackendsFloat32 do
             let fwdx = combo.tensor([[1; 2; 3]; [4; 5; 6]; [7; 8; 9]]).forwardDiff(combo.tensor([[10; 20; 30]; [40; 50; 60]; [70; 80; 90]]))
-            let fwdz = fwdx.[..0] // In Python this is [:1] because in Python upper limits are exclusive whereas in F# they are inclusive
+            let fwdz = fwdx[..0] // In Python this is [:1] because in Python upper limits are exclusive whereas in F# they are inclusive
             let fwdzCorrect = combo.tensor([[1; 2; 3]])
             let fwdzd = fwdz.derivative
             let fwdzdCorrect = combo.tensor([[10; 20; 30]])
 
             let revx = combo.tensor([[1; 2; 3]; [4; 5; 6]; [7; 8; 9]]).reverseDiff()
-            let revz = revx.[..0] // In Python this is [:1] because in Python upper limits are exclusive whereas in F# they are inclusive
+            let revz = revx[..0] // In Python this is [:1] because in Python upper limits are exclusive whereas in F# they are inclusive
             let revzCorrect = combo.tensor([[1; 2; 3]])
             revz.reverse(combo.tensor([[10; 20; 30]]))
             let revxd = revx.derivative
@@ -3735,13 +3735,13 @@ type TestDerivatives () =
 
         for combo in Combos.AllDevicesAndBackendsFloat32 do
             let fwdx = combo.tensor([[1; 2; 3]; [4; 5; 6]; [7; 8; 9]]).forwardDiff(combo.tensor([[10; 20; 30]; [40; 50; 60]; [70; 80; 90]]))
-            let fwdz = fwdx.[2..]
+            let fwdz = fwdx[2..]
             let fwdzCorrect = combo.tensor([[7; 8; 9]])
             let fwdzd = fwdz.derivative
             let fwdzdCorrect = combo.tensor([[70; 80; 90]])
 
             let revx = combo.tensor([[1; 2; 3]; [4; 5; 6]; [7; 8; 9]]).reverseDiff()
-            let revz = revx.[2..]
+            let revz = revx[2..]
             let revzCorrect = combo.tensor([[7; 8; 9]])
             revz.reverse(combo.tensor([[70; 80; 90]]))
             let revxd = revx.derivative
@@ -3813,7 +3813,7 @@ type TestDerivatives () =
 
             let revx = combo.tensor([[54.7919; 70.6440; 16.0868; 74.5486; 82.9318]; 
                                      [54.7919; 70.6440; 16.0868; 74.5486; 82.9318]]).reverseDiff()
-            let revz = revx.[*,2..2]
+            let revz = revx[*,2..2]
             let revzCorrect = combo.tensor([16.0868; 16.0868])
             revz.reverse(combo.tensor([0.9360;0.9360]))
             let revxd = revx.derivative

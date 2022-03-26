@@ -1,6 +1,6 @@
 #!/usr/bin/env -S dotnet fsi
 
-#I "../tests/DiffSharp.Tests/bin/Debug/net5.0"
+#I "../tests/DiffSharp.Tests/bin/Debug/net6.0"
 #r "DiffSharp.Core.dll"
 #r "DiffSharp.Data.dll"
 #r "DiffSharp.Backends.Torch.dll"
@@ -72,8 +72,8 @@ let validInterval = 100
 let start = System.DateTime.Now
 for epoch = 1 to epochs do
     for i, x, t in loader.epoch() do
-        let input =  x.[*,..seqLen-2]
-        let target = t.[*,1..]
+        let input =  x[*,..seqLen-2]
+        let target = t[*,1..]
         rnn.reset()
         languageModel.reverseDiff()
         let output = input --> languageModel

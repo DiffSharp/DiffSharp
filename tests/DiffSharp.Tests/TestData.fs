@@ -150,15 +150,15 @@ type TestData () =
         let x = dsharp.tensor([[1,2,3], [4,5,6], [7,8,9], [10,11,12], [13,14,15], [16,17,18]]).float32()
         let y = dsharp.tensor([1,0,1,1,2,3]).float32()
         let dataset = TensorDataset(x, y)
-        let dataset2 = dataset.[1..2]
+        let dataset2 = dataset[1..2]
         let dataset2Length = dataset2.length
         let dataset2LengthCorrect = 2
         Assert.AreEqual(dataset2LengthCorrect, dataset2Length)
 
         let loader = dataset2.loader(batchSize=dataset2.length)
         let _, bx, by = loader.epoch() |> Seq.head
-        Assert.True(x.[1..2].allclose(bx))
-        Assert.True(y.[1..2].allclose(by))
+        Assert.True(x[1..2].allclose(bx))
+        Assert.True(y[1..2].allclose(by))
   
     [<Test>]
     member _.TestDatasetFilter () =
@@ -214,7 +214,7 @@ type TestData () =
         let datasetClassesCorrect = 2
         let datasetClassNames = dataset.classNames
         let datasetClassNamesCorrect = [|"cat"; "dog"|]
-        let dataShape = (dataset.[0] |> fst).shape
+        let dataShape = (dataset[0] |> fst).shape
         let dataShapeCorrect = [|3; 64; 64|]
 
         Assert.AreEqual(datasetLengthCorrect, datasetLength)
@@ -296,16 +296,16 @@ type TestData () =
         let loader = dataset.loader(batchSize=batchSize, dropLast=false)
 
         let batch1, batchTarget1 = loader.batch()
-        let batchLen1 = batch1.shape.[0]
-        let batchTargetLen1 = batchTarget1.shape.[0]
+        let batchLen1 = batch1.shape[0]
+        let batchTargetLen1 = batchTarget1.shape[0]
         let batchLenCorrect1 = 16
         Assert.AreEqual(batchLenCorrect1, batchLen1)
         Assert.AreEqual(batchLenCorrect1, batchTargetLen1)
 
         let len = 5
         let batch1, batchTarget1 = loader.batch(len)
-        let batchLen1 = batch1.shape.[0]
-        let batchTargetLen1 = batchTarget1.shape.[0]
+        let batchLen1 = batch1.shape[0]
+        let batchTargetLen1 = batchTarget1.shape[0]
         let batchLenCorrect1 = len
         Assert.AreEqual(batchLenCorrect1, batchLen1)
         Assert.AreEqual(batchLenCorrect1, batchTargetLen1)
@@ -324,7 +324,7 @@ type TestData () =
         let datasetLenCorrect = 113
         Assert.AreEqual(datasetLenCorrect, datasetLen)
 
-        let input, target = dataset.[1]
+        let input, target = dataset[1]
         let inputCorrect = dsharp.tensor([[1., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.],
                                             [0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 1., 0., 0., 0., 0., 0., 0., 0., 0., 0.],
                                             [0., 0., 0., 0., 0., 0., 0., 0., 0., 1., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.],

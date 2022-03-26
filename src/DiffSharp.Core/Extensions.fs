@@ -30,13 +30,13 @@ module Array =
 
     /// Gets the cumulative sum of the input array.
     [<ExcludeFromCodeCoverage>]
-    let inline cumulativeSum (a:_[]) = (Array.scan (+) LanguagePrimitives.GenericZero a).[1..]
+    let inline cumulativeSum (a:_[]) = (Array.scan (+) LanguagePrimitives.GenericZero a)[1..]
 
     /// Gets the unique counts of the input array.
     let getUniqueCounts (sorted:bool) (values:'T[]) =
         let counts = Dictionary<'T, int>()
         for v in values do
-            if counts.ContainsKey(v) then counts.[v] <- counts.[v] + 1 else counts.[v] <- 1
+            if counts.ContainsKey(v) then counts[v] <- counts[v] + 1 else counts[v] <- 1
         if sorted then
             counts |> Array.ofSeq |> Array.sortByDescending (fun (KeyValue(_, v)) -> v) |> Array.map (fun (KeyValue(k, v)) -> k, v) |> Array.unzip
         else
@@ -51,7 +51,7 @@ module Array =
     let foralli f (arr: 'T[]) =
         let mutable i = 0
         let n = arr.Length
-        while i < n && f i arr.[i] do
+        while i < n && f i arr[i] do
             i <- i + 1
         (i = n)
 
@@ -85,7 +85,7 @@ module Array =
 module Array4D =
     /// Builds a new array whose elements are the results of applying the given function to each of the elements of the array.
     let map mapping (array:'a[,,,]) =
-        Array4D.init (array.GetLength(0)) (array.GetLength(1)) (array.GetLength(2)) (array.GetLength(3)) (fun i j k l -> mapping array.[i, j, k, l])
+        Array4D.init (array.GetLength(0)) (array.GetLength(1)) (array.GetLength(2)) (array.GetLength(3)) (fun i j k l -> mapping array[i, j, k, l])
 
 // See https://github.com/dotnet/fsharp/issues/12013
 //type 'T array5d = 'T ``[,,,,]``
@@ -169,8 +169,8 @@ module Array6D =
 //             failwith "tbd"
 //
 // let d = Array5D.zeroCreate<int> 2 2 2 2 2
-// d.[0..0,0..0,0..0,0..0,0..0]
-// d.[0,0..0,0..0,0..0,0..0]
+// d[0..0,0..0,0..0,0..0,0..0]
+// d[0,0..0,0..0,0..0,0..0]
 // #endif
 
 
@@ -266,50 +266,50 @@ module ExtensionAutoOpens =
     /// Creates a non-jagged 3D array from jagged data.
     let array3D data = 
         let data = data |> Array.ofSeq |> Array.map array2D
-        let r1, r2, r3 = data.Length, data.[0].GetLength(0), data.[0].GetLength(1)
+        let r1, r2, r3 = data.Length, data[0].GetLength(0), data[0].GetLength(1)
         for i in 0 .. r1-1 do 
-            let q2 = data.[i].GetLength(0)
-            let q3 = data.[i].GetLength(1)
+            let q2 = data[i].GetLength(0)
+            let q3 = data[i].GetLength(1)
             if q2 <> r2 || q3 <> r3 then 
                 invalidArg "data" (sprintf "jagged input at position %d: first is _ x %d x %d, later is _ x %d x %d" i r2 r3 q2 q3)
-        Array3D.init r1 r2 r3 (fun i j k -> data.[i].[j,k])
+        Array3D.init r1 r2 r3 (fun i j k -> data[i][j,k])
 
     /// Creates a non-jagged 4D array from jagged data.
     let array4D data = 
         let data = data |> array2D |> Array2D.map array2D
-        let r1,r2,r3,r4 = data.GetLength(0), data.GetLength(1), data.[0,0].GetLength(0), data.[0,0].GetLength(1)
+        let r1,r2,r3,r4 = data.GetLength(0), data.GetLength(1), data[0,0].GetLength(0), data[0,0].GetLength(1)
         for i in 0 .. r1-1 do 
           for j in 0 .. r2-1 do 
-            let q3 = data.[i,j].GetLength(0)
-            let q4 = data.[i,j].GetLength(1)
+            let q3 = data[i,j].GetLength(0)
+            let q4 = data[i,j].GetLength(1)
             if q3 <> r3 || q4 <> r4 then 
                 invalidArg "data" (sprintf "jagged input at position (%d,%d): first is _ x _ x %d x %d, later is _ x _ x %d x %d" i j r2 r3 q3 q4)
-        Array4D.init r1 r2 r3 r4 (fun i j k m -> data.[i,j].[k,m])
+        Array4D.init r1 r2 r3 r4 (fun i j k m -> data[i,j][k,m])
 
     let array5D data =
         let data = data |> Array.ofSeq |> Array.map array4D
-        let r1,r2,r3,r4,r5 = data.Length, data.[0].GetLength(0), data.[0].GetLength(1), data.[0].GetLength(2), data.[0].GetLength(3)
+        let r1,r2,r3,r4,r5 = data.Length, data[0].GetLength(0), data[0].GetLength(1), data[0].GetLength(2), data[0].GetLength(3)
         for i in 0 .. r1-1 do
-            let q2 = data.[i].GetLength(0)
-            let q3 = data.[i].GetLength(1)
-            let q4 = data.[i].GetLength(2)
-            let q5 = data.[i].GetLength(3)
+            let q2 = data[i].GetLength(0)
+            let q3 = data[i].GetLength(1)
+            let q4 = data[i].GetLength(2)
+            let q5 = data[i].GetLength(3)
             if q2 <> r2 || q3 <> r3 || q4 <> r4 || q5 <> r5 then
                 invalidArg "data" (sprintf "jagged input at position %d: first is _ x %d x %d x %d x %d, later is _ x %d x %d x %d x %d" i r2 r3 r4 r5 q2 q3 q4 q5)
-        Array5D.init r1 r2 r3 r4 r5 (fun i1 i2 i3 i4 i5 -> data.[i1].[i2,i3,i4,i5])
+        Array5D.init r1 r2 r3 r4 r5 (fun i1 i2 i3 i4 i5 -> data[i1][i2,i3,i4,i5])
 
     let array6D data =
         let data = data |> array2D |> Array2D.map array4D
-        let r1,r2,r3,r4,r5,r6 = data.GetLength(0), data.GetLength(1), data.[0,0].GetLength(0), data.[0,0].GetLength(1), data.[0,0].GetLength(2), data.[0,0].GetLength(3)
+        let r1,r2,r3,r4,r5,r6 = data.GetLength(0), data.GetLength(1), data[0,0].GetLength(0), data[0,0].GetLength(1), data[0,0].GetLength(2), data[0,0].GetLength(3)
         for i in 0 .. r1-1 do
             for j in 0 .. r2-2 do
-                let q3 = data.[i,j].GetLength(0)
-                let q4 = data.[i,j].GetLength(1)
-                let q5 = data.[i,j].GetLength(2)
-                let q6 = data.[i,j].GetLength(3)
+                let q3 = data[i,j].GetLength(0)
+                let q4 = data[i,j].GetLength(1)
+                let q5 = data[i,j].GetLength(2)
+                let q6 = data[i,j].GetLength(3)
                 if q3 <> r3 || q4 <> r4 || q5 <> r5 || q6 <> r6 then
                     invalidArg "data" (sprintf "jagged input at position (%d,%d): first is _ x _ x %d x %d x %d x %d, later is _ x _ x %d x %d x %d x %d" i j r3 r4 r5 r6 q3 q4 q5 q6)
-        Array6D.init r1 r2 r3 r4 r5 r6 (fun i1 i2 i3 i4 i5 i6 -> data.[i1,i2].[i3,i4,i5,i6])
+        Array6D.init r1 r2 r3 r4 r5 r6 (fun i1 i2 i3 i4 i5 i6 -> data[i1,i2][i3,i4,i5,i6])
 
     /// Print the given value to the console using the '%A' printf format specifier
     let print x = printfn "%A" x 
