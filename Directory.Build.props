@@ -50,18 +50,12 @@
     <PackageVersion Condition="'$(GITHUB_ACTIONS)' != 'true'">$(Version)-local-$([System.DateTime]::Now.ToString(`yyMMdd`))</PackageVersion>
 
     <!-- START: Package version for CI and nuget publishing  -->
-    <!-- Use only one of Option A or B below, and comment out the one unused  -->
-    
-    <!-- Option A: Stable release, uses the version number given in the Version tag in this file -->
+    <!-- When running in GitHub CI, we generate a package version based on the Version tag earlier in this file. -->
+    <!-- Packages are produced and pushed to nuget by GitHub CI whenever there is a change in version -->
+    <!-- We continually release the dev branch by incrementing the version number in tht dev branch whenever there is a meaningful update that deserves a new package release -->
+    <!-- We use semantic versioning https://semver.org/ -->
     <!-- PackageVersion has the form: Major.Minor.Patch -->
-    <!-- <PackageVersion Condition="'$(GITHUB_ACTIONS)' == 'true'">$(Version)</PackageVersion> -->
-
-    <!-- Option B: Pre-release, uses the version number given in the Version tag in this file and a suffix -->
-    <!-- PackageVersion has the form: Major.Minor.Patch-Suffix and the presensce of -Suffix automatically indicates a pre-release version in nuget-->
-    <!-- -Suffix can be any string, e.g. -alpha, -beta, -preview -->
-    <!-- More info: https://docs.microsoft.com/en-us/nuget/concepts/package-versioning#pre-release-versions -->
-    <PackageVersion Condition="'$(GITHUB_ACTIONS)' == 'true'">$(Version)-preview$(GITHUB_RUN_ID)</PackageVersion>
-
+    <PackageVersion Condition="'$(GITHUB_ACTIONS)' == 'true'">$(Version)</PackageVersion>
     <!-- END: Package version for CI and nuget publishing  -->
 
     <PackageOutputPath>$(MSBuildThisFileDirectory)bin/packages</PackageOutputPath>
