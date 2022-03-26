@@ -459,16 +459,14 @@ type ModelBase() =
         m.save(fileName, noDiff=false)
         ModelBase.load(fileName)
 
-    override _.ToString() = 
+    override m.ToString() = 
         let sb = System.Text.StringBuilder()
         sb.Append("Model(") |> ignore
         let mutable prefix = ""
-        for v in modelDict do 
-            // let n = (v :?> DictionaryEntry).Key :?> string
-            let m = (v :?> DictionaryEntry).Value :?> ModelBase
-            // sb.Append(sprintf "%A: %A" n m) |> ignore
-            sb.Append(sprintf "%s%A" prefix m) |> ignore
-            prefix <- ", "
+        for mm in m.descendants do
+            if mm.hasOwnParameters then
+                sb.Append(sprintf "%s%A" prefix mm) |> ignore
+                prefix <- ", "
         sb.Append(")") |> ignore
         sb.ToString()
 

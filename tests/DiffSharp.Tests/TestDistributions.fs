@@ -370,6 +370,23 @@ type TestDistributions () =
             Assert.CheckEqual(distUnweightedCombinedLengthCorrect, distUnweightedCombinedLength)
 
     [<Test>]
+    member _.TestDistributionsEmpiricalCombineDuplicatesUnweighted () =
+        for combo in Combos.AllDevicesAndBackendsFloat32 do
+            let values = combo.tensor([0,1,1,1,2,2])
+
+            let dist = Empirical(values.unstack(), combineDuplicates=true, device=combo.device, backend=combo.backend, dtype=combo.dtype)
+            let values = dist.valuesTensor
+            let weights = dist.weights
+            let valuesCorrect = combo.tensor([0,1,2])
+            let weightsCorrect = combo.tensor([1./6., 3./6., 2./6.])
+            printfn "%A" values.dtype
+            printfn "%A" weights.dtype
+            printfn "%A" valuesCorrect.dtype
+            printfn "%A" weightsCorrect.dtype
+            Assert.True(valuesCorrect.allclose(values, 0.1))
+            Assert.True(weightsCorrect.allclose(weights, 0.1))
+
+    [<Test>]
     member _.TestDistributionsEmpiricalResampleFilter () =
         for combo in Combos.AllDevicesAndBackendsFloat32 do
             let values = combo.tensor([0,1,2,3,4,5])

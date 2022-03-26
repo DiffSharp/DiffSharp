@@ -225,7 +225,7 @@ type Categorical(?probs:Tensor, ?logits:Tensor) =
 
 
 /// <summary>Represents an Empirical distribution.</summary>
-type Empirical<'T when 'T:equality>(values:seq<'T>, ?weights:Tensor, ?logWeights:Tensor, ?combineDuplicates:bool) =
+type Empirical<'T when 'T:equality>(values:seq<'T>, ?weights:Tensor, ?logWeights:Tensor, ?combineDuplicates:bool, ?device:Device, ?dtype:Dtype, ?backend:Backend) =
     inherit Distribution<'T>()
     let _categorical, _weighted =
         match weights, logWeights with
@@ -239,7 +239,7 @@ type Empirical<'T when 'T:equality>(values:seq<'T>, ?weights:Tensor, ?logWeights
     let _valuesTensor =
             lazy(try _values |> Array.map (fun v -> box v :?> Tensor) |> dsharp.stack
                     with | _ -> 
-                        try _values |> Array.map (dsharp.tensor) |> dsharp.stack
+                        try _values |> Array.map (dsharp.tensor(device=defaultArg device Device.Default, backend=defaultArg backend Backend.Default, dtype=defaultArg dtype Dtype.Default)) |> dsharp.stack
                         with | _ -> failwith "Not supported because Empirical does not hold values that are Tensors or can be converted to Tensors")
     do
         let combineDuplicates = defaultArg combineDuplicates false
@@ -256,7 +256,8 @@ type Empirical<'T when 'T:equality>(values:seq<'T>, ?weights:Tensor, ?logWeights
                     Dictionary.copyKeys uniques, dsharp.stack(Dictionary.copyValues uniques).view(-1)
                 else
                     let vals, counts = _values |> Array.getUniqueCounts false
-                    vals, dsharp.tensor(counts)
+                    let c = dsharp.tensor(counts, device=defaultArg device Device.Default, backend=defaultArg backend Backend.Default, dtype=defaultArg dtype Dtype.Default)
+                    vals, probsToLogits (c/c.sum()) false
             _values <- newValues
             _categorical <- Categorical(logits=newLogWeights)
         _weighted <- not (Seq.allEqual (_categorical.probs.unstack()))
