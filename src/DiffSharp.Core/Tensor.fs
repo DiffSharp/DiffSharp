@@ -375,7 +375,7 @@ type Tensor =
 
     /// Returns the tensor after standardization (z-score normalization)
     member t.standardize() =
-        let stddev:Tensor = t.stddev()
+        let stddev:Tensor = t.std()
         if stddev = t.zeroLike() || stddev.hasnan() then
             t.zerosLike()
         else
@@ -1575,12 +1575,12 @@ type Tensor =
     /// <param name="dim">The dimension to reduce.</param>
     /// <param name="keepDim">Whether the output tensor has dim retained or not.</param>
     /// <param name="unbiased">Whether to use the unbiased estimation or not.</param>
-    member a.stddev(dim, ?keepDim, ?unbiased) = a.var(dim, ?keepDim=keepDim, ?unbiased=unbiased) |> Tensor.Sqrt
+    member a.std(dim, ?keepDim, ?unbiased) = a.var(dim, ?keepDim=keepDim, ?unbiased=unbiased) |> Tensor.Sqrt
 
     /// <summary>Returns the standard deviation of all elements in the input tensor.</summary>
     /// <remarks>If unbiased is False, then the standard deviation will be calculated via the biased estimator. Otherwise, Bessel’s correction will be used.</remarks>
     /// <param name="unbiased">Whether to use the unbiased estimation or not.</param>
-    member a.stddev(?unbiased) = a.var(?unbiased=unbiased) |> Tensor.Sqrt
+    member a.std(?unbiased) = a.var(?unbiased=unbiased) |> Tensor.Sqrt
 
     /// <summary>
     /// Estimates the covariance matrix of the given tensor. The tensor's first

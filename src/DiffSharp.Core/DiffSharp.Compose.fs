@@ -155,7 +155,7 @@ type dsharp with
     static member var(dim:int, ?keepDim:bool, ?unbiased:bool) = fun (a:Tensor) -> a.var(dim, ?keepDim=keepDim, ?unbiased=unbiased)
 
     /// <summary>TBD</summary>
-    static member stddev(dim:int, ?keepDim:bool, ?unbiased:bool) = fun (a:Tensor) -> a.stddev(dim, ?keepDim=keepDim, ?unbiased=unbiased)
+    static member std(dim:int, ?keepDim:bool, ?unbiased:bool) = fun (a:Tensor) -> a.std(dim, ?keepDim=keepDim, ?unbiased=unbiased)
 
     /// <summary>TBD</summary>
     static member covariance(?correction:int64, ?fweights:Tensor, ?aweights:Tensor) = fun (a:Tensor) -> a.covariance(?correction=correction,?fweights=fweights,?aweights=aweights)

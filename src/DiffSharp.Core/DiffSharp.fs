@@ -741,7 +741,7 @@ type dsharp =
     /// </remarks>
     /// <param name="input">The input tensor.</param>
     /// <param name="unbiased">Whether to use the unbiased estimation or not.</param>
-    static member stddev(input:Tensor, ?unbiased:bool) = input.stddev(?unbiased=unbiased)
+    static member std(input:Tensor, ?unbiased:bool) = input.std(?unbiased=unbiased)
 
     /// <summary>Returns the standard deviation of each row of the input tensor in the given dimension dim. If dim is a list of dimensions, reduce over all of them.</summary>
     /// <remarks>
@@ -752,7 +752,7 @@ type dsharp =
     /// <param name="dim">The dimension to reduce.</param>
     /// <param name="keepDim">Whether the output tensor has dim retained or not.</param>
     /// <param name="unbiased">Whether to use the unbiased estimation or not.</param>
-    static member stddev(input:Tensor, dim:int, ?keepDim:bool, ?unbiased:bool) = input.stddev(dim, ?keepDim=keepDim, ?unbiased=unbiased)
+    static member std(input:Tensor, dim:int, ?keepDim:bool, ?unbiased:bool) = input.std(dim, ?keepDim=keepDim, ?unbiased=unbiased)
 
     /// <summary>
     /// Estimates the covariance matrix of the given tensor. The tensor's first

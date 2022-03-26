@@ -2524,7 +2524,7 @@ type TestDerivatives () =
     member _.TestDerivativeStddev () =
         for combo in Combos.AllDevicesAndBackendsFloat32 do
             let fwdx = combo.tensor([1.; 2.; 3.]).forwardDiff(combo.tensor([2.; 3.; 4.]))
-            let fwdz = fwdx.stddev()
+            let fwdz = fwdx.std()
             let fwdzCorrect = combo.tensor(1.0)
             let fwdzd = fwdz.derivative
             let fwdzdCorrect = combo.tensor(1.0)
@@ -2541,7 +2541,7 @@ type TestDerivatives () =
             --> tensor([-1.5000,  0.0000,  1.5000])
             *)
             let revx = combo.tensor([1.; 2.; 3.]).reverseDiff()
-            let revz = revx.stddev()
+            let revz = revx.std()
             let revzCorrect = combo.tensor(1.)
             revz.reverse(combo.tensor(3.))
             let revxd = revx.derivative

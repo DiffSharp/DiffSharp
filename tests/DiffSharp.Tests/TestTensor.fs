@@ -1092,7 +1092,7 @@ type TestTensor () =
             let m1dtype = m1.dtype
             let m1dtypeCorrect = Dtype.Int32
             let m1mean = m1.float().mean()
-            let m1stddev = m1.float().stddev()
+            let m1stddev = m1.float().std()
             let m1meanCorrect = combo.tensor(1.3001).float()
             let m1stddevCorrect = combo.tensor(0.7810).float()
             Assert.CheckEqual(m1dtypeCorrect, m1dtype)
@@ -1104,7 +1104,7 @@ type TestTensor () =
             let m2dtype = m2.dtype
             let m2dtypeCorrect = Dtype.Int32
             let m2mean = m2.float().mean(dim=1)
-            let m2stddev = m2.float().stddev(dim=1)
+            let m2stddev = m2.float().std(dim=1)
             let m2meanCorrect = combo.tensor([1.3001, 0.3001]).float()
             let m2stddevCorrect = combo.tensor([0.7810, 0.6404]).float()
             Assert.CheckEqual(m2dtypeCorrect, m2dtype)
@@ -2880,21 +2880,21 @@ type TestTensor () =
                 [[0.0848;0.4156;0.5542;0.4166];
                 [0.5187;0.0520;0.4763;0.1509];
                 [0.4767;0.8096;0.1729;0.6671]]])
-            let tStddev = t.stddev()
+            let tStddev = t.std()
             let tStddevCorrect = combo.tensor(0.2398)
 
             Assert.True(tStddev.allclose(tStddevCorrect, 0.01))
             Assert.CheckEqual(tStddev.dtype, combo.dtype)
 
             // stddev, dim={0,1,2,3}, keepDim=true
-            let tStddev0 = t.stddev(0)
+            let tStddev0 = t.std(0)
             let tStddev0Correct = combo.tensor([[0.2078; 0.2375; 0.2326; 0.0530];
                 [0.0630; 0.2985; 0.2179; 0.0383];
                 [0.2370; 0.4623; 0.3339; 0.3715]])
-            let tStddev1 = t.stddev(1)
+            let tStddev1 = t.std(1)
             let tStddev1Correct = combo.tensor([[0.2331; 0.2981; 0.2911; 0.1304];
                 [0.2393; 0.3789; 0.2014; 0.2581]])
-            let tStddev2 = t.stddev(2)
+            let tStddev2 = t.std(2)
             let tStddev2Correct = combo.tensor([[0.2277; 0.2918; 0.2495];[0.1996; 0.2328; 0.2753]])
 
             Assert.True(tStddev0.allclose(tStddev0Correct, 0.01))
@@ -2915,11 +2915,11 @@ type TestTensor () =
             input.std(2,keepdim=True)
             # --> tensor([[[0.2278],[0.2918],[0.2495]],[[0.1996],[0.2328],[0.2753]]]) 
             *)
-            let tStddev0 = t.stddev(0, keepDim=true)
+            let tStddev0 = t.std(0, keepDim=true)
             let tStddev0Correct = combo.tensor([[[0.2078; 0.2375; 0.2326; 0.0530];[0.0630; 0.2985; 0.2179; 0.0383];[0.2370; 0.4623; 0.3339; 0.3715]]])
-            let tStddev1 = t.stddev(1, keepDim=true)
+            let tStddev1 = t.std(1, keepDim=true)
             let tStddev1Correct = combo.tensor([[[0.2331; 0.2981; 0.2911; 0.1304]];[[0.2393; 0.3789; 0.2014; 0.2581]]])
-            let tStddev2 = t.stddev(2, keepDim=true)
+            let tStddev2 = t.std(2, keepDim=true)
             let tStddev2Correct = combo.tensor([[[0.2277]; [0.2918]; [0.2495]];[[0.1996]; [0.2328]; [0.2753]]])
 
             Assert.True(tStddev0.allclose(tStddev0Correct, 0.01))
