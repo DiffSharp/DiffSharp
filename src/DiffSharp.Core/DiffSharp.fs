@@ -822,7 +822,7 @@ type dsharp =
     /// <summary>Get a slice of a tensor</summary>
     /// <param name="input">The input tensor.</param>
     /// <param name="index">Index describing the slice.</param>
-    static member slice(input:Tensor, index:seq<int>) = input.[index |> Seq.toArray]
+    static member slice(input:Tensor, index:seq<int>) = input[index |> Seq.toArray]
 
     /// <summary>Returns a new tensor with the same data as the self tensor but of a different shape.</summary>
     /// <remarks>The returned tensor shares the same data and must have the same number of elements, but may have a different size. For a tensor to be viewed, the new view size must be compatible with its original size.
@@ -1255,11 +1255,11 @@ type dsharp =
         for i = 0 to backends.Length-1 do
             try
                 // Try to create a tensor in the given backend, hence testing the whole underlying process
-                let _ = dsharp.tensor([0f], device=Device.CPU, dtype=Dtype.Float32, backend=backends.[i])
-                backendsAvailable.[i] <- true
+                let _ = dsharp.tensor([0f], device=Device.CPU, dtype=Dtype.Float32, backend=backends[i])
+                backendsAvailable[i] <- true
             with
             | _ -> ()
-        [for i = 0 to backends.Length-1 do if backendsAvailable.[i] then yield backends.[i]]
+        [for i = 0 to backends.Length-1 do if backendsAvailable[i] then yield backends[i]]
 
     /// <summary>Returns the list of available devices for a given backend.</summary>
     /// <param name="backend">Return information for this backend. Defaults to Backend.Default.</param>
@@ -1331,7 +1331,7 @@ type dsharp with
     /// <param name="tensor">The input tensor.</param>
     static member mapi (mapping:int[]->Tensor->Tensor) (tensor:Tensor) = // Differentiable map
         let tflat = tensor.view(-1)
-        let items = Array.init (tflat.nelement) (fun i -> mapping (flatIndexToIndex tensor.shape i) tflat.[i])
+        let items = Array.init (tflat.nelement) (fun i -> mapping (flatIndexToIndex tensor.shape i) tflat[i])
         dsharp.stack(items).view(tensor.shape)
 
     /// <summary>Produce a new tensor by mapping a function over all corresponding elements of two input tensors.</summary>
@@ -1343,7 +1343,7 @@ type dsharp with
         if tensor1.shape <> tensor2.shape then failwithf "Expecting tensor1.shape (%A) and tensor2.shape (%A) to be the same" tensor1.shape tensor2.shape
         let tflat1 = tensor1.view(-1)
         let tflat2 = tensor2.view(-1)
-        let items = Array.init (tflat1.nelement) (fun i -> mapping (flatIndexToIndex tensor1.shape i) tflat1.[i] tflat2.[i])
+        let items = Array.init (tflat1.nelement) (fun i -> mapping (flatIndexToIndex tensor1.shape i) tflat1[i] tflat2[i])
         dsharp.stack(items).view(tensor1.shape)
 
     /// <summary>Produce a new tensor by mapping a function over all corresponding elements of three input tensors.</summary>
@@ -1357,7 +1357,7 @@ type dsharp with
         let tflat1 = tensor1.view(-1)
         let tflat2 = tensor2.view(-1)
         let tflat3 = tensor3.view(-1)
-        let items = Array.init (tflat1.nelement) (fun i -> mapping (flatIndexToIndex tensor1.shape i) tflat1.[i] tflat2.[i] tflat3.[i])
+        let items = Array.init (tflat1.nelement) (fun i -> mapping (flatIndexToIndex tensor1.shape i) tflat1[i] tflat2[i] tflat3[i])
         dsharp.stack(items).view(tensor1.shape)
 
     /// <summary>Produce a new tensor by mapping a function over all elements of the input tensor.</summary>
@@ -1459,7 +1459,7 @@ type dsharp with
         else
             let mutable x = x
             for i in 0..n-1 do
-                x <- x |> dsharp.forwardDiff (GlobalNestingLevel.Next()) v.[i]
+                x <- x |> dsharp.forwardDiff (GlobalNestingLevel.Next()) v[i]
             let mutable fx = f x
             [|for _ in 0..n-1 do
                 let d = fx.derivativeDeep
@@ -1613,7 +1613,7 @@ type dsharp with
     static member fcurl f x =
         let fx, j = dsharp.fjacobian f x
         if j.shape <> [|3; 3|] then failwithf "f must be a function with a three-by-three Jacobian"
-        fx, dsharp.stack([j.[2, 1] - j.[1, 2]; j.[0, 2] - j.[2, 0]; j.[1, 0] - j.[0, 1]])
+        fx, dsharp.stack([j[2, 1] - j[1, 2]; j[0, 2] - j[2, 0]; j[1, 0] - j[0, 1]])
 
     /// <summary>TBD</summary>
     static member curl f x = dsharp.fcurl f x |> snd
@@ -1621,7 +1621,7 @@ type dsharp with
     /// <summary>TBD</summary>
     static member fdivergence f x =
         let fx, j = dsharp.fjacobian f x
-        if j.shape.[0] <> j.shape.[1] then failwithf "f must have a square Jacobian"
+        if j.shape[0] <> j.shape[1] then failwithf "f must have a square Jacobian"
         fx, j.trace()
 
     /// <summary>TBD</summary>
@@ -1631,7 +1631,7 @@ type dsharp with
     static member fcurldivergence f x =
         let fx, j = dsharp.fjacobian f x
         if j.shape <> [|3; 3|] then failwithf "f must be a function with a three-by-three Jacobian"
-        fx, dsharp.stack([j.[2, 1] - j.[1, 2]; j.[0, 2] - j.[2, 0]; j.[1, 0] - j.[0, 1]]), j.trace()
+        fx, dsharp.stack([j[2, 1] - j[1, 2]; j[0, 2] - j[2, 0]; j[1, 0] - j[0, 1]]), j.trace()
 
     /// <summary>TBD</summary>
     static member curldivergence f x = let _, c, d = dsharp.fcurldivergence f x in c, d

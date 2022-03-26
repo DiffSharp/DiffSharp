@@ -46,7 +46,7 @@ module PythonResults =
             dict [ for line in lines do 
                        let c = line.LastIndexOf("," )
                        if c <> -1 then 
-                           let res = line.[0..c-1], int line.[c+1..] 
+                           let res = line[0..c-1], int line[c+1..] 
                            printfn "%A" res
                            res]
         else 
@@ -84,7 +84,7 @@ type BasicTensorOps() =
         // Note, this string allocation and dictionary lookup can affect result
         let key = nm + string perf.tensorSize + perf.dtypeName + perf.deviceName
         if PythonResults.pythonResults.ContainsKey(key) then
-            let time = PythonResults.pythonResults.[key]
+            let time = PythonResults.pythonResults[key]
             Thread.Sleep(time)
         else  
             failwithf "key '%s' not found in python results, have you run DiffSharp.Benchmarks.Python?" key

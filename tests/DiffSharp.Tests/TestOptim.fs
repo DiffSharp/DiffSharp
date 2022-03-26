@@ -22,7 +22,7 @@ type TestOptim () =
     let dataloader = dataset.loader(8, shuffle=true)
 
     let rosenbrock (x:Tensor) = 
-        let x, y = x.[0], x.[1]
+        let x, y = x[0], x[1]
         (1. - x)**2 + 100. * (y - x**2)**2
 
     [<Test>]

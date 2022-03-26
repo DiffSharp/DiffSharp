@@ -61,7 +61,7 @@ open DiffSharp.Data
 let dataset = MNIST("../data", train=true, transform=id, n=10)
 
 // Inspect a single image and label
-let data, label = dataset.[7]
+let data, label = dataset[7]
 
 // Save image to file
 data.saveImage("test.png")

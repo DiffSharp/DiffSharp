@@ -23,7 +23,7 @@ type ConvTranspose1d(inChannels:int, outChannels:int, kernelSize:int, ?stride:in
     /// <summary>TBD</summary>
     override _.forward(value) =
         let f = dsharp.convTranspose1d(value, w.value, ?stride=stride, ?padding=padding, ?dilation=dilation)
-        if bias then f + b.value.expand([value.shape.[0]; outChannels]).view([value.shape.[0]; outChannels; 1]) else f
+        if bias then f + b.value.expand([value.shape[0]; outChannels]).view([value.shape[0]; outChannels; 1]) else f
 
 
 /// <summary>A model that applies a 2D transposed convolution operator over an input image composed of several input planes.</summary>
@@ -31,8 +31,8 @@ type ConvTranspose2d(inChannels:int, outChannels:int, ?kernelSize:int, ?stride:i
     inherit Model()
     let kernelSizes = Shape.resolve2dKernelSizes kernelSize kernelSizes
     let bias = defaultArg bias true
-    let k = 1./ sqrt (float (inChannels*kernelSizes.[0]*kernelSizes.[1]))
-    let w = Parameter <| Weight.uniform([|inChannels; outChannels; kernelSizes.[0]; kernelSizes.[1]|], k)
+    let k = 1./ sqrt (float (inChannels*kernelSizes[0]*kernelSizes[1]))
+    let w = Parameter <| Weight.uniform([|inChannels; outChannels; kernelSizes[0]; kernelSizes[1]|], k)
     let b = Parameter <| if bias then Weight.uniform([|outChannels|], k) else dsharp.tensor([])
     do base.addParameter([w;b],["ConvTranspose2d-weight";"ConvTranspose2d-bias"])
 
@@ -42,7 +42,7 @@ type ConvTranspose2d(inChannels:int, outChannels:int, ?kernelSize:int, ?stride:i
     /// <summary>TBD</summary>
     override _.forward(value) =
         let f = dsharp.convTranspose2d(value, w.value, ?stride=stride, ?strides=strides, ?padding=padding, ?paddings=paddings, ?dilation=dilation, ?dilations=dilations)
-        if bias then f + b.value.expand([value.shape.[0]; outChannels]).view([value.shape.[0]; outChannels; 1; 1]) else f
+        if bias then f + b.value.expand([value.shape[0]; outChannels]).view([value.shape[0]; outChannels; 1; 1]) else f
 
 
 /// <summary>A model that applies a 3D transposed convolution operator over an input image composed of several input planes.</summary>
@@ -50,8 +50,8 @@ type ConvTranspose3d(inChannels:int, outChannels:int, ?kernelSize:int, ?stride:i
     inherit Model()
     let kernelSizes = Shape.resolve3dKernelSizes kernelSize kernelSizes
     let bias = defaultArg bias true
-    let k = 1./ sqrt (float (inChannels*kernelSizes.[0]*kernelSizes.[1]*kernelSizes.[2]))
-    let w = Parameter <| Weight.uniform([|inChannels; outChannels; kernelSizes.[0]; kernelSizes.[1]; kernelSizes.[2]|], k)
+    let k = 1./ sqrt (float (inChannels*kernelSizes[0]*kernelSizes[1]*kernelSizes[2]))
+    let w = Parameter <| Weight.uniform([|inChannels; outChannels; kernelSizes[0]; kernelSizes[1]; kernelSizes[2]|], k)
     let b = Parameter <| if bias then Weight.uniform([|outChannels|], k) else dsharp.tensor([])
     do base.addParameter([w;b],["ConvTranspose3d-weight";"ConvTranspose3d-bias"])
 
@@ -61,4 +61,4 @@ type ConvTranspose3d(inChannels:int, outChannels:int, ?kernelSize:int, ?stride:i
     /// <summary>TBD</summary>
     override _.forward(value) =
         let f = dsharp.convTranspose3d(value, w.value, ?stride=stride, ?strides=strides, ?padding=padding, ?paddings=paddings, ?dilation=dilation, ?dilations=dilations)
-        if bias then f + b.value.expand([value.shape.[0]; outChannels]).view([value.shape.[0]; outChannels; 1; 1; 1]) else f
+        if bias then f + b.value.expand([value.shape[0]; outChannels]).view([value.shape[0]; outChannels; 1; 1; 1]) else f

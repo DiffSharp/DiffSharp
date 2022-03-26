@@ -112,7 +112,7 @@ type dsharp with
     static member numfcurl epsilon f x =
         let fx, j = dsharp.numfjacobian epsilon f x
         if j.shape <> [|3; 3|] then failwithf "f must be a function with a three-by-three Jacobian"
-        fx, dsharp.stack([j.[2, 1] - j.[1, 2]; j.[0, 2] - j.[2, 0]; j.[1, 0] - j.[0, 1]])
+        fx, dsharp.stack([j[2, 1] - j[1, 2]; j[0, 2] - j[2, 0]; j[1, 0] - j[0, 1]])
 
     /// <summary>TBD</summary>
     static member numcurl epsilon f x = dsharp.numfcurl epsilon f x |> snd
@@ -120,7 +120,7 @@ type dsharp with
     /// <summary>TBD</summary>
     static member numfdivergence epsilon f x =
         let fx, j = dsharp.numfjacobian epsilon f x
-        if j.shape.[0] <> j.shape.[1] then failwithf "f must have a square Jacobian"
+        if j.shape[0] <> j.shape[1] then failwithf "f must have a square Jacobian"
         fx, j.trace()
 
     /// <summary>TBD</summary>
@@ -130,7 +130,7 @@ type dsharp with
     static member numfcurldivergence epsilon f x =
         let fx, j = dsharp.numfjacobian epsilon f x
         if j.shape <> [|3; 3|] then failwithf "f must be a function with a three-by-three Jacobian"
-        fx, dsharp.stack([j.[2, 1] - j.[1, 2]; j.[0, 2] - j.[2, 0]; j.[1, 0] - j.[0, 1]]), j.trace()
+        fx, dsharp.stack([j[2, 1] - j[1, 2]; j[0, 2] - j[2, 0]; j[1, 0] - j[0, 1]]), j.trace()
 
     /// <summary>TBD</summary>
     static member numcurldivergence epsilon f x = let _, c, d = dsharp.numfcurldivergence epsilon f x in c, d

@@ -89,14 +89,14 @@ type ImageDataset(path:string, ?fileExtension:string, ?resize:int*int, ?transfor
                             if files.Length > 0 then files|]
     let _classes = filesInSubdirs.Length
     let data = [|for i in 0.._classes-1 do
-                    let files = filesInSubdirs.[i]
+                    let files = filesInSubdirs[i]
                     yield! Array.map (fun file -> file, i) files|]
-    let _classNames = Array.map (fun (f:string[]) -> DirectoryInfo(f.[0]).Parent.Name) filesInSubdirs
+    let _classNames = Array.map (fun (f:string[]) -> DirectoryInfo(f[0]).Parent.Name) filesInSubdirs
     member d.classes = _classes
     member d.classNames = _classNames
     override d.length = data.Length
     override d.item(i) =
-        let fileName, category = data.[i]
+        let fileName, category = data[i]
         transform (dsharp.loadImage(fileName, ?resize=resize, device=Device.CPU)), targetTransform (dsharp.tensor(category, device=Device.CPU))
 
 
@@ -125,15 +125,15 @@ type CIFAR10(path:string, ?url:string, ?train:bool, ?transform:Tensor->Tensor, ?
         if not (Directory.Exists(pathExtracted)) then extractTarGz file path
         let files = [|"data_batch_1.bin"; "data_batch_2.bin"; "data_batch_3.bin"; "data_batch_4.bin"; "data_batch_5.bin"; "test_batch.bin"|] |> Array.map (fun f -> Path.Combine(pathExtracted, f))
         if train then
-            files.[..4] |> Array.map loadCIFAR10 |> Array.unzip |> fun (d, t) -> dsharp.cat(d), dsharp.cat(t)
+            files[..4] |> Array.map loadCIFAR10 |> Array.unzip |> fun (d, t) -> dsharp.cat(d), dsharp.cat(t)
         else
-            loadCIFAR10 files.[5]
+            loadCIFAR10 files[5]
 
     let _classNames = File.ReadAllLines(Path.Combine(pathExtracted, "batches.meta.txt")) |> Array.take 10
     member d.classes = _classNames.Length
     member d.classNames = _classNames
-    override d.length = data.shape.[0]
-    override d.item(i) = transform data.[i], targetTransform target.[i]
+    override d.length = data.shape[0]
+    override d.item(i) = transform data[i], targetTransform target[i]
 
 
 type CIFAR100(path:string, ?url:string, ?train:bool, ?transform:Tensor->Tensor, ?targetTransform:Tensor->Tensor) =
@@ -167,8 +167,8 @@ type CIFAR100(path:string, ?url:string, ?train:bool, ?transform:Tensor->Tensor, 
     let _classNamesFine = File.ReadAllLines(Path.Combine(pathExtracted, "fine_label_names.txt")) |> Array.take 100
     member d.classes = _classNamesFine.Length
     member d.classNames = _classNamesFine
-    override d.length = data.shape.[0]
-    override d.item(i) = transform data.[i], targetTransform targetFine.[i]    
+    override d.length = data.shape[0]
+    override d.item(i) = transform data[i], targetTransform targetFine[i]    
 
 
 type MNIST(path:string, ?urls:seq<string>, ?train:bool, ?transform:Tensor->Tensor, ?targetTransform:Tensor->Tensor, ?n:int) =
@@ -220,15 +220,15 @@ type MNIST(path:string, ?urls:seq<string>, ?train:bool, ?transform:Tensor->Tenso
 
     let data, target = 
         if train then
-            if not (File.Exists(files.[0])) then download urls.[0] files.[0]
-            if not (File.Exists(files.[1])) then download urls.[1] files.[1]
-            loadMNISTImages files.[0], loadMNISTLabels files.[1]
+            if not (File.Exists(files[0])) then download urls[0] files[0]
+            if not (File.Exists(files[1])) then download urls[1] files[1]
+            loadMNISTImages files[0], loadMNISTLabels files[1]
         else
-            if not (File.Exists(files.[2])) then download urls.[2] files.[2]
-            if not (File.Exists(files.[3])) then download urls.[3] files.[3]
-            loadMNISTImages files.[2], loadMNISTLabels files.[3]
+            if not (File.Exists(files[2])) then download urls[2] files[2]
+            if not (File.Exists(files[3])) then download urls[3] files[3]
+            loadMNISTImages files[2], loadMNISTLabels files[3]
 
     member d.classes = 10
     member d.classNames = Array.init 10 id |> Array.map string
-    override d.length = data.shape.[0]
-    override d.item(i) = transform data.[i], targetTransform target.[i]
+    override d.length = data.shape[0]
+    override d.item(i) = transform data[i], targetTransform target[i]
