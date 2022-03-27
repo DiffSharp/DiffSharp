@@ -1618,7 +1618,7 @@ type Tensor =
     /// let x = dsharp.tensor([0.0;3.4;5.0])
     /// let y = dsharp.tensor([1.0;2.3;-3.0])
     /// let xy = dsharp.stack([x;y])
-    /// xy.covariance()
+    /// xy.cov()
     /// </code>
     /// Evaluates to
     /// <code>
@@ -1626,7 +1626,7 @@ type Tensor =
     ///         [-4.0100,  7.6300]])
     /// </code>
     /// </example>
-    member a.covariance(?correction:int64, ?fweights:Tensor, ?aweights:Tensor) =
+    member a.cov(?correction:int64, ?fweights:Tensor, ?aweights:Tensor) =
         if a.dim > 2 then 
             failwith $"Expected input to have two or fewer dimensions but input.dim is {a.dim}"
         if a.dtype = Dtype.Bool then failwith $"bool dtype is not supported for input"
@@ -1725,7 +1725,7 @@ type Tensor =
     /// </example>
     member a.corrcoef() =
         if a.dim > 2 then failwith $"Expected to have fewer than 2 dimensions but tensor.dim is {a.dim}"
-        let mutable c = a.covariance()
+        let mutable c = a.cov()
         if c.dim = 0 then 
             c / c
         else

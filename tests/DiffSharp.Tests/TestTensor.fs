@@ -3057,78 +3057,78 @@ type TestTensor () =
 
             // to suppress printfn from this test "Warning: degress of freedom <= 0"
             Console.SetOut(IO.TextWriter.Null)
-            let t0Unbiased = t0.covariance()
+            let t0Unbiased = t0.cov()
             Assert.True(t0Unbiased.isnan().toBool())
             // restore stdout
             let stdout = new IO.StreamWriter(Console.OpenStandardOutput())
             stdout.AutoFlush <- true
             Console.SetOut(stdout)
             
-            let t0Biased = t0.covariance(correction= int64 0)
+            let t0Biased = t0.cov(correction= int64 0)
             let t0BiasedCorrect = combo.tensor(0)
             Assert.True(t0Biased.allclose(t0BiasedCorrect,0.01,0.01))
             
-            let t1Unbiased = t1.covariance()
+            let t1Unbiased = t1.cov()
             let t1UnbiasedCorrect = combo.tensor(0.0518731)
             Assert.True(t1Unbiased.allclose(t1UnbiasedCorrect,0.01,0.01))
 
 
-            let t1Biased = t1.covariance(correction= int64 0)
+            let t1Biased = t1.cov(correction= int64 0)
             let t1BiasedCorrect = combo.tensor(0.03890482)
             Assert.True(t1Biased.allclose(t1BiasedCorrect,0.01,0.01))
 
-            Assert.True(t1.covariance().allclose(t2.covariance(),0.01,0.01))
-            Assert.True(t1.covariance(correction= int64 0).allclose(t2.covariance(correction= int64 0),0.01,0.01))
+            Assert.True(t1.cov().allclose(t2.cov(),0.01,0.01))
+            Assert.True(t1.cov(correction= int64 0).allclose(t2.cov(correction= int64 0),0.01,0.01))
 
-            let tUnbiased = t.covariance()
+            let tUnbiased = t.cov()
             let tUnbiasedCorrect = combo.tensor([[ 0.0518731 , -0.01221014, -0.03185672],
                                                  [-0.01221014,  0.08516011,  0.04919771],
                                                  [-0.03185672,  0.04919771,  0.06224549]])
             Assert.True(tUnbiased.allclose(tUnbiasedCorrect,0.01,0.01))
 
-            let tBiased = t.covariance(correction= int64 0)
+            let tBiased = t.cov(correction= int64 0)
             let tBiasedCorrect = 
                 combo.tensor([[ 0.03890482, -0.0091576 , -0.02389254],
                               [-0.0091576 ,  0.06387008,  0.03689828],
                               [-0.02389254,  0.03689828,  0.04668411]])
             Assert.True(tBiased.allclose(tBiasedCorrect,0.01,0.01))
 
-            let tUnbiasedFWeights = t.covariance(fweights=fweights)
+            let tUnbiasedFWeights = t.cov(fweights=fweights)
             let tUnbiasedFWeightsCorrect = 
                 combo.tensor([[ 0.05789406, -0.01862841, -0.04269081],
                               [-0.01862841,  0.0682321 ,  0.0523144 ],
                               [-0.04269081,  0.0523144 ,  0.06026907]])
             Assert.True(tUnbiasedFWeights.allclose(tUnbiasedFWeightsCorrect,0.01,0.01))
 
-            let tBiasedFWeights = t.covariance(fweights=fweights,correction= int64 0)
+            let tBiasedFWeights = t.cov(fweights=fweights,correction= int64 0)
             let tBiasedFWeightsCorrect = 
                 combo.tensor([[ 0.054847  , -0.01764797, -0.04044393],
                               [-0.01764797,  0.06464094,  0.04956101],
                               [-0.04044393,  0.04956101,  0.05709701]])
             Assert.True(tBiasedFWeights.allclose(tBiasedFWeightsCorrect,0.01,0.01))
 
-            let tUnbiasedAWeights = t.covariance(aweights=aweights)
+            let tUnbiasedAWeights = t.cov(aweights=aweights)
             let tUnbiasedAWeightsCorrect = 
                 combo.tensor([[ 0.03039008, -0.00885102, -0.02299303],
                               [-0.00885102,  0.10213812,  0.05019765],
                               [-0.02299303,  0.05019765,  0.06144794]])
             Assert.True(tUnbiasedAWeights.allclose(tUnbiasedAWeightsCorrect,0.01,0.01))
 
-            let tBiasedAWeights = t.covariance(aweights=aweights,correction= int64 0)
+            let tBiasedAWeights = t.cov(aweights=aweights,correction= int64 0)
             let tBiasedAWeightsCorrect = 
                 combo.tensor([[ 0.0218481 , -0.00636319, -0.0165302 ],
                               [-0.00636319,  0.07342935,  0.0360882 ],
                               [-0.0165302 ,  0.0360882 ,  0.04417628]])
             Assert.True(tBiasedAWeights.allclose(tBiasedAWeightsCorrect,0.01,0.01))
 
-            let tUnbiasedFWeightsAWeights = t.covariance(fweights=fweights,aweights=aweights)
+            let tUnbiasedFWeightsAWeights = t.cov(fweights=fweights,aweights=aweights)
             let tUnbiasedFWeightsAWeightsCorrect = 
                 combo.tensor([[ 0.04020249, -0.01536804, -0.03199123],
                               [-0.01536804,  0.09027013,  0.06286618],
                               [-0.03199123,  0.06286618,  0.0633787 ]])
             Assert.True(tUnbiasedFWeightsAWeights.allclose(tUnbiasedFWeightsAWeightsCorrect,0.01,0.01))
 
-            let tBiasedFWeightsAWeights = t.covariance(fweights=fweights,aweights=aweights,correction= int64 0)
+            let tBiasedFWeightsAWeights = t.cov(fweights=fweights,aweights=aweights,correction= int64 0)
             let tBiasedFWeightsAWeightsCorrect = 
                 combo.tensor([[ 0.03776553, -0.01443647, -0.03005202],
                               [-0.01443647,  0.08479822,  0.05905542],

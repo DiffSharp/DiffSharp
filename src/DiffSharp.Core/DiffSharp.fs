@@ -791,7 +791,7 @@ type dsharp =
     /// let x = dsharp.tensor([0.0;3.4;5.0])
     /// let y = dsharp.tensor([1.0;2.3;-3.0])
     /// let xy = dsharp.stack([x;y])
-    /// xy.covariance()
+    /// xy.cov()
     /// </code>
     /// Evaluates to
     /// <code>
@@ -799,8 +799,8 @@ type dsharp =
     ///         [-4.0100,  7.6300]])
     /// </code>
     /// </example>
-    static member covariance(input:Tensor, ?correction:int64, ?fweights:Tensor, ?aweights:Tensor) =
-        input.covariance(?correction=correction, ?fweights=fweights, ?aweights=aweights)
+    static member cov(input:Tensor, ?correction:int64, ?fweights:Tensor, ?aweights:Tensor) =
+        input.cov(?correction=correction, ?fweights=fweights, ?aweights=aweights)
     
     /// <summary>
     /// Estimates the Pearson correlation coefficient matrix for the given tensor. The tensor's first

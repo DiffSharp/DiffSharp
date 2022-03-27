@@ -2605,7 +2605,7 @@ type TestDerivatives () =
 
             // Checking vs. Variance because 1D covariance = variance
             let fwdx = combo.tensor([1.; 2.; 3.]).forwardDiff(combo.tensor([2.; 3.; 4.]))
-            let fwdz = fwdx.covariance()
+            let fwdz = fwdx.cov()
             let fwdzCorrect = fwdx.var()
             let fwdzd = fwdz.derivative
             let fwdzdCorrect = fwdzCorrect.derivative
@@ -2614,7 +2614,7 @@ type TestDerivatives () =
             Assert.CheckEqual(fwdzdCorrect, fwdzd)
 
             let revx = combo.tensor([1.; 2.; 3.]).reverseDiff()
-            let revz = revx.covariance()
+            let revz = revx.cov()
             let revzCorrect = revx.var()
             revz.reverse(combo.tensor(3.))
             let revxd = revx.derivative
@@ -2641,7 +2641,7 @@ type TestDerivatives () =
 
             // Unbiased forward diff
             let fwdxUnbiased = t.forwardDiff(deriv)
-            let fwdzUnbiased = fwdxUnbiased.covariance()
+            let fwdzUnbiased = fwdxUnbiased.cov()
             let fwdzdUnbiased = fwdzUnbiased.derivative
             let fwdzdUnbiasedCorrect = dfd fwdxUnbiased.primalDeep 1 None None deriv
 
@@ -2662,7 +2662,7 @@ type TestDerivatives () =
                     [-0.3827,  0.3223,  2.9513, -2.8909]])
             *)
             let revxUnbiased = t.reverseDiff()
-            let revzUnbiased = revxUnbiased.covariance()
+            let revzUnbiased = revxUnbiased.cov()
             revzUnbiased.reverse(combo.tensor([[1.,2.,3.],[4.,5.,6.],[7.,8.,9.]]))
             let revxdUnbiased = revxUnbiased.derivative
             let revxdUnbiasedCorrect = combo.tensor(
@@ -2674,7 +2674,7 @@ type TestDerivatives () =
 
             // Biased forward diff
             let fwdxBiased = t.forwardDiff(deriv)
-            let fwdzBiased = fwdxBiased.covariance(correction= int64 0)
+            let fwdzBiased = fwdxBiased.cov(correction= int64 0)
             let fwdzdBiased = fwdzBiased.derivative
             let fwdzdBiasedCorrect = dfd fwdxBiased.primalDeep 0 None None deriv
 
@@ -2695,7 +2695,7 @@ type TestDerivatives () =
                     [-0.2870,  0.2417,  2.2135, -2.1682]])
             *)            
             let revxBiased = t.reverseDiff()
-            let revzBiased = revxBiased.covariance(correction= int64 0)
+            let revzBiased = revxBiased.cov(correction= int64 0)
             revzBiased.reverse(combo.tensor([[1.,2.,3.],[4.,5.,6.],[7.,8.,9.]]))
             let revxdBiased = revxBiased.derivative
             let revxdBiasedCorrect = combo.tensor(
@@ -2707,7 +2707,7 @@ type TestDerivatives () =
 
             // fweights forward diff
             let fwdxFweights = t.forwardDiff(deriv)
-            let fwdzFweights = fwdxFweights.covariance(fweights=fweights)
+            let fwdzFweights = fwdxFweights.cov(fweights=fweights)
             let fwdzdFweights = fwdzFweights.derivative
             let fwdzdFweightsCorrect = dfd fwdxFweights.primalDeep 1 (Some fweights) None deriv
 
@@ -2729,7 +2729,7 @@ type TestDerivatives () =
                     [-0.1600, -0.2975,  2.7697, -2.3122]])
             *)              
             let revxFweights = t.reverseDiff()
-            let revzFweights = revxFweights.covariance(fweights=fweights)
+            let revzFweights = revxFweights.cov(fweights=fweights)
             revzFweights.reverse(combo.tensor([[1.,2.,3.],[4.,5.,6.],[7.,8.,9.]]))
             let revxdFweights = revxFweights.derivative
             let revxdFweightsCorrect = combo.tensor(
@@ -2741,7 +2741,7 @@ type TestDerivatives () =
 
             // aweights forward diff
             let fwdxAweights = t.forwardDiff(deriv)
-            let fwdzAweights = fwdxAweights.covariance(aweights=aweights)
+            let fwdzAweights = fwdxAweights.cov(aweights=aweights)
             let fwdzdAweights = fwdzAweights.derivative
             let fwdzdAweightsCorrect = dfd fwdxAweights.primalDeep 1 None (Some aweights) deriv
 
@@ -2763,7 +2763,7 @@ type TestDerivatives () =
                     [-0.0526,  0.3221,  3.1268, -3.3963]])
             *)
             let revxAweights = t.reverseDiff()
-            let revzAweights = revxAweights.covariance(aweights=aweights)
+            let revzAweights = revxAweights.cov(aweights=aweights)
             revzAweights.reverse(combo.tensor([[1.,2.,3.],[4.,5.,6.],[7.,8.,9.]]))
             let revxdAweights = revxAweights.derivative
             let revxdAweightsCorrect = combo.tensor(
