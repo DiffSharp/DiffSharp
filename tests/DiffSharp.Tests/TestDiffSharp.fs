@@ -94,7 +94,7 @@ type TestDiffSharp () =
         let t = dsharp.rand([1000])
         let tMean = t.mean()
         let tMeanCorrect = dsharp.tensor(0.5)
-        let tStddev = t.stddev()
+        let tStddev = t.std()
         let tStddevCorrect = dsharp.tensor(1./12.) |> dsharp.sqrt
         Assert.True(tMeanCorrect.allclose(tMean, 0.1))
         Assert.True(tStddevCorrect.allclose(tStddev, 0.1))
@@ -104,7 +104,7 @@ type TestDiffSharp () =
         let t = dsharp.randn([1000])
         let tMean = t.mean()
         let tMeanCorrect = dsharp.tensor(0.)
-        let tStddev = t.stddev()
+        let tStddev = t.std()
         let tStddevCorrect = dsharp.tensor(1.)
         Assert.True(tMeanCorrect.allclose(tMean, 0.1, 0.1))
         Assert.True(tStddevCorrect.allclose(tStddev, 0.1, 0.1))

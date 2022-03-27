@@ -32,7 +32,7 @@ type TestDistributions () =
             let stddev = d.stddev
             let samples = d.sample(numEmpiricalSamples)
             let samplesMean = samples.mean()
-            let samplesStddev = samples.stddev()
+            let samplesStddev = samples.std()
             let logprob = d.logprob(combo.tensor(20.))
             let logprobCorrect = combo.tensor(-6.2533)
 
@@ -58,7 +58,7 @@ type TestDistributions () =
             let stddev = d.stddev
             let samples = d.sample(numEmpiricalSamples)
             let samplesMean = samples.mean(0)
-            let samplesStddev = samples.stddev(0)
+            let samplesStddev = samples.std(0)
             let logprob = d.logprob(combo.tensor([20., 21.]))
             let logprobCorrect = combo.tensor([-6.2533, -1.4485])
 
@@ -88,7 +88,7 @@ type TestDistributions () =
             let stddev = d.stddev
             let samples = d.sample(numEmpiricalSamples)
             let samplesMean = samples.mean()
-            let samplesStddev = samples.stddev()
+            let samplesStddev = samples.std()
             let meanCorrect = combo.tensor(5.5)
             let stddevCorrect = combo.tensor(2.8868)
             let logprob = d.logprob(combo.tensor(8.))
@@ -123,7 +123,7 @@ type TestDistributions () =
             let stddev = d.stddev
             let samples = d.sample(numEmpiricalSamples)
             let samplesMean = samples.mean(0)
-            let samplesStddev = samples.stddev(0)
+            let samplesStddev = samples.std(0)
             let meanCorrect = combo.tensor([5.5, 0.5, 0.])
             let stddevCorrect = combo.tensor([2.8868, 0.28867, 2.88435])
             let logprob = d.logprob(combo.tensor([8., 0.2, 4.]))
@@ -163,7 +163,7 @@ type TestDistributions () =
                 let logits = d.logits
                 let samples = d.sample(numEmpiricalSamples)
                 let samplesMean = samples.mean(0)
-                let samplesStddev = samples.stddev(0)
+                let samplesStddev = samples.std(0)
                 let meanCorrect = combo.tensor(0.2)
                 let stddevCorrect = combo.tensor(0.4)
                 let logprob = d.logprob(combo.tensor(0.2))
@@ -202,7 +202,7 @@ type TestDistributions () =
                 let logits = d.logits
                 let samples = d.sample(numEmpiricalSamples)
                 let samplesMean = samples.mean(0)
-                let samplesStddev = samples.stddev(0)
+                let samplesStddev = samples.std(0)
                 let meanCorrect = probs
                 let stddevCorrect = combo.tensor([[0.5000, 0.4000, 0.4583],
                                                     [0.4000, 0.4000, 0.4899]])
@@ -243,7 +243,7 @@ type TestDistributions () =
                 let logits = d.logits
                 let samples = d.sample(numEmpiricalSamples).cast(combo.dtype)
                 let samplesMean = samples.mean(0)
-                let samplesStddev = samples.stddev(0)
+                let samplesStddev = samples.std(0)
                 let meanCorrect = combo.tensor(1.6)
                 let stddevCorrect = combo.tensor(0.666)
                 let logprob = d.logprob(combo.tensor(0))
@@ -272,7 +272,7 @@ type TestDistributions () =
             let logits = d.logits
             let samples = d.sample(numEmpiricalSamples).cast(combo.dtype)
             let samplesMean = samples.mean(0)
-            let samplesStddev = samples.stddev(0)
+            let samplesStddev = samples.std(0)
             let meanCorrect = combo.tensor([1.6, 1.1])
             let stddevCorrect = combo.tensor([0.666, 0.7])
             let logprob = d.logprob(combo.tensor([0, 1]))
@@ -379,10 +379,10 @@ type TestDistributions () =
             let weights = dist.weights
             let valuesCorrect = combo.tensor([0,1,2])
             let weightsCorrect = combo.tensor([1./6., 3./6., 2./6.])
-            printfn "%A" values.dtype
-            printfn "%A" weights.dtype
-            printfn "%A" valuesCorrect.dtype
-            printfn "%A" weightsCorrect.dtype
+            // printfn "%A" values.dtype
+            // printfn "%A" weights.dtype
+            // printfn "%A" valuesCorrect.dtype
+            // printfn "%A" weightsCorrect.dtype
             Assert.True(valuesCorrect.allclose(values, 0.1))
             Assert.True(weightsCorrect.allclose(weights, 0.1))
 

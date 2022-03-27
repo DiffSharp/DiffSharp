@@ -375,7 +375,7 @@ type Tensor =
 
     /// Returns the tensor after standardization (z-score normalization)
     member t.standardize() =
-        let stddev:Tensor = t.stddev()
+        let stddev:Tensor = t.std()
         if stddev = t.zeroLike() || stddev.hasnan() then
             t.zerosLike()
         else
@@ -789,6 +789,7 @@ type Tensor =
     ///  The argument offset controls which diagonal to consider.
     /// </summary>
     member a.diagonal(?offset:int, ?dim1:int, ?dim2:int) =
+        // TODO: The following can be slow, especially for reverse mode differentiation of the diagonal of a large tensor. Consider a faster implementation.
         if a.dim < 2 then failwithf "Tensor must be at least 2-dimensional"
         let offset = defaultArg offset 0
         let dim1 = defaultArg dim1 0
@@ -1546,7 +1547,7 @@ type Tensor =
     /// <summary>Returns the variance of all elements in the input tensor.</summary>
     /// <remarks>If unbiased is False, then the variance will be calculated via the biased estimator. Otherwise, Bessel’s correction will be used.</remarks>
     /// <param name="unbiased">Whether to use the unbiased estimation or not.</param>
-    member a.variance(?unbiased:bool) = 
+    member a.var(?unbiased:bool) = 
         // This is the two-pass algorithm, see https://en.wikipedia.org/wiki/Algorithms_for_calculating_variance
         let unbiased = defaultArg unbiased true  // Use Bessel's correction if unbiased=true
         let n = if unbiased then a.nelement - 1 else a.nelement
@@ -1560,7 +1561,7 @@ type Tensor =
     /// <param name="dim">The dimension to reduce.</param>
     /// <param name="keepDim">Whether the output tensor has dim retained or not.</param>
     /// <param name="unbiased">Whether to use the unbiased estimation or not.</param>
-    member a.variance(dim:int, ?keepDim:bool, ?unbiased:bool) =
+    member a.var(dim:int, ?keepDim:bool, ?unbiased:bool) =
         // This is the two-pass algorithm, see https://en.wikipedia.org/wiki/Algorithms_for_calculating_variance
         let unbiased = defaultArg unbiased true  // Use Bessel's correction if unbiased=true
         let dim = Shape.completeDim a.dim dim  // Handles -1 semantics
@@ -1575,12 +1576,164 @@ type Tensor =
     /// <param name="dim">The dimension to reduce.</param>
     /// <param name="keepDim">Whether the output tensor has dim retained or not.</param>
     /// <param name="unbiased">Whether to use the unbiased estimation or not.</param>
-    member a.stddev(dim, ?keepDim, ?unbiased) = a.variance(dim, ?keepDim=keepDim, ?unbiased=unbiased) |> Tensor.Sqrt
+    member a.std(dim, ?keepDim, ?unbiased) = a.var(dim, ?keepDim=keepDim, ?unbiased=unbiased) |> Tensor.Sqrt
 
     /// <summary>Returns the standard deviation of all elements in the input tensor.</summary>
     /// <remarks>If unbiased is False, then the standard deviation will be calculated via the biased estimator. Otherwise, Bessel’s correction will be used.</remarks>
     /// <param name="unbiased">Whether to use the unbiased estimation or not.</param>
-    member a.stddev(?unbiased) = a.variance(?unbiased=unbiased) |> Tensor.Sqrt
+    member a.std(?unbiased) = a.var(?unbiased=unbiased) |> Tensor.Sqrt
+
+    /// <summary>
+    /// Estimates the covariance matrix of the given tensor. The tensor's first
+    /// dimension should index variables and the second dimension should
+    /// index observations for each variable.
+    /// </summary>
+    /// <remarks>
+    /// If no weights are given, the covariance between variables \(x\) and \(y\) is
+    ///  \[cov(x,y)= \frac{\sum^{N}_{i = 1}(x_{i} - \mu_x)(y_{i} - \mu_y)}{N~-~\text{correction}}\]
+    /// where \(\mu_x\) and \(\mu_y\) are the sample means.
+    /// 
+    /// If there are fweights or aweights then the covariance is
+    /// \[cov(x,y)=\frac{\sum^{N}_{i = 1}w_i(x_{i} - \mu_x^*)(y_{i} - \mu_y^*)}{\text{normalization factor}}\]
+    /// where \(w\) is either fweights or aweights if one weight type is provided.
+    /// If both weight types are provided \(w=\text{fweights}\times\text{aweights}\). 
+    /// \(\mu_x^* = \frac{\sum^{N}_{i = 1}w_ix_{i} }{\sum^{N}_{i = 1}w_i}\)
+    /// is the weighted mean of variables.
+    /// The normalization factor is \(\sum^{N}_{i=1} w_i\) if only fweights are provided or if aweights are provided and <c>correction=0</c>. 
+    /// Otherwise if aweights \(aw\) are provided the normalization factor is
+    ///  \(\sum^N_{i=1} w_i - \text{correction}\times\frac{\sum^N_{i=1} w_i aw_i}{\sum^N_{i=1} w_i}\) 
+    /// </remarks>
+    /// <param name="correction">Difference between the sample size and the sample degrees of freedom. Defaults to 1 (Bessel's correction).</param>
+    /// <param name="fweights">Frequency weights represent the number of times each observation was observed. 
+    /// Should be given as a tensor of integers. Defaults to no weights.</param>
+    /// <param name="aweights">Relative importance weights, larger weights for observations that
+    /// should have a larger effect on the estimate. 
+    /// Should be given as a tensor of floating point numbers. Defaults to no weights.</param>
+    /// <returns>Returns a square tensor representing the covariance matrix.
+    ///  Given a tensor with \(N\) variables \(X=[x_1,x_2,\ldots,x_N]\) the
+    /// \(C_{i,j}\) entry on the covariance matrix is the covariance between
+    /// \(x_i\) and \(x_j\).
+    /// </returns>
+    /// <example id="tensor-covariance1">
+    /// <code lang="fsharp">
+    /// let x = dsharp.tensor([0.0;3.4;5.0])
+    /// let y = dsharp.tensor([1.0;2.3;-3.0])
+    /// let xy = dsharp.stack([x;y])
+    /// xy.cov()
+    /// </code>
+    /// Evaluates to
+    /// <code>
+    /// tensor([[ 6.5200, -4.0100],
+    ///         [-4.0100,  7.6300]])
+    /// </code>
+    /// </example>
+    member a.cov(?correction:int64, ?fweights:Tensor, ?aweights:Tensor) =
+        if a.dim > 2 then 
+            failwith $"Expected input to have two or fewer dimensions but input.dim is {a.dim}"
+        if a.dtype = Dtype.Bool then failwith $"bool dtype is not supported for input"
+        let mutable input = if a.dim < 2 then a.view([1;-1]) else a
+        let correction = defaultArg correction (int64 1)
+        let nObservations = input[0].nelement
+        let checkWeightDims name (w: Tensor) =
+            if w.dim > 1 then
+                failwith $"{name} should be scalar or 1D. {name}.dim is {w.dim}."
+            if w.nelement <> nObservations then
+                let error =
+                    $"The number of columns in the input tensor should be the same as the number of elements in {name}." +
+                    $"There are {nObservations} columns in input and {w.nelement} elements in {name}." 
+                failwith error
+            if w.nelement > 0 && w.min().le(w.zeroLike()).toBool() then failwith $"{name} cannot be negative"
+        let fweights = 
+            match fweights with
+            | None -> None
+            | Some fw ->
+                checkWeightDims "fweights" fw
+                match fw.dtype with
+                | Dtype.Integral -> Some fw
+                | _ -> failwith $"fweights.dtype should be integral but it is {fw.dtype}."
+        let aweights = 
+            match aweights with
+            | None -> None
+            | Some aw ->
+                checkWeightDims "aweights" aw
+                match aw.dtype with
+                | Dtype.FloatingPoint -> Some aw
+                | _ -> failwith $"aweights.dtype should be floating point but it is {aw.dtype}."
+        let w =
+            match fweights, aweights with
+            | None, None -> None
+            | Some fw, None -> Some fw
+            | None, Some aw -> Some aw
+            | Some fw, Some aw -> Some (fw * aw)
+        let wSum =
+            match w with
+            | None -> Tensor.create(nObservations, device=input.device, dtype=input.dtype, backend=input.backend)
+            | Some w -> w.sum()
+        if w.IsSome && wSum.eq(wSum.zeroLike()).toBool() then 
+            failwith "weights cannot be normalized because they sum to zero"
+        let avg =
+            match w with
+            | None -> input.mean(dim=1)
+            | Some w -> (input * w).sum(dim=1) / wSum
+        let normFactor =
+            let nf =
+                match w, aweights, correction <> int64 0 with
+                | Some w, Some aweights, true ->
+                    wSum - correction * (w * aweights).sum() / wSum
+                | _ -> wSum - correction
+            if nf.le(nf.zeroLike()).toBool() then 
+                printfn $"Warning: degress of freedom <= 0"
+                nf.zeroLike() 
+            else nf
+        input <- input - avg.unsqueeze(1)
+        let cov = 
+            match w with
+            | None -> input.matmul(input.transpose())
+            | Some w -> input.matmul((input * w).transpose())
+        cov.div(normFactor).squeeze()
+
+    /// <summary>
+    /// Estimates the Pearson correlation coefficient matrix for the given tensor. The tensor's first
+    /// dimension should index variables and the second dimension should
+    /// index observations for each variable.
+    /// </summary>
+    /// <returns>
+    /// The correlation coefficient matrix \(R\) is computed from the covariance
+    /// matrix 
+    /// Returns a square tensor representing the correlation coefficient matrix.
+    ///  Given a tensor with \(N\) variables \(X=[x_1,x_2,\ldots,x_N]\) the
+    /// \(R_{i,j}\) entry on the correlation matrix is the correlation between
+    /// \(x_i\) and \(x_j\).
+    /// </returns>
+    /// <remarks>
+    /// The correlation between variables \(x\) and \(y\) is
+    ///  \[cor(x,y)= \frac{\sum^{N}_{i = 1}(x_{i} - \mu_x)(y_{i} - \mu_y)}{\sigma_x \sigma_y (N ~-~1)}\]
+    /// where \(\mu_x\) and \(\mu_y\) are the sample means and \(\sigma_x\) and \(\sigma_x\) are 
+    /// the sample standard deviations.
+    /// </remarks>
+    /// <example id="tensor-correlation1">
+    /// <code lang="fsharp">
+    /// let x = dsharp.tensor([-0.2678; -0.0908; -0.3766;  0.2780])
+    /// let y = dsharp.tensor([-0.5812;  0.1535;  0.2387;  0.2350])
+    /// let xy = dsharp.stack([x;y])
+    /// xy.corrcoef()
+    /// </code>
+    /// Evaluates to
+    /// <code>
+    /// tensor([[1.0000, 0.3582],
+    ///         [0.3582, 1.0000]])
+    /// </code>
+    /// </example>
+    member a.corrcoef() =
+        if a.dim > 2 then failwith $"Expected to have fewer than 2 dimensions but tensor.dim is {a.dim}"
+        let mutable c = a.cov()
+        if c.dim = 0 then 
+            c / c
+        else
+            let stddev:Tensor = c.diagonal().sqrt()
+            c <- c / stddev.view([-1;1])
+            c <- c / stddev.view([1;-1])
+            c.clamp(-1,1)
 
     /// <summary>Returns a tensor where each row contains numSamples indices sampled from the multinomial probability distribution located in the corresponding row of tensor input.</summary>
     /// <param name="numSamples">The number of samples to draw.</param>

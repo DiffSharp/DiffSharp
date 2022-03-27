@@ -14,7 +14,7 @@ open DiffSharp
 ///        \(\gamma\( and \(\beta\) are learnable parameter vectors of size \(C\) (where \(C\) is the
 ///        input size). By default, the elements of \(\gamma\) are set to 1 and the elements of 
 ///        \(\beta\) are set to 0. The standard-deviation is calculated via the biased estimator,
-///        equivalent to <c>dsharp.variance(input, unbiased=False)</c>.
+///        equivalent to <c>dsharp.var(input, unbiased=False)</c>.
 ///    </para>
 ///    <para>
 ///        Also by default, during training this layer keeps running estimates of its computed mean
@@ -75,7 +75,7 @@ type BatchNorm1d(numFeatures:int, ?eps:double, ?momentum:Tensor, ?affine:bool, ?
             if value.shape[1] <> numFeatures then failwithf "Expecting value to have shape NxL (batchSize x numFeatures) where numFeatures=%A, received value with shape %A" numFeatures value.shape
             let mean, var =
                 if m.mode = Mode.Train || (m.mode = Mode.Eval && not trackRunningStats) then
-                    value.mean(0), value.variance(0, unbiased=false)
+                    value.mean(0), value.var(0, unbiased=false)
                 else
                     _mean.value, _variance.value
             if m.mode = Mode.Train && trackRunningStats then 
@@ -88,7 +88,7 @@ type BatchNorm1d(numFeatures:int, ?eps:double, ?momentum:Tensor, ?affine:bool, ?
             let vt = value.transpose(0,1).view([numFeatures;-1])
             let mean, var =
                 if m.mode = Mode.Train || (m.mode = Mode.Eval && not trackRunningStats) then
-                    vt.mean(1), vt.variance(1, unbiased=false)
+                    vt.mean(1), vt.var(1, unbiased=false)
                 else
                     _mean.value, _variance.value
             if m.mode = Mode.Train && trackRunningStats then
@@ -106,7 +106,7 @@ type BatchNorm1d(numFeatures:int, ?eps:double, ?momentum:Tensor, ?affine:bool, ?
 ///        \(\gamma\( and \(\beta\) are learnable parameter vectors of size \(C\) (where \(C\) is the
 ///        input size). By default, the elements of \(\gamma\) are set to 1 and the elements of 
 ///        \(\beta\) are set to 0. The standard-deviation is calculated via the biased estimator,
-///        equivalent to <c>dsharp.variance(input, unbiased=False)</c>.
+///        equivalent to <c>dsharp.var(input, unbiased=False)</c>.
 ///    </para>
 ///    <para>
 ///        Also by default, during training this layer keeps running estimates of its computed mean
@@ -167,7 +167,7 @@ type BatchNorm2d(numFeatures:int, ?eps:double, ?momentum:Tensor, ?affine:bool, ?
         let vt = value.transpose(0,1).view([numFeatures;-1])
         let mean, var =
             if m.mode = Mode.Train || (m.mode = Mode.Eval && not trackRunningStats) then
-                vt.mean(1), vt.variance(1, unbiased=false)
+                vt.mean(1), vt.var(1, unbiased=false)
             else
                 _mean.value, _variance.value
         if m.mode = Mode.Train && trackRunningStats then
@@ -184,7 +184,7 @@ type BatchNorm2d(numFeatures:int, ?eps:double, ?momentum:Tensor, ?affine:bool, ?
 ///        \(\gamma\( and \(\beta\) are learnable parameter vectors of size \(C\) (where \(C\) is the
 ///        input size). By default, the elements of \(\gamma\) are set to 1 and the elements of 
 ///        \(\beta\) are set to 0. The standard-deviation is calculated via the biased estimator,
-///        equivalent to <c>dsharp.variance(input, unbiased=False)</c>.
+///        equivalent to <c>dsharp.var(input, unbiased=False)</c>.
 ///    </para>
 ///    <para>
 ///        Also by default, during training this layer keeps running estimates of its computed mean
@@ -245,7 +245,7 @@ type BatchNorm3d(numFeatures:int, ?eps:double, ?momentum:Tensor, ?affine:bool, ?
         let vt = value.transpose(0,1).view([numFeatures;-1])
         let mean, var =
             if m.mode = Mode.Train || (m.mode = Mode.Eval && not trackRunningStats) then
-                vt.mean(1), vt.variance(1, unbiased=false)
+                vt.mean(1), vt.var(1, unbiased=false)
             else
                 _mean.value, _variance.value
         if m.mode = Mode.Train && trackRunningStats then
