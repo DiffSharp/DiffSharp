@@ -93,7 +93,7 @@ type TestOptim () =
                 let loss = dsharp.mseLoss(y, targets)
                 loss.reverse()
                 optimizer.step()
-                printfn "%A" (float loss)
+                // printfn "%A" (float loss)
         let y = net.forward inputs
         Assert.True(targets.allclose(y, 0.1, 0.1))
 

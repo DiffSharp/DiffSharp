@@ -670,8 +670,9 @@ type TestTensor () =
     member _.TestTensorZerosDisposal () =
         for i in 0..1024 do
             let _ = dsharp.zeros([1024; 1024])
-            printfn "%A" i
-            //System.GC.Collect()
+            // printfn "%A" i
+            System.GC.Collect()
+        Assert.True(true)
 
 
     [<Test>]

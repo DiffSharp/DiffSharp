@@ -379,10 +379,10 @@ type TestDistributions () =
             let weights = dist.weights
             let valuesCorrect = combo.tensor([0,1,2])
             let weightsCorrect = combo.tensor([1./6., 3./6., 2./6.])
-            printfn "%A" values.dtype
-            printfn "%A" weights.dtype
-            printfn "%A" valuesCorrect.dtype
-            printfn "%A" weightsCorrect.dtype
+            // printfn "%A" values.dtype
+            // printfn "%A" weights.dtype
+            // printfn "%A" valuesCorrect.dtype
+            // printfn "%A" weightsCorrect.dtype
             Assert.True(valuesCorrect.allclose(values, 0.1))
             Assert.True(weightsCorrect.allclose(weights, 0.1))
 
