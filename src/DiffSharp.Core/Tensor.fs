@@ -789,6 +789,7 @@ type Tensor =
     ///  The argument offset controls which diagonal to consider.
     /// </summary>
     member a.diagonal(?offset:int, ?dim1:int, ?dim2:int) =
+        // TODO: The following can be slow, especially for reverse mode differentiation of the diagonal of a large tensor. Consider a faster implementation.
         if a.dim < 2 then failwithf "Tensor must be at least 2-dimensional"
         let offset = defaultArg offset 0
         let dim1 = defaultArg dim1 0
@@ -1632,7 +1633,7 @@ type Tensor =
         if a.dtype = Dtype.Bool then failwith $"bool dtype is not supported for input"
         let mutable input = if a.dim < 2 then a.view([1;-1]) else a
         let correction = defaultArg correction (int64 1)
-        let nObservations = input.[0].nelement
+        let nObservations = input[0].nelement
         let checkWeightDims name (w: Tensor) =
             if w.dim > 1 then
                 failwith $"{name} should be scalar or 1D. {name}.dim is {w.dim}."
