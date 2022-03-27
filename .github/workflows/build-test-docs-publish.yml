@@ -17,10 +17,14 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
-    - name: Setup dotnet
+    - name: Setup dotnet 5.0 (needed for Coveralls)
       uses: actions/setup-dotnet@v1
       with:
-        dotnet-version: 5.0.405
+        dotnet-version: 5.0.x
+    - name: Setup dotnet 6.0
+      uses: actions/setup-dotnet@v1
+      with:
+        dotnet-version: 6.0.x
     - name: Install dependencies
       run: dotnet restore
     - name: Install tool dependencies
@@ -74,7 +78,7 @@ jobs:
     - name: Setup dotnet
       uses: actions/setup-dotnet@v1
       with:
-        dotnet-version: 5.0.405
+        dotnet-version: 6.0.x
     - name: Install dependencies
       run: dotnet restore
     - name: Pack
@@ -94,7 +98,7 @@ jobs:
     - name: Setup dotnet
       uses: actions/setup-dotnet@v1
       with:
-        dotnet-version: 5.0.405
+        dotnet-version: 6.0.x
     - name: Install dependencies
       run: dotnet restore
     - name: Pack (DiffSharp-cuda-windows)

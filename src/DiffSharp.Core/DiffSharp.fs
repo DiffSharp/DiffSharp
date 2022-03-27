@@ -722,7 +722,7 @@ type dsharp =
     /// </remarks>
     /// <param name="input">The input tensor.</param>
     /// <param name="unbiased">Whether to use the unbiased estimation or not.</param>
-    static member variance(input:Tensor, ?unbiased:bool) = input.variance(?unbiased=unbiased)
+    static member var(input:Tensor, ?unbiased:bool) = input.var(?unbiased=unbiased)
 
     /// <summary>Returns the variance of each row of the input tensor in the given dimension dim. If dim is a list of dimensions, reduce over all of them.</summary>
     /// <remarks>
@@ -733,7 +733,7 @@ type dsharp =
     /// <param name="dim">The dimension to reduce.</param>
     /// <param name="keepDim">Whether the output tensor has dim retained or not.</param>
     /// <param name="unbiased">Whether to use the unbiased estimation or not.</param>
-    static member variance(input:Tensor, dim:int, ?keepDim:bool, ?unbiased:bool) = input.variance(dim, ?keepDim=keepDim, ?unbiased=unbiased)
+    static member var(input:Tensor, dim:int, ?keepDim:bool, ?unbiased:bool) = input.var(dim, ?keepDim=keepDim, ?unbiased=unbiased)
 
     /// <summary>Returns the standard deviation of all elements in the input tensor.</summary>
     /// <remarks>
@@ -741,7 +741,7 @@ type dsharp =
     /// </remarks>
     /// <param name="input">The input tensor.</param>
     /// <param name="unbiased">Whether to use the unbiased estimation or not.</param>
-    static member stddev(input:Tensor, ?unbiased:bool) = input.stddev(?unbiased=unbiased)
+    static member std(input:Tensor, ?unbiased:bool) = input.std(?unbiased=unbiased)
 
     /// <summary>Returns the standard deviation of each row of the input tensor in the given dimension dim. If dim is a list of dimensions, reduce over all of them.</summary>
     /// <remarks>
@@ -752,7 +752,90 @@ type dsharp =
     /// <param name="dim">The dimension to reduce.</param>
     /// <param name="keepDim">Whether the output tensor has dim retained or not.</param>
     /// <param name="unbiased">Whether to use the unbiased estimation or not.</param>
-    static member stddev(input:Tensor, dim:int, ?keepDim:bool, ?unbiased:bool) = input.stddev(dim, ?keepDim=keepDim, ?unbiased=unbiased)
+    static member std(input:Tensor, dim:int, ?keepDim:bool, ?unbiased:bool) = input.std(dim, ?keepDim=keepDim, ?unbiased=unbiased)
+
+    /// <summary>
+    /// Estimates the covariance matrix of the given tensor. The tensor's first
+    /// dimension should index variables and the second dimension should
+    /// index observations for each variable.
+    /// </summary>
+    /// <remarks>
+    /// If no weights are given, the covariance between variables \(x\) and \(y\) is
+    ///  \[cov(x,y)= \frac{\sum^{N}_{i = 1}(x_{i} - \mu_x)(y_{i} - \mu_y)}{N~-~\text{correction}}\]
+    /// where \(\mu_x\) and \(\mu_y\) are the sample means.
+    /// 
+    /// If there are fweights or aweights then the covariance is
+    /// \[cov(x,y)=\frac{\sum^{N}_{i = 1}w_i(x_{i} - \mu_x^*)(y_{i} - \mu_y^*)}{\text{normalization factor}}\]
+    /// where \(w\) is either fweights or aweights if one weight type is provided.
+    /// If both weight types are provided \(w=\text{fweights}\times\text{aweights}\). 
+    /// \(\mu_x^* = \frac{\sum^{N}_{i = 1}w_ix_{i} }{\sum^{N}_{i = 1}w_i}\)
+    /// is the weighted mean of variables.
+    /// The normalization factor is \(\sum^{N}_{i=1} w_i\) if only fweights are provided or if aweights are provided and <c>correction=0</c>. 
+    /// Otherwise if aweights \(aw\) are provided the normalization factor is
+    ///  \(\sum^N_{i=1} w_i - \text{correction}\times\frac{\sum^N_{i=1} w_i aw_i}{\sum^N_{i=1} w_i}\) 
+    /// </remarks>
+    /// <param name="input">The input tensor.</param>
+    /// <param name="correction">Difference between the sample size and the sample degrees of freedom. Defaults to 1 (Bessel's correction).</param>
+    /// <param name="fweights">Frequency weights represent the number of times each observation was observed. 
+    /// Should be given as a tensor of integers. Defaults to no weights.</param>
+    /// <param name="aweights">Relative importance weights, larger weights for observations that
+    /// should have a larger effect on the estimate. 
+    /// Should be given as a tensor of floating point numbers. Defaults to no weights.</param>
+    /// <returns>Returns a square tensor representing the covariance matrix.
+    ///  Given a tensor with \(N\) variables \(X=[x_1,x_2,\ldots,x_N]\) the
+    /// \(C_{i,j}\) entry on the covariance matrix is the covariance between
+    /// \(x_i\) and \(x_j\).
+    /// </returns>
+    /// <example id="tensor-covariance1">
+    /// <code lang="fsharp">
+    /// let x = dsharp.tensor([0.0;3.4;5.0])
+    /// let y = dsharp.tensor([1.0;2.3;-3.0])
+    /// let xy = dsharp.stack([x;y])
+    /// xy.cov()
+    /// </code>
+    /// Evaluates to
+    /// <code>
+    /// tensor([[ 6.5200, -4.0100],
+    ///         [-4.0100,  7.6300]])
+    /// </code>
+    /// </example>
+    static member cov(input:Tensor, ?correction:int64, ?fweights:Tensor, ?aweights:Tensor) =
+        input.cov(?correction=correction, ?fweights=fweights, ?aweights=aweights)
+    
+    /// <summary>
+    /// Estimates the Pearson correlation coefficient matrix for the given tensor. The tensor's first
+    /// dimension should index variables and the second dimension should
+    /// index observations for each variable.
+    /// </summary>
+    /// <returns>
+    /// The correlation coefficient matrix \(R\) is computed from the covariance
+    /// matrix 
+    /// Returns a square tensor representing the correlation coefficient matrix.
+    ///  Given a tensor with \(N\) variables \(X=[x_1,x_2,\ldots,x_N]\) the
+    /// \(R_{i,j}\) entry on the correlation matrix is the correlation between
+    /// \(x_i\) and \(x_j\).
+    /// </returns>
+    /// <remarks>
+    /// The correlation between variables \(x\) and \(y\) is
+    ///  \[cor(x,y)= \frac{\sum^{N}_{i = 1}(x_{i} - \mu_x)(y_{i} - \mu_y)}{\sigma_x \sigma_y (N ~-~1)}\]
+    /// where \(\mu_x\) and \(\mu_y\) are the sample means and \(\sigma_x\) and \(\sigma_x\) are 
+    /// the sample standard deviations.
+    /// </remarks>
+    /// <param name="input">The input tensor.</param>
+    /// <example id="tensor-correlation1">
+    /// <code lang="fsharp">
+    /// let x = dsharp.tensor([-0.2678; -0.0908; -0.3766;  0.2780])
+    /// let y = dsharp.tensor([-0.5812;  0.1535;  0.2387;  0.2350])
+    /// let xy = dsharp.stack([x;y])
+    /// dsharp.corrcoef(xy)
+    /// </code>
+    /// Evaluates to
+    /// <code>
+    /// tensor([[1.0000, 0.3582],
+    ///         [0.3582, 1.0000]])
+    /// </code>
+    /// </example>
+    static member corrcoef(input: Tensor) = input.corrcoef()
 
     /// <summary>Gathers values along an axis specified by dim.</summary>
     /// <param name="input">The input tensor.</param>
@@ -822,7 +905,7 @@ type dsharp =
     /// <summary>Get a slice of a tensor</summary>
     /// <param name="input">The input tensor.</param>
     /// <param name="index">Index describing the slice.</param>
-    static member slice(input:Tensor, index:seq<int>) = input.[index |> Seq.toArray]
+    static member slice(input:Tensor, index:seq<int>) = input[index |> Seq.toArray]
 
     /// <summary>Returns a new tensor with the same data as the self tensor but of a different shape.</summary>
     /// <remarks>The returned tensor shares the same data and must have the same number of elements, but may have a different size. For a tensor to be viewed, the new view size must be compatible with its original size.
@@ -1255,11 +1338,11 @@ type dsharp =
         for i = 0 to backends.Length-1 do
             try
                 // Try to create a tensor in the given backend, hence testing the whole underlying process
-                let _ = dsharp.tensor([0f], device=Device.CPU, dtype=Dtype.Float32, backend=backends.[i])
-                backendsAvailable.[i] <- true
+                let _ = dsharp.tensor([0f], device=Device.CPU, dtype=Dtype.Float32, backend=backends[i])
+                backendsAvailable[i] <- true
             with
             | _ -> ()
-        [for i = 0 to backends.Length-1 do if backendsAvailable.[i] then yield backends.[i]]
+        [for i = 0 to backends.Length-1 do if backendsAvailable[i] then yield backends[i]]
 
     /// <summary>Returns the list of available devices for a given backend.</summary>
     /// <param name="backend">Return information for this backend. Defaults to Backend.Default.</param>
@@ -1331,7 +1414,7 @@ type dsharp with
     /// <param name="tensor">The input tensor.</param>
     static member mapi (mapping:int[]->Tensor->Tensor) (tensor:Tensor) = // Differentiable map
         let tflat = tensor.view(-1)
-        let items = Array.init (tflat.nelement) (fun i -> mapping (flatIndexToIndex tensor.shape i) tflat.[i])
+        let items = Array.init (tflat.nelement) (fun i -> mapping (flatIndexToIndex tensor.shape i) tflat[i])
         dsharp.stack(items).view(tensor.shape)
 
     /// <summary>Produce a new tensor by mapping a function over all corresponding elements of two input tensors.</summary>
@@ -1343,7 +1426,7 @@ type dsharp with
         if tensor1.shape <> tensor2.shape then failwithf "Expecting tensor1.shape (%A) and tensor2.shape (%A) to be the same" tensor1.shape tensor2.shape
         let tflat1 = tensor1.view(-1)
         let tflat2 = tensor2.view(-1)
-        let items = Array.init (tflat1.nelement) (fun i -> mapping (flatIndexToIndex tensor1.shape i) tflat1.[i] tflat2.[i])
+        let items = Array.init (tflat1.nelement) (fun i -> mapping (flatIndexToIndex tensor1.shape i) tflat1[i] tflat2[i])
         dsharp.stack(items).view(tensor1.shape)
 
     /// <summary>Produce a new tensor by mapping a function over all corresponding elements of three input tensors.</summary>
@@ -1357,7 +1440,7 @@ type dsharp with
         let tflat1 = tensor1.view(-1)
         let tflat2 = tensor2.view(-1)
         let tflat3 = tensor3.view(-1)
-        let items = Array.init (tflat1.nelement) (fun i -> mapping (flatIndexToIndex tensor1.shape i) tflat1.[i] tflat2.[i] tflat3.[i])
+        let items = Array.init (tflat1.nelement) (fun i -> mapping (flatIndexToIndex tensor1.shape i) tflat1[i] tflat2[i] tflat3[i])
         dsharp.stack(items).view(tensor1.shape)
 
     /// <summary>Produce a new tensor by mapping a function over all elements of the input tensor.</summary>
@@ -1459,7 +1542,7 @@ type dsharp with
         else
             let mutable x = x
             for i in 0..n-1 do
-                x <- x |> dsharp.forwardDiff (GlobalNestingLevel.Next()) v.[i]
+                x <- x |> dsharp.forwardDiff (GlobalNestingLevel.Next()) v[i]
             let mutable fx = f x
             [|for _ in 0..n-1 do
                 let d = fx.derivativeDeep
@@ -1613,7 +1696,7 @@ type dsharp with
     static member fcurl f x =
         let fx, j = dsharp.fjacobian f x
         if j.shape <> [|3; 3|] then failwithf "f must be a function with a three-by-three Jacobian"
-        fx, dsharp.stack([j.[2, 1] - j.[1, 2]; j.[0, 2] - j.[2, 0]; j.[1, 0] - j.[0, 1]])
+        fx, dsharp.stack([j[2, 1] - j[1, 2]; j[0, 2] - j[2, 0]; j[1, 0] - j[0, 1]])
 
     /// <summary>TBD</summary>
     static member curl f x = dsharp.fcurl f x |> snd
@@ -1621,7 +1704,7 @@ type dsharp with
     /// <summary>TBD</summary>
     static member fdivergence f x =
         let fx, j = dsharp.fjacobian f x
-        if j.shape.[0] <> j.shape.[1] then failwithf "f must have a square Jacobian"
+        if j.shape[0] <> j.shape[1] then failwithf "f must have a square Jacobian"
         fx, j.trace()
 
     /// <summary>TBD</summary>
@@ -1631,7 +1714,7 @@ type dsharp with
     static member fcurldivergence f x =
         let fx, j = dsharp.fjacobian f x
         if j.shape <> [|3; 3|] then failwithf "f must be a function with a three-by-three Jacobian"
-        fx, dsharp.stack([j.[2, 1] - j.[1, 2]; j.[0, 2] - j.[2, 0]; j.[1, 0] - j.[0, 1]]), j.trace()
+        fx, dsharp.stack([j[2, 1] - j[1, 2]; j[0, 2] - j[2, 0]; j[1, 0] - j[0, 1]]), j.trace()
 
     /// <summary>TBD</summary>
     static member curldivergence f x = let _, c, d = dsharp.fcurldivergence f x in c, d

@@ -132,7 +132,7 @@ type TorchRawTensor(tt: torch.Tensor, shape: Shape, dtype: Dtype, device: Device
     override t.GetItem(indexes:int[]) =
         Shape.checkCanIndex t.Shape indexes
         if t.Shape.Length = 0 then t.ToScalar()
-        else t.MakeLike(tt=tt.[indexes |> Array.map (fun v -> torch.TensorIndex.Single(int64 v))], shape=[||]).ToScalar()
+        else t.MakeLike(tt=tt[indexes |> Array.map (fun v -> torch.TensorIndex.Single(int64 v))], shape=[||]).ToScalar()
 
     override t.GetSlice(fullBounds:int[,]) =
         let n = fullBounds.GetLength(0)
@@ -140,10 +140,10 @@ type TorchRawTensor(tt: torch.Tensor, shape: Shape, dtype: Dtype, device: Device
 
         let indices =
             Array.init n (fun i -> 
-                let start = fullBounds.[i,0]
-                let stop = fullBounds.[i,1] + 1
+                let start = fullBounds[i,0]
+                let stop = fullBounds[i,1] + 1
                 let len = stop - start
-                if fullBounds.[i,2] = 1 && len = 1 then
+                if fullBounds[i,2] = 1 && len = 1 then
                     torch.TensorIndex.Single(int64 start)
                 else
                     torch.TensorIndex.Slice(start=int64 start, stop=int64 stop))
@@ -164,27 +164,27 @@ type TorchRawTensor(tt: torch.Tensor, shape: Shape, dtype: Dtype, device: Device
         | Dtype.Int8 ->
             let data = tt.data<sbyte>()
             for i in 0 .. n-1 do
-                 res <- combineHashes res (int32 data.[int64 i])
+                 res <- combineHashes res (int32 data[int64 i])
         | Dtype.Byte ->
             let data = tt.data<byte>()
             for i in 0 .. n-1 do
-                 res <- combineHashes res (int32 data.[int64 i])
+                 res <- combineHashes res (int32 data[int64 i])
         | Dtype.Bool ->
             let data = tt.data<byte>()
             for i in 0 .. n-1 do
-                 res <- combineHashes res (int32 data.[int64 i])
+                 res <- combineHashes res (int32 data[int64 i])
         | Dtype.Int16 ->
             let data = tt.data<int16>()
             for i in 0 .. n-1 do
-                 res <- combineHashes res (int32 data.[int64 i] )
+                 res <- combineHashes res (int32 data[int64 i] )
         | Dtype.Int32 ->
             let data = tt.data<int32>()
             for i in 0 .. n-1 do
-                 res <- combineHashes res (int32 data.[int64 i])
+                 res <- combineHashes res (int32 data[int64 i])
         | Dtype.Int64 -> 
             let data = tt.data<int64>()
             for i in 0 .. n-1 do
-                 res <- combineHashes res (int32 data.[int64 i])
+                 res <- combineHashes res (int32 data[int64 i])
         | Dtype.Float16 ->
             for i in 0 .. n-1 do
                  res <- combineHashes res (hash (tt.ReadCpuFloat16(int64 i)))
@@ -194,11 +194,11 @@ type TorchRawTensor(tt: torch.Tensor, shape: Shape, dtype: Dtype, device: Device
         | Dtype.Float32 ->
             let data = tt.data<single>()
             for i in 0 .. n-1 do
-                 res <- combineHashes res (hash data.[int64 i])
+                 res <- combineHashes res (hash data[int64 i])
         | Dtype.Float64 ->
             let data = tt.data<double>()
             for i in 0 .. n-1 do
-                 res <- combineHashes res (hash data.[int64 i])
+                 res <- combineHashes res (hash data[int64 i])
         res
     
     override t.Expand(newShape) =
@@ -222,12 +222,12 @@ type TorchRawTensor(tt: torch.Tensor, shape: Shape, dtype: Dtype, device: Device
         let tt = torchMoveTo tt Device.CPU
         match t.Shape with
         | [|  |] -> tt.ToScalar() |> box
-        | [| d0 |] -> upcast Array.init<'T> d0 (fun i -> tt.[int64 i] |> conv)
-        | [| d0; d1 |] -> upcast Array2D.init<'T> d0 d1 (fun i j -> tt.[int64 i, int64 j] |> conv)
-        | [| d0; d1; d2 |]  -> upcast Array3D.init<'T> d0 d1 d2 (fun i j k -> tt.[int64 i, int64 j, int64 k] |> conv)
-        | [| d0; d1; d2; d3 |]  -> upcast Array4D.init<'T> d0 d1 d2 d3 (fun i j k l -> tt.[int64 i, int64 j, int64 k, int64 l] |> conv)
-        | [| d0; d1; d2; d3; d4 |]  -> upcast Array5D.init<'T> d0 d1 d2 d3 d4 (fun i j k l m -> tt.[int64 i, int64 j, int64 k, int64 l, int64 m] |> conv)
-        | [| d0; d1; d2; d3; d4; d5 |]  -> upcast Array6D.init<'T> d0 d1 d2 d3 d4 d5 (fun i j k l m n -> tt.[int64 i, int64 j, int64 k, int64 l, int64 m, int64 n] |> conv)
+        | [| d0 |] -> upcast Array.init<'T> d0 (fun i -> tt[int64 i] |> conv)
+        | [| d0; d1 |] -> upcast Array2D.init<'T> d0 d1 (fun i j -> tt[int64 i, int64 j] |> conv)
+        | [| d0; d1; d2 |]  -> upcast Array3D.init<'T> d0 d1 d2 (fun i j k -> tt[int64 i, int64 j, int64 k] |> conv)
+        | [| d0; d1; d2; d3 |]  -> upcast Array4D.init<'T> d0 d1 d2 d3 (fun i j k l -> tt[int64 i, int64 j, int64 k, int64 l] |> conv)
+        | [| d0; d1; d2; d3; d4 |]  -> upcast Array5D.init<'T> d0 d1 d2 d3 d4 (fun i j k l m -> tt[int64 i, int64 j, int64 k, int64 l, int64 m] |> conv)
+        | [| d0; d1; d2; d3; d4; d5 |]  -> upcast Array6D.init<'T> d0 d1 d2 d3 d4 d5 (fun i j k l m n -> tt[int64 i, int64 j, int64 k, int64 l, int64 m, int64 n] |> conv)
         | _ -> failwithf "Cannot get array for Tensor dimensions > 6. Consider slicing the Tensor. Shape: %A" t.Shape
 
     override t.ToValues() =
@@ -250,7 +250,7 @@ type TorchRawTensor(tt: torch.Tensor, shape: Shape, dtype: Dtype, device: Device
         let data = tt2.data<'T>()
         let res = Array.zeroCreate<'T> (int32 tt2.NumberOfElements)
         for i in 0 .. int32 tt2.NumberOfElements - 1 do
-            res.[i] <- data.[int64 i]
+            res[i] <- data[int64 i]
         res
 
     member t.ToRawData() : Array =
@@ -276,7 +276,7 @@ type TorchRawTensor(tt: torch.Tensor, shape: Shape, dtype: Dtype, device: Device
         let tts, shapes = tensors |> Array.map (fun t -> (t :?> TorchRawTensor).TorchTensor, t.Shape) |> Array.unzip
         let _n, _shape1, _shape2, newShape = Shape.checkCanStack shapes dim
         let result = torch.stack(tts, int64 dim)
-        (tensors.[0] :?> TorchRawTensor).MakeLike(result, newShape)
+        (tensors[0] :?> TorchRawTensor).MakeLike(result, newShape)
 
     override t.UnstackT(dim) = 
         let shape = t.Shape
@@ -336,7 +336,7 @@ type TorchRawTensor(tt: torch.Tensor, shape: Shape, dtype: Dtype, device: Device
         let mutable res = tt
         let mutable c = 0
         for i in 0 .. t.Dim - 1 do
-            if shape.[i] = 1 && (dim = -1 || i = dim) then 
+            if shape[i] = 1 && (dim = -1 || i = dim) then 
                 res <- res.squeeze(int64 c)
             else   
                 c <- c + 1
@@ -364,10 +364,10 @@ type TorchRawTensor(tt: torch.Tensor, shape: Shape, dtype: Dtype, device: Device
         let mutable res = tt
         for i=0 to dims-1 do
             let s = res.shape
-            s.[i] <- int64 outputShape.[i]
+            s[i] <- int64 outputShape[i]
             let resnew = t.ZerosLike(fromTorchShape s)
-            let indices = Array.init t.Shape.[i] id |> Array.map ((*) dilations.[i] >> int64)
-            let mutable d = TorchInt64TensorOps().CreateFromFlatArray(indices, shape=[|t.Shape.[i]|], device=t.Device)
+            let indices = Array.init t.Shape[i] id |> Array.map ((*) dilations[i] >> int64)
+            let mutable d = TorchInt64TensorOps().CreateFromFlatArray(indices, shape=[|t.Shape[i]|], device=t.Device)
             for _=0 to i-1 do
                 d <- d.UnsqueezeT(0)
             for _=i+1 to dims-1 do
@@ -381,7 +381,7 @@ type TorchRawTensor(tt: torch.Tensor, shape: Shape, dtype: Dtype, device: Device
         let outputShape = Shape.undilatedShape shape dilations
         let mutable res = tt
         for d in 0 .. dilations.Length - 1 do
-            res <- res.slice(int64 d, 0L, int64 shape.[d], int64 dilations.[d])
+            res <- res.slice(int64 d, 0L, int64 shape[d], int64 dilations[d])
         t.MakeLike(res, outputShape)
 
     override t.GatherT(dim:int, indices) =
@@ -497,20 +497,20 @@ type TorchRawTensor(tt: torch.Tensor, shape: Shape, dtype: Dtype, device: Device
         for i = t.Dim - 1 downto 0 do 
             let (struct (values2, indexes)) = values.max(int64 i)
             values <- values2
-            idxs.[i] <- indexes
+            idxs[i] <- indexes
 
         for i = 0 to t.Dim - 1 do 
-            let idx = idxs.[i]
+            let idx = idxs[i]
 
-            res.[i] <- 
+            res[i] <- 
                 match i with 
                 | 0 -> idx.ToInt64()
-                | 1 -> idx.[res.[0]].ToInt64() 
-                | 2 -> idx.[res.[0], res.[1]].ToInt64() 
-                | 3 -> idx.[res.[0], res.[1], res.[2]].ToInt64() 
-                | 4 -> idx.[res.[0], res.[1], res.[2], res.[3]].ToInt64() 
-                | 5 -> idx.[res.[0], res.[1], res.[2], res.[3], res.[4]].ToInt64() 
-                | 6 -> idx.[res.[0], res.[1], res.[2], res.[3], res.[4], res.[5]].ToInt64() 
+                | 1 -> idx[res[0]].ToInt64() 
+                | 2 -> idx[res[0], res[1]].ToInt64() 
+                | 3 -> idx[res[0], res[1], res[2]].ToInt64() 
+                | 4 -> idx[res[0], res[1], res[2], res[3]].ToInt64() 
+                | 5 -> idx[res[0], res[1], res[2], res[3], res[4]].ToInt64() 
+                | 6 -> idx[res[0], res[1], res[2], res[3], res[4], res[5]].ToInt64() 
                 | _ -> failwith "MaxIndexT > 6d nyi for torch"
         res |> Array.map int32
 
@@ -535,20 +535,20 @@ type TorchRawTensor(tt: torch.Tensor, shape: Shape, dtype: Dtype, device: Device
         for i = t.Dim - 1 downto 0 do 
             let (struct (values2, indexes)) = values.min(int64 i)
             values <- values2
-            idxs.[i] <- indexes
+            idxs[i] <- indexes
 
         for i = 0 to t.Dim - 1 do 
-            let idx = idxs.[i]
+            let idx = idxs[i]
 
-            res.[i] <- 
+            res[i] <- 
                 match i with 
                 | 0 -> idx.ToInt64()
-                | 1 -> idx.[res.[0]].ToInt64() 
-                | 2 -> idx.[res.[0], res.[1]].ToInt64() 
-                | 3 -> idx.[res.[0], res.[1], res.[2]].ToInt64() 
-                | 4 -> idx.[res.[0], res.[1], res.[2], res.[3]].ToInt64() 
-                | 5 -> idx.[res.[0], res.[1], res.[2], res.[3], res.[4]].ToInt64() 
-                | 6 -> idx.[res.[0], res.[1], res.[2], res.[3], res.[4], res.[5]].ToInt64() 
+                | 1 -> idx[res[0]].ToInt64() 
+                | 2 -> idx[res[0], res[1]].ToInt64() 
+                | 3 -> idx[res[0], res[1], res[2]].ToInt64() 
+                | 4 -> idx[res[0], res[1], res[2], res[3]].ToInt64() 
+                | 5 -> idx[res[0], res[1], res[2], res[3], res[4]].ToInt64() 
+                | 6 -> idx[res[0], res[1], res[2], res[3], res[4], res[5]].ToInt64() 
                 | _ -> failwith "MinIndexT > 6d nyi for torch"
         res |> Array.map int32
     
@@ -575,9 +575,9 @@ type TorchRawTensor(tt: torch.Tensor, shape: Shape, dtype: Dtype, device: Device
         let res = tt.clone()
         let mutable t1Slice = res // will share memory with res
         for d in 0 .. location.Length - 1 do 
-            let len2 = expandedShape2.[d]
-            if location.[d] <> 0 || len2 <> shape1.[d] then 
-                t1Slice <- t1Slice.narrow(int64 d, int64 location.[d], int64 len2)
+            let len2 = expandedShape2[d]
+            if location[d] <> 0 || len2 <> shape1[d] then 
+                t1Slice <- t1Slice.narrow(int64 d, int64 location[d], int64 len2)
         t1Slice.add_(t2Expanded) |> ignore
         t1.MakeLike(res)
 
@@ -674,8 +674,8 @@ type TorchRawTensor(tt: torch.Tensor, shape: Shape, dtype: Dtype, device: Device
         | _ ->  
         let (t1BatchPart, t1MatrixPart), (t2BatchPart, t2MatrixPart) = Shape.checkCanMatmul t1.Shape t2.Shape
         if t1BatchPart <> t2BatchPart then failwithf "Cannot matrix multiply raw tensors with shapes %A, %A - mismatch batching" t1.Shape t2.Shape
-        let t1rows = t1MatrixPart.[0]
-        let t2cols = t2MatrixPart.[1]
+        let t1rows = t1MatrixPart[0]
+        let t2cols = t2MatrixPart[1]
         let newShape = Array.append t1BatchPart [| t1rows; t2cols |]        
         let result =
             // "addmm for CUDA tensors only supports floating-point types. Try converting the tensors with .float()" | const char *
@@ -777,7 +777,7 @@ type TorchRawTensor(tt: torch.Tensor, shape: Shape, dtype: Dtype, device: Device
         //let batchSize, channels, _inputSize, _outputShape = Shape.computeMaxUnpool1d t1.Shape outputSize
         let t1X = t1.UnsqueezeT(2)
         let indicesX = indices.UnsqueezeT(2)
-        let resulttX = t1X.MaxUnpool2D(indicesX, [| outputSize.[0]; outputSize.[1]; 1; outputSize.[2] |])
+        let resulttX = t1X.MaxUnpool2D(indicesX, [| outputSize[0]; outputSize[1]; 1; outputSize[2] |])
         let resultt = resulttX.SqueezeT(2)
         resultt
 
@@ -789,7 +789,7 @@ type TorchRawTensor(tt: torch.Tensor, shape: Shape, dtype: Dtype, device: Device
 
         // note, LibTorch only wants the last two elements of the output size passsed in
         // "There should be exactly two elements (height, width) in output_size (max_unpooling2d_shape_check at ...)"
-        let outputSize = outputSize.[2..3]
+        let outputSize = outputSize[2..3]
         
         // TODO: consider switching to the torch::nn module for MaxUnpool2d
 
@@ -804,7 +804,7 @@ type TorchRawTensor(tt: torch.Tensor, shape: Shape, dtype: Dtype, device: Device
 
         // note, LibTorch only wants the last three elements of the output size passsed in
         // "There should be exactly three elements (depth, height, width) in output_size (max_unpooling3d_shape_check at ..\..\aten\src\ATen\native\MaxUnpooling.cpp:231)"
-        let outputSize = outputSize.[2..4]
+        let outputSize = outputSize[2..4]
         
         // NOTE: strides and padding must always be specified for torch::max_unpool3d C++ entry
         // TODO: consider switching to the torch::nn module for MaxUnpool
@@ -1124,9 +1124,9 @@ type TorchRawTensor(tt: torch.Tensor, shape: Shape, dtype: Dtype, device: Device
         let t2Expanded = t2.TorchTensor.expand(toTorchShape expandedShape2)
         let mutable t1Slice = tt // will share memory with res
         for d in 0 .. location.Length - 1 do 
-            let len2 = expandedShape2.[d]
-            if location.[d] <> 0 || len2 <> shape1.[d] then 
-                t1Slice <- t1Slice.narrow(int64 d, int64 location.[d], int64 len2)
+            let len2 = expandedShape2[d]
+            if location[d] <> 0 || len2 <> shape1[d] then 
+                t1Slice <- t1Slice.narrow(int64 d, int64 location[d], int64 len2)
         t1Slice.add_(t2Expanded) |> ignore
 
     override _.SubInPlace(t2) = checkMutable(); tt.sub_(t2.TorchTensor) |> ignore
@@ -1246,7 +1246,7 @@ type TorchTensorOps<'T, 'T2>
         // torch.InitializeDevice(device.ToTorch) |> ignore
         let t = 
             match shape with 
-            | [| |] -> fromScalar(values.[0])
+            | [| |] -> fromScalar(values[0])
             | _ -> from (values, toTorchShape shape)
         let tt = torchMoveTo t device
         TorchRawTensor(tt, shape, dtype, device) :> RawTensor
@@ -1419,14 +1419,14 @@ type TorchBackendTensorStatics() =
     let supported = Array.zeroCreate<int> 32
     let isSupported (deviceType: DiffSharp.DeviceType) = 
         let n = int deviceType
-        match supported.[n] with 
+        match supported[n] with 
         | 0 ->
             try
                 torch.empty([| 1L |], device= torch.Device(deviceType.ToTorch, index=0)) |> ignore
-                supported.[n] <- 1
+                supported[n] <- 1
                 true
              with _ -> 
-                supported.[n] <- 2
+                supported[n] <- 2
                 false
         | 1 -> true
         | _ -> false

@@ -134,17 +134,17 @@ type TestModel () =
         d.unflatten(dflat)
         Assert.True(d.isReverseDiff)
 
-        let dp1 = d.["p1"]
+        let dp1 = d["p1"]
         let dp1p = dp1.primal
         let dp1d = dp1.derivative
-        let dp2 = d.["p2"]
+        let dp2 = d["p2"]
         let dp2p = dp2.primal
         let dp2d = dp2.derivative
 
         let dfp = dflatp.split([2*5; 4])
-        let dp1pCorrect, dp2pCorrect = dfp.[0].view([2;5]), dfp.[1]
+        let dp1pCorrect, dp2pCorrect = dfp[0].view([2;5]), dfp[1]
         let dfd = dflatd.split([2*5; 4])
-        let dp1dCorrect, dp2dCorrect = dfd.[0].view([2;5]), dfd.[1]
+        let dp1dCorrect, dp2dCorrect = dfd[0].view([2;5]), dfd[1]
 
         Assert.CheckEqual(dp1pCorrect, dp1p)
         Assert.CheckEqual(dp2pCorrect, dp2p)
@@ -204,11 +204,11 @@ type TestModel () =
     [<Test>]
     member _.TestModelInit () =
         let net = Linear(10, 10)
-        let wBefore = net.parameters.["Linear-weight"]
+        let wBefore = net.parameters["Linear-weight"]
         net.init(function
             | "Linear-weight", v -> v.onesLike()
             | _, v -> v)
-        let wAfter = net.parameters.["Linear-weight"]
+        let wAfter = net.parameters["Linear-weight"]
         let wAfterCorrect = dsharp.onesLike(wBefore)
         Assert.False(wAfterCorrect.allclose(wBefore))
         Assert.True(wAfterCorrect.allclose(wAfter))
@@ -436,21 +436,21 @@ type TestModel () =
     member _.TestModelTrainEval () =
         let m = Linear(1, 2) --> Linear(2, 3) --> Linear(3, 4)
         Assert.CheckEqual(Mode.Train, m.mode)
-        Assert.CheckEqual(Mode.Train, m.descendants.[0].mode)
-        Assert.CheckEqual(Mode.Train, m.descendants.[1].mode)
-        Assert.CheckEqual(Mode.Train, m.descendants.[2].mode)
+        Assert.CheckEqual(Mode.Train, m.descendants[0].mode)
+        Assert.CheckEqual(Mode.Train, m.descendants[1].mode)
+        Assert.CheckEqual(Mode.Train, m.descendants[2].mode)
 
         m.eval()
         Assert.CheckEqual(Mode.Eval, m.mode)
-        Assert.CheckEqual(Mode.Eval, m.descendants.[0].mode)
-        Assert.CheckEqual(Mode.Eval, m.descendants.[1].mode)
-        Assert.CheckEqual(Mode.Eval, m.descendants.[2].mode)
+        Assert.CheckEqual(Mode.Eval, m.descendants[0].mode)
+        Assert.CheckEqual(Mode.Eval, m.descendants[1].mode)
+        Assert.CheckEqual(Mode.Eval, m.descendants[2].mode)
 
         m.train()
         Assert.CheckEqual(Mode.Train, m.mode)
-        Assert.CheckEqual(Mode.Train, m.descendants.[0].mode)
-        Assert.CheckEqual(Mode.Train, m.descendants.[1].mode)
-        Assert.CheckEqual(Mode.Train, m.descendants.[2].mode)
+        Assert.CheckEqual(Mode.Train, m.descendants[0].mode)
+        Assert.CheckEqual(Mode.Train, m.descendants[1].mode)
+        Assert.CheckEqual(Mode.Train, m.descendants[2].mode)
 
     [<Test>]
     member _.TestModelChildrenModels () =
@@ -561,7 +561,7 @@ type TestModel () =
         let din, cin, cout, k = 16, 1, 2, 3
         let inputs  = dsharp.randn([2; cin; din])
         let conv1 = Conv1d(cin, cout, k)
-        let fcin = inputs.[0] --> dsharp.unsqueeze 0 --> conv1 --> dsharp.nelement
+        let fcin = inputs[0] --> dsharp.unsqueeze 0 --> conv1 --> dsharp.nelement
         let net = conv1 --> dsharp.relu --> dsharp.flatten 1 --> Linear(fcin, 2)
         let targets = dsharp.tensor([0.; 1.])
         let targetsp = dsharp.tensor([[1.,0.],[0.,1.]])
@@ -578,7 +578,7 @@ type TestModel () =
         let cin, hin, win, cout, k = 1, 6, 6, 2, 3
         let inputs  = dsharp.randn([2; cin; hin; win])
         let conv1 = Conv2d(cin, cout, k)
-        let fcin = inputs.[0] --> dsharp.unsqueeze 0 --> conv1 --> dsharp.nelement
+        let fcin = inputs[0] --> dsharp.unsqueeze 0 --> conv1 --> dsharp.nelement
         let net = conv1 --> dsharp.relu --> dsharp.flatten 1 --> Linear(fcin, 2)
         let targets = dsharp.tensor([0.; 1.])
         let targetsp = dsharp.tensor([[1.,0.],[0.,1.]])
@@ -595,7 +595,7 @@ type TestModel () =
         let cin, din, hin, win, cout, k = 1, 6, 6, 6, 2, 3
         let inputs  = dsharp.randn([2; cin; din; hin; win])
         let conv1 = Conv3d(cin, cout, k)
-        let fcin = inputs.[0] --> dsharp.unsqueeze 0 --> conv1 --> dsharp.nelement
+        let fcin = inputs[0] --> dsharp.unsqueeze 0 --> conv1 --> dsharp.nelement
         let net = conv1 --> dsharp.relu --> dsharp.flatten 1 --> Linear(fcin, 2)
         let targets = dsharp.tensor([0.; 1.])
         let targetsp = dsharp.tensor([[1.,0.],[0.,1.]])

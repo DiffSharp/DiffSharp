@@ -77,12 +77,12 @@ type Random() =
         cumulativeProbs |> Array.findIndex (fun v -> v >= p)
 
     /// Samples a value at random from the given array.
-    static member Choice(array:_[]) = array.[rnd.Next(array.Length)]
+    static member Choice(array:_[]) = array[rnd.Next(array.Length)]
 
     /// Samples a value at random from the given array using the given categorical probabilities.
     static member Choice(array:_[], probs:float[]) = 
         if array.Length <> probs.Length then failwith "Expecting array and probs of same length"
-        array.[Random.ChoiceIndex(probs)]
+        array[Random.ChoiceIndex(probs)]
 
     /// Samples a number of random values  array of random values for the given weighted distribution
     static member Multinomial(probs:float[], numSamples:int) =
@@ -90,7 +90,7 @@ type Random() =
 
     /// Returns a 2D array where each row contains `numSamples` indices sampled from the multinomial probability distribution defined by the probabilities in the corresponding row of the `probs` array.
     static member Multinomial(probs:float[,], numSamples:int) =
-        Array2D.init (probs.GetLength(0)) numSamples (fun i _ -> Random.ChoiceIndex(probs.[i,*])) // Samples with replacement
+        Array2D.init (probs.GetLength(0)) numSamples (fun i _ -> Random.ChoiceIndex(probs[i,*])) // Samples with replacement
 
     /// Samples a random value from the Bernoulli distribution with the given probability.
     static member Bernoulli(prob:float) = if rnd.NextDouble() < prob then 1. else 0.
@@ -115,9 +115,9 @@ type Random() =
         while n > 1 do
             n <- n - 1
             let i = rnd.Next(n+1)
-            let temp = a.[i]
-            a.[i] <- a.[n]
-            a.[n] <- temp
+            let temp = a[i]
+            a[i] <- a[n]
+            a[n] <- temp
         a
 
 /// Contains operations relating to pseudo-random number generation.
@@ -127,7 +127,7 @@ module Random =
     let shuffledIndices (length: int) =
         let indices = Array.init length id
         let indicesShuffled = Random.Shuffle(indices)
-        fun (i: int) -> indicesShuffled.[i]
+        fun (i: int) -> indicesShuffled[i]
 
 /// Contains operations relating to converting .NET data to tensor data.
 module DataConverter =
@@ -153,14 +153,14 @@ module DataConverter =
 
     let rec private  (|ListTy|_|) (ty: Type) = 
         if ty.IsGenericType && ty.GetGenericTypeDefinition().Equals(typedefof<list<int>>) then
-           Some (ty.GetGenericArguments().[0])
+           Some (ty.GetGenericArguments()[0])
         else   
             None
 
     /// Matches a 1D sequence type (seq<_>) or a subclass.
     let rec private  (|SeqTy|_|) (ty: Type) = 
         if ty.IsGenericType && ty.GetGenericTypeDefinition().Equals(typedefof<seq<int>>) then
-           Some (ty.GetGenericArguments().[0])
+           Some (ty.GetGenericArguments()[0])
         else   
             match ty.BaseType with 
             | null -> None 
@@ -185,10 +185,10 @@ module DataConverter =
     let private (|SeqTupleTy|_|) (ty: Type) = 
         match ty with 
         | SeqTy (TupleTy etys) -> 
-            match etys |> Array.tryFind (fun ety -> ety <> etys.[0]) with
+            match etys |> Array.tryFind (fun ety -> ety <> etys[0]) with
             | None -> ()
-            | Some ety2 -> failwithf "jagged input: unexpected mixed types in tuple being used as sequence notation, %s and %s" (formatType etys.[0]) (formatType ety2)
-            Some (etys.[0])
+            | Some ety2 -> failwithf "jagged input: unexpected mixed types in tuple being used as sequence notation, %s and %s" (formatType etys[0]) (formatType ety2)
+            Some (etys[0])
         | _ -> None
 
     let private (|TupleLeafTy|_|) (tgt: Type) (ty: Type) = 
@@ -210,7 +210,7 @@ module DataConverter =
         let arr =
             [|  for i=0 to n1-1 do
                     for j=0 to n2-1 do
-                       yield v.[i, j] |]
+                       yield v[i, j] |]
         arr, [| n1;n2|]
 
     let private flatArrayAndShape3D<'T> (v: 'T[,,]) =
@@ -221,7 +221,7 @@ module DataConverter =
             [|  for i=0 to n1-1 do
                     for j=0 to n2-1 do
                         for k=0 to n3-1 do
-                            yield v.[i, j, k] |]
+                            yield v[i, j, k] |]
         arr, [| n1;n2;n3 |]
 
     let private flatArrayAndShape4D<'T> (v: 'T[,,,]) =
@@ -234,7 +234,7 @@ module DataConverter =
                     for j=0 to n2-1 do
                         for k=0 to n3-1 do
                             for m=0 to n4-1 do
-                                yield v.[i, j, k, m] |]
+                                yield v[i, j, k, m] |]
         arr, [| n1;n2;n3;n4 |]
 
     let private flatArrayAndShape5D<'T> (v: Array) =

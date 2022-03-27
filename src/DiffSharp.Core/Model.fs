@@ -50,8 +50,8 @@ type ParameterDict() =
 
     /// <summary>TBD</summary>
     member d.Item
-        with get (key:string) = (d.parameters.[key] :?> Parameter).value
-        and set (key:string) (v:Tensor) = (d.parameters.[key] :?> Parameter).value <- v
+        with get (key:string) = (d.parameters[key] :?> Parameter).value
+        and set (key:string) (v:Tensor) = (d.parameters[key] :?> Parameter).value <- v
 
     interface IEnumerable<string*Parameter> with
         member d.GetEnumerator():IEnumerator<string*Parameter> = 
@@ -65,32 +65,32 @@ type ParameterDict() =
     member d.device
         with get() = 
             if d.parameters.Count = 0 then Device.Default // Empty ParameterDict defaults to default device, dtype, backend config
-            else let p = d.parameters.[0] :?> Parameter in p.value.device
+            else let p = d.parameters[0] :?> Parameter in p.value.device
 
     member d.dtype
         with get() = 
             if d.parameters.Count = 0 then Dtype.Default // Empty ParameterDict defaults to default device, dtype, backend config
-            else let p = d.parameters.[0] :?> Parameter in p.value.dtype
+            else let p = d.parameters[0] :?> Parameter in p.value.dtype
 
     member d.backend
         with get() = 
             if d.parameters.Count = 0 then Backend.Default // Empty ParameterDict defaults to default device, dtype, backend config
-            else let p = d.parameters.[0] :?> Parameter in p.value.backend
+            else let p = d.parameters[0] :?> Parameter in p.value.backend
 
     member d.isForwardDiff
         with get() = 
             if d.parameters.Count = 0 then false
-            else let p = d.parameters.[0] :?> Parameter in p.value.isForwardDiff
+            else let p = d.parameters[0] :?> Parameter in p.value.isForwardDiff
 
     member d.isReverseDiff
         with get() = 
             if d.parameters.Count = 0 then false
-            else let p = d.parameters.[0] :?> Parameter in p.value.isReverseDiff
+            else let p = d.parameters[0] :?> Parameter in p.value.isReverseDiff
 
     member d.isNoDiff
         with get() = 
             if d.parameters.Count = 0 then true
-            else let p = d.parameters.[0] :?> Parameter in p.value.isNoDiff
+            else let p = d.parameters[0] :?> Parameter in p.value.isNoDiff
 
     /// <summary>TBD</summary>
     member d.clear() = d.parameters.Clear()
@@ -127,7 +127,7 @@ type ParameterDict() =
         let dKeys = d.parameters.Keys
         let oKeys = other.parameters.Keys
         if dKeys <> oKeys then failwithf "Expecting ParameterDict objects to have same set of keys."
-        d.iter(fun (n, p) -> p.value <- other.[n])
+        d.iter(fun (n, p) -> p.value <- other[n])
 
     /// <summary>TBD</summary>
     member d.iter(f:string*Parameter->unit) = for n, p in d do f(n, p)
@@ -144,7 +144,7 @@ type ParameterDict() =
         // This is to be extra cautious about all Parameters in the ParameterDict getting the same tag, which is crucial for correctness of differentiation results
         // If we leave the default tag value to be determined by each underlying tensor, there is a risk that the tag can somehow change during the ParameterDict .iter call
         let nestingTag = defaultArg nestingTag GlobalNestingLevel.Current
-        d.iter(fun (n, p) -> p.forwardDiff(derivatives.[n], nestingTag=nestingTag))
+        d.iter(fun (n, p) -> p.forwardDiff(derivatives[n], nestingTag=nestingTag))
 
     /// <summary>
     ///  Adjust the parameters to include support for reverse-mode automatic differentiation.
@@ -181,7 +181,7 @@ type ParameterDict() =
             // This mirrors the behavior in ParameterDict.unflatten.
             let pp, pd = Array.unzip [| for t in d.parameters.Values do let t = (t :?> Parameter) in t.value.primal.view(-1), t.value.derivative.view(-1) |]
             let tp, td = dsharp.cat(pp), dsharp.cat(pd)
-            tp.reverseDiff(derivative=td, nestingTag=(d.parameters.[0] :?> Parameter).value.nestingTag)
+            tp.reverseDiff(derivative=td, nestingTag=(d.parameters[0] :?> Parameter).value.nestingTag)
         else
         let ts = [| for t in d.parameters.Values do (t :?> Parameter).value.view(-1) |]
         dsharp.cat(ts)
@@ -205,7 +205,7 @@ type ParameterDict() =
         let mutable i = 0
         let keys = OrderedDictionary.copyKeys d.parameters
         for n in keys do
-            d.[n] <- ts.[i]
+            d[n] <- ts[i]
             i <- i+1
 
     /// <summary>TBD</summary>
@@ -251,9 +251,9 @@ type ModelBase() =
         stateDict.add(bufferDict)
 
     let nextName (name:string) =
-        let name = if name.Contains("__") then name.Split("__").[0] else name
+        let name = if name.Contains("__") then name.Split("__")[0] else name
         let i = namePrefixes.GetValueOrDefault name
-        namePrefixes.[name] <- i+1
+        namePrefixes[name] <- i+1
         sprintf "%s__%A" name (i+1)
 
     member _.checkItems(items:seq<_>, ?names:seq<string>)=
@@ -366,8 +366,8 @@ type ModelBase() =
     member m.addParameter(items:seq<Parameter>, ?names:seq<string>) =
         let items, names = m.checkItems(items, ?names=names)
         for i in 0..items.Length-1 do
-            let param = items.[i]
-            let n = if names.Length > 0 then names.[i] else sprintf "Parameter-%s" (Random.UUID())
+            let param = items[i]
+            let n = if names.Length > 0 then names[i] else sprintf "Parameter-%s" (Random.UUID())
             parameterDict.add(n, param)
         updateState()
 
@@ -375,8 +375,8 @@ type ModelBase() =
     member m.addBuffer(items:seq<Parameter>, ?names:seq<string>) =
         let items, names = m.checkItems(items, ?names=names)
         for i in 0..items.Length-1 do
-            let param = items.[i]
-            let n = if names.Length > 0 then names.[i] else sprintf "Buffer-%s" (Random.UUID())
+            let param = items[i]
+            let n = if names.Length > 0 then names[i] else sprintf "Buffer-%s" (Random.UUID())
             bufferDict.add(n, param)
         updateState()
 
@@ -385,10 +385,10 @@ type ModelBase() =
         let items, names = m.checkItems(items, ?names=names)
         for i in 0..items.Length-1 do
             let model = 
-                match items.[i] with
+                match items[i] with
                 | :? ModelBase as mm -> mm
                 | _ -> failwithf "Unsupported type. Expecting a ModelBase."
-            let n = if names.Length > 0 then names.[i] else sprintf "Model-%s" (Random.UUID())
+            let n = if names.Length > 0 then names[i] else sprintf "Model-%s" (Random.UUID())
 
             modelDict.Add(n, model)
             for n, p in model.parameters do 

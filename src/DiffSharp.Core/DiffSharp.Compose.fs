@@ -152,10 +152,16 @@ type dsharp with
     static member mean(dim:int, ?keepDim:bool) = fun (a:Tensor) -> a.mean(dim, ?keepDim=keepDim)
 
     /// <summary>TBD</summary>
-    static member variance(dim:int, ?keepDim:bool, ?unbiased:bool) = fun (a:Tensor) -> a.variance(dim, ?keepDim=keepDim, ?unbiased=unbiased)
+    static member var(dim:int, ?keepDim:bool, ?unbiased:bool) = fun (a:Tensor) -> a.var(dim, ?keepDim=keepDim, ?unbiased=unbiased)
 
     /// <summary>TBD</summary>
-    static member stddev(dim:int, ?keepDim:bool, ?unbiased:bool) = fun (a:Tensor) -> a.stddev(dim, ?keepDim=keepDim, ?unbiased=unbiased)
+    static member std(dim:int, ?keepDim:bool, ?unbiased:bool) = fun (a:Tensor) -> a.std(dim, ?keepDim=keepDim, ?unbiased=unbiased)
+
+    /// <summary>TBD</summary>
+    static member cov(?correction:int64, ?fweights:Tensor, ?aweights:Tensor) = fun (a:Tensor) -> a.cov(?correction=correction,?fweights=fweights,?aweights=aweights)
+
+    /// <summary>TBD</summary>
+    static member corrcoef() = fun (a:Tensor) -> a.corrcoef()
 
     /// <summary>TBD</summary>
     static member gather(dim:int, indices:Tensor) = fun (a:Tensor) -> a.gather(dim, indices)
@@ -188,7 +194,7 @@ type dsharp with
     static member repeat(dim:int, times:int) = fun (a:Tensor) -> a.repeat(dim, times)
 
     /// <summary>TBD</summary>
-    static member slice(index:seq<int>) = fun (a:Tensor) -> a.[index |> Seq.toArray]
+    static member slice(index:seq<int>) = fun (a:Tensor) -> a[index |> Seq.toArray]
 
     /// <summary>TBD</summary>
     static member view(shape:seq<int>) = fun (a:Tensor) -> a.view(shape)
