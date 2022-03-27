@@ -3,7 +3,7 @@
 //
 // BSD 2-Clause License. See LICENSE in root of repository.
 
-namespace DiffSharp.Model
+namespace rec DiffSharp.Model
 
 open DiffSharp
 open DiffSharp.Util
@@ -381,21 +381,35 @@ type ModelBase() =
         updateState()
 
     /// <summary>TBD</summary>
-    member m.addModel(items:seq<obj>, ?names:seq<string>) =
+    member m.addModel(items:seq<ModelBase>, ?names:seq<string>) =
         let items, names = m.checkItems(items, ?names=names)
         for i in 0..items.Length-1 do
-            let model = 
-                match items[i] with
-                | :? ModelBase as mm -> mm
-                | _ -> failwithf "Unsupported type. Expecting a ModelBase."
+            let model = items[i]
             let n = if names.Length > 0 then names[i] else sprintf "Model-%s" (Random.UUID())
-
             modelDict.Add(n, model)
             for n, p in model.parameters do 
                 parameterDict.add(nextName n, p)
             for n, b in model.buffers do 
                 bufferDict.add(nextName n, b)
         updateState()
+
+    member m.addModel(models:seq<Model>, ?names:seq<string>) =
+        m.addModel(models |> Seq.cast<ModelBase>, ?names=names)
+
+    member m.addModel(model:Model, ?name:string) =
+        match name with
+        | Some(name) -> m.addModel([model], [name])
+        | None -> m.addModel([model])
+
+    member m.addParameter(parameter:Parameter, ?name:string) =
+        match name with
+        | Some(name) -> m.addParameter([parameter], [name])
+        | None -> m.addParameter([parameter])
+
+    member m.addBuffer(buffer:Parameter, ?name:string) =
+        match name with
+        | Some(name) -> m.addBuffer([buffer], [name])
+        | None -> m.addBuffer([buffer])
 
     /// <summary>
     ///  Adjust the parameters of the model to initiate a new level of forward-mode automatic differentiation.
@@ -492,7 +506,7 @@ type ModelBase() =
 
 /// <summary>Represents a model, primarily a collection of named parameters and sub-models and a function governed by them.</summary>
 // [<AbstractClass>]
-type Model<'In, 'Out>(?f:'In->'Out, ?parameters: seq<Parameter>, ?buffers: seq<Parameter>, ?models: seq<obj>) =
+type Model<'In, 'Out>(?f:'In->'Out, ?parameters: seq<Parameter>, ?buffers: seq<Parameter>, ?models: seq<ModelBase>) =
     inherit ModelBase()
 
     do
@@ -522,7 +536,7 @@ type Model<'In, 'Out>(?f:'In->'Out, ?parameters: seq<Parameter>, ?buffers: seq<P
     
     /// <summary>TBD</summary>
     static member compose (model1:Model<'In, 'Out>) (model2:Model<'Out, 'Out2>) : Model<'In, 'Out2> =
-        Model<'In, 'Out2>(model1.forward >> model2.forward, models=[box model1; box model2])
+        Model<'In, 'Out2>(model1.forward >> model2.forward, models=[model1; model2])
 
     /// <summary>TBD</summary>
     static member (-->) (model1:Model<'In, 'Out>, model2:Model<'Out, 'Out2>) = Model<'In, 'Out>.compose model1 model2

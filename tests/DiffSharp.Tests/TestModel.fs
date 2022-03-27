@@ -14,8 +14,8 @@ open DiffSharp.Optim
 
 type ModelStyle1a() =
     inherit Model() 
-    let fc1 = Linear(10, 16)
-    let fc2 = Linear(16, 20)
+    let fc1:Model = Linear(10, 16)
+    let fc2:Model = Linear(16, 20)
     do base.addModel([fc1; fc2], ["fc1"; "fc2"])
     override __.forward(x) =
         x
@@ -25,8 +25,8 @@ type ModelStyle1a() =
 
 type ModelStyle1b() =
     inherit Model()
-    let fc1 = Linear(20, 32)
-    let fc2 = Linear(32, 30)
+    let fc1:Model = Linear(20, 32)
+    let fc2:Model = Linear(32, 30)
     let p = Parameter(dsharp.randn([]))
     do base.addModel([fc1; fc2], ["fc1"; "fc2"])
     do base.addParameter([p], ["p"])
@@ -39,8 +39,8 @@ type ModelStyle1b() =
 
 type GenericModelFloatFloat() =
     inherit Model<float,float>()
-    let fc1 = Linear(1, 2)
-    let fc2 = Linear(2, 1)
+    let fc1:Model = Linear(1, 2)
+    let fc2:Model = Linear(2, 1)
     do base.addModel([fc1; fc2], ["fc1"; "fc2"])
     do base.init (fun (_, t) -> t.onesLike())
     override __.forward(x) =
@@ -52,8 +52,8 @@ type GenericModelFloatFloat() =
 
 type GenericModelIntString() =
     inherit Model<int,string>()
-    let fc1 = Linear(1, 2)
-    let fc2 = Linear(2, 1)
+    let fc1:Model = Linear(1, 2)
+    let fc2:Model = Linear(2, 1)
     do base.addModel([fc1; fc2], ["fc1"; "fc2"])
     do base.init (fun (_, t) -> t.onesLike())
     override __.forward(x) =

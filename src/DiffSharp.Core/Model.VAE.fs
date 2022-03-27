@@ -84,8 +84,8 @@ type VAEMLP(xDim:int, zDim:int, ?hDims:seq<int>, ?nonlinearity:Tensor->Tensor, ?
     let enc = Array.append [|for i in 0..dims.Length-2 -> Linear(dims[i], dims[i+1])|] [|Linear(dims[dims.Length-2], dims[dims.Length-1])|]
     let dec = [|for i in 0..dims.Length-2 -> Linear(dims[i+1], dims[i])|] |> Array.rev
     do 
-        base.addModel(enc |> Array.map box)
-        base.addModel(dec |> Array.map box)
+        base.addModel(enc |> Seq.cast<Model>)
+        base.addModel(dec |> Seq.cast<Model>)
 
     override m.encode (x:Tensor) =
         let batchSize = x.shape[0]
