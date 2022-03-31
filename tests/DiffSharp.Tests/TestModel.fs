@@ -16,7 +16,7 @@ type ModelStyle1a() =
     inherit Model() 
     let fc1:Model = Linear(10, 16)
     let fc2:Model = Linear(16, 20)
-    do base.addModel([fc1; fc2], ["fc1"; "fc2"])
+    do base.addModel((fc1, "fc1"), (fc2, "fc2"))
     override __.forward(x) =
         x
         |> fc1.forward
@@ -28,8 +28,8 @@ type ModelStyle1b() =
     let fc1:Model = Linear(20, 32)
     let fc2:Model = Linear(32, 30)
     let p = Parameter(dsharp.randn([]))
-    do base.addModel([fc1; fc2], ["fc1"; "fc2"])
-    do base.addParameter([p], ["p"])
+    do base.addModel((fc1, "fc1"), (fc2, "fc2"))
+    do base.addParameter((p, "p"))
     override __.forward(x) =
         x
         |> fc1.forward
@@ -41,7 +41,7 @@ type GenericModelFloatFloat() =
     inherit Model<float,float>()
     let fc1:Model = Linear(1, 2)
     let fc2:Model = Linear(2, 1)
-    do base.addModel([fc1; fc2], ["fc1"; "fc2"])
+    do base.addModel((fc1, "fc1"), (fc2, "fc2"))
     do base.init (fun (_, t) -> t.onesLike())
     override __.forward(x) =
         x |> dsharp.tensor
@@ -54,7 +54,7 @@ type GenericModelIntString() =
     inherit Model<int,string>()
     let fc1:Model = Linear(1, 2)
     let fc2:Model = Linear(2, 1)
-    do base.addModel([fc1; fc2], ["fc1"; "fc2"])
+    do base.addModel((fc1, "fc1"), (fc2, "fc2"))
     do base.init (fun (_, t) -> t.onesLike())
     override __.forward(x) =
         x |> float32 |> dsharp.tensor

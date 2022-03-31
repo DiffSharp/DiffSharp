@@ -8,7 +8,7 @@ namespace DiffSharp.Model
 
 type Sequential(models: seq<Model>) =
     inherit Model()
-    do base.addModel(models)
+    do base.addModel(models |> Seq.toArray)
     override _.forward(value) = 
         models |> Seq.fold (fun v m -> m.forward v) value
     override m.ToString() = sprintf "Sequential(%A)" m.children

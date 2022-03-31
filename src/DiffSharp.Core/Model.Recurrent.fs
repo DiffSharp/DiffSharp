@@ -33,8 +33,8 @@ type RNNCell(inFeatures, outFeatures, ?nonlinearity, ?bias, ?batchFirst) =
     let whh = Parameter(Weight.uniform([|outFeatures; outFeatures|], k))
     let b = Parameter(if bias then Weight.uniform([|outFeatures|], k) else dsharp.tensor([]))
     let h = Parameter <| dsharp.tensor([]) // Not a paramter to be trained, this is for keeping hidden state
-    do base.addParameter([wih;whh;b],["RNNCell-weight-ih";"RNNCell-weight-hh";"RNNCell-bias"])
-    do base.addBuffer([h], ["RNNCell-hidden"])
+    do base.addParameter((wih, "RNNCell-weight-ih"), (whh, "RNNCell-weight-hh"), (b, "RNNCell-bias"))
+    do base.addBuffer(h, "RNNCell-hidden")
 
     member _.hidden 
         with get () = h.value
@@ -68,8 +68,8 @@ type LSTMCell(inFeatures, outFeatures, ?bias, ?batchFirst) =
     let b = Parameter(if bias then Weight.uniform([|outFeatures*4|], k) else dsharp.tensor([]))
     let h = Parameter <| dsharp.tensor([]) // Not a paramter to be trained, this is for keeping hidden state
     let c = Parameter <| dsharp.tensor([]) // Not a paramter to be trained, this is for keeping hidden state
-    do base.addParameter([wih;whh;b],["LSTMCell-weight-ih";"LSTMCell-weight-hh";"LSTMCell-bias"])
-    do base.addBuffer([h;c],["LSTMCell-hidden";"LSTMCell-cell"])
+    do base.addParameter((wih, "LSTMCell-weight-ih"), (whh, "LSTMCell-weight-hh"), (b, "LSTMCell-bias"))
+    do base.addBuffer((h, "LSTMCell-hidden"), (c, "LSTMCell-cell"))
 
     member _.hidden 
         with get () = h.value
@@ -119,8 +119,8 @@ type RNN(inFeatures, outFeatures, ?numLayers, ?nonlinearity, ?bias, ?batchFirst,
     let dropoutLayer = Dropout(dropout)
     let hs = Parameter <| dsharp.tensor([]) // Not a parameter to be trained, it is for keeping hidden state
     do 
-        base.addModel(layers |> Seq.cast<Model>, Array.init numLayers (fun i -> sprintf "RNN-layer-%A" i))
-        if bidirectional then base.addModel(layersReverse |> Seq.cast<Model>, Array.init numLayers (fun i -> sprintf "RNN-layer-reverse-%A" i))
+        base.addModel(layers |> Array.mapi (fun i l -> l :>Model, sprintf "RNN-layer-%A" i))
+        if bidirectional then base.addModel(layersReverse |> Array.mapi (fun i l -> l :>Model, sprintf "RNN-layer-reverse-%A" i))
         if dropout > 0. then base.addModel(dropoutLayer, "RNN-dropout")
 
     member _.hidden
@@ -170,8 +170,8 @@ type LSTM(inFeatures, outFeatures, ?numLayers, ?bias, ?batchFirst, ?dropout, ?bi
     let hs = Parameter <| dsharp.tensor([]) // Not a parameter to be trained, it is for keeping hidden state
     let cs = Parameter <| dsharp.tensor([]) // Not a parameter to be trained, it is for keeping hidden state
     do 
-        base.addModel(layers |> Seq.cast<Model>, Array.init numLayers (fun i -> sprintf "LSTM-layer-%A" i))
-        if bidirectional then base.addModel(layersReverse |> Seq.cast<Model>, Array.init numLayers (fun i -> sprintf "LSTM-layer-reverse-%A" i))
+        base.addModel(layers |> Array.mapi (fun i l -> l :>Model, sprintf "LSTM-layer-%A" i))
+        if bidirectional then base.addModel(layersReverse |> Array.mapi (fun i l -> l :>Model, sprintf "LSTM-layer-reverse-%A" i))    
         if dropout > 0. then base.addModel(dropoutLayer, "LSTM-dropout")
 
     member _.hidden

@@ -256,13 +256,9 @@ type ModelBase() =
         namePrefixes[name] <- i+1
         sprintf "%s__%A" name (i+1)
 
-    member _.checkItems(items:seq<_>, ?names:seq<string>)=
-        let items = items |> Seq.toArray
-        let names = defaultArg names (Seq.empty) |> Seq.toArray
+    let checkNames(names:string[])=
         if names.Length > 0 then
-            if items.Length <> names.Length then failwithf "Expecting items (%A) and names (%A) to have the same length" items.Length names.Length
             for name in names do if name.Contains("__") then failwithf "String '__' not allowed in name '%s'" name
-        items, names
 
     /// <summary>TBD</summary>
     member m.train() = 
@@ -363,28 +359,31 @@ type ModelBase() =
     member m.init(f:string*Tensor->Tensor) = m.parameters.iter(fun (n, p) -> p.value <- f(n, p.value))
 
     /// <summary>TBD</summary>
-    member m.addParameter(items:seq<Parameter>, ?names:seq<string>) =
-        let items, names = m.checkItems(items, ?names=names)
-        for i in 0..items.Length-1 do
-            let param = items[i]
+    member private _.addParameter(parameters:Parameter[], ?names:string[]) =
+        let names = defaultArg names Array.empty
+        checkNames names
+        for i in 0..parameters.Length-1 do
+            let param = parameters[i]
             let n = if names.Length > 0 then names[i] else sprintf "Parameter-%s" (Random.UUID())
             parameterDict.add(n, param)
         updateState()
 
     /// <summary>TBD</summary>
-    member m.addBuffer(items:seq<Parameter>, ?names:seq<string>) =
-        let items, names = m.checkItems(items, ?names=names)
-        for i in 0..items.Length-1 do
-            let param = items[i]
+    member private _.addBuffer(buffers:Parameter[], ?names:string[]) =
+        let names = defaultArg names Array.empty
+        checkNames names
+        for i in 0..buffers.Length-1 do
+            let param = buffers[i]
             let n = if names.Length > 0 then names[i] else sprintf "Buffer-%s" (Random.UUID())
             bufferDict.add(n, param)
         updateState()
 
     /// <summary>TBD</summary>
-    member m.addModel(items:seq<ModelBase>, ?names:seq<string>) =
-        let items, names = m.checkItems(items, ?names=names)
-        for i in 0..items.Length-1 do
-            let model = items[i]
+    member private _.addModel(models:ModelBase[], ?names:string[]) =
+        let names = defaultArg names Array.empty
+        checkNames names
+        for i in 0..models.Length-1 do
+            let model = models[i]
             let n = if names.Length > 0 then names[i] else sprintf "Model-%s" (Random.UUID())
             modelDict.Add(n, model)
             for n, p in model.parameters do 
@@ -393,23 +392,45 @@ type ModelBase() =
                 bufferDict.add(nextName n, b)
         updateState()
 
-    member m.addModel(models:seq<Model>, ?names:seq<string>) =
-        m.addModel(models |> Seq.cast<ModelBase>, ?names=names)
+    member m.addModel([<System.ParamArray>] models: ModelBase[]) =
+        m.addModel(models, ?names=None)
 
-    member m.addModel(model:Model, ?name:string) =
-        match name with
-        | Some(name) -> m.addModel([model], [name])
-        | None -> m.addModel([model])
+    member m.addModel([<System.ParamArray>] models: (ModelBase*string)[]) =
+        let items, names = Array.unzip models
+        m.addModel(items, names)
 
-    member m.addParameter(parameter:Parameter, ?name:string) =
-        match name with
-        | Some(name) -> m.addParameter([parameter], [name])
-        | None -> m.addParameter([parameter])
+    member m.addModel(model: ModelBase, name:string) =
+        m.addModel((model, name))
 
-    member m.addBuffer(buffer:Parameter, ?name:string) =
-        match name with
-        | Some(name) -> m.addBuffer([buffer], [name])
-        | None -> m.addBuffer([buffer])
+    member m.addModel([<System.ParamArray>] models: Model[]) =
+        m.addModel(models |> Seq.cast<ModelBase> |> Seq.toArray, ?names=None)
+
+    member m.addModel([<System.ParamArray>] models: (Model*string)[]) =
+        let items, names = Array.unzip models
+        m.addModel(items |> Seq.cast<ModelBase> |> Seq.toArray, names)
+
+    member m.addModel(model: Model, name:string) =
+        m.addModel((model, name))
+
+    member m.addParameter([<System.ParamArray>] parameters: Parameter[]) =
+        m.addParameter(parameters, ?names=None)
+
+    member m.addParameter([<System.ParamArray>] parameters: (Parameter*string)[]) =
+        let parameters, names = Array.unzip parameters
+        m.addParameter(parameters, names=names)
+
+    member m.addParameter(parameter: Parameter, name:string) =
+        m.addParameter((parameter, name))
+
+    member m.addBuffer([<System.ParamArray>] buffers: Parameter[]) =
+        m.addBuffer(buffers, ?names=None)
+
+    member m.addBuffer([<System.ParamArray>] buffers: (Parameter*string)[]) =
+        let buffers, names = Array.unzip buffers
+        m.addBuffer(buffers, names=names)
+
+    member m.addBuffer(buffer: Parameter, name:string) =
+        m.addBuffer((buffer, name))
 
     /// <summary>
     ///  Adjust the parameters of the model to initiate a new level of forward-mode automatic differentiation.
@@ -503,16 +524,15 @@ type ModelBase() =
         sb.ToString()
 
 
-
 /// <summary>Represents a model, primarily a collection of named parameters and sub-models and a function governed by them.</summary>
 // [<AbstractClass>]
 type Model<'In, 'Out>(?f:'In->'Out, ?parameters: seq<Parameter>, ?buffers: seq<Parameter>, ?models: seq<ModelBase>) =
     inherit ModelBase()
 
     do
-        base.addParameter(defaultArg parameters Seq.empty)
-        base.addBuffer(defaultArg buffers Seq.empty)
-        base.addModel(defaultArg models Seq.empty)
+        base.addParameter(defaultArg parameters Seq.empty |> Seq.toArray)
+        base.addBuffer(defaultArg buffers Seq.empty |> Seq.toArray)
+        base.addModel(defaultArg models Seq.empty |> Seq.toArray)
 
     /// <summary>TBD</summary>
     abstract member forward: 'In -> 'Out
