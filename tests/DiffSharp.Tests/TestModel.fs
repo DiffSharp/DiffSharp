@@ -12,7 +12,7 @@ open DiffSharp.Model
 open DiffSharp.Data
 open DiffSharp.Optim
 
-type ModelStyle1a() =
+type ModelStyle1() =
     inherit Model() 
     let fc1:Model = Linear(10, 16)
     let fc2:Model = Linear(16, 20)
@@ -23,14 +23,17 @@ type ModelStyle1a() =
         |> dsharp.relu
         |> fc2.forward
 
-type ModelStyle1b() =
+type ModelStyle1WithParamBuffer() =
     inherit Model()
     let fc1:Model = Linear(20, 32)
     let fc2:Model = Linear(32, 30)
     let p = Parameter(dsharp.randn([]))
+    let b = Parameter(dsharp.randn([]))
     do base.addModel((fc1, "fc1"), (fc2, "fc2"))
     do base.addParameter((p, "p"))
+    do base.addBuffer((b, "b"))
     override __.forward(x) =
+        b.value <- x.min()
         x
         |> fc1.forward
         |> dsharp.relu
@@ -153,10 +156,10 @@ type TestModel () =
 
     [<Test>]
     member _.TestModelCreationStyle1 () =
-        let net = ModelStyle1a()
+        let net = ModelStyle1()
         Assert.CheckEqual(516, net.nparameters)
 
-        let net2 = ModelStyle1b()
+        let net2 = ModelStyle1WithParamBuffer()
         Assert.CheckEqual(1663, net2.nparameters)
 
     [<Test>]
@@ -193,14 +196,14 @@ type TestModel () =
 
     [<Test>]
     member _.TestModelUsageStyle1 () =
-        let net = ModelStyle1a()
+        let net = ModelStyle1()
         let x = dsharp.randn([1; 10])
         let y = net.forward x |> dsharp.sin
         Assert.CheckEqual([| 1;20 |], y.shape)
 
     [<Test>]
     member _.TestModelUsageStyle2 () =
-        let net = ModelStyle1a()
+        let net = ModelStyle1()
         let x = dsharp.randn([1; 10])
         let y = x --> net --> dsharp.sin
         Assert.CheckEqual([| 1;20 |], y.shape)
@@ -219,8 +222,8 @@ type TestModel () =
 
     [<Test>]
     member _.TestModelCompose () =
-        let net1 = ModelStyle1a()
-        let net2 = ModelStyle1b()
+        let net1 = ModelStyle1()
+        let net2 = ModelStyle1WithParamBuffer()
         let net3 = Model.compose net1 net2
         Assert.CheckEqual(516 + 1663, net3.nparameters)
 
@@ -230,7 +233,7 @@ type TestModel () =
 
     [<Test>]
     member _.TestModelParametersDiff () =
-        let net = ModelStyle1a()
+        let net = ModelStyle1()
 
         Assert.True(net.parametersVector.isNoDiff)
 
@@ -257,7 +260,7 @@ type TestModel () =
 
     [<Test>]
     member _.TestModelDiff () =
-        let net = ModelStyle1a()
+        let net = ModelStyle1()
 
         let status = net.isNoDiff, net.isForwardDiff, net.isReverseDiff
         let statusCorrect = true, false, false
@@ -285,7 +288,7 @@ type TestModel () =
 
     [<Test>]
     member _.TestModelForwardParameters () =
-        let net = ModelStyle1a()
+        let net = ModelStyle1()
         let f = net.asFunction
         let p = net.parametersVector
         let x = dsharp.randn([1;10])
@@ -294,7 +297,7 @@ type TestModel () =
 
     [<Test>]
     member _.TestModelForwardCompose () =
-        let net = ModelStyle1a()
+        let net = ModelStyle1()
         let f p x = net.asFunction p x |> dsharp.sin
         let p = net.parametersVector
         let x = dsharp.randn([1;10])
@@ -303,7 +306,7 @@ type TestModel () =
 
     [<Test>]
     member _.TestModelForwardLoss () =
-        let net = ModelStyle1a()
+        let net = ModelStyle1()
         let f p x t = net.asFunction p x |> dsharp.mseLoss t
         let p = net.parametersVector
         let x = dsharp.randn([1;10])
@@ -313,12 +316,32 @@ type TestModel () =
 
     [<Test>]
     member _.TestModelSaveLoadState () =
-        let net1 = ModelStyle1a()
+        let net1 = ModelStyle1()
         let p1 = net1.stateVector
         let fileName = System.IO.Path.GetTempFileName()
         net1.saveState(fileName)
 
-        let net2 = ModelStyle1a()
+        let net2 = ModelStyle1()
+        let p2 = net2.stateVector
+        Assert.AreNotEqual(p1, p2)
+
+        net2.loadState(fileName)
+        let p2 = net2.stateVector
+        Assert.CheckEqual(p1, p2)
+
+        let x = dsharp.randn([1;10])
+        let y1 = x --> net1
+        let y2 = x --> net2
+        Assert.CheckEqual(y1, y2)
+
+    [<Test>]
+    member _.TestModelSaveLoadStateWithParamBuffer () =
+        let net1 = ModelStyle1WithParamBuffer()
+        let p1 = net1.stateVector
+        let fileName = System.IO.Path.GetTempFileName()
+        net1.saveState(fileName)
+
+        let net2 = ModelStyle1WithParamBuffer()
         let p2 = net2.stateVector
         Assert.AreNotEqual(p1, p2)
 
@@ -333,7 +356,23 @@ type TestModel () =
 
     [<Test>]
     member _.TestModelSaveLoad () =
-        let net1 = ModelStyle1a()
+        let net1 = ModelStyle1()
+        let p1 = net1.parametersVector
+        let fileName = System.IO.Path.GetTempFileName()
+        net1.save(fileName)
+
+        let net2 = Model.load(fileName)
+        let p2 = net2.parametersVector
+        Assert.CheckEqual(p1, p2)
+
+        let x = dsharp.randn([1;10])
+        let y1 = x --> net1
+        let y2 = x --> net2
+        Assert.CheckEqual(y1, y2)
+
+    [<Test>]
+    member _.TestModelSaveLoadWithParamBuffer () =
+        let net1 = ModelStyle1WithParamBuffer()
         let p1 = net1.parametersVector
         let fileName = System.IO.Path.GetTempFileName()
         net1.save(fileName)
@@ -349,7 +388,25 @@ type TestModel () =
 
     [<Test>]
     member _.TestModelSaveLoadStateNoDiff () =
-        let net = ModelStyle1a()
+        let net = ModelStyle1()
+        net.reverseDiff()
+        Assert.True(net.isReverseDiff)
+
+        let fileName = System.IO.Path.GetTempFileName()
+        net.saveState(fileName)
+        Assert.True(net.isReverseDiff)
+
+        net.loadState(fileName)
+        Assert.True(net.isNoDiff)
+
+        net.reverseDiff()
+        net.saveState(fileName, noDiff=false)
+        net.loadState(fileName)
+        Assert.True(net.isReverseDiff)
+
+    [<Test>]
+    member _.TestModelSaveLoadStateNoDiffWithParamBuffer () =
+        let net = ModelStyle1WithParamBuffer()
         net.reverseDiff()
         Assert.True(net.isReverseDiff)
 
@@ -367,7 +424,25 @@ type TestModel () =
 
     [<Test>]
     member _.TestModelSaveLoadNoDiff () =
-        let net = ModelStyle1a()
+        let net = ModelStyle1()
+        net.reverseDiff()
+        Assert.True(net.isReverseDiff)
+
+        let fileName = System.IO.Path.GetTempFileName()
+        net.save(fileName)
+        Assert.True(net.isReverseDiff)
+
+        let net2 = Model.load(fileName)
+        Assert.True(net2.isNoDiff)
+
+        net2.reverseDiff()
+        net2.save(fileName, noDiff=false)
+        let net3 = Model.load(fileName)
+        Assert.True(net3.isReverseDiff)
+
+    [<Test>]
+    member _.TestModelSaveLoadNoDiffWithParamBuffer () =
+        let net = ModelStyle1WithParamBuffer()
         net.reverseDiff()
         Assert.True(net.isReverseDiff)
 
@@ -409,8 +484,47 @@ type TestModel () =
                 Assert.CheckEqual(combo2.backend, net.backend)
 
     [<Test>]
+    member _.TestModelMoveWithParamBuffer () =
+        for combo1 in Combos.FloatingPointExcept16s do
+            use _holder = dsharp.useConfig(combo1.dtype, combo1.device, combo1.backend)
+            let net = ModelStyle1WithParamBuffer()
+
+            Assert.CheckEqual(combo1.device, net.parametersVector.device)
+            Assert.CheckEqual(combo1.dtype, net.parametersVector.dtype)
+            Assert.CheckEqual(combo1.backend, net.parametersVector.backend)
+
+            Assert.CheckEqual(combo1.device, net.device)
+            Assert.CheckEqual(combo1.dtype, net.dtype)
+            Assert.CheckEqual(combo1.backend, net.backend)
+
+            for combo2 in Combos.FloatingPointExcept16s do
+                net.move(combo2.device, combo2.dtype, combo2.backend)
+
+                Assert.CheckEqual(combo2.device, net.parametersVector.device)
+                Assert.CheckEqual(combo2.dtype, net.parametersVector.dtype)
+                Assert.CheckEqual(combo2.backend, net.parametersVector.backend)
+
+                Assert.CheckEqual(combo2.device, net.device)
+                Assert.CheckEqual(combo2.dtype, net.dtype)
+                Assert.CheckEqual(combo2.backend, net.backend)
+
+    [<Test>]
     member _.TestModelClone () =
-        let net1 = ModelStyle1a()
+        let net1 = ModelStyle1()
+        let p1 = net1.parametersVector
+
+        let net2 = net1.clone()
+        let p2 = net2.parametersVector
+        Assert.CheckEqual(p1, p2)
+
+        let x = dsharp.randn([1;10])
+        let y1 = x --> net1
+        let y2 = x --> net2
+        Assert.CheckEqual(y1, y2)
+
+    [<Test>]
+    member _.TestModelCloneWithParamBuffer () =
+        let net1 = ModelStyle1WithParamBuffer()
         let p1 = net1.parametersVector
 
         let net2 = net1.clone()
