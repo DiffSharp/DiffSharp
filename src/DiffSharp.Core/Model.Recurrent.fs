@@ -17,8 +17,8 @@ module ModelRecurrentAutoOpens =
             else
                 if value.dim <> 3 then failwithf "Expecting the input to be of shape seqLen x batchSize x inFeatures, but received input with shape %A" value.shape
                 value
-        if value.shape.[2] <> inFeatures then failwithf "Expecting input to have %A features, but received input with shape %A" inFeatures value.shape
-        let seqLen, batchSize = value.shape.[0], value.shape.[1]
+        if value.shape[2] <> inFeatures then failwithf "Expecting input to have %A features, but received input with shape %A" inFeatures value.shape
+        let seqLen, batchSize = value.shape[0], value.shape[1]
         value, seqLen, batchSize
 
 
@@ -33,8 +33,8 @@ type RNNCell(inFeatures, outFeatures, ?nonlinearity, ?bias, ?batchFirst) =
     let whh = Parameter(Weight.uniform([|outFeatures; outFeatures|], k))
     let b = Parameter(if bias then Weight.uniform([|outFeatures|], k) else dsharp.tensor([]))
     let h = Parameter <| dsharp.tensor([]) // Not a paramter to be trained, this is for keeping hidden state
-    do base.addParameter([wih;whh;b],["RNNCell-weight-ih";"RNNCell-weight-hh";"RNNCell-bias"])
-    do base.addBuffer([h], ["RNNCell-hidden"])
+    do base.addParameter((wih, "RNNCell-weight-ih"), (whh, "RNNCell-weight-hh"), (b, "RNNCell-bias"))
+    do base.addBuffer(h, "RNNCell-hidden")
 
     member _.hidden 
         with get () = h.value
@@ -49,11 +49,11 @@ type RNNCell(inFeatures, outFeatures, ?nonlinearity, ?bias, ?batchFirst) =
         if r.hidden.nelement = 0 then r.hidden <- dsharp.zeros([batchSize; outFeatures])
         let output = Array.create seqLen (dsharp.tensor([]))
         for i in 0..seqLen-1 do
-            let v = value.[i]
+            let v = value[i]
             r.hidden <- dsharp.matmul(v, wih.value) + dsharp.matmul(h.value, whh.value)
             if bias then r.hidden <- r.hidden + b.value
             r.hidden <- nonlinearity r.hidden
-            output.[i] <- r.hidden
+            output[i] <- r.hidden
         let output = dsharp.stack output
         if batchFirst then output.transpose(0, 1) else output
 
@@ -68,8 +68,8 @@ type LSTMCell(inFeatures, outFeatures, ?bias, ?batchFirst) =
     let b = Parameter(if bias then Weight.uniform([|outFeatures*4|], k) else dsharp.tensor([]))
     let h = Parameter <| dsharp.tensor([]) // Not a paramter to be trained, this is for keeping hidden state
     let c = Parameter <| dsharp.tensor([]) // Not a paramter to be trained, this is for keeping hidden state
-    do base.addParameter([wih;whh;b],["LSTMCell-weight-ih";"LSTMCell-weight-hh";"LSTMCell-bias"])
-    do base.addBuffer([h;c],["LSTMCell-hidden";"LSTMCell-cell"])
+    do base.addParameter((wih, "LSTMCell-weight-ih"), (whh, "LSTMCell-weight-hh"), (b, "LSTMCell-bias"))
+    do base.addBuffer((h, "LSTMCell-hidden"), (c, "LSTMCell-cell"))
 
     member _.hidden 
         with get () = h.value
@@ -89,19 +89,19 @@ type LSTMCell(inFeatures, outFeatures, ?bias, ?batchFirst) =
         if r.cell.nelement = 0 then r.cell <- dsharp.zeros([batchSize; outFeatures])
         let output = Array.create seqLen (dsharp.tensor([]))
         for i in 0..seqLen-1 do
-            let v = value.[i]
+            let v = value[i]
             let x2h = dsharp.matmul(v, wih.value)
             let h2h = dsharp.matmul(h.value, whh.value)
             let mutable pre = x2h + h2h
             if bias then pre <- pre + b.value
-            let pretan = pre.[*,..outFeatures-1].tanh()
-            let presig = pre.[*,outFeatures..].sigmoid()
-            let inputGate = presig.[*,..outFeatures-1]
-            let forgetGate = presig.[*,outFeatures..(2*outFeatures)-1]
-            let outputGate = presig.[*,(2*outFeatures)..]
+            let pretan = pre[*,..outFeatures-1].tanh()
+            let presig = pre[*,outFeatures..].sigmoid()
+            let inputGate = presig[*,..outFeatures-1]
+            let forgetGate = presig[*,outFeatures..(2*outFeatures)-1]
+            let outputGate = presig[*,(2*outFeatures)..]
             r.cell <- (inputGate*pretan) + (forgetGate*c.value)
             r.hidden <- outputGate*c.value.tanh()
-            output.[i] <- r.hidden
+            output[i] <- r.hidden
         let output = dsharp.stack output
         if batchFirst then output.transpose(0, 1) else output
 
@@ -119,9 +119,9 @@ type RNN(inFeatures, outFeatures, ?numLayers, ?nonlinearity, ?bias, ?batchFirst,
     let dropoutLayer = Dropout(dropout)
     let hs = Parameter <| dsharp.tensor([]) // Not a parameter to be trained, it is for keeping hidden state
     do 
-        base.addModel(layers |> Array.map box, Array.init numLayers (fun i -> sprintf "RNN-layer-%A" i))
-        if bidirectional then base.addModel(layersReverse |> Array.map box, Array.init numLayers (fun i -> sprintf "RNN-layer-reverse-%A" i))
-        if dropout > 0. then base.addModel([dropoutLayer], ["RNN-dropout"])
+        base.addModel(layers |> Array.mapi (fun i l -> l :>Model, sprintf "RNN-layer-%A" i))
+        if bidirectional then base.addModel(layersReverse |> Array.mapi (fun i l -> l :>Model, sprintf "RNN-layer-reverse-%A" i))
+        if dropout > 0. then base.addModel(dropoutLayer, "RNN-dropout")
 
     member _.hidden
         with get () = hs.value
@@ -137,18 +137,18 @@ type RNN(inFeatures, outFeatures, ?numLayers, ?nonlinearity, ?bias, ?batchFirst,
         let newhs = Array.create (numLayers*numDirections) (dsharp.tensor([]))
         let mutable hFwd = value
         for i in 0..numLayers-1 do 
-            layers.[i].hidden <- r.hidden.[i]
-            hFwd <- layers.[i].forward(hFwd)
+            layers[i].hidden <- r.hidden[i]
+            hFwd <- layers[i].forward(hFwd)
             if dropout > 0. && i < numLayers-1 then hFwd <- dropoutLayer.forward(hFwd)
-            newhs.[i] <- layers.[i].hidden
+            newhs[i] <- layers[i].hidden
         let output = 
             if bidirectional then
                 let mutable hRev = value.flip([0])
                 for i in 0..numLayers-1 do 
-                    layersReverse.[i].hidden <- r.hidden.[numLayers+i]
-                    hRev <- layersReverse.[i].forward(hRev)
+                    layersReverse[i].hidden <- r.hidden[numLayers+i]
+                    hRev <- layersReverse[i].forward(hRev)
                     if dropout > 0. && i < numLayers-1 then hRev <- dropoutLayer.forward(hRev)
-                    newhs.[numLayers+i] <- layersReverse.[i].hidden
+                    newhs[numLayers+i] <- layersReverse[i].hidden
                 dsharp.cat([hFwd; hRev], 2)
             else hFwd
         r.hidden <- dsharp.stack(newhs)
@@ -170,9 +170,9 @@ type LSTM(inFeatures, outFeatures, ?numLayers, ?bias, ?batchFirst, ?dropout, ?bi
     let hs = Parameter <| dsharp.tensor([]) // Not a parameter to be trained, it is for keeping hidden state
     let cs = Parameter <| dsharp.tensor([]) // Not a parameter to be trained, it is for keeping hidden state
     do 
-        base.addModel(layers |> Array.map box, Array.init numLayers (fun i -> sprintf "LSTM-layer-%A" i))
-        if bidirectional then base.addModel(layersReverse |> Array.map box, Array.init numLayers (fun i -> sprintf "LSTM-layer-reverse-%A" i))
-        if dropout > 0. then base.addModel([dropoutLayer], ["LSTM-dropout"])
+        base.addModel(layers |> Array.mapi (fun i l -> l :>Model, sprintf "LSTM-layer-%A" i))
+        if bidirectional then base.addModel(layersReverse |> Array.mapi (fun i l -> l :>Model, sprintf "LSTM-layer-reverse-%A" i))    
+        if dropout > 0. then base.addModel(dropoutLayer, "LSTM-dropout")
 
     member _.hidden
         with get () = hs.value
@@ -196,22 +196,22 @@ type LSTM(inFeatures, outFeatures, ?numLayers, ?bias, ?batchFirst, ?dropout, ?bi
         let newcs = Array.create (numLayers*numDirections) (dsharp.tensor([]))
         let mutable hFwd = value
         for i in 0..numLayers-1 do 
-            layers.[i].hidden <- r.hidden.[i]
-            layers.[i].cell <- r.cell.[i]
-            hFwd <- layers.[i].forward(hFwd)
+            layers[i].hidden <- r.hidden[i]
+            layers[i].cell <- r.cell[i]
+            hFwd <- layers[i].forward(hFwd)
             if dropout > 0. && i < numLayers-1 then hFwd <- dropoutLayer.forward(hFwd)
-            newhs.[i] <- layers.[i].hidden
-            newcs.[i] <- layers.[i].cell
+            newhs[i] <- layers[i].hidden
+            newcs[i] <- layers[i].cell
         let output = 
             if bidirectional then
                 let mutable hRev = value.flip([0])
                 for i in 0..numLayers-1 do 
-                    layersReverse.[i].hidden <- r.hidden.[numLayers+i]
-                    layersReverse.[i].cell <- r.cell.[numLayers+i]
-                    hRev <- layersReverse.[i].forward(hRev)
+                    layersReverse[i].hidden <- r.hidden[numLayers+i]
+                    layersReverse[i].cell <- r.cell[numLayers+i]
+                    hRev <- layersReverse[i].forward(hRev)
                     if dropout > 0. && i < numLayers-1 then hRev <- dropoutLayer.forward(hRev)
-                    newhs.[numLayers+i] <- layersReverse.[i].hidden
-                    newcs.[numLayers+i] <- layersReverse.[i].cell
+                    newhs[numLayers+i] <- layersReverse[i].hidden
+                    newcs[numLayers+i] <- layersReverse[i].cell
                 dsharp.cat([hFwd; hRev], 2)
             else hFwd
         r.hidden <- dsharp.stack(newhs)

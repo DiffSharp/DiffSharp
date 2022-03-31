@@ -313,14 +313,14 @@ type TestTensorAvgPool () =
 
             let tk3 = t.avgpool1d(kernelSize=3)
             let tk3Correct = combo.ones([2;2;2])
-            printfn $"tk3Correct = {tk3Correct}"
-            printfn $"tk3        = {tk3}"
+            // printfn $"tk3Correct = {tk3Correct}"
+            // printfn $"tk3        = {tk3}"
             Assert.True(tk3Correct.allclose(tk3,0.01))
 
             let tk3r = tk3.avgpoolReverse1d(t, 3)
             let tk3rCorrect = combo.full([2;2;6], 1.0/3.0)
-            printfn $"tk3r        = {tk3r}"
-            printfn $"tk3rCorrect        = {tk3rCorrect}"
+            // printfn $"tk3r        = {tk3r}"
+            // printfn $"tk3rCorrect        = {tk3rCorrect}"
             Assert.True(tk3rCorrect.allclose(tk3r,0.01))
 
     [<Test>]
@@ -330,14 +330,14 @@ type TestTensorAvgPool () =
 
             let tk3 = t.avgpool2d(kernelSize=3)
             let tk3Correct = combo.ones([2;2;2;2])
-            printfn $"tk3Correct = {tk3Correct}"
-            printfn $"tk3        = {tk3}"
+            // printfn $"tk3Correct = {tk3Correct}"
+            // printfn $"tk3        = {tk3}"
             Assert.True(tk3Correct.allclose(tk3,0.01))
 
             let tk3r = tk3.avgpoolReverse2d(t, 3)
             let tk3rCorrect = combo.full([2;2;6;6], 1.0/9.0)
-            printfn $"tk3r        = {tk3r}"
-            printfn $"tk3rCorrect        = {tk3rCorrect}"
+            // printfn $"tk3r        = {tk3r}"
+            // printfn $"tk3rCorrect        = {tk3rCorrect}"
             Assert.True(tk3rCorrect.allclose(tk3r,0.01))
 
     [<Test>]
@@ -347,14 +347,14 @@ type TestTensorAvgPool () =
 
             let tk3 = t.avgpool3d(kernelSize=3)
             let tk3Correct = combo.ones([2;2;2;2;2])
-            printfn $"tk3Correct = {tk3Correct}"
-            printfn $"tk3        = {tk3}"
+            // printfn $"tk3Correct = {tk3Correct}"
+            // printfn $"tk3        = {tk3}"
             Assert.True(tk3Correct.allclose(tk3,0.01))
 
             let tk3r = tk3.avgpoolReverse3d(t, 3)
             let tk3rCorrect = combo.full([2;2;6;6;6], 1.0/27.0)
-            printfn $"tk3r        = {tk3r}"
-            printfn $"tk3rCorrect        = {tk3rCorrect}"
+            // printfn $"tk3r        = {tk3r}"
+            // printfn $"tk3rCorrect        = {tk3rCorrect}"
             Assert.True(tk3rCorrect.allclose(tk3r,0.01))
 
 
@@ -928,13 +928,13 @@ type TestDerivativesAvgPool () =
                                                [ 0.0000,  0.0000,  0.0000,  0.0000,  0.0000],
                                                [ 0.0000,  0.0000,  0.0000,  0.0000,  0.0000]]]])
                                                
-            printfn $"revxdCorrect = {revxdCorrect}"
+            // printfn $"revxdCorrect = {revxdCorrect}"
             let revxdCorrect = revxdCorrect.unsqueeze(0)
-            printfn $"revxdCorrect = {revxdCorrect}"
+            // printfn $"revxdCorrect = {revxdCorrect}"
 
             Assert.True(revz.allclose(revzCorrect, 0.05))
-            printfn $"revxd = {revxd}"
-            printfn $"revxdCorrect = {revxdCorrect}"
+            // printfn $"revxd = {revxd}"
+            // printfn $"revxdCorrect = {revxdCorrect}"
             Assert.True(revxd.allclose(revxdCorrect, 0.10))
 
 

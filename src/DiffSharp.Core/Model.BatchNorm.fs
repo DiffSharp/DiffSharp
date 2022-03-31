@@ -14,7 +14,7 @@ open DiffSharp
 ///        \(\gamma\( and \(\beta\) are learnable parameter vectors of size \(C\) (where \(C\) is the
 ///        input size). By default, the elements of \(\gamma\) are set to 1 and the elements of 
 ///        \(\beta\) are set to 0. The standard-deviation is calculated via the biased estimator,
-///        equivalent to <c>dsharp.variance(input, unbiased=False)</c>.
+///        equivalent to <c>dsharp.var(input, unbiased=False)</c>.
 ///    </para>
 ///    <para>
 ///        Also by default, during training this layer keeps running estimates of its computed mean
@@ -37,8 +37,8 @@ type BatchNorm1d(numFeatures:int, ?eps:double, ?momentum:Tensor, ?affine:bool, ?
     let b = Parameter <| if affine then dsharp.zeros(numFeatures) else dsharp.zero() // beta
     let _mean = Parameter <| dsharp.zero()
     let _variance = Parameter <| dsharp.zero()
-    do base.addParameter([w;b],["BatchNorm1d-weight";"BatchNorm1d-bias"]) // We don't add mean and variance here because they hold running statistics and are not subject to gradient-based optimization
-    do base.addBuffer([momentum;_mean;_variance], ["BatchNorm1d-momentum";"BatchNorm1d-mean";"BatchNorm1d-variance"])
+    do base.addParameter((w, "BatchNorm1d-weight"), (b, "BatchNorm1d-bias")) // We don't add mean and variance here because they hold running statistics and are not subject to gradient-based optimization
+    do base.addBuffer((momentum, "BatchNorm1d-momentum"), (_mean, "BatchNorm1d-mean"), (_variance, "BatchNorm1d-variance"))
 
     /// <summary>TBD</summary>
     member _.mean = _mean.value
@@ -72,27 +72,27 @@ type BatchNorm1d(numFeatures:int, ?eps:double, ?momentum:Tensor, ?affine:bool, ?
     /// <summary>TBD</summary>
     override m.forward(value) =
         if value.dim = 2 then
-            if value.shape.[1] <> numFeatures then failwithf "Expecting value to have shape NxL (batchSize x numFeatures) where numFeatures=%A, received value with shape %A" numFeatures value.shape
+            if value.shape[1] <> numFeatures then failwithf "Expecting value to have shape NxL (batchSize x numFeatures) where numFeatures=%A, received value with shape %A" numFeatures value.shape
             let mean, var =
                 if m.mode = Mode.Train || (m.mode = Mode.Eval && not trackRunningStats) then
-                    value.mean(0), value.variance(0, unbiased=false)
+                    value.mean(0), value.var(0, unbiased=false)
                 else
                     _mean.value, _variance.value
             if m.mode = Mode.Train && trackRunningStats then 
-                let batchSize = value.shape.[0]
+                let batchSize = value.shape[0]
                 m.updateStats mean var batchSize
             let res = (value - mean) / (var + eps).sqrt()
             if affine then res * w.value + b.value else res
         elif value.dim = 3 then
-            if value.shape.[1] <> numFeatures then failwithf "Expecting value to have shape NxCxL (batchSize x numFeatures x length) where numFeatures=%A, received value with shape %A" numFeatures value.shape
+            if value.shape[1] <> numFeatures then failwithf "Expecting value to have shape NxCxL (batchSize x numFeatures x length) where numFeatures=%A, received value with shape %A" numFeatures value.shape
             let vt = value.transpose(0,1).view([numFeatures;-1])
             let mean, var =
                 if m.mode = Mode.Train || (m.mode = Mode.Eval && not trackRunningStats) then
-                    vt.mean(1), vt.variance(1, unbiased=false)
+                    vt.mean(1), vt.var(1, unbiased=false)
                 else
                     _mean.value, _variance.value
             if m.mode = Mode.Train && trackRunningStats then
-                let n = vt.shape.[1]
+                let n = vt.shape[1]
                 m.updateStats mean var n
             let res = (value - mean.view([1;numFeatures;1])) / (var.view([1;numFeatures;1]) + eps).sqrt()
             if affine then res * w.value.view([1;numFeatures;1]) + b.value.view([1;numFeatures;1]) else res
@@ -106,7 +106,7 @@ type BatchNorm1d(numFeatures:int, ?eps:double, ?momentum:Tensor, ?affine:bool, ?
 ///        \(\gamma\( and \(\beta\) are learnable parameter vectors of size \(C\) (where \(C\) is the
 ///        input size). By default, the elements of \(\gamma\) are set to 1 and the elements of 
 ///        \(\beta\) are set to 0. The standard-deviation is calculated via the biased estimator,
-///        equivalent to <c>dsharp.variance(input, unbiased=False)</c>.
+///        equivalent to <c>dsharp.var(input, unbiased=False)</c>.
 ///    </para>
 ///    <para>
 ///        Also by default, during training this layer keeps running estimates of its computed mean
@@ -129,8 +129,8 @@ type BatchNorm2d(numFeatures:int, ?eps:double, ?momentum:Tensor, ?affine:bool, ?
     let b = Parameter <| if affine then dsharp.zeros(numFeatures) else dsharp.zero() // beta
     let _mean = Parameter <| dsharp.zero()
     let _variance = Parameter <| dsharp.zero()
-    do base.addParameter([w;b],["BatchNorm2d-weight";"BatchNorm2d-bias"]) // We don't add mean and variance here because they hold running statistics and are not subject to gradient-based optimization
-    do base.addBuffer([momentum;_mean;_variance], ["BatchNorm2d-momentum";"BatchNorm2d-mean";"BatchNorm2d-variance"])
+    do base.addParameter((w, "BatchNorm2d-weight"), (b, "BatchNorm2d-bias")) // We don't add mean and variance here because they hold running statistics and are not subject to gradient-based optimization
+    do base.addBuffer((momentum, "BatchNorm2d-momentum"), (_mean, "BatchNorm2d-mean"), (_variance, "BatchNorm2d-variance"))
 
     /// <summary>TBD</summary>
     member _.mean = _mean.value
@@ -163,15 +163,15 @@ type BatchNorm2d(numFeatures:int, ?eps:double, ?momentum:Tensor, ?affine:bool, ?
 
     /// <summary>TBD</summary>
     override m.forward(value) =
-        if value.dim <> 4 || value.shape.[1] <> numFeatures then failwithf "Expecting value to have shape NxCxHxW (batchSize x numFeatures x height x width) where numFeatures=%A, received value with shape %A" numFeatures value.shape
+        if value.dim <> 4 || value.shape[1] <> numFeatures then failwithf "Expecting value to have shape NxCxHxW (batchSize x numFeatures x height x width) where numFeatures=%A, received value with shape %A" numFeatures value.shape
         let vt = value.transpose(0,1).view([numFeatures;-1])
         let mean, var =
             if m.mode = Mode.Train || (m.mode = Mode.Eval && not trackRunningStats) then
-                vt.mean(1), vt.variance(1, unbiased=false)
+                vt.mean(1), vt.var(1, unbiased=false)
             else
                 _mean.value, _variance.value
         if m.mode = Mode.Train && trackRunningStats then
-            let n = vt.shape.[1]
+            let n = vt.shape[1]
             m.updateStats mean var n
         let res = (value - mean.view([1;numFeatures;1;1])) / (var.view([1;numFeatures;1;1]) + eps).sqrt()
         if affine then res * w.value.view([1;numFeatures;1;1]) + b.value.view([1;numFeatures;1;1]) else res
@@ -184,7 +184,7 @@ type BatchNorm2d(numFeatures:int, ?eps:double, ?momentum:Tensor, ?affine:bool, ?
 ///        \(\gamma\( and \(\beta\) are learnable parameter vectors of size \(C\) (where \(C\) is the
 ///        input size). By default, the elements of \(\gamma\) are set to 1 and the elements of 
 ///        \(\beta\) are set to 0. The standard-deviation is calculated via the biased estimator,
-///        equivalent to <c>dsharp.variance(input, unbiased=False)</c>.
+///        equivalent to <c>dsharp.var(input, unbiased=False)</c>.
 ///    </para>
 ///    <para>
 ///        Also by default, during training this layer keeps running estimates of its computed mean
@@ -207,8 +207,8 @@ type BatchNorm3d(numFeatures:int, ?eps:double, ?momentum:Tensor, ?affine:bool, ?
     let b = Parameter <| if affine then dsharp.zeros(numFeatures) else dsharp.zero() // beta
     let _mean = Parameter <| dsharp.zero()
     let _variance = Parameter <| dsharp.zero()
-    do base.addParameter([w;b],["BatchNorm3d-weight";"BatchNorm3d-bias"]) // We don't add mean and variance here because they hold running statistics and are not subject to gradient-based optimization
-    do base.addBuffer([momentum;_mean;_variance], ["BatchNorm3d-momentum";"BatchNorm3d-mean";"BatchNorm3d-variance"])
+    do base.addParameter((w, "BatchNorm3d-weight"), (b, "BatchNorm3d-bias")) // We don't add mean and variance here because they hold running statistics and are not subject to gradient-based optimization
+    do base.addBuffer((momentum, "BatchNorm3d-momentum"), (_mean, "BatchNorm3d-mean"), (_variance, "BatchNorm3d-variance"))
 
     /// <summary>TBD</summary>
     member _.mean = _mean.value
@@ -241,15 +241,15 @@ type BatchNorm3d(numFeatures:int, ?eps:double, ?momentum:Tensor, ?affine:bool, ?
 
     /// <summary>TBD</summary>
     override m.forward(value) =
-        if value.dim <> 5 || value.shape.[1] <> numFeatures then failwithf "Expecting value to have shape NxCxDxHxW (batchSize x numFeatures x depth x height x width) where numFeatures=%A, received value with shape %A" numFeatures value.shape
+        if value.dim <> 5 || value.shape[1] <> numFeatures then failwithf "Expecting value to have shape NxCxDxHxW (batchSize x numFeatures x depth x height x width) where numFeatures=%A, received value with shape %A" numFeatures value.shape
         let vt = value.transpose(0,1).view([numFeatures;-1])
         let mean, var =
             if m.mode = Mode.Train || (m.mode = Mode.Eval && not trackRunningStats) then
-                vt.mean(1), vt.variance(1, unbiased=false)
+                vt.mean(1), vt.var(1, unbiased=false)
             else
                 _mean.value, _variance.value
         if m.mode = Mode.Train && trackRunningStats then
-            let n = vt.shape.[1]
+            let n = vt.shape[1]
             m.updateStats mean var n
         let res = (value - mean.view([1;numFeatures;1;1;1])) / (var.view([1;numFeatures;1;1;1]) + eps).sqrt()
         if affine then res * w.value.view([1;numFeatures;1;1;1]) + b.value.view([1;numFeatures;1;1;1]) else res

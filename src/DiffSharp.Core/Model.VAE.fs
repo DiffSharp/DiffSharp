@@ -6,6 +6,7 @@
 namespace DiffSharp.Model
 
 open DiffSharp
+open DiffSharp.Util
 
 /// <summary>Variational auto-encoder base</summary>
 [<AbstractClass>]
@@ -37,7 +38,7 @@ type VAEBase(zDim:int) =
         let normalize = defaultArg normalize true
         let xRecon, mu, logVar = m.encodeDecode x
         let loss = VAEBase.loss(xRecon, x, mu, logVar)
-        if normalize then loss / x.shape.[0] else loss
+        if normalize then loss / x.shape[0] else loss
 
     member m.sample(?numSamples:int) = 
         let numSamples = defaultArg numSamples 1
@@ -55,12 +56,12 @@ type VAE(xShape:seq<int>, zDim:int, encoder:Model, decoder:Model) =
         // TODO: check if decoder can accept input with (-1, zDim)
         // let decodedExample = xExample --> encoder --> decoder
         // if decodedExample.shape <> xShape then failwithf "Expecting decoder's output shape (%A) to be xShape (%A)" decodedExample.shape xShape
-        base.addModel([encoder;decoder;prez;postz],["VAE-encoder";"VAE-decoder";"VAE-prez"; "VAE-postz"])
+        base.addModel(encoder,decoder,prez,postz)
 
     override _.encode x =
         let mulogvar = x --> encoder --> prez
         let h = mulogvar.split([zDim; zDim], dim=1)
-        let mu, logVar = h.[0], h.[1]
+        let mu, logVar = h[0], h[1]
         mu, logVar
 
     override _.decode z =
@@ -81,25 +82,25 @@ type VAEMLP(xDim:int, zDim:int, ?hDims:seq<int>, ?nonlinearity:Tensor->Tensor, ?
         else
             Array.append (Array.append [|xDim|] hDims) [|zDim|]
             
-    let enc = Array.append [|for i in 0..dims.Length-2 -> Linear(dims.[i], dims.[i+1])|] [|Linear(dims.[dims.Length-2], dims.[dims.Length-1])|]
-    let dec = [|for i in 0..dims.Length-2 -> Linear(dims.[i+1], dims.[i])|] |> Array.rev
+    let enc:Model[] = Array.append [|for i in 0..dims.Length-2 -> Linear(dims[i], dims[i+1])|] [|Linear(dims[dims.Length-2], dims[dims.Length-1])|]
+    let dec:Model[] = Array.rev [|for i in 0..dims.Length-2 -> Linear(dims[i+1], dims[i])|]
     do 
-        base.addModel(enc |> Array.map box)
-        base.addModel(dec |> Array.map box)
+        base.addModel(enc)
+        base.addModel(dec)
 
     override _.encode (x:Tensor) =
-        let batchSize = x.shape.[0]
+        let batchSize = x.shape[0]
         let mutable x = x.view([batchSize; xDim])
         for i in 0..enc.Length-3 do
-            x <- nonlinearity <| enc.[i].forward(x)
-        let mu = enc.[enc.Length-2].forward(x)
-        let logVar = enc.[enc.Length-1].forward(x)
+            x <- nonlinearity <| enc[i].forward(x)
+        let mu = enc[enc.Length-2].forward(x)
+        let logVar = enc[enc.Length-1].forward(x)
         mu, logVar
 
     override _.decode z =
         let mutable h = z
         for i in 0..dec.Length-2 do
-            h <- nonlinearity <| dec.[i].forward(h)
-        nonlinearityLast <| dec.[dec.Length-1].forward(h)
+            h <- nonlinearity <| dec[i].forward(h)
+        nonlinearityLast <| dec[dec.Length-1].forward(h)
 
     override _.ToString() = sprintf "VAEMLP(%A, %A, %A)" xDim hDims zDim

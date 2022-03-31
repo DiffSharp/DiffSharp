@@ -46,4 +46,4 @@ DiffSharp is developed by [Atılım Güneş Baydin](http://www.robots.ox.ac.uk/~
 
 ## License
 
-DiffSharp is licensed under the BSD 2-Clause "Simplified" License, which you can find in the [LICENSE](https://github.com/DiffSharp/DiffSharp/blob/dev/LICENSE) file in this repository.
+DiffSharp is licensed under the BSD 2-Clause "Simplified" License, which you can find in the [LICENSE](https://github.com/DiffSharp/DiffSharp/blob/dev/LICENSE) file in this repository. 

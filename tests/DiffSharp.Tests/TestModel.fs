@@ -14,9 +14,9 @@ open DiffSharp.Optim
 
 type ModelStyle1a() =
     inherit Model() 
-    let fc1 = Linear(10, 16)
-    let fc2 = Linear(16, 20)
-    do base.addModel([fc1; fc2], ["fc1"; "fc2"])
+    let fc1:Model = Linear(10, 16)
+    let fc2:Model = Linear(16, 20)
+    do base.addModel((fc1, "fc1"), (fc2, "fc2"))
     override __.forward(x) =
         x
         |> fc1.forward
@@ -25,11 +25,11 @@ type ModelStyle1a() =
 
 type ModelStyle1b() =
     inherit Model()
-    let fc1 = Linear(20, 32)
-    let fc2 = Linear(32, 30)
+    let fc1:Model = Linear(20, 32)
+    let fc2:Model = Linear(32, 30)
     let p = Parameter(dsharp.randn([]))
-    do base.addModel([fc1; fc2], ["fc1"; "fc2"])
-    do base.addParameter([p], ["p"])
+    do base.addModel((fc1, "fc1"), (fc2, "fc2"))
+    do base.addParameter((p, "p"))
     override __.forward(x) =
         x
         |> fc1.forward
@@ -39,9 +39,9 @@ type ModelStyle1b() =
 
 type GenericModelFloatFloat() =
     inherit Model<float,float>()
-    let fc1 = Linear(1, 2)
-    let fc2 = Linear(2, 1)
-    do base.addModel([fc1; fc2], ["fc1"; "fc2"])
+    let fc1:Model = Linear(1, 2)
+    let fc2:Model = Linear(2, 1)
+    do base.addModel((fc1, "fc1"), (fc2, "fc2"))
     do base.init (fun (_, t) -> t.onesLike())
     override __.forward(x) =
         x |> dsharp.tensor
@@ -52,9 +52,9 @@ type GenericModelFloatFloat() =
 
 type GenericModelIntString() =
     inherit Model<int,string>()
-    let fc1 = Linear(1, 2)
-    let fc2 = Linear(2, 1)
-    do base.addModel([fc1; fc2], ["fc1"; "fc2"])
+    let fc1:Model = Linear(1, 2)
+    let fc2:Model = Linear(2, 1)
+    do base.addModel((fc1, "fc1"), (fc2, "fc2"))
     do base.init (fun (_, t) -> t.onesLike())
     override __.forward(x) =
         x |> float32 |> dsharp.tensor
@@ -134,17 +134,17 @@ type TestModel () =
         d.unflatten(dflat)
         Assert.True(d.isReverseDiff)
 
-        let dp1 = d.["p1"]
+        let dp1 = d["p1"]
         let dp1p = dp1.primal
         let dp1d = dp1.derivative
-        let dp2 = d.["p2"]
+        let dp2 = d["p2"]
         let dp2p = dp2.primal
         let dp2d = dp2.derivative
 
         let dfp = dflatp.split([2*5; 4])
-        let dp1pCorrect, dp2pCorrect = dfp.[0].view([2;5]), dfp.[1]
+        let dp1pCorrect, dp2pCorrect = dfp[0].view([2;5]), dfp[1]
         let dfd = dflatd.split([2*5; 4])
-        let dp1dCorrect, dp2dCorrect = dfd.[0].view([2;5]), dfd.[1]
+        let dp1dCorrect, dp2dCorrect = dfd[0].view([2;5]), dfd[1]
 
         Assert.CheckEqual(dp1pCorrect, dp1p)
         Assert.CheckEqual(dp2pCorrect, dp2p)
@@ -163,11 +163,11 @@ type TestModel () =
     member _.TestModelCreationStyle2 () =
         let fc1 = Linear(10, 32)
         let fc2 = Linear(32, 10)
-        let net = Model.create [fc1; fc2] [] []
-                    (dsharp.view [-1; 10]
-                    >> fc1.forward
-                    >> dsharp.relu
-                    >> fc2.forward)
+        let net = Model(dsharp.view [-1; 10]
+                        >> fc1.forward
+                        >> dsharp.relu
+                        >> fc2.forward, 
+                        models=[fc1; fc2])
         Assert.CheckEqual(682, net.nparameters)
         
         // check these properties exist
@@ -177,12 +177,13 @@ type TestModel () =
         let fc1 = Linear(10, 32)
         let fc2 = Linear(32, 10)
         let p = Parameter(dsharp.randn([]))
-        let net2 = Model.create [fc1; fc2] [p] []
-                    (dsharp.view [-1; 10]
-                    >> fc1.forward
-                    >> dsharp.relu
-                    >> fc2.forward
-                    >> dsharp.mul p.value)
+        let net2 = Model(dsharp.view [-1; 10]
+                        >> fc1.forward
+                        >> dsharp.relu
+                        >> fc2.forward
+                        >> dsharp.mul p.value, 
+                        parameters=[p], 
+                        models=[fc1; fc2])
         Assert.CheckEqual(683, net2.nparameters)
 
     [<Test>]
@@ -207,11 +208,11 @@ type TestModel () =
     [<Test>]
     member _.TestModelInit () =
         let net = Linear(10, 10)
-        let wBefore = net.parameters.["Linear-weight"]
+        let wBefore = net.parameters["Linear-weight"]
         net.init(function
             | "Linear-weight", v -> v.onesLike()
             | _, v -> v)
-        let wAfter = net.parameters.["Linear-weight"]
+        let wAfter = net.parameters["Linear-weight"]
         let wAfterCorrect = dsharp.onesLike(wBefore)
         Assert.False(wAfterCorrect.allclose(wBefore))
         Assert.True(wAfterCorrect.allclose(wAfter))
@@ -439,21 +440,21 @@ type TestModel () =
     member _.TestModelTrainEval () =
         let m = Linear(1, 2) --> Linear(2, 3) --> Linear(3, 4)
         Assert.CheckEqual(Mode.Train, m.mode)
-        Assert.CheckEqual(Mode.Train, m.descendants.[0].mode)
-        Assert.CheckEqual(Mode.Train, m.descendants.[1].mode)
-        Assert.CheckEqual(Mode.Train, m.descendants.[2].mode)
+        Assert.CheckEqual(Mode.Train, m.descendants[0].mode)
+        Assert.CheckEqual(Mode.Train, m.descendants[1].mode)
+        Assert.CheckEqual(Mode.Train, m.descendants[2].mode)
 
         m.eval()
         Assert.CheckEqual(Mode.Eval, m.mode)
-        Assert.CheckEqual(Mode.Eval, m.descendants.[0].mode)
-        Assert.CheckEqual(Mode.Eval, m.descendants.[1].mode)
-        Assert.CheckEqual(Mode.Eval, m.descendants.[2].mode)
+        Assert.CheckEqual(Mode.Eval, m.descendants[0].mode)
+        Assert.CheckEqual(Mode.Eval, m.descendants[1].mode)
+        Assert.CheckEqual(Mode.Eval, m.descendants[2].mode)
 
         m.train()
         Assert.CheckEqual(Mode.Train, m.mode)
-        Assert.CheckEqual(Mode.Train, m.descendants.[0].mode)
-        Assert.CheckEqual(Mode.Train, m.descendants.[1].mode)
-        Assert.CheckEqual(Mode.Train, m.descendants.[2].mode)
+        Assert.CheckEqual(Mode.Train, m.descendants[0].mode)
+        Assert.CheckEqual(Mode.Train, m.descendants[1].mode)
+        Assert.CheckEqual(Mode.Train, m.descendants[2].mode)
 
     [<Test>]
     member _.TestModelChildrenModels () =
@@ -567,7 +568,7 @@ type TestModel () =
         // check these properties exist
         conv1.weight |> ignore
         conv1.bias |> ignore
-        let fcin = inputs.[0] --> dsharp.unsqueeze 0 --> conv1 --> dsharp.nelement
+        let fcin = inputs[0] --> dsharp.unsqueeze 0 --> conv1 --> dsharp.nelement
         let net = conv1 --> dsharp.relu --> dsharp.flatten 1 --> Linear(fcin, 2)
         let targets = dsharp.tensor([0.; 1.])
         let targetsp = dsharp.tensor([[1.,0.],[0.,1.]])
@@ -587,7 +588,7 @@ type TestModel () =
         // check these properties exist
         conv1.weight |> ignore
         conv1.bias |> ignore
-        let fcin = inputs.[0] --> dsharp.unsqueeze 0 --> conv1 --> dsharp.nelement
+        let fcin = inputs[0] --> dsharp.unsqueeze 0 --> conv1 --> dsharp.nelement
         let net = conv1 --> dsharp.relu --> dsharp.flatten 1 --> Linear(fcin, 2)
         let targets = dsharp.tensor([0.; 1.])
         let targetsp = dsharp.tensor([[1.,0.],[0.,1.]])
@@ -607,7 +608,7 @@ type TestModel () =
         // check these properties exist
         conv1.weight |> ignore
         conv1.bias |> ignore
-        let fcin = inputs.[0] --> dsharp.unsqueeze 0 --> conv1 --> dsharp.nelement
+        let fcin = inputs[0] --> dsharp.unsqueeze 0 --> conv1 --> dsharp.nelement
         let net = conv1 --> dsharp.relu --> dsharp.flatten 1 --> Linear(fcin, 2)
         let targets = dsharp.tensor([0.; 1.])
         let targetsp = dsharp.tensor([[1.,0.],[0.,1.]])
@@ -1362,3 +1363,12 @@ type TestModel () =
         Assert.AreEqual(hiddenDepthAfterCorrect, hiddenDepthAfter)
         Assert.AreEqual(cellDepthBeforeCorrect, cellDepthBefore)
         Assert.AreEqual(cellDepthAfterCorrect, cellDepthAfter)
+
+    [<Test>]
+    member _.TestModelFunc () =
+        let f (x:Tensor) = x + 3
+        let m = Model(f)
+        let x = dsharp.tensor([1,2,3], dtype=Dtype.Int32)
+        let fx = x |> f
+        let mx = x --> m
+        Assert.AreEqual(fx, mx)

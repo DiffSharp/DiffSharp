@@ -54,9 +54,9 @@ type SGD(model, ?lr:Tensor, ?momentum:Tensor, ?nesterov:bool, ?weightDecay:Tenso
             if not momInit then 
                 momBuffer <- model.parameters.map(fun (p:Parameter) -> Parameter(p.value.derivative))
                 momInit <- true
-            let mb = momBuffer.[name]
+            let mb = momBuffer[name]
             let mb = mb.mul(mom).add(d)
-            momBuffer.[name] <- mb
+            momBuffer[name] <- mb
             if nesterov then d <- d.add(mb*mom)
             else d <- mb
         | None -> ()   
@@ -81,10 +81,10 @@ type Adam(model, ?lr:Tensor, ?beta1:Tensor, ?beta2:Tensor, ?eps:Tensor, ?weightD
         match weightDecay with
         | Some wd -> d <- d.add(t.primal * wd)
         | None -> ()
-        let expAvg = stateExpAvg.[name].mul(beta1).add(d*(1.-beta1))
-        let expAvgSq = stateExpAvgSq.[name].mul(beta2).add(d*d*(1.-beta2))
-        stateExpAvg.[name] <- expAvg
-        stateExpAvgSq.[name] <- expAvgSq
+        let expAvg = stateExpAvg[name].mul(beta1).add(d*(1.-beta1))
+        let expAvgSq = stateExpAvgSq[name].mul(beta2).add(d*d*(1.-beta2))
+        stateExpAvg[name] <- expAvg
+        stateExpAvgSq[name] <- expAvgSq
         let biasCorrection1 = 1. - beta1 ** o.stateStep
         let biasCorrection2 = 1. - beta2 ** o.stateStep
         let denom = (expAvgSq.sqrt() / biasCorrection2.sqrt()).add(eps)

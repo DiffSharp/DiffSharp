@@ -1,6 +1,6 @@
 #!/usr/bin/env -S dotnet fsi
 
-#I "../tests/DiffSharp.Tests/bin/Debug/net5.0"
+#I "../tests/DiffSharp.Tests/bin/Debug/net6.0"
 #r "DiffSharp.Core.dll"
 #r "DiffSharp.Data.dll"
 #r "DiffSharp.Backends.Torch.dll"
@@ -31,8 +31,8 @@ type VAE(xDim:int, zDim:int, ?hDims:seq<int>, ?nonlinearity:Tensor->Tensor, ?non
         else
             Array.append (Array.append [|xDim|] hDims) [|zDim|]
             
-    let enc = Array.append [|for i in 0..dims.Length-2 -> Linear(dims.[i], dims.[i+1])|] [|Linear(dims.[dims.Length-2], dims.[dims.Length-1])|]
-    let dec = [|for i in 0..dims.Length-2 -> Linear(dims.[i+1], dims.[i])|] |> Array.rev
+    let enc = Array.append [|for i in 0..dims.Length-2 -> Linear(dims[i], dims[i+1])|] [|Linear(dims[dims.Length-2], dims[dims.Length-1])|]
+    let dec = [|for i in 0..dims.Length-2 -> Linear(dims[i+1], dims[i])|] |> Array.rev
     do 
         base.addModel([for m in enc -> box m])
         base.addModel([for m in dec -> box m])
@@ -40,9 +40,9 @@ type VAE(xDim:int, zDim:int, ?hDims:seq<int>, ?nonlinearity:Tensor->Tensor, ?non
     let encode x =
         let mutable x = x
         for i in 0..enc.Length-3 do
-            x <- nonlinearity <| enc.[i].forward(x)
-        let mu = enc.[enc.Length-2].forward(x)
-        let logVar = enc.[enc.Length-1].forward(x)
+            x <- nonlinearity <| enc[i].forward(x)
+        let mu = enc[enc.Length-2].forward(x)
+        let logVar = enc[enc.Length-1].forward(x)
         mu, logVar
 
     let sampleLatent mu (logVar:Tensor) =
@@ -53,8 +53,8 @@ type VAE(xDim:int, zDim:int, ?hDims:seq<int>, ?nonlinearity:Tensor->Tensor, ?non
     let decode z =
         let mutable h = z
         for i in 0..dec.Length-2 do
-            h <- nonlinearity <| dec.[i].forward(h)
-        nonlinearityLast <| dec.[dec.Length-1].forward(h)
+            h <- nonlinearity <| dec[i].forward(h)
+        nonlinearityLast <| dec[dec.Length-1].forward(h)
 
     member _.encodeDecode(x:Tensor) =
         let mu, logVar = encode (x.view([-1; xDim]))
@@ -75,7 +75,7 @@ type VAE(xDim:int, zDim:int, ?hDims:seq<int>, ?nonlinearity:Tensor->Tensor, ?non
         let normalize = defaultArg normalize true
         let xRecon, mu, logVar = m.encodeDecode x
         let loss = VAE.loss(xRecon, x, mu, logVar)
-        if normalize then loss / x.shape.[0] else loss
+        if normalize then loss / x.shape[0] else loss
 
     member _.sample(?numSamples:int) = 
         let numSamples = defaultArg numSamples 1

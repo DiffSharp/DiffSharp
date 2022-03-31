@@ -158,12 +158,12 @@ type TestTensorConvolutions () =
 
             Assert.True(t3s3p6d3.allclose(t3s3p6d3Correct, 0.01))
 
-            let t3b1 = t1.[0].unsqueeze(0).conv1d(t2)
-            let t3b1Correct = t3Correct.[0].unsqueeze(0)
+            let t3b1 = t1[0].unsqueeze(0).conv1d(t2)
+            let t3b1Correct = t3Correct[0].unsqueeze(0)
             Assert.True(t3b1.allclose(t3b1Correct, 0.01))
 
-            let t3b1s2 = t1.[0].unsqueeze(0).conv1d(t2, stride = 2)
-            let t3b1s2Correct = t3s2Correct.[0].unsqueeze(0)
+            let t3b1s2 = t1[0].unsqueeze(0).conv1d(t2, stride = 2)
+            let t3b1s2Correct = t3s2Correct[0].unsqueeze(0)
 
             Assert.True(t3b1s2.allclose(t3b1s2Correct, 0.01))
 
@@ -491,10 +491,10 @@ type TestTensorConvolutions () =
                                                       [  26.8834,  -22.3392,   64.3614,   32.6334],
                                                       [  11.1650,   45.6064,   -9.0581,   23.5884]]]])
 
-            let t3b1 = t1.[0].unsqueeze(0).conv2d(t2)
-            let t3b1Correct = t3Correct.[0].unsqueeze(0)
-            let t3b1s2 = t1.[0].unsqueeze(0).conv2d(t2, stride = 2)
-            let t3b1s2Correct = t3s2Correct.[0].unsqueeze(0)
+            let t3b1 = t1[0].unsqueeze(0).conv2d(t2)
+            let t3b1Correct = t3Correct[0].unsqueeze(0)
+            let t3b1s2 = t1[0].unsqueeze(0).conv2d(t2, stride = 2)
+            let t3b1s2Correct = t3s2Correct[0].unsqueeze(0)
 
             // Assert.True(false)
             Assert.True(t3.allclose(t3Correct, 0.01))

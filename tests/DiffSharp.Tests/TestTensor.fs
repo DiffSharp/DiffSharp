@@ -670,8 +670,9 @@ type TestTensor () =
     member _.TestTensorZerosDisposal () =
         for i in 0..1024 do
             let _ = dsharp.zeros([1024; 1024])
-            printfn "%A" i
-            //System.GC.Collect()
+            // printfn "%A" i
+            System.GC.Collect()
+        Assert.True(true)
 
 
     [<Test>]
@@ -882,11 +883,11 @@ type TestTensor () =
         Assert.CheckEqual(3, (t1slice1.GetItem(0) |> Convert.ToInt32))
         Assert.CheckEqual(4, (t1slice1.GetItem(1) |> Convert.ToInt32))
         Assert.CheckEqual(1, t1slice1.Dim)
-        Assert.CheckEqual(2, t1slice1.Shape.[0])
+        Assert.CheckEqual(2, t1slice1.Shape[0])
 
         Assert.CheckEqual(3, (t1slice2.GetItem(0) |> Convert.ToInt32))
         Assert.CheckEqual(1, t1slice2.Dim)
-        Assert.CheckEqual(1, t1slice2.Shape.[0])
+        Assert.CheckEqual(1, t1slice2.Shape[0])
 
         // TODO: slicing reducing down to scalar
         //let t1slice3 = t1.primalRaw.GetSlice(array2D [ [ 3; 3; 1 ] ])
@@ -925,31 +926,31 @@ type TestTensor () =
         Assert.CheckEqual(2.0, t0.toDouble())
 
         let t1 = combo.tensor([2., 3., 4., 5., 6.])
-        let t1_0 = t1.[0]
-        let t1_1 = t1.[1]
+        let t1_0 = t1[0]
+        let t1_1 = t1[1]
         let t1_0_s = t1_0.toDouble()
         let t1_1_s = t1_1.toDouble()
         Assert.CheckEqual(2.0, t1_0_s)
         Assert.CheckEqual(3.0, t1_1_s)
-        Assert.CheckEqual(4.0, (t1.[2].toDouble()))
-        Assert.CheckEqual(5.0, (t1.[3].toDouble()))
+        Assert.CheckEqual(4.0, (t1[2].toDouble()))
+        Assert.CheckEqual(5.0, (t1[3].toDouble()))
 
         let t2 = combo.tensor([[2.]; [3.]])
-        Assert.CheckEqual(2.0, (t2.[0,0].toDouble()))
-        Assert.CheckEqual(3.0, (t2.[1,0].toDouble()))
+        Assert.CheckEqual(2.0, (t2[0,0].toDouble()))
+        Assert.CheckEqual(3.0, (t2[1,0].toDouble()))
 
         let t2b = combo.tensor([[1.;2.]; [3.;4.]])
-        Assert.CheckEqual(1.0, (t2b.[0,0].toDouble()))
-        Assert.CheckEqual(2.0, (t2b.[0,1].toDouble()))
-        Assert.CheckEqual(3.0, (t2b.[1,0].toDouble()))
-        Assert.CheckEqual(4.0, (t2b.[1,1].toDouble()))
+        Assert.CheckEqual(1.0, (t2b[0,0].toDouble()))
+        Assert.CheckEqual(2.0, (t2b[0,1].toDouble()))
+        Assert.CheckEqual(3.0, (t2b[1,0].toDouble()))
+        Assert.CheckEqual(4.0, (t2b[1,1].toDouble()))
 
         let t3 = combo.tensor([[[2.; 3.]]])
-        Assert.CheckEqual(2.0, (t3.[0,0,0].toDouble()))
-        Assert.CheckEqual(3.0, (t3.[0,0,1].toDouble()))
+        Assert.CheckEqual(2.0, (t3[0,0,0].toDouble()))
+        Assert.CheckEqual(3.0, (t3[0,0,1].toDouble()))
 
         let t4 = combo.tensor([[[[1.]]]])
-        Assert.CheckEqual(1.0, (t4.[0,0,0,0].toDouble()))
+        Assert.CheckEqual(1.0, (t4[0,0,0,0].toDouble()))
 
     [<Test>]
     member _.TestTensorArange () =
@@ -1092,7 +1093,7 @@ type TestTensor () =
             let m1dtype = m1.dtype
             let m1dtypeCorrect = Dtype.Int32
             let m1mean = m1.float().mean()
-            let m1stddev = m1.float().stddev()
+            let m1stddev = m1.float().std()
             let m1meanCorrect = combo.tensor(1.3001).float()
             let m1stddevCorrect = combo.tensor(0.7810).float()
             Assert.CheckEqual(m1dtypeCorrect, m1dtype)
@@ -1104,7 +1105,7 @@ type TestTensor () =
             let m2dtype = m2.dtype
             let m2dtypeCorrect = Dtype.Int32
             let m2mean = m2.float().mean(dim=1)
-            let m2stddev = m2.float().stddev(dim=1)
+            let m2stddev = m2.float().std(dim=1)
             let m2meanCorrect = combo.tensor([1.3001, 0.3001]).float()
             let m2stddevCorrect = combo.tensor([0.7810, 0.6404]).float()
             Assert.CheckEqual(m2dtypeCorrect, m2dtype)
@@ -2013,9 +2014,9 @@ type TestTensor () =
                                       if p3 > 0 then p3])
                           |> Seq.toList 
                       let t6Correct = 
-                          [if p1 > 0 then combo.tensor(t6vs.[0..p1-1]);
-                           if p2 > 0 then combo.tensor(t6vs.[p1..p1+p2-1]);
-                           if p3 > 0 then combo.tensor(t6vs.[p1+p2..])]
+                          [if p1 > 0 then combo.tensor(t6vs[0..p1-1]);
+                           if p2 > 0 then combo.tensor(t6vs[p1..p1+p2-1]);
+                           if p3 > 0 then combo.tensor(t6vs[p1+p2..])]
 
                       Assert.CheckEqual(t6Correct, t6)
 
@@ -2034,9 +2035,9 @@ type TestTensor () =
                            if p3 > 0 then p3]
                       let t7 = t7in.split(sizes,dim=1) |> Seq.toList 
                       let t7Correct = 
-                          [if p1 > 0 then combo.tensor([ t7vs1.[0..p1-1];     t7vs2.[0..p1-1] ]);
-                           if p2 > 0 then combo.tensor([ t7vs1.[p1..p1+p2-1]; t7vs2.[p1..p1+p2-1] ]);
-                           if p3 > 0 then combo.tensor([ t7vs1.[p1+p2..];     t7vs2.[p1+p2..] ])]
+                          [if p1 > 0 then combo.tensor([ t7vs1[0..p1-1];     t7vs2[0..p1-1] ]);
+                           if p2 > 0 then combo.tensor([ t7vs1[p1..p1+p2-1]; t7vs2[p1..p1+p2-1] ]);
+                           if p3 > 0 then combo.tensor([ t7vs1[p1+p2..];     t7vs2[p1+p2..] ])]
 
                       Assert.CheckEqual(t7Correct, t7)
 
@@ -2807,12 +2808,12 @@ type TestTensor () =
     member _.TestTensorVarianceDimBackwards () =
         for combo in Combos.FloatingPointExcept16s do 
             let t = combo.randn([2;2;2])
-            let tvariance_3 = t.variance(-3)
-            let tvariance_2 = t.variance(-2)
-            let tvariance_1 = t.variance(-1)
-            let tvariance0 = t.variance(0)
-            let tvariance1 = t.variance(1)
-            let tvariance2 = t.variance(2)
+            let tvariance_3 = t.var(-3)
+            let tvariance_2 = t.var(-2)
+            let tvariance_1 = t.var(-1)
+            let tvariance0 = t.var(0)
+            let tvariance1 = t.var(1)
+            let tvariance2 = t.var(2)
 
             Assert.CheckEqual(tvariance_3, tvariance0)
             Assert.CheckEqual(tvariance_2, tvariance1)
@@ -2831,7 +2832,7 @@ type TestTensor () =
             // mean, dim={0,1,2}
             (* Python:
             import pytorch as torch
-            input = np.[[[1.,2.,3.,4.], [5.,6.,7.,8.], [9.,10.,11.,12.]], [[13.,14.,15.,16.], [17.,18.,19.,20.], [21.,22.,23.,24.]]]
+            input = np[[[1.,2.,3.,4.], [5.,6.,7.,8.], [9.,10.,11.,12.]], [[13.,14.,15.,16.], [17.,18.,19.,20.], [21.,22.,23.,24.]]]
             input.mean(1)
             --> array([[15., 18., 21., 24.],[51., 54., 57., 60.]])
             input.sum(2)
@@ -2880,21 +2881,21 @@ type TestTensor () =
                 [[0.0848;0.4156;0.5542;0.4166];
                 [0.5187;0.0520;0.4763;0.1509];
                 [0.4767;0.8096;0.1729;0.6671]]])
-            let tStddev = t.stddev()
+            let tStddev = t.std()
             let tStddevCorrect = combo.tensor(0.2398)
 
             Assert.True(tStddev.allclose(tStddevCorrect, 0.01))
             Assert.CheckEqual(tStddev.dtype, combo.dtype)
 
             // stddev, dim={0,1,2,3}, keepDim=true
-            let tStddev0 = t.stddev(0)
+            let tStddev0 = t.std(0)
             let tStddev0Correct = combo.tensor([[0.2078; 0.2375; 0.2326; 0.0530];
                 [0.0630; 0.2985; 0.2179; 0.0383];
                 [0.2370; 0.4623; 0.3339; 0.3715]])
-            let tStddev1 = t.stddev(1)
+            let tStddev1 = t.std(1)
             let tStddev1Correct = combo.tensor([[0.2331; 0.2981; 0.2911; 0.1304];
                 [0.2393; 0.3789; 0.2014; 0.2581]])
-            let tStddev2 = t.stddev(2)
+            let tStddev2 = t.std(2)
             let tStddev2Correct = combo.tensor([[0.2277; 0.2918; 0.2495];[0.1996; 0.2328; 0.2753]])
 
             Assert.True(tStddev0.allclose(tStddev0Correct, 0.01))
@@ -2915,11 +2916,11 @@ type TestTensor () =
             input.std(2,keepdim=True)
             # --> tensor([[[0.2278],[0.2918],[0.2495]],[[0.1996],[0.2328],[0.2753]]]) 
             *)
-            let tStddev0 = t.stddev(0, keepDim=true)
+            let tStddev0 = t.std(0, keepDim=true)
             let tStddev0Correct = combo.tensor([[[0.2078; 0.2375; 0.2326; 0.0530];[0.0630; 0.2985; 0.2179; 0.0383];[0.2370; 0.4623; 0.3339; 0.3715]]])
-            let tStddev1 = t.stddev(1, keepDim=true)
+            let tStddev1 = t.std(1, keepDim=true)
             let tStddev1Correct = combo.tensor([[[0.2331; 0.2981; 0.2911; 0.1304]];[[0.2393; 0.3789; 0.2014; 0.2581]]])
-            let tStddev2 = t.stddev(2, keepDim=true)
+            let tStddev2 = t.std(2, keepDim=true)
             let tStddev2Correct = combo.tensor([[[0.2277]; [0.2918]; [0.2495]];[[0.1996]; [0.2328]; [0.2753]]])
 
             Assert.True(tStddev0.allclose(tStddev0Correct, 0.01))
@@ -2935,7 +2936,7 @@ type TestTensor () =
             input.var()
             *)
             let t = combo.tensor([[[0.3787;0.7515;0.2252;0.3416]; [0.6078;0.4742;0.7844;0.0967]; [0.1416;0.1559;0.6452;0.1417]]; [[0.0848;0.4156;0.5542;0.4166];[0.5187;0.0520;0.4763;0.1509];[0.4767;0.8096;0.1729;0.6671]]])
-            let tVariance = t.variance()
+            let tVariance = t.var()
             let tVarianceCorrect = combo.tensor(0.0575)
 
             Assert.True(tVariance.allclose(tVarianceCorrect, 0.01))
@@ -2949,11 +2950,11 @@ type TestTensor () =
             input.var(2)
             # --> tensor([[0.0519, 0.0852, 0.0622],[0.0398, 0.0542, 0.0758]])
             *)
-            let tVariance0 = t.variance(0)
+            let tVariance0 = t.var(0)
             let tVariance0Correct = combo.tensor([[0.0432; 0.0564; 0.0541; 0.0028];[0.0040; 0.0891; 0.0475; 0.0015];[0.0561; 0.2137; 0.1115; 0.1380]])
-            let tVariance1 = t.variance(1)
+            let tVariance1 = t.var(1)
             let tVariance1Correct = combo.tensor([[0.0543; 0.0888; 0.0847; 0.0170];[0.0573; 0.1436; 0.0406; 0.0666]])
-            let tVariance2 = t.variance(2)
+            let tVariance2 = t.var(2)
             let tVariance2Correct = combo.tensor([[0.0519; 0.0852; 0.0622];[0.0398; 0.0542; 0.0758]])
 
             Assert.True(tVariance0.allclose(tVariance0Correct, 0.01, 0.01))
@@ -2963,19 +2964,19 @@ type TestTensor () =
             Assert.CheckEqual(tVariance1.dtype, combo.dtype)
             Assert.CheckEqual(tVariance2.dtype, combo.dtype)
 
-            let tVarianceBiased = t.variance(unbiased=false)
+            let tVarianceBiased = t.var(unbiased=false)
             let tVarianceBiasedCorrect = combo.tensor(0.0551)
 
             Assert.True(tVarianceBiased.allclose(tVarianceBiasedCorrect, 0.01))
 
-            let tVarianceBiased0 = t.variance(0, unbiased=false)
+            let tVarianceBiased0 = t.var(0, unbiased=false)
             let tVarianceBiased0Correct = combo.tensor([[0.0216, 0.0282, 0.0271, 0.0014],
                                                         [0.0020, 0.0446, 0.0237, 0.0007],
                                                         [0.0281, 0.1068, 0.0558, 0.0690]])
-            let tVarianceBiased1 = t.variance(1, unbiased=false)
+            let tVarianceBiased1 = t.var(1, unbiased=false)
             let tVarianceBiased1Correct = combo.tensor([[0.0362, 0.0592, 0.0565, 0.0113],
                                                         [0.0382, 0.0957, 0.0271, 0.0444]])
-            let tVarianceBiased2 = t.variance(2, unbiased=false)
+            let tVarianceBiased2 = t.var(2, unbiased=false)
             let tVarianceBiased2Correct = combo.tensor([[0.0389, 0.0639, 0.0467],
                                                         [0.0299, 0.0407, 0.0568]])
 
@@ -2987,8 +2988,8 @@ type TestTensor () =
             Assert.CheckEqual(tVarianceBiased2.dtype, combo.dtype)
 
         let tPrecisionCheckData = dsharp.tensor([1e10+4.0; 1e10+7.0; 1e10+13.0;1e10+16.0],dtype=Float64)
-        let tPrecisionCheck = tPrecisionCheckData.variance()
-        let tPrecisionCheck0 = tPrecisionCheckData.variance(0)
+        let tPrecisionCheck = tPrecisionCheckData.var()
+        let tPrecisionCheck0 = tPrecisionCheckData.var(0)
         let tPrecisionCheckCorrect = dsharp.tensor(30.0,dtype=Float64)
         Assert.True(tPrecisionCheck.allclose(tPrecisionCheckCorrect, 0.01, 0.01))
         Assert.True(tPrecisionCheck0.allclose(tPrecisionCheckCorrect, 0.01, 0.01))
@@ -3008,11 +3009,11 @@ type TestTensor () =
             # --> tensor([[[0.0519],[0.0852],[0.0622]],[[0.0398],[0.0542],[0.0758]]])
             *)
             let t = combo.tensor([[[0.3787;0.7515;0.2252;0.3416]; [0.6078;0.4742;0.7844;0.0967]; [0.1416;0.1559;0.6452;0.1417]]; [[0.0848;0.4156;0.5542;0.4166];[0.5187;0.0520;0.4763;0.1509];[0.4767;0.8096;0.1729;0.6671]]])
-            let tVariance0 = t.variance(0, keepDim=true)
+            let tVariance0 = t.var(0, keepDim=true)
             let tVariance0Correct = combo.tensor([[[0.0432; 0.0564; 0.0541; 0.0028];[0.0040; 0.0891; 0.0475; 0.0015];[0.0561; 0.2137; 0.1115; 0.1380]]])
-            let tVariance1 = t.variance(1, keepDim=true)
+            let tVariance1 = t.var(1, keepDim=true)
             let tVariance1Correct = combo.tensor([[[0.0543; 0.0888; 0.0847; 0.0170]];[[0.0573; 0.1436; 0.0406; 0.0666]]])
-            let tVariance2 = t.variance(2, keepDim=true)
+            let tVariance2 = t.var(2, keepDim=true)
             let tVariance2Correct = combo.tensor([[[0.0519];[0.0852];[0.0622]];[[0.0398];[0.0542];[0.0758]]])
 
             Assert.True(tVariance0.allclose(tVariance0Correct, 0.01, 0.01))
@@ -3022,6 +3023,139 @@ type TestTensor () =
             Assert.CheckEqual(tVariance1.dtype, combo.dtype)
             Assert.CheckEqual(tVariance2.dtype, combo.dtype)
 
+    [<Test>]
+    member _.TestTensorCovariance () =
+        (* Python:
+        import numpy as np
+        a = np.array([[0.3787,0.7515,0.2252,0.3416],
+            [0.6078,0.4742,0.7844,0.0967],
+            [0.1416,0.1559,0.6452,0.1417]])
+        a0 = a[[0],0]
+        a1 = a[0,:]
+        a2 = a[0:1,:]
+        fweights = np.array([1,7,7,4])
+        aweights = np.array([0.7241, 0.2481, 0.4878, 0.6862])
+
+
+        np.cov(a0)
+        np.cov(a1)
+        np.cov(a2)
+
+        np.cov(a)
+        np.cov(a,ddof=0)
+        np.cov(a,fweights=fweights)
+        np.cov(a,aweights=aweights)
+        *)
+        for combo in Combos.FloatingPoint do
+            let t = combo.tensor([[0.3787;0.7515;0.2252;0.3416];
+                                  [0.6078;0.4742;0.7844;0.0967];
+                                  [0.1416;0.1559;0.6452;0.1417]])
+            let t0 = t.[0,0]
+            let t1 = t.[0]
+            let t2 = t.[0].view([1;-1])
+            let fweights = combo.tensor([1;7;7;4],dtype=Dtype.Int32)
+            let aweights = combo.tensor([0.7241; 0.2481; 0.4878; 0.6862])
+
+            // to suppress printfn from this test "Warning: degress of freedom <= 0"
+            Console.SetOut(IO.TextWriter.Null)
+            let t0Unbiased = t0.cov()
+            Assert.True(t0Unbiased.isnan().toBool())
+            // restore stdout
+            let stdout = new IO.StreamWriter(Console.OpenStandardOutput())
+            stdout.AutoFlush <- true
+            Console.SetOut(stdout)
+            
+            let t0Biased = t0.cov(correction= int64 0)
+            let t0BiasedCorrect = combo.tensor(0)
+            Assert.True(t0Biased.allclose(t0BiasedCorrect,0.01,0.01))
+            
+            let t1Unbiased = t1.cov()
+            let t1UnbiasedCorrect = combo.tensor(0.0518731)
+            Assert.True(t1Unbiased.allclose(t1UnbiasedCorrect,0.01,0.01))
+
+
+            let t1Biased = t1.cov(correction= int64 0)
+            let t1BiasedCorrect = combo.tensor(0.03890482)
+            Assert.True(t1Biased.allclose(t1BiasedCorrect,0.01,0.01))
+
+            Assert.True(t1.cov().allclose(t2.cov(),0.01,0.01))
+            Assert.True(t1.cov(correction= int64 0).allclose(t2.cov(correction= int64 0),0.01,0.01))
+
+            let tUnbiased = t.cov()
+            let tUnbiasedCorrect = combo.tensor([[ 0.0518731 , -0.01221014, -0.03185672],
+                                                 [-0.01221014,  0.08516011,  0.04919771],
+                                                 [-0.03185672,  0.04919771,  0.06224549]])
+            Assert.True(tUnbiased.allclose(tUnbiasedCorrect,0.01,0.01))
+
+            let tBiased = t.cov(correction= int64 0)
+            let tBiasedCorrect = 
+                combo.tensor([[ 0.03890482, -0.0091576 , -0.02389254],
+                              [-0.0091576 ,  0.06387008,  0.03689828],
+                              [-0.02389254,  0.03689828,  0.04668411]])
+            Assert.True(tBiased.allclose(tBiasedCorrect,0.01,0.01))
+
+            let tUnbiasedFWeights = t.cov(fweights=fweights)
+            let tUnbiasedFWeightsCorrect = 
+                combo.tensor([[ 0.05789406, -0.01862841, -0.04269081],
+                              [-0.01862841,  0.0682321 ,  0.0523144 ],
+                              [-0.04269081,  0.0523144 ,  0.06026907]])
+            Assert.True(tUnbiasedFWeights.allclose(tUnbiasedFWeightsCorrect,0.01,0.01))
+
+            let tBiasedFWeights = t.cov(fweights=fweights,correction= int64 0)
+            let tBiasedFWeightsCorrect = 
+                combo.tensor([[ 0.054847  , -0.01764797, -0.04044393],
+                              [-0.01764797,  0.06464094,  0.04956101],
+                              [-0.04044393,  0.04956101,  0.05709701]])
+            Assert.True(tBiasedFWeights.allclose(tBiasedFWeightsCorrect,0.01,0.01))
+
+            let tUnbiasedAWeights = t.cov(aweights=aweights)
+            let tUnbiasedAWeightsCorrect = 
+                combo.tensor([[ 0.03039008, -0.00885102, -0.02299303],
+                              [-0.00885102,  0.10213812,  0.05019765],
+                              [-0.02299303,  0.05019765,  0.06144794]])
+            Assert.True(tUnbiasedAWeights.allclose(tUnbiasedAWeightsCorrect,0.01,0.01))
+
+            let tBiasedAWeights = t.cov(aweights=aweights,correction= int64 0)
+            let tBiasedAWeightsCorrect = 
+                combo.tensor([[ 0.0218481 , -0.00636319, -0.0165302 ],
+                              [-0.00636319,  0.07342935,  0.0360882 ],
+                              [-0.0165302 ,  0.0360882 ,  0.04417628]])
+            Assert.True(tBiasedAWeights.allclose(tBiasedAWeightsCorrect,0.01,0.01))
+
+            let tUnbiasedFWeightsAWeights = t.cov(fweights=fweights,aweights=aweights)
+            let tUnbiasedFWeightsAWeightsCorrect = 
+                combo.tensor([[ 0.04020249, -0.01536804, -0.03199123],
+                              [-0.01536804,  0.09027013,  0.06286618],
+                              [-0.03199123,  0.06286618,  0.0633787 ]])
+            Assert.True(tUnbiasedFWeightsAWeights.allclose(tUnbiasedFWeightsAWeightsCorrect,0.01,0.01))
+
+            let tBiasedFWeightsAWeights = t.cov(fweights=fweights,aweights=aweights,correction= int64 0)
+            let tBiasedFWeightsAWeightsCorrect = 
+                combo.tensor([[ 0.03776553, -0.01443647, -0.03005202],
+                              [-0.01443647,  0.08479822,  0.05905542],
+                              [-0.03005202,  0.05905542,  0.05953687]])
+            Assert.True(tBiasedFWeightsAWeights.allclose(tBiasedFWeightsAWeightsCorrect,0.01,0.01))
+
+    [<Test>]
+    member _.TestTensorCorrCoef () =
+        (* Python:
+        import numpy as np
+        a = np.array([[0.3787,0.7515,0.2252,0.3416],
+            [0.6078,0.4742,0.7844,0.0967],
+            [0.1416,0.1559,0.6452,0.1417]])
+        np.corrcoef(a)
+        *)
+        for combo in Combos.FloatingPointExcept16s do
+            let t = combo.tensor([[0.3787;0.7515;0.2252;0.3416];
+                                  [0.6078;0.4742;0.7844;0.0967];
+                                  [0.1416;0.1559;0.6452;0.1417]])
+            let tCorrCoef = t.corrcoef()
+            let tCorrCoefCorrect =
+                combo.tensor([[ 1.        , -0.18370941, -0.56062968],
+                              [-0.18370941,  1.        ,  0.67572941],
+                              [-0.56062968,  0.67572941,  1.        ]])
+            Assert.True(tCorrCoef.allclose(tCorrCoefCorrect,0.01,0.01))
+            
     [<Test>]
     member _.TestTensorPermuteT () =
         for combo in Combos.All do 
@@ -3601,24 +3735,24 @@ type TestTensor () =
     member _.TestTensorSlice () =
         for combo in Combos.All do 
             let t1 = combo.tensor([1.;2.])
-            let t1s1 = t1.[0]
-            let t1s2 = t1.[*]
-            let t1s3 = t1.[1..]
-            let t1s4 = t1.[..0] // In Python this is [:1] because in Python upper limits are exclusive whereas in F# they are inclusive
+            let t1s1 = t1[0]
+            let t1s2 = t1[*]
+            let t1s3 = t1[1..]
+            let t1s4 = t1[..0] // In Python this is [:1] because in Python upper limits are exclusive whereas in F# they are inclusive
             let t1s1Correct = combo.tensor(1.)
             let t1s2Correct = combo.tensor([1.;2.])
             let t1s3Correct = combo.tensor([2.])
             let t1s4Correct = combo.tensor([1.])
 
             let t2 = combo.tensor([[1.;2.];[3.;4.]])
-            let t2s1 = t2.[0]
-            let t2s2 = t2.[*]
-            let t2s3 = t2.[0,0]
-            let t2s4 = t2.[0,*]
-            let t2s5 = t2.[*,0]
-            let t2s6 = t2.[*,*]
-            let t2s7 = t2.[1..]
-            let t2s8 = t2.[..0] // In Python this is [:1] because in Python upper limits are exclusive whereas in F# they are inclusive
+            let t2s1 = t2[0]
+            let t2s2 = t2[*]
+            let t2s3 = t2[0,0]
+            let t2s4 = t2[0,*]
+            let t2s5 = t2[*,0]
+            let t2s6 = t2[*,*]
+            let t2s7 = t2[1..]
+            let t2s8 = t2[..0] // In Python this is [:1] because in Python upper limits are exclusive whereas in F# they are inclusive
             let t2s1Correct = combo.tensor([1.;2.])
             let t2s2Correct = combo.tensor([[1.;2.];[3.;4.]])
             let t2s3Correct = combo.tensor(1.)
@@ -3629,26 +3763,26 @@ type TestTensor () =
             let t2s8Correct = combo.tensor([[1.; 2.]])
 
             let t2b = combo.tensor([[1.;2.;3.;4.]; [5.;6.;7.;8.]; [9.;10.;11.;12.]])
-            let t2bs1 = t2b.[1..,2..]
+            let t2bs1 = t2b[1..,2..]
             let t2bs1Correct = combo.tensor([[7.;8.];[11.;12.]])
-            let t2bs2 = t2b.[1..2,2..3]
+            let t2bs2 = t2b[1..2,2..3]
             let t2bs2Correct = combo.tensor([[7.;8.];[11.;12.]])
 
             let t3 = combo.tensor([[[1.;2.];[3.;4.]];[[5.;6.];[7.;8.]]])
-            let t3s1  = t3.[0]
-            let t3s2  = t3.[*]
-            let t3s3  = t3.[0,0]
-            let t3s4  = t3.[0,*]
-            let t3s5  = t3.[*,0]
-            let t3s6  = t3.[*,*]
-            let t3s7  = t3.[0,0,0]
-            let t3s8  = t3.[0,0,*]
-            let t3s9  = t3.[0,*,0]
-            let t3s10 = t3.[0,*,*]
-            let t3s11 = t3.[*,0,0]
-            let t3s12 = t3.[*,0,*]
-            let t3s13 = t3.[*,*,0]
-            let t3s14 = t3.[*,*,*]
+            let t3s1  = t3[0]
+            let t3s2  = t3[*]
+            let t3s3  = t3[0,0]
+            let t3s4  = t3[0,*]
+            let t3s5  = t3[*,0]
+            let t3s6  = t3[*,*]
+            let t3s7  = t3[0,0,0]
+            let t3s8  = t3[0,0,*]
+            let t3s9  = t3[0,*,0]
+            let t3s10 = t3[0,*,*]
+            let t3s11 = t3[*,0,0]
+            let t3s12 = t3[*,0,*]
+            let t3s13 = t3[*,*,0]
+            let t3s14 = t3[*,*,*]
             let t3s1Correct  = combo.tensor([[1.;2.];[3.;4.]])
             let t3s2Correct  = combo.tensor([[[1.;2.];[3.;4.]];[[5.;6.];[7.;8.]]])
             let t3s3Correct  = combo.tensor([1.;2.])
@@ -3670,8 +3804,8 @@ type TestTensor () =
                                     [[[4.]]; 
                                      [[5.]]; 
                                      [[6.]]]])
-            let t4s1 = t4.[0]
-            let t4s2 = t4.[0,*,*,*]
+            let t4s1 = t4[0]
+            let t4s2 = t4[0,*,*,*]
             let t4s1Correct = combo.tensor([[[1]];
                                              [[2]];
                                              [[3]]])
@@ -5211,9 +5345,9 @@ type TestTensor () =
     member _.TestTensorIEnumerable () =
         for combo in Combos.All do 
             let t1 = combo.tensor([1,2,3])
-            t1.unstack() |> Seq.iteri (fun i v -> Assert.CheckEqual(t1.[i], v))
+            t1.unstack() |> Seq.iteri (fun i v -> Assert.CheckEqual(t1[i], v))
             let t2 = combo.tensor([[1,2,3], [4,5,6]])
-            t2.unstack() |> Seq.iteri (fun i v -> Assert.CheckEqual(t2.[i,*], v))
+            t2.unstack() |> Seq.iteri (fun i v -> Assert.CheckEqual(t2[i,*], v))
 
     [<Test>]
     member _.TestTensorFSharpCoreOps () =

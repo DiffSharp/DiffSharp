@@ -14,7 +14,7 @@ type Linear(inFeatures, outFeatures, ?bias:bool) =
     let w = Parameter(Weight.kaiming(inFeatures, outFeatures))
     let k = 1./sqrt (float outFeatures)
     let b = Parameter(if biasv then Weight.uniform([|outFeatures|], k) else dsharp.tensor([]))
-    do base.addParameter([w;b],["Linear-weight";"Linear-bias"])
+    do base.addParameter((w, "Linear-weight"), (b, "Linear-bias"))
 
     /// <summary>Get or set the weight parameter of the model</summary>
     member _.weight
