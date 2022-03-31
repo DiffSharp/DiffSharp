@@ -58,13 +58,13 @@ type VAE(xShape:seq<int>, zDim:int, encoder:Model, decoder:Model) =
         // if decodedExample.shape <> xShape then failwithf "Expecting decoder's output shape (%A) to be xShape (%A)" decodedExample.shape xShape
         base.addModel(encoder,decoder,prez,postz)
 
-    override m.encode x =
+    override _.encode x =
         let mulogvar = x --> encoder --> prez
         let h = mulogvar.split([zDim; zDim], dim=1)
         let mu, logVar = h[0], h[1]
         mu, logVar
 
-    override m.decode z =
+    override _.decode z =
         z --> postz -->decoder
 
     override _.ToString() = sprintf "VAE(%A, %A, %A, %A)" xShape zDim encoder decoder
@@ -88,7 +88,7 @@ type VAEMLP(xDim:int, zDim:int, ?hDims:seq<int>, ?nonlinearity:Tensor->Tensor, ?
         base.addModel(enc)
         base.addModel(dec)
 
-    override m.encode (x:Tensor) =
+    override _.encode (x:Tensor) =
         let batchSize = x.shape[0]
         let mutable x = x.view([batchSize; xDim])
         for i in 0..enc.Length-3 do
@@ -97,7 +97,7 @@ type VAEMLP(xDim:int, zDim:int, ?hDims:seq<int>, ?nonlinearity:Tensor->Tensor, ?
         let logVar = enc[enc.Length-1].forward(x)
         mu, logVar
 
-    override m.decode z =
+    override _.decode z =
         let mutable h = z
         for i in 0..dec.Length-2 do
             h <- nonlinearity <| dec[i].forward(h)
