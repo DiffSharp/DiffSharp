@@ -3,7 +3,7 @@
 //
 // BSD 2-Clause License. See LICENSE in root of repository.
 
-namespace DiffSharp.Model
+namespace rec DiffSharp.Model
 
 open DiffSharp
 open DiffSharp.Util
@@ -256,13 +256,9 @@ type ModelBase() =
         namePrefixes[name] <- i+1
         sprintf "%s__%A" name (i+1)
 
-    member _.checkItems(items:seq<_>, ?names:seq<string>)=
-        let items = items |> Seq.toArray
-        let names = defaultArg names (Seq.empty) |> Seq.toArray
+    let checkNames(names:string[])=
         if names.Length > 0 then
-            if items.Length <> names.Length then failwithf "Expecting items (%A) and names (%A) to have the same length" items.Length names.Length
             for name in names do if name.Contains("__") then failwithf "String '__' not allowed in name '%s'" name
-        items, names
 
     /// <summary>TBD</summary>
     member m.train() = 
@@ -363,39 +359,78 @@ type ModelBase() =
     member m.init(f:string*Tensor->Tensor) = m.parameters.iter(fun (n, p) -> p.value <- f(n, p.value))
 
     /// <summary>TBD</summary>
-    member m.addParameter(items:seq<Parameter>, ?names:seq<string>) =
-        let items, names = m.checkItems(items, ?names=names)
-        for i in 0..items.Length-1 do
-            let param = items[i]
+    member private _.addParameter(parameters:Parameter[], ?names:string[]) =
+        let names = defaultArg names Array.empty
+        checkNames names
+        for i in 0..parameters.Length-1 do
+            let param = parameters[i]
             let n = if names.Length > 0 then names[i] else sprintf "Parameter-%s" (Random.UUID())
             parameterDict.add(n, param)
         updateState()
 
     /// <summary>TBD</summary>
-    member m.addBuffer(items:seq<Parameter>, ?names:seq<string>) =
-        let items, names = m.checkItems(items, ?names=names)
-        for i in 0..items.Length-1 do
-            let param = items[i]
+    member private _.addBuffer(buffers:Parameter[], ?names:string[]) =
+        let names = defaultArg names Array.empty
+        checkNames names
+        for i in 0..buffers.Length-1 do
+            let param = buffers[i]
             let n = if names.Length > 0 then names[i] else sprintf "Buffer-%s" (Random.UUID())
             bufferDict.add(n, param)
         updateState()
 
     /// <summary>TBD</summary>
-    member m.addModel(items:seq<obj>, ?names:seq<string>) =
-        let items, names = m.checkItems(items, ?names=names)
-        for i in 0..items.Length-1 do
-            let model = 
-                match items[i] with
-                | :? ModelBase as mm -> mm
-                | _ -> failwithf "Unsupported type. Expecting a ModelBase."
+    member private _.addModel(models:ModelBase[], ?names:string[]) =
+        let names = defaultArg names Array.empty
+        checkNames names
+        for i in 0..models.Length-1 do
+            let model = models[i]
             let n = if names.Length > 0 then names[i] else sprintf "Model-%s" (Random.UUID())
-
             modelDict.Add(n, model)
             for n, p in model.parameters do 
                 parameterDict.add(nextName n, p)
             for n, b in model.buffers do 
                 bufferDict.add(nextName n, b)
         updateState()
+
+    member m.addModel([<System.ParamArray>] models: ModelBase[]) =
+        m.addModel(models, ?names=None)
+
+    member m.addModel([<System.ParamArray>] models: (ModelBase*string)[]) =
+        let items, names = Array.unzip models
+        m.addModel(items, names)
+
+    member m.addModel(model: ModelBase, name:string) =
+        m.addModel((model, name))
+
+    member m.addModel([<System.ParamArray>] models: Model[]) =
+        m.addModel(models |> Seq.cast<ModelBase> |> Seq.toArray, ?names=None)
+
+    member m.addModel([<System.ParamArray>] models: (Model*string)[]) =
+        let items, names = Array.unzip models
+        m.addModel(items |> Seq.cast<ModelBase> |> Seq.toArray, names)
+
+    member m.addModel(model: Model, name:string) =
+        m.addModel((model, name))
+
+    member m.addParameter([<System.ParamArray>] parameters: Parameter[]) =
+        m.addParameter(parameters, ?names=None)
+
+    member m.addParameter([<System.ParamArray>] parameters: (Parameter*string)[]) =
+        let parameters, names = Array.unzip parameters
+        m.addParameter(parameters, names=names)
+
+    member m.addParameter(parameter: Parameter, name:string) =
+        m.addParameter((parameter, name))
+
+    member m.addBuffer([<System.ParamArray>] buffers: Parameter[]) =
+        m.addBuffer(buffers, ?names=None)
+
+    member m.addBuffer([<System.ParamArray>] buffers: (Parameter*string)[]) =
+        let buffers, names = Array.unzip buffers
+        m.addBuffer(buffers, names=names)
+
+    member m.addBuffer(buffer: Parameter, name:string) =
+        m.addBuffer((buffer, name))
 
     /// <summary>
     ///  Adjust the parameters of the model to initiate a new level of forward-mode automatic differentiation.
@@ -489,14 +524,22 @@ type ModelBase() =
         sb.ToString()
 
 
-
 /// <summary>Represents a model, primarily a collection of named parameters and sub-models and a function governed by them.</summary>
-[<AbstractClass>]
-type Model<'In, 'Out>() =
+// [<AbstractClass>]
+type Model<'In, 'Out>(?f:'In->'Out, ?parameters: seq<Parameter>, ?buffers: seq<Parameter>, ?models: seq<ModelBase>) =
     inherit ModelBase()
+
+    do
+        base.addParameter(defaultArg parameters Seq.empty |> Seq.toArray)
+        base.addBuffer(defaultArg buffers Seq.empty |> Seq.toArray)
+        base.addModel(defaultArg models Seq.empty |> Seq.toArray)
 
     /// <summary>TBD</summary>
     abstract member forward: 'In -> 'Out
+    default _.forward x =
+        match f with
+        | Some(f) -> f x
+        | _ -> failwithf "Model.forward not implemented"
 
     /// <summary>Use the model as a function of its parameters and input.</summary>
     /// <remarks>
@@ -512,25 +555,17 @@ type Model<'In, 'Out>() =
             m.parametersVector <- old
     
     /// <summary>TBD</summary>
-    static member create (models: seq<obj>) (parameters: seq<Parameter>) (buffers: seq<Parameter>) (f: 'In -> 'Out) : Model<'In, 'Out> =
-        let model = { new Model<'In, 'Out>() with override _.forward(x:'In) : 'Out = f x}
-        model.addModel(models)
-        model.addParameter(parameters)
-        model.addBuffer(buffers)
-        model
-
-    /// <summary>TBD</summary>
     static member compose (model1:Model<'In, 'Out>) (model2:Model<'Out, 'Out2>) : Model<'In, 'Out2> =
-        Model<'In, 'Out2>.create [box model1; box model2] [] [] (model1.forward >> model2.forward)
+        Model<'In, 'Out2>(model1.forward >> model2.forward, models=[model1; model2])
 
     /// <summary>TBD</summary>
     static member (-->) (model1:Model<'In, 'Out>, model2:Model<'Out, 'Out2>) = Model<'In, 'Out>.compose model1 model2
     
     /// <summary>TBD</summary>
-    static member (-->) (model:Model<'In, 'Out>, f:'Out->'Out2) = Model<'In, 'Out2>.create [model] [] [] (model.forward >> f)
+    static member (-->) (model:Model<'In, 'Out>, f:'Out->'Out2) = Model<'In, 'Out2>(model.forward >> f, models=[model])
 
     /// <summary>TBD</summary>
-    static member (-->) (f:'In->'Out, model:Model<'Out, 'Out2>) = Model<'In, 'Out2>.create [model] [] [] (f >> model.forward)
+    static member (-->) (f:'In->'Out, model:Model<'Out, 'Out2>) = Model<'In, 'Out2>(f >> model.forward, models=[model])
 
     /// <summary>TBD</summary>
     static member (-->) (t:'In, model:Model<'In, 'Out>) = model.forward t

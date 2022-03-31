@@ -6,6 +6,7 @@
 namespace DiffSharp.Model
 
 open DiffSharp
+open DiffSharp.Util
 
 /// <summary>Variational auto-encoder base</summary>
 [<AbstractClass>]
@@ -55,7 +56,7 @@ type VAE(xShape:seq<int>, zDim:int, encoder:Model, decoder:Model) =
         // TODO: check if decoder can accept input with (-1, zDim)
         // let decodedExample = xExample --> encoder --> decoder
         // if decodedExample.shape <> xShape then failwithf "Expecting decoder's output shape (%A) to be xShape (%A)" decodedExample.shape xShape
-        base.addModel([encoder;decoder;prez;postz],["VAE-encoder";"VAE-decoder";"VAE-prez"; "VAE-postz"])
+        base.addModel(encoder,decoder,prez,postz)
 
     override m.encode x =
         let mulogvar = x --> encoder --> prez
@@ -81,11 +82,11 @@ type VAEMLP(xDim:int, zDim:int, ?hDims:seq<int>, ?nonlinearity:Tensor->Tensor, ?
         else
             Array.append (Array.append [|xDim|] hDims) [|zDim|]
             
-    let enc = Array.append [|for i in 0..dims.Length-2 -> Linear(dims[i], dims[i+1])|] [|Linear(dims[dims.Length-2], dims[dims.Length-1])|]
-    let dec = [|for i in 0..dims.Length-2 -> Linear(dims[i+1], dims[i])|] |> Array.rev
+    let enc:Model[] = Array.append [|for i in 0..dims.Length-2 -> Linear(dims[i], dims[i+1])|] [|Linear(dims[dims.Length-2], dims[dims.Length-1])|]
+    let dec:Model[] = Array.rev [|for i in 0..dims.Length-2 -> Linear(dims[i+1], dims[i])|]
     do 
-        base.addModel(enc |> Array.map box)
-        base.addModel(dec |> Array.map box)
+        base.addModel(enc)
+        base.addModel(dec)
 
     override m.encode (x:Tensor) =
         let batchSize = x.shape[0]

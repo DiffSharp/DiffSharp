@@ -127,7 +127,7 @@ type Generator(nz: int) =
     let fc2 = Linear(256, 512)
     let fc3 = Linear(512, 1024)
     let fc4 = Linear(1024, 28*28)
-    do base.addModel([fc1; fc2; fc3; fc4])
+    do base.addModel(fc1, fc2, fc3, fc4)
     override self.forward(x) =
         x
         |> dsharp.view([-1;nz])
@@ -147,7 +147,7 @@ type Discriminator(nz:int) =
     let fc2 = Linear(1024, 512)
     let fc3 = Linear(512, 256)
     let fc4 = Linear(256, 1)
-    do base.addModel([fc1; fc2; fc3; fc4])
+    do base.addModel(fc1, fc2, fc3, fc4)
     override self.forward(x) =
         x
         |> dsharp.view([-1;28*28])

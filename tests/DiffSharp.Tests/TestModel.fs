@@ -14,9 +14,9 @@ open DiffSharp.Optim
 
 type ModelStyle1a() =
     inherit Model() 
-    let fc1 = Linear(10, 16)
-    let fc2 = Linear(16, 20)
-    do base.addModel([fc1; fc2], ["fc1"; "fc2"])
+    let fc1:Model = Linear(10, 16)
+    let fc2:Model = Linear(16, 20)
+    do base.addModel((fc1, "fc1"), (fc2, "fc2"))
     override __.forward(x) =
         x
         |> fc1.forward
@@ -25,11 +25,11 @@ type ModelStyle1a() =
 
 type ModelStyle1b() =
     inherit Model()
-    let fc1 = Linear(20, 32)
-    let fc2 = Linear(32, 30)
+    let fc1:Model = Linear(20, 32)
+    let fc2:Model = Linear(32, 30)
     let p = Parameter(dsharp.randn([]))
-    do base.addModel([fc1; fc2], ["fc1"; "fc2"])
-    do base.addParameter([p], ["p"])
+    do base.addModel((fc1, "fc1"), (fc2, "fc2"))
+    do base.addParameter((p, "p"))
     override __.forward(x) =
         x
         |> fc1.forward
@@ -39,9 +39,9 @@ type ModelStyle1b() =
 
 type GenericModelFloatFloat() =
     inherit Model<float,float>()
-    let fc1 = Linear(1, 2)
-    let fc2 = Linear(2, 1)
-    do base.addModel([fc1; fc2], ["fc1"; "fc2"])
+    let fc1:Model = Linear(1, 2)
+    let fc2:Model = Linear(2, 1)
+    do base.addModel((fc1, "fc1"), (fc2, "fc2"))
     do base.init (fun (_, t) -> t.onesLike())
     override __.forward(x) =
         x |> dsharp.tensor
@@ -52,9 +52,9 @@ type GenericModelFloatFloat() =
 
 type GenericModelIntString() =
     inherit Model<int,string>()
-    let fc1 = Linear(1, 2)
-    let fc2 = Linear(2, 1)
-    do base.addModel([fc1; fc2], ["fc1"; "fc2"])
+    let fc1:Model = Linear(1, 2)
+    let fc2:Model = Linear(2, 1)
+    do base.addModel((fc1, "fc1"), (fc2, "fc2"))
     do base.init (fun (_, t) -> t.onesLike())
     override __.forward(x) =
         x |> float32 |> dsharp.tensor
@@ -163,22 +163,23 @@ type TestModel () =
     member _.TestModelCreationStyle2 () =
         let fc1 = Linear(10, 32)
         let fc2 = Linear(32, 10)
-        let net = Model.create [fc1; fc2] [] []
-                    (dsharp.view [-1; 10]
-                    >> fc1.forward
-                    >> dsharp.relu
-                    >> fc2.forward)
+        let net = Model(dsharp.view [-1; 10]
+                        >> fc1.forward
+                        >> dsharp.relu
+                        >> fc2.forward, 
+                        models=[fc1; fc2])
         Assert.CheckEqual(682, net.nparameters)
 
         let fc1 = Linear(10, 32)
         let fc2 = Linear(32, 10)
         let p = Parameter(dsharp.randn([]))
-        let net2 = Model.create [fc1; fc2] [p] []
-                    (dsharp.view [-1; 10]
-                    >> fc1.forward
-                    >> dsharp.relu
-                    >> fc2.forward
-                    >> dsharp.mul p.value)
+        let net2 = Model(dsharp.view [-1; 10]
+                        >> fc1.forward
+                        >> dsharp.relu
+                        >> fc2.forward
+                        >> dsharp.mul p.value, 
+                        parameters=[p], 
+                        models=[fc1; fc2])
         Assert.CheckEqual(683, net2.nparameters)
 
     [<Test>]
@@ -1349,3 +1350,12 @@ type TestModel () =
         Assert.AreEqual(hiddenDepthAfterCorrect, hiddenDepthAfter)
         Assert.AreEqual(cellDepthBeforeCorrect, cellDepthBefore)
         Assert.AreEqual(cellDepthAfterCorrect, cellDepthAfter)
+
+    [<Test>]
+    member _.TestModelFunc () =
+        let f (x:Tensor) = x + 3
+        let m = Model(f)
+        let x = dsharp.tensor([1,2,3], dtype=Dtype.Int32)
+        let fx = x |> f
+        let mx = x --> m
+        Assert.AreEqual(fx, mx)

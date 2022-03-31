@@ -37,8 +37,8 @@ type BatchNorm1d(numFeatures:int, ?eps:double, ?momentum:Tensor, ?affine:bool, ?
     let b = Parameter <| if affine then dsharp.zeros(numFeatures) else dsharp.zero() // beta
     let _mean = Parameter <| dsharp.zero()
     let _variance = Parameter <| dsharp.zero()
-    do base.addParameter([w;b],["BatchNorm1d-weight";"BatchNorm1d-bias"]) // We don't add mean and variance here because they hold running statistics and are not subject to gradient-based optimization
-    do base.addBuffer([momentum;_mean;_variance], ["BatchNorm1d-momentum";"BatchNorm1d-mean";"BatchNorm1d-variance"])
+    do base.addParameter((w, "BatchNorm1d-weight"), (b, "BatchNorm1d-bias")) // We don't add mean and variance here because they hold running statistics and are not subject to gradient-based optimization
+    do base.addBuffer((momentum, "BatchNorm1d-momentum"), (_mean, "BatchNorm1d-mean"), (_variance, "BatchNorm1d-variance"))
 
     /// <summary>TBD</summary>
     member _.mean = _mean.value
@@ -129,8 +129,8 @@ type BatchNorm2d(numFeatures:int, ?eps:double, ?momentum:Tensor, ?affine:bool, ?
     let b = Parameter <| if affine then dsharp.zeros(numFeatures) else dsharp.zero() // beta
     let _mean = Parameter <| dsharp.zero()
     let _variance = Parameter <| dsharp.zero()
-    do base.addParameter([w;b],["BatchNorm2d-weight";"BatchNorm2d-bias"]) // We don't add mean and variance here because they hold running statistics and are not subject to gradient-based optimization
-    do base.addBuffer([momentum;_mean;_variance], ["BatchNorm2d-momentum";"BatchNorm2d-mean";"BatchNorm2d-variance"])
+    do base.addParameter((w, "BatchNorm2d-weight"), (b, "BatchNorm2d-bias")) // We don't add mean and variance here because they hold running statistics and are not subject to gradient-based optimization
+    do base.addBuffer((momentum, "BatchNorm2d-momentum"), (_mean, "BatchNorm2d-mean"), (_variance, "BatchNorm2d-variance"))
 
     /// <summary>TBD</summary>
     member _.mean = _mean.value
@@ -207,8 +207,8 @@ type BatchNorm3d(numFeatures:int, ?eps:double, ?momentum:Tensor, ?affine:bool, ?
     let b = Parameter <| if affine then dsharp.zeros(numFeatures) else dsharp.zero() // beta
     let _mean = Parameter <| dsharp.zero()
     let _variance = Parameter <| dsharp.zero()
-    do base.addParameter([w;b],["BatchNorm3d-weight";"BatchNorm3d-bias"]) // We don't add mean and variance here because they hold running statistics and are not subject to gradient-based optimization
-    do base.addBuffer([momentum;_mean;_variance], ["BatchNorm3d-momentum";"BatchNorm3d-mean";"BatchNorm3d-variance"])
+    do base.addParameter((w, "BatchNorm3d-weight"), (b, "BatchNorm3d-bias")) // We don't add mean and variance here because they hold running statistics and are not subject to gradient-based optimization
+    do base.addBuffer((momentum, "BatchNorm3d-momentum"), (_mean, "BatchNorm3d-mean"), (_variance, "BatchNorm3d-variance"))
 
     /// <summary>TBD</summary>
     member _.mean = _mean.value
