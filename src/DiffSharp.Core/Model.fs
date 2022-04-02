@@ -515,9 +515,9 @@ type ModelBase() =
             if mm.hasOwnParameters then
                 sb.AppendLine(sprintf "%-40s %16s" (mm.ToString()) (thousandsInt mm.nparameters)) |> ignore
         sb.AppendLine("---") |> ignore
-        sb.AppendLine(sprintf "Total params                  : %s" (thousandsInt m.nstate)) |> ignore
         sb.AppendLine(sprintf "Trainable params              : %s" (thousandsInt m.nparameters)) |> ignore
         sb.AppendLine(sprintf "Non-trainable params (buffers): %s" (thousandsInt m.nbuffers)) |> ignore
+        sb.AppendLine(sprintf "Total params                  : %s" (thousandsInt m.nstate)) |> ignore
         sb.AppendLine("---") |> ignore
         sb.AppendLine(sprintf "Total params size (MiB)       : %s" (thousandsFloat ((float m.stateVector.memorySize)/(1024.*1024.)))) |> ignore
         sb.AppendLine("---") |> ignore
@@ -592,5 +592,5 @@ type Weight =
         w * s
 
     /// <summary>TBD</summary>
-    static member uniform(shape:Shape, k:float) =
+    static member uniform(shape:seq<int>, k:float) =
         -k + dsharp.rand(shape) * 2*k

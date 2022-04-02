@@ -35,6 +35,12 @@
     <Compile Include="TestExtensions.fs" />
     <Compile Include="TestData.fs" />
     <Compile Include="TestModel.fs" />
+    <Compile Include="TestModel.BatchNorm.fs" />
+    <Compile Include="TestModel.Conv.fs" />
+    <Compile Include="TestModel.ConvTranspose.fs" />
+    <Compile Include="TestModel.Linear.fs" />
+    <Compile Include="TestModel.Recurrent.fs" />
+    <Compile Include="TestModel.Sequential.fs" />
     <Compile Include="TestOptim.fs" />
     <Compile Include="TestOp.AvgPool.fs" />
     <Compile Include="TestOp.BMM.fs" />

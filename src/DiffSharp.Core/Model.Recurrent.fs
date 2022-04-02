@@ -29,10 +29,10 @@ type RNNCell(inFeatures, outFeatures, ?nonlinearity, ?bias, ?batchFirst) =
     let bias = defaultArg bias true
     let batchFirst = defaultArg batchFirst false
     let k = 1./sqrt (float outFeatures)
-    let wih = Parameter(Weight.uniform([|inFeatures; outFeatures|], k))
-    let whh = Parameter(Weight.uniform([|outFeatures; outFeatures|], k))
-    let b = Parameter(if bias then Weight.uniform([|outFeatures|], k) else dsharp.tensor([]))
-    let h = Parameter <| dsharp.tensor([]) // Not a paramter to be trained, this is for keeping hidden state
+    let wih = Parameter(Weight.uniform([inFeatures; outFeatures], k))
+    let whh = Parameter(Weight.uniform([outFeatures; outFeatures], k))
+    let b = Parameter(if bias then Weight.uniform([outFeatures], k) else dsharp.tensor([]))
+    let h = Parameter <| dsharp.zeros([outFeatures]) // Not a parameter to be trained, this is for keeping hidden state
     do base.addParameter((wih, "RNNCell-weight-ih"), (whh, "RNNCell-weight-hh"), (b, "RNNCell-bias"))
     do base.addBuffer(h, "RNNCell-hidden")
 
@@ -42,7 +42,7 @@ type RNNCell(inFeatures, outFeatures, ?nonlinearity, ?bias, ?batchFirst) =
 
     override _.ToString() = sprintf "RNNCell(%A, %A)" inFeatures outFeatures
 
-    member r.reset() = r.hidden <- dsharp.tensor([])
+    member r.reset() = r.hidden <- dsharp.zeros([outFeatures])
 
     override r.forward(value) =
         let value, seqLen, batchSize = rnnShape value inFeatures batchFirst
@@ -63,11 +63,11 @@ type LSTMCell(inFeatures, outFeatures, ?bias, ?batchFirst) =
     let bias = defaultArg bias true
     let batchFirst = defaultArg batchFirst false
     let k = 1./sqrt (float outFeatures)
-    let wih = Parameter(Weight.uniform([|inFeatures; outFeatures*4|], k))
-    let whh = Parameter(Weight.uniform([|outFeatures; outFeatures*4|], k))
-    let b = Parameter(if bias then Weight.uniform([|outFeatures*4|], k) else dsharp.tensor([]))
-    let h = Parameter <| dsharp.tensor([]) // Not a paramter to be trained, this is for keeping hidden state
-    let c = Parameter <| dsharp.tensor([]) // Not a paramter to be trained, this is for keeping hidden state
+    let wih = Parameter(Weight.uniform([inFeatures; outFeatures*4], k))
+    let whh = Parameter(Weight.uniform([outFeatures; outFeatures*4], k))
+    let b = Parameter(if bias then Weight.uniform([outFeatures*4], k) else dsharp.tensor([]))
+    let h = Parameter <| dsharp.zeros([outFeatures]) // Not a parameter to be trained, this is for keeping hidden state
+    let c = Parameter <| dsharp.zeros([outFeatures]) // Not a parameter to be trained, this is for keeping hidden state
     do base.addParameter((wih, "LSTMCell-weight-ih"), (whh, "LSTMCell-weight-hh"), (b, "LSTMCell-bias"))
     do base.addBuffer((h, "LSTMCell-hidden"), (c, "LSTMCell-cell"))
 
@@ -81,7 +81,7 @@ type LSTMCell(inFeatures, outFeatures, ?bias, ?batchFirst) =
 
     override _.ToString() = sprintf "LSTMCell(%A, %A)" inFeatures outFeatures
 
-    member r.reset() = r.hidden <- dsharp.tensor([])
+    member r.reset() = r.hidden <- dsharp.zeros([outFeatures])
 
     override r.forward(value) =
         let value, seqLen, batchSize = rnnShape value inFeatures batchFirst
@@ -117,7 +117,7 @@ type RNN(inFeatures, outFeatures, ?numLayers, ?nonlinearity, ?bias, ?batchFirst,
     let layers = makeLayers()
     let layersReverse = if bidirectional then makeLayers() else [||]
     let dropoutLayer = Dropout(dropout)
-    let hs = Parameter <| dsharp.tensor([]) // Not a parameter to be trained, it is for keeping hidden state
+    let hs = Parameter <| dsharp.zeros([numLayers*numDirections; outFeatures]) // Not a parameter to be trained, it is for keeping hidden state
     do 
         base.addModel(layers |> Array.mapi (fun i l -> l :>Model, sprintf "RNN-layer-%A" i))
         if bidirectional then base.addModel(layersReverse |> Array.mapi (fun i l -> l :>Model, sprintf "RNN-layer-reverse-%A" i))
@@ -129,7 +129,7 @@ type RNN(inFeatures, outFeatures, ?numLayers, ?nonlinearity, ?bias, ?batchFirst,
 
     override _.ToString() = sprintf "RNN(%A, %A, numLayers:%A, bidirectional:%A)" inFeatures outFeatures numLayers bidirectional
 
-    member r.reset() = r.hidden <- dsharp.tensor([])
+    member r.reset() = r.hidden <- dsharp.zeros([numLayers*numDirections; outFeatures])
 
     override r.forward(value) =
         let value, _, batchSize = rnnShape value inFeatures batchFirst
@@ -167,8 +167,8 @@ type LSTM(inFeatures, outFeatures, ?numLayers, ?bias, ?batchFirst, ?dropout, ?bi
     let layers = makeLayers()
     let layersReverse = if bidirectional then makeLayers() else [||]
     let dropoutLayer = Dropout(dropout)
-    let hs = Parameter <| dsharp.tensor([]) // Not a parameter to be trained, it is for keeping hidden state
-    let cs = Parameter <| dsharp.tensor([]) // Not a parameter to be trained, it is for keeping hidden state
+    let hs = Parameter <| dsharp.zeros([numLayers*numDirections; outFeatures]) // Not a parameter to be trained, it is for keeping hidden state
+    let cs = Parameter <| dsharp.zeros([numLayers*numDirections; outFeatures]) // Not a parameter to be trained, it is for keeping hidden state
     do 
         base.addModel(layers |> Array.mapi (fun i l -> l :>Model, sprintf "LSTM-layer-%A" i))
         if bidirectional then base.addModel(layersReverse |> Array.mapi (fun i l -> l :>Model, sprintf "LSTM-layer-reverse-%A" i))    
@@ -185,8 +185,8 @@ type LSTM(inFeatures, outFeatures, ?numLayers, ?bias, ?batchFirst, ?dropout, ?bi
     override _.ToString() = sprintf "LSTM(%A, %A, numLayers:%A, bidirectional:%A)" inFeatures outFeatures numLayers bidirectional
 
     member r.reset() =
-        r.hidden <- dsharp.tensor([])
-        r.cell <- dsharp.tensor([])
+        r.hidden <- dsharp.zeros([numLayers*numDirections; outFeatures])
+        r.cell <- dsharp.zeros([numLayers*numDirections; outFeatures])
 
     override r.forward(value) =
         let value, _, batchSize = rnnShape value inFeatures batchFirst
