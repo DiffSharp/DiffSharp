@@ -3739,6 +3739,39 @@ type TestTensor () =
             Assert.CheckEqual(tbCorrect, tb)
 
     [<Test>]
+    member _.TestTensorSliceWithNegativeIndex () =
+        for combo in Combos.All do
+            let t = combo.tensor([[[ 0,  1,  2,  3],
+                                    [ 4,  5,  6,  7],
+                                    [ 8,  9, 10, 11]],
+
+                                    [[12, 13, 14, 15],
+                                    [16, 17, 18, 19],
+                                    [20, 21, 22, 23]]])
+
+            let t1 = t[-1]
+            let t1Correct = combo.tensor([[12, 13, 14, 15],
+                                            [16, 17, 18, 19],
+                                            [20, 21, 22, 23]])
+            Assert.CheckEqual(t1Correct, t1)
+
+            let t2 = t[0, -1]
+            let t2Correct = combo.tensor([ 8,  9, 10, 11])
+            Assert.CheckEqual(t2Correct, t2)
+
+            let t3 = t[0, 0, -1]
+            let t3Correct = combo.tensor(3)
+            Assert.CheckEqual(t3Correct, t3)
+
+            let t3 = t[0, 0, -2]
+            let t3Correct = combo.tensor(2)
+            Assert.CheckEqual(t3Correct, t3)
+
+            let t3 = t[0, -2, -1]
+            let t3Correct = combo.tensor(7)
+            Assert.CheckEqual(t3Correct, t3)
+
+    [<Test>]
     member _.TestTensorSlice () =
         for combo in Combos.All do 
             let t1 = combo.tensor([1.;2.])

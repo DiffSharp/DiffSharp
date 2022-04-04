@@ -697,6 +697,14 @@ module rec Shape =
         let trim = newShape.Length - shape.Length
         newShape |> Array.mapi (fun i x -> if i>=trim && x = -1 then shape[i - trim] else x)
 
+    let completeSliceBounds (shape: Shape) (bounds:int[,]) =
+        let newBounds = Array2D.init (bounds.GetLength(0)) (bounds.GetLength(1)) 
+                            (fun i j -> 
+                                if j = 0 then completeDim shape[i] bounds[i, j]
+                                elif j = 1 then completeDim shape[i] bounds[i, j]
+                                else bounds[i, j])
+        newBounds
+
     let inline create (xs: seq<int>) = Seq.toArrayQuick xs
 
     let resolve2dKernelSizes kernelSize kernelSizes = 
