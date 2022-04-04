@@ -76,6 +76,13 @@ type dsharp =
     static member empty(length:int, ?device:Device, ?dtype:Dtype, ?backend:Backend) =
         TensorC(RawTensor.Empty([|length|], ?device=device, ?dtype=dtype, ?backend=backend))
 
+    /// <summary>Returns a new empty tensor holding no data, element type and configuration</summary>
+    /// <param name="device">The desired device of returned tensor. Default: if None, uses Device.Default.</param>
+    /// <param name="dtype">The desired element type of returned tensor. Default: if None, uses Dtype.Default.</param>
+    /// <param name="backend">The desired backend of returned tensor. Default: if None, uses Backend.Default.</param>
+    static member empty(?device:Device, ?dtype:Dtype, ?backend:Backend) =
+        Tensor.create(value=[], ?device=device, ?dtype=dtype, ?backend=backend)
+
     /// <summary>Get the scalar zero tensor for the given configuration</summary>
     /// <param name="device">The desired device of returned tensor. Default: if None, uses Device.Default.</param>
     /// <param name="dtype">The desired element type of returned tensor. Default: if None, uses Dtype.Default.</param>
