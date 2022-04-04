@@ -34,15 +34,15 @@ let corpus = System.IO.File.ReadAllText("./shakespeare.txt")
 
 let seqLen = 32
 let batchSize = 16
+let hiddenSize = 128
+let numLayers = 2
 
 let dataset = TextDataset(corpus, seqLen)
 let loader = dataset.loader(batchSize=batchSize, shuffle=true)
 
-let rnn = RNN(dataset.numChars, 512, numLayers=2, batchFirst=true)
-let languageModel =
-    rnn
-    --> dsharp.view([-1; 512])
-    --> Linear(512, dataset.numChars)
+let rnn = RNN(dataset.numChars, hiddenSize, numLayers=numLayers, batchFirst=true)
+let decoder = dsharp.view([-1; hiddenSize]) --> Linear(hiddenSize, dataset.numChars)
+let languageModel = rnn --> decoder
 
 printfn "%s" (languageModel.summary())
 
@@ -52,15 +52,19 @@ if File.Exists(modelFileName) then
     languageModel.loadState(modelFileName)
 
 let predict (text:string) len =
-    rnn.reset()
+    let mutable hidden = rnn.newHidden(1)
     let mutable prediction = text
     let mutable last = text
-    for i in 1..len do
+    for _ in 1..len do
         let lastTensor = last |> dataset.textToTensor
-        let nextCharProbs = lastTensor.unsqueeze(0) --> languageModel --> dsharp.slice([-1]) --> dsharp.softmax(-1)
+        let newOut, newHidden = rnn.forwardWithHidden(lastTensor.unsqueeze(0), hidden)
+        hidden <- newHidden
+        let nextCharProbs = newOut --> decoder --> dsharp.slice([-1]) --> dsharp.softmax(-1)
         last <- Categorical(nextCharProbs).sample() |> int |> dataset.indexToChar |> string
         prediction <- prediction + last
     prediction
+
+// printfn "\nSample from language model:\n%A\n" (predict "We " 512)
 
 let optimizer = Adam(languageModel, lr=dsharp.tensor(0.001))
 
@@ -74,7 +78,6 @@ for epoch = 1 to epochs do
     for i, x, t in loader.epoch() do
         let input =  x[*,..seqLen-2]
         let target = t[*,1..]
-        rnn.reset()
         languageModel.reverseDiff()
         let output = input --> languageModel
         let loss = dsharp.crossEntropyLoss(output, target.view(-1))
