@@ -64,8 +64,6 @@ let predict (text:string) len =
         prediction <- prediction + last
     prediction
 
-// printfn "\nSample from language model:\n%A\n" (predict "We " 512)
-
 let optimizer = Adam(languageModel, lr=dsharp.tensor(0.001))
 
 let losses = ResizeArray()
