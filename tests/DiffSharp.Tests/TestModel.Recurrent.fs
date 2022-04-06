@@ -42,13 +42,8 @@ type TestModelRecurrent () =
         let outputShapeCorrect = [|batchSize; seqLen; dout|]
         Assert.AreEqual(outputShapeCorrect, outputShape)
 
-        let hiddenShape = rnn.hidden.shape
+        let hiddenShape = rnn.newHidden(batchSize).shape
         let hiddenShapeCorrect = [|numLayers*numDirections; batchSize; dout|]
-        Assert.AreEqual(hiddenShapeCorrect, hiddenShape)
-
-        rnn.reset()
-        let hiddenShape = rnn.hidden.shape
-        let hiddenShapeCorrect = [|0|]
         Assert.AreEqual(hiddenShapeCorrect, hiddenShape)
 
         let steps = 64
@@ -59,23 +54,15 @@ type TestModelRecurrent () =
         let mutable loss = dsharp.mseLoss(output, target)
         let loss0 = float loss
 
-        let hiddenDepthBefore = rnn.hidden.depth
-        let hiddenDepthBeforeCorrect = 0
-
         for i in 1..steps do
-            rnn.reset()
             rnn.reverseDiff()
             let output = input --> rnn
             loss <- dsharp.mseLoss(output, target)
             loss.reverse()
             optimizer.step()
         let lossFinal = float loss
-        let hiddenDepthAfter = rnn.hidden.depth
-        let hiddenDepthAfterCorrect = 1
 
         Assert.Less(lossFinal, loss0/2.)
-        Assert.AreEqual(hiddenDepthBeforeCorrect, hiddenDepthBefore)
-        Assert.AreEqual(hiddenDepthAfterCorrect, hiddenDepthAfter)
 
     [<Test>]
     member _.TestModelLSTM () =
@@ -102,20 +89,9 @@ type TestModelRecurrent () =
         let outputShapeCorrect = [|batchSize; seqLen; dout|]
         Assert.AreEqual(outputShapeCorrect, outputShape)
 
-        let hiddenShape = lstm.hidden.shape
+        let hiddenShape = lstm.newHidden(batchSize).shape
         let hiddenShapeCorrect = [|numLayers*numDirections; batchSize; dout|]
-        let cellShape = lstm.cell.shape
-        let cellShapeCorrect = [|numLayers*numDirections; batchSize; dout|]
         Assert.AreEqual(hiddenShapeCorrect, hiddenShape)
-        Assert.AreEqual(cellShapeCorrect, cellShape)
-
-        lstm.reset()
-        let hiddenShape = lstm.hidden.shape
-        let hiddenShapeCorrect = [|0|]
-        let cellShape = lstm.cell.shape
-        let cellShapeCorrect = [|0|]
-        Assert.AreEqual(hiddenShapeCorrect, hiddenShape)
-        Assert.AreEqual(cellShapeCorrect, cellShape)
 
         let steps = 100
         let lr = 0.01
@@ -125,60 +101,34 @@ type TestModelRecurrent () =
         let mutable loss = dsharp.mseLoss(output, target)
         let loss0 = float loss
 
-        let hiddenDepthBefore = lstm.hidden.depth
-        let hiddenDepthBeforeCorrect = 0
-        let cellDepthBefore = lstm.cell.depth
-        let cellDepthBeforeCorrect = 0
-
         for i in 1..steps do
-            lstm.reset()
             lstm.reverseDiff()
             let output = input --> lstm
             loss <- dsharp.mseLoss(output, target)
             loss.reverse()
             optimizer.step()
         let lossFinal = float loss
-        let hiddenDepthAfter = lstm.hidden.depth
-        let hiddenDepthAfterCorrect = 1
-        let cellDepthAfter = lstm.cell.depth
-        let cellDepthAfterCorrect = 1
 
         Assert.Less(lossFinal, loss0/2.)
-        Assert.AreEqual(hiddenDepthBeforeCorrect, hiddenDepthBefore)
-        Assert.AreEqual(hiddenDepthAfterCorrect, hiddenDepthAfter)
-        Assert.AreEqual(cellDepthBeforeCorrect, cellDepthBefore)
-        Assert.AreEqual(cellDepthAfterCorrect, cellDepthAfter)
 
     [<Test>]
     member _.TestModelRNNSaveLoadState () =
         let net = RNN(10, 10)
 
-        let hidden0 = net.hidden
         let fileName = System.IO.Path.GetTempFileName()
-        net.saveState(fileName) // Initial hidden state
+        net.saveState(fileName) // Save pre-use
+        let _ = dsharp.randn([10; 10; 10]) --> net // Use
+        net.loadState(fileName) // Load after-use
 
-        let _ = dsharp.randn([10; 10; 10]) --> net // Hidden state updated
-        let hidden1 = net.hidden
-
-        net.loadState(fileName) // Should be able to load state
-        let hidden2 = net.hidden
-
-        Assert.AreEqual(hidden0.shape, hidden1.shape)
-        Assert.AreEqual(hidden0, hidden2)
+        Assert.True(true)
 
     [<Test>]
     member _.TestModelLSTMSaveLoadState () =
         let net = LSTM(10, 10)
 
-        let hidden0 = net.hidden
         let fileName = System.IO.Path.GetTempFileName()
-        net.saveState(fileName) // Initial hidden state
+        net.saveState(fileName) // Save pre-use
+        let _ = dsharp.randn([10; 10; 10]) --> net // Use
+        net.loadState(fileName) // Load after-use
 
-        let _ = dsharp.randn([10; 10; 10]) --> net // Hidden state updated
-        let hidden1 = net.hidden
-
-        net.loadState(fileName) // Should be able to load state
-        let hidden2 = net.hidden
-
-        Assert.AreEqual(hidden0.shape, hidden1.shape)
-        Assert.AreEqual(hidden0, hidden2)
+        Assert.True(true)
