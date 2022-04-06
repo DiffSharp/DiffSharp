@@ -16,7 +16,6 @@ open DiffSharp.Optim
 [<TestFixture>]
 type TestModelRecurrent () =
 
-
     [<Test>]
     member _.TestModelRNN () =
         let din = 8
@@ -93,7 +92,7 @@ type TestModelRecurrent () =
         let hiddenShapeCorrect = [|numLayers*numDirections; batchSize; dout|]
         Assert.AreEqual(hiddenShapeCorrect, hiddenShape)
 
-        let steps = 100
+        let steps = 128
         let lr = 0.01
         let optimizer = Adam(lstm, lr=dsharp.tensor(lr))
         let target = dsharp.randn([batchSize; seqLen; dout])

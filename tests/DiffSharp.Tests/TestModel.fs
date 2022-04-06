@@ -349,7 +349,7 @@ type TestModel () =
         let p2 = net2.stateVector
         Assert.CheckEqual(p1, p2)
 
-        let x = dsharp.randn([1;10])
+        let x = dsharp.randn([1;20])
         let y1 = x --> net1
         let y2 = x --> net2
         Assert.CheckEqual(y1, y2)
@@ -381,7 +381,7 @@ type TestModel () =
         let p2 = net2.parametersVector
         Assert.CheckEqual(p1, p2)
 
-        let x = dsharp.randn([1;10])
+        let x = dsharp.randn([1;20])
         let y1 = x --> net1
         let y2 = x --> net2
         Assert.CheckEqual(y1, y2)
@@ -472,6 +472,12 @@ type TestModel () =
             Assert.CheckEqual(combo1.dtype, net.dtype)
             Assert.CheckEqual(combo1.backend, net.backend)
 
+            let x = combo1.randn([5; 20])
+            let y = x --> net
+            Assert.CheckEqual(combo1.device, y.device)
+            Assert.CheckEqual(combo1.dtype, y.dtype)
+            Assert.CheckEqual(combo1.backend, y.backend)
+
             for combo2 in Combos.FloatingPointExcept16s do
                 net.move(combo2.device, combo2.dtype, combo2.backend)
 
@@ -482,6 +488,12 @@ type TestModel () =
                 Assert.CheckEqual(combo2.device, net.device)
                 Assert.CheckEqual(combo2.dtype, net.dtype)
                 Assert.CheckEqual(combo2.backend, net.backend)
+
+                let x = combo2.randn([5; 20])
+                let y = x --> net
+                Assert.CheckEqual(combo2.device, y.device)
+                Assert.CheckEqual(combo2.dtype, y.dtype)
+                Assert.CheckEqual(combo2.backend, y.backend)
 
     [<Test>]
     member _.TestModelMoveWithParamBuffer () =
@@ -497,6 +509,12 @@ type TestModel () =
             Assert.CheckEqual(combo1.dtype, net.dtype)
             Assert.CheckEqual(combo1.backend, net.backend)
 
+            let x = combo1.randn([5; 20])
+            let y = x --> net
+            Assert.CheckEqual(combo1.device, y.device)
+            Assert.CheckEqual(combo1.dtype, y.dtype)
+            Assert.CheckEqual(combo1.backend, y.backend)
+
             for combo2 in Combos.FloatingPointExcept16s do
                 net.move(combo2.device, combo2.dtype, combo2.backend)
 
@@ -507,6 +525,12 @@ type TestModel () =
                 Assert.CheckEqual(combo2.device, net.device)
                 Assert.CheckEqual(combo2.dtype, net.dtype)
                 Assert.CheckEqual(combo2.backend, net.backend)
+
+                let x = combo2.randn([5; 20])
+                let y = x --> net
+                Assert.CheckEqual(combo2.device, y.device)
+                Assert.CheckEqual(combo2.dtype, y.dtype)
+                Assert.CheckEqual(combo2.backend, y.backend)
 
     [<Test>]
     member _.TestModelClone () =
@@ -531,7 +555,7 @@ type TestModel () =
         let p2 = net2.parametersVector
         Assert.CheckEqual(p1, p2)
 
-        let x = dsharp.randn([1;10])
+        let x = dsharp.randn([1;20])
         let y1 = x --> net1
         let y2 = x --> net2
         Assert.CheckEqual(y1, y2)
@@ -641,85 +665,6 @@ type TestModel () =
         Assert.CheckEqual(m1Params, m1ChildrenParams)
         Assert.CheckEqual(m2Params, m2ChildrenParams)
         Assert.CheckEqual(m3Params, m3ChildrenParams)
-
-    [<Test>]
-    member _.TestModelDropout () =
-        let m = Dropout(1.)
-        let x = dsharp.randn([10;10])
-        Assert.CheckEqual(m.parametersVector.shape, [| 0 |])
-        m.train()
-        let xtrain = x --> m
-        Assert.CheckEqual(x.zerosLike(), xtrain)
-        m.eval()
-        let xeval = x --> m
-        Assert.CheckEqual(x, xeval)
-
-    [<Test>]
-    member _.TestModelDropout2d () =
-        let m = Dropout2d(1.)
-        let x = dsharp.randn([10;4;10;10])
-        
-        m.train()
-        let xtrain = x --> m
-        Assert.CheckEqual(x.zerosLike(), xtrain)
-        m.eval()
-        let xeval = x --> m
-        Assert.CheckEqual(x, xeval)
-
-    [<Test>]
-    member _.TestModelDropout3d () =
-        let m = Dropout3d(1.)
-        let x = dsharp.randn([10;4;10;10;10])
-        
-        m.train()
-        let xtrain = x --> m
-        Assert.CheckEqual(x.zerosLike(), xtrain)
-        m.eval()
-        let xeval = x --> m
-        Assert.CheckEqual(x, xeval)
-    
-    [<Test>]
-    member _.TestModelVAEMLP () =
-        // Fits a little VAEMLP to structured noise
-        let xdim, zdim, n = 8, 4, 16
-        let m = VAEMLP(xdim*xdim, zdim)
-        let x = dsharp.stack(Array.init n (fun _ -> dsharp.eye(xdim)*dsharp.rand([xdim;xdim])))
-
-        let lr, steps = 1e-2, 50
-        let optimizer = Adam(m, lr=dsharp.tensor(lr))
-        let loss0 = float <| m.loss(x)
-        let mutable loss = loss0
-        for _ in 0..steps do
-            m.reverseDiff()
-            let l = m.loss(x)
-            l.reverse()
-            optimizer.step()
-            loss <- float l
-
-        Assert.Less(loss, loss0/2.)
-    
-    [<Test>]
-    member _.TestModelVAE () =
-        // Fits a little VAE to structured noise
-        let xdim, zdim, n = 28, 4, 16
-        let encoder = dsharp.flatten(1) --> Linear(xdim*xdim, 8) --> dsharp.relu
-        let decoder = Linear(8, xdim*xdim) --> dsharp.sigmoid
-
-        let m = VAE([xdim;xdim], zdim, encoder, decoder)
-        let x = dsharp.stack(Array.init n (fun _ -> dsharp.eye(xdim)*dsharp.rand([xdim;xdim])))
-
-        let lr, steps = 1e-2, 25
-        let optimizer = Adam(m, lr=dsharp.tensor(lr))
-        let loss0 = float <| m.loss(x)
-        let mutable loss = loss0
-        for _ in 0..steps do
-            m.reverseDiff()
-            let l = m.loss(x)
-            l.reverse()
-            optimizer.step()
-            loss <- float l
-
-        Assert.Less(loss, loss0/2.)
 
     [<Test>]
     member _.TestModelParameterNames () =
