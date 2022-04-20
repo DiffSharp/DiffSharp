@@ -700,8 +700,7 @@ module rec Shape =
     let completeSliceBounds (shape: Shape) (bounds:int[,]) =
         let newBounds = Array2D.init (bounds.GetLength(0)) (bounds.GetLength(1)) 
                             (fun i j -> 
-                                if j = 0 then completeDim shape[i] bounds[i, j]
-                                elif j = 1 then completeDim shape[i] bounds[i, j]
+                                if j = 0 || j = 1 then completeDim shape[i] bounds[i, j]
                                 else bounds[i, j])
         newBounds
 
