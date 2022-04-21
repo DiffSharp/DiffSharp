@@ -693,17 +693,21 @@ type TestTensor () =
     [<Test>]
     member _.TestTensorEmpty () =
         for combo in Combos.All do 
-            // No data, not a scalar, shape [|0|] signifies no dimensions
+            // Empty tensor with no data
+            // This is not a scalar, and shape [|0|] signifies the absence of data and dimensions
             let tvoid = combo.empty()
             Assert.CheckEqual(tvoid.shape, ([|0|]: int32[]) )
             Assert.CheckEqual(tvoid.dtype, combo.dtype)
 
-            // Scalar tensor, shape [||] siginifes zero dimensions
+            // Scalar (zero-dimensional) tensor
+            // Shape [||] siginifes zero dimensions
+            // Tensor data is not initialized and can be random or zero depending on the backend used
             let t0 = combo.empty([])
             Assert.CheckEqual(t0.shape, ([| |]: int32[]) )
             Assert.CheckEqual(t0.dtype, combo.dtype)
 
             // Vector
+            // Tensor data is not initialized and can be random or zero depending on the backend used
             let t1 = combo.empty([2])
             Assert.CheckEqual(t1.shape, ([| 2 |]: int32[]) )
             Assert.CheckEqual(t1.dtype, combo.dtype)

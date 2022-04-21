@@ -38,6 +38,9 @@ type dsharp =
     /// <summary>Indicates if an object is a tensor</summary>
     static member isTensor(value:obj) = value :? Tensor
 
+    /// <summary>Returns the version of the DiffSharp.Core assembly.</summary>
+    static member version = typeof<Tensor>.Assembly.GetName().Version.ToString()
+
     /// <summary>Saves the tensor to the given file using a bespoke binary format.</summary>
     /// <remarks>
     ///   The binary format records the elements, backend, element type and shape. It does not record the device.
