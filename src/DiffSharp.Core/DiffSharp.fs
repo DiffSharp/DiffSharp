@@ -41,27 +41,17 @@ type dsharp =
     /// <summary>Returns the version of the DiffSharp.Core assembly.</summary>
     static member version = typeof<Tensor>.Assembly.GetName().Version.ToString()
 
-    /// <summary>Saves the tensor to the given file using a bespoke binary format.</summary>
+    /// <summary>Saves the object to the given file using a bespoke binary format.</summary>
     /// <remarks>
-    ///   The binary format records the elements, backend, element type and shape. It does not record the device.
     ///   The format used may change from version to version of DiffSharp.
     /// </remarks>
-    static member save(tensor:Tensor, fileName) = tensor.save(fileName)
+    static member save(value:obj, fileName) = saveBinary value fileName
 
-    /// <summary>Loads the tensor from the given file using the given element type and configuration.</summary>
-    ///
-    /// <param name="fileName">The file from which to load the tensor.</param>
-    /// <param name="device">The device of the resulting tensor. Default: if None, uses Device.Default.</param>
-    /// <param name="dtype">The element type of the resulting tensor. Defaults to the element type of the saved tensor.</param>
-    /// <param name="backend">The device of the resulting tensor. Default: if None, uses Backend.Default.</param>
-    ///
+    /// <summary>Loads an object from the given file using a bespoke binary format.</summary>
     /// <remarks>
-    ///    The backend at the time of saving the tensor must be available when the tensor is reloaded.
-    ///    The tensor is first loaded into that backend and then moved. As a result, intermediate tensors may be created
-    ///    in the process of reloading.
+    ///   The format used may change from version to version of DiffSharp.
     /// </remarks>
-    static member load(fileName, ?device:Device, ?dtype:Dtype, ?backend:Backend) =
-        Tensor.load(fileName, ?device=device, ?dtype=dtype, ?backend=backend)
+    static member load(fileName) = loadBinary fileName
 
     /// <summary>Returns a new uninitialized tensor filled with arbitrary values for the given shape, element type and configuration</summary>
     /// <param name="shape">The desired shape of returned tensor.</param>

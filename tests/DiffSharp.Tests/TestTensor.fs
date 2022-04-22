@@ -601,7 +601,7 @@ type TestTensor () =
         for combo in Combos.All do 
             let a = combo.tensor([[1,2],[3,4]])
             a.save(fileName)
-            let b = combo.load(fileName)
+            let b = Tensor.load(fileName, device=combo.device, dtype=combo.dtype, backend=combo.backend)
             Assert.CheckEqual(a, b)
 
     [<Test>]
@@ -631,7 +631,7 @@ type TestTensor () =
         a.save(fileName)
         for combo in Combos.All do 
             let aInCombo = combo.move(a)
-            let b = combo.load(fileName)
+            let b = Tensor.load(fileName, device=combo.device, dtype=combo.dtype, backend=combo.backend)
             Assert.CheckEqual(aInCombo, b)
 
     [<Test>]

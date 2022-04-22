@@ -11,6 +11,8 @@ open DiffSharp.Compose
 open DiffSharp.Shorten
 open DiffSharp.Numerical
 open DiffSharp.Numerical.Shorten
+open DiffSharp.Model
+
 
 [<TestFixture>]
 type TestDiffSharp () =
@@ -720,3 +722,76 @@ type TestDiffSharp () =
         let y = x.exp()
         y.reverse()
         Assert.AreEqual(x.derivative.shape, [||])
+
+    [<Test>]
+    member _.TestLoadSaveGeneric() =
+        // string
+        let v1 = "Hello, world!"
+        let f1 = System.IO.Path.GetTempFileName()
+        dsharp.save(v1, f1)
+        let v1b = dsharp.load(f1)
+        Assert.CheckEqual(v1, v1b)
+
+        // int
+        let v2 = 128
+        let f2 = System.IO.Path.GetTempFileName()
+        dsharp.save(v2, f2)
+        let v2b = dsharp.load(f2)
+        Assert.CheckEqual(v2, v2b)
+
+        // float
+        let v3 = 3.14
+        let f3 = System.IO.Path.GetTempFileName()
+        dsharp.save(v3, f3)
+        let v3b = dsharp.load(f3)
+        Assert.CheckEqual(v3, v3b)
+
+        // bool
+        let v4 = true
+        let f4 = System.IO.Path.GetTempFileName()
+        dsharp.save(v4, f4)
+        let v4b = dsharp.load(f4)
+        Assert.CheckEqual(v4, v4b)
+
+        // list
+        let v5 = [1, 2, 3]
+        let f5 = System.IO.Path.GetTempFileName()
+        dsharp.save(v5, f5)
+        let v5b = dsharp.load(f5)
+        Assert.CheckEqual(v5, v5b)
+
+        // tuple
+        let v6 = (1, 2, 3)
+        let f6 = System.IO.Path.GetTempFileName()
+        dsharp.save(v6, f6)
+        let v6b = dsharp.load(f6)
+        Assert.CheckEqual(v6, v6b)
+
+        // dict
+        let v7 = [("a", 1), ("b", 2), ("c", 3)]
+        let f7 = System.IO.Path.GetTempFileName()
+        dsharp.save(v7, f7)
+        let v7b = dsharp.load(f7)
+        Assert.CheckEqual(v7, v7b)
+
+        // tuple of dicts
+        let v8 = ([("a", 1), ("b", 2), ("c", 3)], [("a", 1), ("b", 2), ("c", 3)])
+        let f8 = System.IO.Path.GetTempFileName()
+        dsharp.save(v8, f8)
+        let v8b = dsharp.load(f8)
+        Assert.CheckEqual(v8, v8b)
+
+        // tensor
+        let v9 = dsharp.tensor([1, 2, 3])
+        let f9 = System.IO.Path.GetTempFileName()
+        dsharp.save(v9, f9)
+        let v9b = dsharp.load(f9)
+        Assert.CheckEqual(v9, v9b)
+
+        // model
+        let v10 = Linear(10, 10)
+        let f10 = System.IO.Path.GetTempFileName()
+        dsharp.save(v10, f10)
+        let v10b:Model = dsharp.load(f10)
+        Assert.CheckEqual(v10.parametersVector, v10b.parametersVector)
+
