@@ -46,6 +46,8 @@ type Random() =
 
     /// Samples a random value from the standard normal distribution with mean 0 and standard deviation 1.
     static member Normal() =
+        // Marsaglia polar method
+        // TODO: this is discarding one of the two samples that can be generated. For efficiency, we can keep the second sample around to return it in the next call.
         let rec normal() = 
             let x, y = (rnd.NextDouble()) * 2.0 - 1.0, (rnd.NextDouble()) * 2.0 - 1.0
             let s = x * x + y * y
