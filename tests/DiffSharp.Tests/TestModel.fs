@@ -608,10 +608,10 @@ type TestModel () =
     [<Test>]
     member _.TestModelClone () =
         let net1 = ModelStyle1()
-        let p1 = net1.parametersVector
+        let p1 = net1.stateVector
 
         let net2 = net1.clone()
-        let p2 = net2.parametersVector
+        let p2 = net2.stateVector
         Assert.CheckEqual(p1, p2)
 
         let x = dsharp.randn([1;10])
@@ -622,10 +622,10 @@ type TestModel () =
     [<Test>]
     member _.TestModelCloneWithParamBuffer () =
         let net1 = ModelStyle1WithParamBuffer()
-        let p1 = net1.parametersVector
+        let p1 = net1.stateVector
 
         let net2 = net1.clone()
-        let p2 = net2.parametersVector
+        let p2 = net2.stateVector
         Assert.CheckEqual(p1, p2)
 
         let x = dsharp.randn([1;20])
