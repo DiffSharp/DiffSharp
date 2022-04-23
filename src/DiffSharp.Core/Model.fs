@@ -46,7 +46,7 @@ type ParameterDict() =
     // A generic Dictionary is not good because it does not guarantee an order in which the items are returned. https://docs.microsoft.com/en-us/dotnet/api/system.collections.generic.dictionary-2?view=net-5.0
     // A generic SortedDictionary exists but we don't want to sort the parameters by keys and we want to have them in the order they were registered. https://docs.microsoft.com/en-us/dotnet/api/system.collections.generic.sorteddictionary-2?view=net-5.0
     // This non-generic OrderedDictionary is used since there is currently no generic OrderedDictionary https://github.com/dotnet/runtime/issues/24826
-    member val private parameters = OrderedDictionary() 
+    member val internal parameters = OrderedDictionary() 
 
     /// <summary>TBD</summary>
     member d.Item
@@ -76,21 +76,6 @@ type ParameterDict() =
         with get() = 
             if d.parameters.Count = 0 then Backend.Default // Empty ParameterDict defaults to default device, dtype, backend config
             else let p = d.parameters[0] :?> Parameter in p.value.backend
-
-    member d.isForwardDiff
-        with get() = 
-            if d.parameters.Count = 0 then false
-            else let p = d.parameters[0] :?> Parameter in p.value.isForwardDiff
-
-    member d.isReverseDiff
-        with get() = 
-            if d.parameters.Count = 0 then false
-            else let p = d.parameters[0] :?> Parameter in p.value.isReverseDiff
-
-    member d.isNoDiff
-        with get() = 
-            if d.parameters.Count = 0 then true
-            else let p = d.parameters[0] :?> Parameter in p.value.isNoDiff
 
     /// <summary>TBD</summary>
     member d.clear() = d.parameters.Clear()
@@ -126,11 +111,15 @@ type ParameterDict() =
     member d.copy() = d.map(fun (n, p:Parameter) -> (n, p.copy()))
 
     /// <summary>TBD</summary>
-    member d.set(other:ParameterDict, ?strict:bool) = 
+    member d.set(other:ParameterDict, ?differentiable:bool, ?strict:bool) = 
+        let differentiable = defaultArg differentiable false
         let strict = defaultArg strict false
         d.iter(fun (n, p) -> 
-            if other.parameters.Contains(n) then 
-                p.value <- other[n]
+            if other.parameters.Contains(n) then
+                if differentiable then
+                    p.value <- other[n]
+                else
+                    p.value <- other[n].primalDeep
             elif strict then 
                 failwithf "ParameterDict.set: key %A not found in other" n)
 
@@ -177,33 +166,40 @@ type ParameterDict() =
     member d.nelement with get() = [|for t in d.parameters.Values do (t :?> Parameter).value.nelement|] |> Array.sum
 
     /// <summary>TBD</summary>
-    member d.flatten(?noDiff:bool) =
-        let noDiff = defaultArg noDiff false
-        let d =
-            if noDiff then 
-                let dd = d.copy() // Gets a copy of the ParameterDict with no differentiation
-                // dd.noDiff()
-                dd
-            else d
-        if d.count = 0 then dsharp.zeros(0) // Empty ParameterDict defaults to default device, dtype, backend config
-        elif d.isReverseDiff then
-            // We flatten reverse-mode parameters into a single reverse-mode tensor and also keep the derivative information to cover the use case
-            // where the reverse-mode derivative of the parameters (after reverse propagation) can be read from the flattened tensor.
-            // This extra code is needed because for reverse-mode tensor operations like cat normally do not keep derivative information and only apply to primals.
-            // This mirrors the behavior in ParameterDict.unflatten.
-            let pp, pd = Array.unzip [| for t in d.parameters.Values do let t = (t :?> Parameter) in t.value.primal.view(-1), t.value.derivative.view(-1) |]
-            let tp, td = dsharp.cat(pp), dsharp.cat(pd)
-            tp.reverseDiff(derivative=td, nestingTag=(d.parameters[0] :?> Parameter).value.nestingTag)
+    member d.flatten(?differentiable:bool) =
+        let differentiable = defaultArg differentiable false
+        if d.count = 0 then dsharp.zeros(0) // Empty ParameterDict defaults to default device, dtype backend config
         else
-        let ts = [| for t in d.parameters.Values do (t :?> Parameter).value.view(-1) |]
-        dsharp.cat(ts)
+        let p0 = d.parameters[0] :?> Parameter
+        if not differentiable || p0.value.isNoDiff then
+            let ts = [| for t in d.parameters.Values do (t :?> Parameter).value.primalDeep.view(-1) |] // Discards differentiability
+            dsharp.cat(ts)
+        else
+            if p0.value.isForwardDiff then
+                // Forward mode
+                for p in d.parameters.Values do
+                    if (p :?> Parameter).value.isForwardDiff = false then
+                        failwith "Expecting all parameters to be forward-mode differentiable"
+                let ts = [| for t in d.parameters.Values do (t :?> Parameter).value.view(-1) |] // Preserves forward-mode differentiability
+                dsharp.cat(ts)
+            else
+                // Reverse mode
+                for p in d.parameters.Values do
+                    if (p :?> Parameter).value.isReverseDiff = false then
+                        failwith "Expecting all parameters to be reverse-mode differentiable"
+                // We flatten reverse-mode parameters into a single reverse-mode tensor and also keep the derivative information to cover the use case
+                // where the reverse-mode derivative of the parameters (after reverse propagation) can be read from the flattened tensor.
+                // This extra code is needed because for reverse-mode tensor operations like cat normally do not keep derivative information and only apply to primals.
+                let pp, pd = Array.unzip [| for t in d.parameters.Values do let t = (t :?> Parameter) in t.value.primal.view(-1), t.value.derivative.view(-1) |]
+                let tp, td = dsharp.cat(pp), dsharp.cat(pd)
+                tp.reverseDiff(derivative=td, nestingTag=(d.parameters[0] :?> Parameter).value.nestingTag)
 
     /// <summary>TBD</summary>
-    member d.unflatten(tensors:Tensor, ?noDiff:bool) =
-        let noDiff = defaultArg noDiff false
+    member d.unflatten(tensors:Tensor, ?differentiable:bool) =
+        let differentiable = defaultArg differentiable false
         let tensors =
-            if noDiff then tensors.primalDeep
-            else tensors
+            if differentiable then tensors // Keeps differentiablity
+            else tensors.primalDeep // Discards differentiability
         if tensors.dim <> 1 then failwithf "Expecting 1d tensors but received tensors with shape %A" tensors.shape
         if tensors.nelement <> d.nelement then failwithf "Expecting tensors.nelement (%A) and ParameterDict.nelement (%A) to be the same" tensors.nelement d.nelement
         if tensors.nelement = 0 then ()
@@ -296,43 +292,43 @@ type ModelBase() =
         with get() = parameterDict.backend
 
     member _.isForwardDiff
-        with get() = parameterDict.isForwardDiff
+        with get() = let p = parameterDict.parameters[0] :?> Parameter in p.value.isForwardDiff
 
     member _.isReverseDiff
-        with get() = parameterDict.isReverseDiff
+        with get() = let p = parameterDict.parameters[0] :?> Parameter in p.value.isReverseDiff
 
     member _.isNoDiff
-        with get() = parameterDict.isNoDiff
+        with get() = let p = parameterDict.parameters[0] :?> Parameter in p.value.isNoDiff
 
     /// <summary>TBD</summary>
     member _.parameters
         with get () = parameterDict
-        and set p = parameterDict.set(p)
+        and set p = parameterDict.set(p, differentiable=true)
 
     /// <summary>TBD</summary>
     member _.parametersVector
-        with get () = parameterDict.flatten()
-        and set p = parameterDict.unflatten(p)
+        with get () = parameterDict.flatten(differentiable=true)
+        and set p = parameterDict.unflatten(p, differentiable=true)
 
     /// <summary>TBD</summary>
     member _.buffers
         with get () = bufferDict
-        and set b = bufferDict.set(b)
+        and set b = bufferDict.set(b, differentiable=false)
 
     /// <summary>TBD</summary>
     member _.buffersVector
-        with get () = bufferDict.flatten(noDiff=true)
-        and set b = bufferDict.unflatten(b, noDiff=true)
+        with get () = bufferDict.flatten(differentiable=false)
+        and set b = bufferDict.unflatten(b, differentiable=false)
 
     /// <summary>TBD</summary>
     member _.state
         with get () = stateDict
-        and set s = stateDict.set(s)
+        and set s = stateDict.set(s, differentiable=false)
 
     /// <summary>TBD</summary>
     member _.stateVector
-        with get () = stateDict.flatten(noDiff=true)
-        and set s = stateDict.unflatten(s, noDiff=true)
+        with get () = stateDict.flatten(differentiable=false)
+        and set s = stateDict.unflatten(s, differentiable=false)
 
     /// <summary>Gets the number of parameters of the Model</summary>
     member m.nparameters = m.parameters.nelement
