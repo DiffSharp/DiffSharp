@@ -40,7 +40,7 @@ type TestModelLinear () =
         let net = Linear(inFeatures, outFeatures)
 
         let fileName = System.IO.Path.GetTempFileName()
-        net.saveState(fileName)
+        dsharp.save(net.state, fileName)
         let _ = dsharp.randn([batchSize; inFeatures]) --> net
-        net.loadState(fileName)
+        net.state <- dsharp.load(fileName)
         Assert.True(true)

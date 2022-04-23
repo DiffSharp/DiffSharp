@@ -319,13 +319,13 @@ type TestModel () =
         let net1 = ModelStyle1()
         let p1 = net1.stateVector
         let fileName = System.IO.Path.GetTempFileName()
-        net1.saveState(fileName)
+        dsharp.save(net1.state, fileName)
 
         let net2 = ModelStyle1()
         let p2 = net2.stateVector
         Assert.AreNotEqual(p1, p2)
 
-        net2.loadState(fileName)
+        net2.state <- dsharp.load(fileName)
         let p2 = net2.stateVector
         Assert.CheckEqual(p1, p2)
 
@@ -339,13 +339,13 @@ type TestModel () =
         let net1 = ModelStyle1WithParamBuffer()
         let p1 = net1.stateVector
         let fileName = System.IO.Path.GetTempFileName()
-        net1.saveState(fileName)
+        dsharp.save(net1.state, fileName)
 
         let net2 = ModelStyle1WithParamBuffer()
         let p2 = net2.stateVector
         Assert.AreNotEqual(p1, p2)
 
-        net2.loadState(fileName)
+        net2.state <- dsharp.load(fileName)
         let p2 = net2.stateVector
         Assert.CheckEqual(p1, p2)
 
@@ -359,9 +359,9 @@ type TestModel () =
         let net1 = ModelStyle1()
         let p1 = net1.parametersVector
         let fileName = System.IO.Path.GetTempFileName()
-        net1.save(fileName)
+        dsharp.save(net1, fileName)
 
-        let net2 = Model.load(fileName)
+        let net2:Model = dsharp.load(fileName)
         let p2 = net2.parametersVector
         Assert.CheckEqual(p1, p2)
 
@@ -375,9 +375,9 @@ type TestModel () =
         let net1 = ModelStyle1WithParamBuffer()
         let p1 = net1.parametersVector
         let fileName = System.IO.Path.GetTempFileName()
-        net1.save(fileName)
+        dsharp.save(net1, fileName)
 
-        let net2 = Model.load(fileName)
+        let net2:Model = dsharp.load(fileName)
         let p2 = net2.parametersVector
         Assert.CheckEqual(p1, p2)
 
@@ -393,15 +393,15 @@ type TestModel () =
         Assert.True(net.isReverseDiff)
 
         let fileName = System.IO.Path.GetTempFileName()
-        net.saveState(fileName)
+        dsharp.save(net.state, fileName)
         Assert.True(net.isReverseDiff)
 
-        net.loadState(fileName)
+        net.state <- dsharp.load(fileName)
         Assert.True(net.isNoDiff)
 
         net.reverseDiff()
-        net.saveState(fileName, noDiff=false)
-        net.loadState(fileName)
+        dsharp.save(net.state, fileName)
+        net.state <- dsharp.load(fileName)
         Assert.True(net.isReverseDiff)
 
     [<Test>]
@@ -411,15 +411,15 @@ type TestModel () =
         Assert.True(net.isReverseDiff)
 
         let fileName = System.IO.Path.GetTempFileName()
-        net.saveState(fileName)
+        dsharp.save(net.state, fileName)
         Assert.True(net.isReverseDiff)
 
-        net.loadState(fileName)
+        net.state <- dsharp.load(fileName)
         Assert.True(net.isNoDiff)
 
         net.reverseDiff()
-        net.saveState(fileName, noDiff=false)
-        net.loadState(fileName)
+        dsharp.save(net.state, fileName)
+        net.state <- dsharp.load(fileName)
         Assert.True(net.isReverseDiff)
 
     [<Test>]
@@ -429,15 +429,15 @@ type TestModel () =
         Assert.True(net.isReverseDiff)
 
         let fileName = System.IO.Path.GetTempFileName()
-        net.save(fileName)
+        dsharp.save(net, fileName)
         Assert.True(net.isReverseDiff)
 
-        let net2 = Model.load(fileName)
+        let net2:Model = dsharp.load(fileName)
         Assert.True(net2.isNoDiff)
 
         net2.reverseDiff()
-        net2.save(fileName, noDiff=false)
-        let net3 = Model.load(fileName)
+        dsharp.save(net2, fileName)
+        let net3:Model = dsharp.load(fileName)
         Assert.True(net3.isReverseDiff)
 
     [<Test>]
@@ -447,15 +447,15 @@ type TestModel () =
         Assert.True(net.isReverseDiff)
 
         let fileName = System.IO.Path.GetTempFileName()
-        net.save(fileName)
+        dsharp.save(net, fileName)
         Assert.True(net.isReverseDiff)
 
-        let net2 = Model.load(fileName)
+        let net2:Model = dsharp.load(fileName)
         Assert.True(net2.isNoDiff)
 
         net2.reverseDiff()
-        net2.save(fileName, noDiff=false)
-        let net3 = Model.load(fileName)
+        dsharp.save(net2, fileName)
+        let net3:Model = dsharp.load(fileName)
         Assert.True(net3.isReverseDiff)
 
     [<Test>]

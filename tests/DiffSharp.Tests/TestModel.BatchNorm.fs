@@ -490,12 +490,12 @@ type TestModelBatchNorm () =
 
         let mean0, variance0 = net.mean, net.variance
         let fileName = System.IO.Path.GetTempFileName()
-        net.saveState(fileName)
+        dsharp.save(net.state, fileName)
 
         let _ = dsharp.randn([batchSize; numFeatures]) --> net
         let mean1, variance1 = net.mean, net.variance
 
-        net.loadState(fileName)
+        net.state <- dsharp.load(fileName)
         let mean2, variance2 = net.mean, net.variance
 
         Assert.AreEqual(mean0.shape, mean1.shape)
@@ -512,12 +512,12 @@ type TestModelBatchNorm () =
 
         let mean0, variance0 = net.mean, net.variance
         let fileName = System.IO.Path.GetTempFileName()
-        net.saveState(fileName)
+        dsharp.save(net.state, fileName)
 
         let _ = dsharp.randn([batchSize; numFeatures; d; d]) --> net
         let mean1, variance1 = net.mean, net.variance
 
-        net.loadState(fileName)
+        net.state <- dsharp.load(fileName)
         let mean2, variance2 = net.mean, net.variance
 
         Assert.AreEqual(mean0.shape, mean1.shape)
@@ -534,12 +534,12 @@ type TestModelBatchNorm () =
 
         let mean0, variance0 = net.mean, net.variance
         let fileName = System.IO.Path.GetTempFileName()
-        net.saveState(fileName)
+        dsharp.save(net.state, fileName)
 
         let _ = dsharp.randn([batchSize; numFeatures; d; d; d]) --> net
         let mean1, variance1 = net.mean, net.variance
 
-        net.loadState(fileName)
+        net.state <- dsharp.load(fileName)
         let mean2, variance2 = net.mean, net.variance
 
         Assert.AreEqual(mean0.shape, mean1.shape)

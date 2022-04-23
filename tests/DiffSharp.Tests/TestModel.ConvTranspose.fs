@@ -74,9 +74,9 @@ type TestModelConvTranspose () =
         let net = ConvTranspose1d(inChannels, outChannels, kernelSize)
 
         let fileName = System.IO.Path.GetTempFileName()
-        net.saveState(fileName)
+        dsharp.save(net.state, fileName)
         let _ = dsharp.randn([batchSize; inChannels; d]) --> net
-        net.loadState(fileName)
+        net.state <- dsharp.load(fileName)
         Assert.True(true)
 
     [<Test>]
@@ -89,9 +89,9 @@ type TestModelConvTranspose () =
         let net = ConvTranspose2d(inChannels, outChannels, kernelSize)
 
         let fileName = System.IO.Path.GetTempFileName()
-        net.saveState(fileName)
+        dsharp.save(net.state, fileName)
         let _ = dsharp.randn([batchSize; inChannels; d; d]) --> net
-        net.loadState(fileName)
+        net.state <- dsharp.load(fileName)
         Assert.True(true)
 
     [<Test>]
@@ -104,7 +104,7 @@ type TestModelConvTranspose () =
         let net = ConvTranspose3d(inChannels, outChannels, kernelSize)
 
         let fileName = System.IO.Path.GetTempFileName()
-        net.saveState(fileName)
+        dsharp.save(net.state, fileName)
         let _ = dsharp.randn([batchSize; inChannels; d; d; d]) --> net
-        net.loadState(fileName)
+        net.state <- dsharp.load(fileName)
         Assert.True(true)        

@@ -668,7 +668,10 @@ type Tensor =
     /// </summary>
     member a.like(value, ?device, ?dtype, ?backend) = TensorC(a.primalRaw.CreateLike(value, ?device=device, ?dtype=dtype, ?backend=backend))
 
-    /// Returns a new tensor with underlying storage copied.
+    /// <summary>Returns a new tensor with underlying storage copied.</summary>
+    /// <remarks>
+    ///   This method discards differentiability and returns a constant tensor.
+    /// </remarks>
     member a.clone() = TensorC(a.primalRaw.Clone())
 
     /// Returns a tensor in the manner of <see cref="M:DiffSharp.dsharp.onehot"/> for the given element type and configuration, defaulting to

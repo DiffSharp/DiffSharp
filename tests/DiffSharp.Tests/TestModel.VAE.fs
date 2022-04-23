@@ -65,9 +65,9 @@ type TestModelVAE() =
         let net = VAEMLP(xdim*xdim, zdim)
 
         let fileName = System.IO.Path.GetTempFileName()
-        net.saveState(fileName) // Save pre-use
+        dsharp.save(net.state, fileName) // Save pre-use
         let _ = dsharp.randn([n; xdim*xdim]) --> net // Use
-        net.loadState(fileName) // Load after-use
+        net.state <- dsharp.load(fileName) // Load after-use
 
         Assert.True(true)
 
@@ -79,8 +79,8 @@ type TestModelVAE() =
         let net = VAE([xdim;xdim], zdim, encoder, decoder)
 
         let fileName = System.IO.Path.GetTempFileName()
-        net.saveState(fileName) // Save pre-use
+        dsharp.save(net.state, fileName) // Save pre-use
         let _ = dsharp.randn([n; xdim; xdim]) --> net // Use
-        net.loadState(fileName) // Load after-use
+        net.state <- dsharp.load(fileName) // Load after-use
 
         Assert.True(true)

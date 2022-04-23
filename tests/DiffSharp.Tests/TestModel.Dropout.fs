@@ -57,9 +57,9 @@ type TestModelDropout () =
         let net = Dropout(0.5)
 
         let fileName = System.IO.Path.GetTempFileName()
-        net.saveState(fileName) // Save pre-use
+        dsharp.save(net.state, fileName) // Save pre-use
         let _ = dsharp.randn([10; 10]) --> net // Use
-        net.loadState(fileName) // Load after-use
+        net.state <- dsharp.load(fileName) // Load after-use
 
         Assert.True(true)
 
@@ -68,9 +68,9 @@ type TestModelDropout () =
         let net = Dropout2d(0.5)
 
         let fileName = System.IO.Path.GetTempFileName()
-        net.saveState(fileName) // Save pre-use
+        dsharp.save(net.state, fileName) // Save pre-use
         let _ = dsharp.randn([10; 10; 10; 10]) --> net // Use
-        net.loadState(fileName) // Load after-use
+        net.state <- dsharp.load(fileName) // Load after-use
 
         Assert.True(true)
 
@@ -79,8 +79,8 @@ type TestModelDropout () =
         let net = Dropout3d(0.5)
 
         let fileName = System.IO.Path.GetTempFileName()
-        net.saveState(fileName) // Save pre-use
+        dsharp.save(net.state, fileName) // Save pre-use
         let _ = dsharp.randn([10; 10; 10; 10; 10]) --> net // Use
-        net.loadState(fileName) // Load after-use
+        net.state <- dsharp.load(fileName) // Load after-use
 
         Assert.True(true)

@@ -115,9 +115,9 @@ type TestModelRecurrent () =
         let net = RNN(10, 10)
 
         let fileName = System.IO.Path.GetTempFileName()
-        net.saveState(fileName) // Save pre-use
+        dsharp.save(net.state, fileName) // Save pre-use
         let _ = dsharp.randn([10; 10; 10]) --> net // Use
-        net.loadState(fileName) // Load after-use
+        net.state <- dsharp.load(fileName) // Load after-use
 
         Assert.True(true)
 
@@ -126,8 +126,8 @@ type TestModelRecurrent () =
         let net = LSTM(10, 10)
 
         let fileName = System.IO.Path.GetTempFileName()
-        net.saveState(fileName) // Save pre-use
+        dsharp.save(net.state, fileName) // Save pre-use
         let _ = dsharp.randn([10; 10; 10]) --> net // Use
-        net.loadState(fileName) // Load after-use
+        net.state <- dsharp.load(fileName) // Load after-use
 
         Assert.True(true)

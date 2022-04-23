@@ -51,6 +51,8 @@ type dsharp =
     /// <remarks>
     ///   The format used may change from version to version of DiffSharp.
     /// </remarks>
+    // TODO: this can be improved to traverse the loaded data structure to discover any contained Tensor objects
+    // and move all tensors to the config specified by a given set of device, dtype, backend arguments.
     static member load(fileName) = loadBinary fileName
 
     /// <summary>Returns a new uninitialized tensor filled with arbitrary values for the given shape, element type and configuration</summary>

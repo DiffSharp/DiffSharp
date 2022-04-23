@@ -120,14 +120,19 @@ type ParameterDict() =
     member d.map(f:Parameter->Parameter) = d.map(fun (n, p) -> (n, f p))
 
     /// <summary>TBD</summary>
+    /// <remarks>
+    ///   This method discards differentiability and returns a ParameterDict containing parameters that are constant tensors.
+    /// </remarks>    /// 
     member d.copy() = d.map(fun (n, p:Parameter) -> (n, p.copy()))
 
     /// <summary>TBD</summary>
-    member d.set(other:ParameterDict) = 
-        let dKeys = d.parameters.Keys
-        let oKeys = other.parameters.Keys
-        if dKeys <> oKeys then failwithf "Expecting ParameterDict objects to have same set of keys."
-        d.iter(fun (n, p) -> p.value <- other[n])
+    member d.set(other:ParameterDict, ?strict:bool) = 
+        let strict = defaultArg strict false
+        d.iter(fun (n, p) -> 
+            if other.parameters.Contains(n) then 
+                p.value <- other[n]
+            elif strict then 
+                failwithf "ParameterDict.set: key %A not found in other" n)
 
     /// <summary>TBD</summary>
     member d.iter(f:string*Parameter->unit) = for n, p in d do f(n, p)
@@ -172,7 +177,14 @@ type ParameterDict() =
     member d.nelement with get() = [|for t in d.parameters.Values do (t :?> Parameter).value.nelement|] |> Array.sum
 
     /// <summary>TBD</summary>
-    member d.flatten() =
+    member d.flatten(?noDiff:bool) =
+        let noDiff = defaultArg noDiff false
+        let d =
+            if noDiff then 
+                let dd = d.copy() // Gets a copy of the ParameterDict with no differentiation
+                // dd.noDiff()
+                dd
+            else d
         if d.count = 0 then dsharp.zeros(0) // Empty ParameterDict defaults to default device, dtype, backend config
         elif d.isReverseDiff then
             // We flatten reverse-mode parameters into a single reverse-mode tensor and also keep the derivative information to cover the use case
@@ -187,7 +199,11 @@ type ParameterDict() =
         dsharp.cat(ts)
 
     /// <summary>TBD</summary>
-    member d.unflatten(tensors:Tensor) =
+    member d.unflatten(tensors:Tensor, ?noDiff:bool) =
+        let noDiff = defaultArg noDiff false
+        let tensors =
+            if noDiff then tensors.primalDeep
+            else tensors
         if tensors.dim <> 1 then failwithf "Expecting 1d tensors but received tensors with shape %A" tensors.shape
         if tensors.nelement <> d.nelement then failwithf "Expecting tensors.nelement (%A) and ParameterDict.nelement (%A) to be the same" tensors.nelement d.nelement
         if tensors.nelement = 0 then ()
@@ -305,8 +321,8 @@ type ModelBase() =
 
     /// <summary>TBD</summary>
     member _.buffersVector
-        with get () = bufferDict.flatten()
-        and set b = bufferDict.unflatten(b)
+        with get () = bufferDict.flatten(noDiff=true)
+        and set b = bufferDict.unflatten(b, noDiff=true)
 
     /// <summary>TBD</summary>
     member _.state
@@ -315,8 +331,8 @@ type ModelBase() =
 
     /// <summary>TBD</summary>
     member _.stateVector
-        with get () = stateDict.flatten()
-        and set s = stateDict.unflatten(s)
+        with get () = stateDict.flatten(noDiff=true)
+        and set s = stateDict.unflatten(s, noDiff=true)
 
     /// <summary>Gets the number of parameters of the Model</summary>
     member m.nparameters = m.parameters.nelement
@@ -459,40 +475,40 @@ type ModelBase() =
     member m.move(?device, ?dtype, ?backend) = 
         m.state.move(?device=device, ?dtype=dtype, ?backend=backend)
 
-    /// <summary>TBD</summary>
-    member m.saveState(fileName, ?noDiff:bool) =
-        let noDiff = defaultArg noDiff true
-        let ss =
-            if noDiff then m.stateVector.noDiff() // We remove any derivatives from the state vector before saving. This doesn't alter the differentiation state of the model.
-            else m.stateVector
-        ss.save(fileName)
+    // /// <summary>TBD</summary>
+    // member m.saveState(fileName, ?noDiff:bool) =
+    //     let noDiff = defaultArg noDiff true
+    //     let ss =
+    //         if noDiff then m.stateVector.noDiff() // We remove any derivatives from the state vector before saving. This doesn't alter the differentiation state of the model.
+    //         else m.stateVector
+    //     ss.save(fileName)
+
+    // /// <summary>TBD</summary>
+    // member m.loadState(fileName) = m.stateVector <- Tensor.load(fileName)
+
+    // /// <summary>TBD</summary>
+    // member m.save(fileName, ?noDiff:bool) =
+    //     let noDiff = defaultArg noDiff true
+    //     let mm =
+    //         if noDiff then
+    //             if m.isNoDiff then m
+    //             else
+    //                 // We clone the model and then remove any derivatives before saving. 
+    //                 // The clone is used because we don't want a save operation to alter the differentiation state of the model.
+    //                 let mClone:ModelBase = m.clone()
+    //                 mClone.noDiff()
+    //                 mClone
+    //         else m
+    //     saveBinary mm fileName
+
+    // /// <summary>TBD</summary>
+    // static member load(fileName):ModelBase = loadBinary fileName
 
     /// <summary>TBD</summary>
-    member m.loadState(fileName) = m.stateVector <- Tensor.load(fileName)
-
-    /// <summary>TBD</summary>
-    member m.save(fileName, ?noDiff:bool) =
-        let noDiff = defaultArg noDiff true
-        let mm =
-            if noDiff then
-                if m.isNoDiff then m
-                else
-                    // We clone the model and then remove any derivatives before saving. 
-                    // The clone is used because we don't want a save operation to alter the differentiation state of the model.
-                    let mClone:ModelBase = m.clone()
-                    mClone.noDiff()
-                    mClone
-            else m
-        saveBinary mm fileName
-
-    /// <summary>TBD</summary>
-    static member load(fileName):ModelBase = loadBinary fileName
-
-    /// <summary>TBD</summary>
-    member m.clone() = 
+    member m.clone():ModelBase = 
         let fileName = System.IO.Path.GetTempFileName()
-        m.save(fileName, noDiff=false)
-        ModelBase.load(fileName)
+        dsharp.save(m, fileName)
+        dsharp.load(fileName)
 
     override m.ToString() = 
         let sb = System.Text.StringBuilder()
@@ -570,8 +586,8 @@ type Model<'In, 'Out>(?f:'In->'Out, ?parameters: seq<Parameter>, ?buffers: seq<P
     /// <summary>TBD</summary>
     static member (-->) (t:'In, model:Model<'In, 'Out>) = model.forward t
 
-    /// <summary>TBD</summary>
-    static member load(fileName):Model<'In, 'Out> = ModelBase.load(fileName) :?> Model<'In, 'Out>
+    // /// <summary>TBD</summary>
+    // static member load(fileName):Model<'In, 'Out> = ModelBase.load(fileName) :?> Model<'In, 'Out>
 
     /// <summary>TBD</summary>
     member m.clone():Model<'In, 'Out> = (m :> ModelBase).clone() :?> Model<'In, 'Out>
