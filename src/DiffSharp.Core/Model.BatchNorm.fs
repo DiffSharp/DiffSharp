@@ -29,16 +29,16 @@ open DiffSharp
 type BatchNorm1d(numFeatures:int, ?eps:double, ?momentum:Tensor, ?affine:bool, ?trackRunningStats:bool, ?reversible:bool) =
     inherit Model()
     let eps = defaultArg eps 1e-5
-    let momentum = Parameter <| defaultArg momentum (dsharp.tensor(0.1))
+    let momentum = defaultArg momentum (dsharp.tensor(0.1))
     let affine = defaultArg affine true
     let trackRunningStats = defaultArg trackRunningStats true
     let reversible = defaultArg reversible false
     let w = Parameter <| if affine then dsharp.ones(numFeatures) else dsharp.zero() // gamma
     let b = Parameter <| if affine then dsharp.zeros(numFeatures) else dsharp.zero() // beta
-    let _mean = Parameter <| dsharp.zero()
-    let _variance = Parameter <| dsharp.zero()
+    let _mean = Parameter <| dsharp.zeros(numFeatures)
+    let _variance = Parameter <| dsharp.ones(numFeatures)
     do base.addParameter((w, "BatchNorm1d-weight"), (b, "BatchNorm1d-bias")) // We don't add mean and variance here because they hold running statistics and are not subject to gradient-based optimization
-    do base.addBuffer((momentum, "BatchNorm1d-momentum"), (_mean, "BatchNorm1d-mean"), (_variance, "BatchNorm1d-variance"))
+    do base.addBuffer((_mean, "BatchNorm1d-mean"), (_variance, "BatchNorm1d-variance"))
 
     /// <summary>TBD</summary>
     member _.mean = _mean.value
@@ -58,13 +58,13 @@ type BatchNorm1d(numFeatures:int, ?eps:double, ?momentum:Tensor, ?affine:bool, ?
     member private _.updateStats (batchMean:Tensor) (batchVariance:Tensor) (n:int) =
         let batchMean = if reversible then batchMean else batchMean.primal
         let batchVariance = if reversible then batchVariance else batchVariance.primal
-        _mean.value <- (1 - momentum.value) * _mean.value + momentum.value * batchMean
+        _mean.value <- (1 - momentum) * _mean.value + momentum * batchMean
         // PyTorch seems to use unbiased variance (Bessel's correction) for running batchnorm statistics and biased variance for batch statistics. This seems strange and confusing but we adopt the same behavior for the time being.
         // https://github.com/pytorch/pytorch/issues/19902
         // https://discuss.pytorch.org/t/model-eval-gives-incorrect-loss-for-model-with-batchnorm-layers/7561/46
         // Here we transform biased variance to unbiased variance for running statistics
         let batchVariance = batchVariance * (float n) / (float n - 1.)
-        _variance.value <- (1 - momentum.value) * _variance.value + momentum.value * batchVariance
+        _variance.value <- (1 - momentum) * _variance.value + momentum * batchVariance
 
     /// <summary>TBD</summary>
     override _.ToString() = sprintf "BatchNorm1d(%A)" numFeatures
@@ -121,16 +121,16 @@ type BatchNorm1d(numFeatures:int, ?eps:double, ?momentum:Tensor, ?affine:bool, ?
 type BatchNorm2d(numFeatures:int, ?eps:double, ?momentum:Tensor, ?affine:bool, ?trackRunningStats:bool, ?reversible:bool) =
     inherit Model()
     let eps = defaultArg eps 1e-5
-    let momentum = Parameter <| defaultArg momentum (dsharp.tensor(0.1))
+    let momentum = defaultArg momentum (dsharp.tensor(0.1))
     let affine = defaultArg affine true
     let trackRunningStats = defaultArg trackRunningStats true
     let reversible = defaultArg reversible false
     let w = Parameter <| if affine then dsharp.ones(numFeatures) else dsharp.zero() // gamma
     let b = Parameter <| if affine then dsharp.zeros(numFeatures) else dsharp.zero() // beta
-    let _mean = Parameter <| dsharp.zero()
-    let _variance = Parameter <| dsharp.zero()
+    let _mean = Parameter <| dsharp.zeros(numFeatures)
+    let _variance = Parameter <| dsharp.ones(numFeatures)
     do base.addParameter((w, "BatchNorm2d-weight"), (b, "BatchNorm2d-bias")) // We don't add mean and variance here because they hold running statistics and are not subject to gradient-based optimization
-    do base.addBuffer((momentum, "BatchNorm2d-momentum"), (_mean, "BatchNorm2d-mean"), (_variance, "BatchNorm2d-variance"))
+    do base.addBuffer((_mean, "BatchNorm2d-mean"), (_variance, "BatchNorm2d-variance"))
 
     /// <summary>TBD</summary>
     member _.mean = _mean.value
@@ -150,13 +150,13 @@ type BatchNorm2d(numFeatures:int, ?eps:double, ?momentum:Tensor, ?affine:bool, ?
     member private _.updateStats (batchMean:Tensor) (batchVariance:Tensor) (n:int) =
         let batchMean = if reversible then batchMean else batchMean.primal
         let batchVariance = if reversible then batchVariance else batchVariance.primal
-        _mean.value <- (1 - momentum.value) * _mean.value + momentum.value * batchMean
+        _mean.value <- (1 - momentum) * _mean.value + momentum * batchMean
         // PyTorch seems to use unbiased variance (Bessel's correction) for running batchnorm statistics and biased variance for batch statistics. This seems strange and confusing but we adopt the same behavior for the time being.
         // https://github.com/pytorch/pytorch/issues/19902
         // https://discuss.pytorch.org/t/model-eval-gives-incorrect-loss-for-model-with-batchnorm-layers/7561/46
         // Here we transform biased variance to unbiased variance for running statistics
         let batchVariance = batchVariance * (float n) / (float n - 1.)
-        _variance.value <- (1 - momentum.value) * _variance.value + momentum.value * batchVariance
+        _variance.value <- (1 - momentum) * _variance.value + momentum * batchVariance
 
     /// <summary>TBD</summary>
     override _.ToString() = sprintf "BatchNorm2d(%A)" numFeatures
@@ -199,16 +199,16 @@ type BatchNorm2d(numFeatures:int, ?eps:double, ?momentum:Tensor, ?affine:bool, ?
 type BatchNorm3d(numFeatures:int, ?eps:double, ?momentum:Tensor, ?affine:bool, ?trackRunningStats:bool, ?reversible:bool) =
     inherit Model()
     let eps = defaultArg eps 1e-5
-    let momentum = Parameter <| defaultArg momentum (dsharp.tensor(0.1))
+    let momentum = defaultArg momentum (dsharp.tensor(0.1))
     let affine = defaultArg affine true
     let trackRunningStats = defaultArg trackRunningStats true
     let reversible = defaultArg reversible false
     let w = Parameter <| if affine then dsharp.ones(numFeatures) else dsharp.zero() // gamma
     let b = Parameter <| if affine then dsharp.zeros(numFeatures) else dsharp.zero() // beta
-    let _mean = Parameter <| dsharp.zero()
-    let _variance = Parameter <| dsharp.zero()
+    let _mean = Parameter <| dsharp.zeros(numFeatures)
+    let _variance = Parameter <| dsharp.ones(numFeatures)
     do base.addParameter((w, "BatchNorm3d-weight"), (b, "BatchNorm3d-bias")) // We don't add mean and variance here because they hold running statistics and are not subject to gradient-based optimization
-    do base.addBuffer((momentum, "BatchNorm3d-momentum"), (_mean, "BatchNorm3d-mean"), (_variance, "BatchNorm3d-variance"))
+    do base.addBuffer((_mean, "BatchNorm3d-mean"), (_variance, "BatchNorm3d-variance"))
 
     /// <summary>TBD</summary>
     member _.mean = _mean.value
@@ -228,13 +228,13 @@ type BatchNorm3d(numFeatures:int, ?eps:double, ?momentum:Tensor, ?affine:bool, ?
     member private _.updateStats (batchMean:Tensor) (batchVariance:Tensor) (n:int) =
         let batchMean = if reversible then batchMean else batchMean.primal
         let batchVariance = if reversible then batchVariance else batchVariance.primal
-        _mean.value <- (1 - momentum.value) * _mean.value + momentum.value * batchMean
+        _mean.value <- (1 - momentum) * _mean.value + momentum * batchMean
         // PyTorch seems to use unbiased variance (Bessel's correction) for running batchnorm statistics and biased variance for batch statistics. This seems strange and confusing but we adopt the same behavior for the time being.
         // https://github.com/pytorch/pytorch/issues/19902
         // https://discuss.pytorch.org/t/model-eval-gives-incorrect-loss-for-model-with-batchnorm-layers/7561/46
         // Here we transform biased variance to unbiased variance for running statistics
         let batchVariance = batchVariance * (float n) / (float n - 1.)
-        _variance.value <- (1 - momentum.value) * _variance.value + momentum.value * batchVariance
+        _variance.value <- (1 - momentum) * _variance.value + momentum * batchVariance
 
     /// <summary>TBD</summary>
     override _.ToString() = sprintf "BatchNorm3d(%A)" numFeatures

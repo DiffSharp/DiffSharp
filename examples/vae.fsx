@@ -31,11 +31,11 @@ type VAE(xDim:int, zDim:int, ?hDims:seq<int>, ?nonlinearity:Tensor->Tensor, ?non
         else
             Array.append (Array.append [|xDim|] hDims) [|zDim|]
             
-    let enc = Array.append [|for i in 0..dims.Length-2 -> Linear(dims[i], dims[i+1])|] [|Linear(dims[dims.Length-2], dims[dims.Length-1])|]
-    let dec = [|for i in 0..dims.Length-2 -> Linear(dims[i+1], dims[i])|] |> Array.rev
+    let enc:Model[] = Array.append [|for i in 0..dims.Length-2 -> Linear(dims[i], dims[i+1])|] [|Linear(dims[dims.Length-2], dims[dims.Length-1])|]
+    let dec:Model[] = Array.rev [|for i in 0..dims.Length-2 -> Linear(dims[i+1], dims[i])|]
     do 
-        base.addModel([for m in enc -> box m])
-        base.addModel([for m in dec -> box m])
+        base.addModel(enc)
+        base.addModel(dec)
 
     let encode x =
         let mutable x = x

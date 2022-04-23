@@ -601,7 +601,7 @@ type TestTensor () =
         for combo in Combos.All do 
             let a = combo.tensor([[1,2],[3,4]])
             a.save(fileName)
-            let b = combo.load(fileName)
+            let b = Tensor.load(fileName, device=combo.device, dtype=combo.dtype, backend=combo.backend)
             Assert.CheckEqual(a, b)
 
     [<Test>]
@@ -631,7 +631,7 @@ type TestTensor () =
         a.save(fileName)
         for combo in Combos.All do 
             let aInCombo = combo.move(a)
-            let b = combo.load(fileName)
+            let b = Tensor.load(fileName, device=combo.device, dtype=combo.dtype, backend=combo.backend)
             Assert.CheckEqual(aInCombo, b)
 
     [<Test>]
@@ -693,10 +693,21 @@ type TestTensor () =
     [<Test>]
     member _.TestTensorEmpty () =
         for combo in Combos.All do 
+            // Empty tensor with no data
+            // This is not a scalar, and shape [|0|] signifies the absence of data and dimensions
+            let tvoid = combo.empty()
+            Assert.CheckEqual(tvoid.shape, ([|0|]: int32[]) )
+            Assert.CheckEqual(tvoid.dtype, combo.dtype)
+
+            // Scalar (zero-dimensional) tensor
+            // Shape [||] siginifes zero dimensions
+            // Tensor data is not initialized and can be random or zero depending on the backend used
             let t0 = combo.empty([])
             Assert.CheckEqual(t0.shape, ([| |]: int32[]) )
             Assert.CheckEqual(t0.dtype, combo.dtype)
 
+            // Vector
+            // Tensor data is not initialized and can be random or zero depending on the backend used
             let t1 = combo.empty([2])
             Assert.CheckEqual(t1.shape, ([| 2 |]: int32[]) )
             Assert.CheckEqual(t1.dtype, combo.dtype)
@@ -3730,6 +3741,39 @@ type TestTensor () =
             let tbCorrect = combo.tensor([true, true, false, true, true], dtype=Dtype.Bool)
 
             Assert.CheckEqual(tbCorrect, tb)
+
+    [<Test>]
+    member _.TestTensorSliceWithNegativeIndex () =
+        for combo in Combos.All do
+            let t = combo.tensor([[[ 0,  1,  2,  3],
+                                    [ 4,  5,  6,  7],
+                                    [ 8,  9, 10, 11]],
+
+                                    [[12, 13, 14, 15],
+                                    [16, 17, 18, 19],
+                                    [20, 21, 22, 23]]])
+
+            let t1 = t[-1]
+            let t1Correct = combo.tensor([[12, 13, 14, 15],
+                                            [16, 17, 18, 19],
+                                            [20, 21, 22, 23]])
+            Assert.CheckEqual(t1Correct, t1)
+
+            let t2 = t[0, -1]
+            let t2Correct = combo.tensor([ 8,  9, 10, 11])
+            Assert.CheckEqual(t2Correct, t2)
+
+            let t3 = t[0, 0, -1]
+            let t3Correct = combo.tensor(3)
+            Assert.CheckEqual(t3Correct, t3)
+
+            let t3 = t[0, 0, -2]
+            let t3Correct = combo.tensor(2)
+            Assert.CheckEqual(t3Correct, t3)
+
+            let t3 = t[0, -2, -1]
+            let t3Correct = combo.tensor(7)
+            Assert.CheckEqual(t3Correct, t3)
 
     [<Test>]
     member _.TestTensorSlice () =

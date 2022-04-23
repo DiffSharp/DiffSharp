@@ -68,9 +68,8 @@ type RawTensorCPU<'T when 'T : equality and 'T :> scalar>(values: 'T[], shape: S
         t[indexes] :> scalar
 
     override t.GetSlice(fullBounds:int[,]) =
-        // printfn "rfullBounds\n%A" fullBounds
+        let fullBounds = Shape.completeSliceBounds t.Shape fullBounds
         let shape = Shape.checkCanGetSlice t.Shape fullBounds
-        // printfn "rshape\n%A" shape
         let array = Array.zeroCreate (shapeLength shape)
         let mutable arrayi = 0
         let rec slice (fullBounds:int[,]) externalCoords =

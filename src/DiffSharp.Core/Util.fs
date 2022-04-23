@@ -46,6 +46,8 @@ type Random() =
 
     /// Samples a random value from the standard normal distribution with mean 0 and standard deviation 1.
     static member Normal() =
+        // Marsaglia polar method
+        // TODO: this is discarding one of the two samples that can be generated. For efficiency, we can keep the second sample around to return it in the next call.
         let rec normal() = 
             let x, y = (rnd.NextDouble()) * 2.0 - 1.0, (rnd.NextDouble()) * 2.0 - 1.0
             let s = x * x + y * y
@@ -475,6 +477,30 @@ module UtilAutoOpens =
     /// Given a PNG image file name, returns an HTML image element with the image content included as a Base64 encoded string
     let pngToHtml fileName widthPixels =
         sprintf """<img src="data:image/png;base64,%s" style="width: %dpx; height: auto"/>""" (fileName |> fileToBase64String) widthPixels
+
+    /// Return a human-readable string representation of the given value in Bytes.
+    let bytesReadable (i:int64) =
+        // Based on https://www.somacon.com/p576.php
+        let absolute_i = abs i
+        let suffix, readable = 
+            // https://en.wikipedia.org/wiki/Binary_prefix
+            if absolute_i >= 0x1000000000000000L then // exbibyte
+                "EiB", (i >>> 50)
+            elif absolute_i >= 0x4000000000000L then // pebibyte
+                "PiB", (i >>> 40)
+            elif absolute_i >= 0x10000000000L then // tebibyte
+                "TiB", (i >>> 30)
+            elif absolute_i >= 0x40000000L then // gibibyte
+                "GiB", (i >>> 20)
+            elif absolute_i >= 0x100000L then // mebibyte
+                "MiB", (i >>> 10)
+            elif absolute_i >= 0x400L then // kibibyte
+                "KiB", i
+            else
+                "B", i // Byte
+        if suffix = "B" then i.ToString("0 B") else
+        let readable = (double readable / 1024.)
+        readable.ToString("0.### ") + suffix
 
     // Avoids warning FS3370 in F# 6
     let (!) (r: 'T ref)  = r.Value

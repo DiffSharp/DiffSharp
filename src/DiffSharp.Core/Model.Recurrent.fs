@@ -7,213 +7,361 @@ namespace DiffSharp.Model
 
 open DiffSharp
 
-[<AutoOpen>]
-module ModelRecurrentAutoOpens =
-    let rnnShape (value:Tensor) inFeatures batchFirst =
-        let value =
-            if batchFirst then
-                if value.dim <> 3 then failwithf "Expecting the input to be of shape batchSize x seqLen x inFeatures, but received input with shape %A" value.shape
-                value.transpose(0, 1)
-            else
-                if value.dim <> 3 then failwithf "Expecting the input to be of shape seqLen x batchSize x inFeatures, but received input with shape %A" value.shape
-                value
-        if value.shape[2] <> inFeatures then failwithf "Expecting input to have %A features, but received input with shape %A" inFeatures value.shape
-        let seqLen, batchSize = value.shape[0], value.shape[1]
-        value, seqLen, batchSize
+module RecurrentShape =
+    let RNNCell (input:Tensor) inputSize =
+        // input: [batchSize, inputSize]
+        if input.dim <> 2 then failwithf "Expecting the input to be of shape [batchSize; inputSize] but got %A" input.shape
+        if input.shape[1] <> inputSize then failwithf "Expecting the input size to be %A but got %A" inputSize input.shape[1]
+
+    let RNNCellSequence (input:Tensor) inputSize =
+        // input: [seqLen, batchSize, inputSize]
+        if input.dim <> 3 then failwithf "Expecting the input to be of shape [sequenceLength; batchSize; inputSize] but got %A" input.shape
+        if input.shape[2] <> inputSize then failwithf "Expecting the input size to be %A but got %A" inputSize input.shape[2]
+
+    let RNNCellWithHidden (input:Tensor) (hidden:Tensor) inputSize hiddenSize =
+        // input: [batchSize, inputSize]
+        // hidden: [batchSize, hiddenSize]
+        if input.dim <> 2 then failwithf "Expecting the input to be of shape [batchSize; inputSize] but got %A" input.shape
+        if hidden.dim <> 2 then failwithf "Expecting the hidden to be of shape [batchSize; hiddenSize] but got %A" hidden.shape
+        if input.shape[0] <> hidden.shape[0] then failwithf "Expecting the batch size to be the same for the input and hidden but got %A and %A" input.shape[0] hidden.shape[0]
+        if input.shape[1] <> inputSize then failwithf "Expecting the input size to be %A but got %A" inputSize input.shape[1]
+        if hidden.shape[1] <> hiddenSize then failwithf "Expecting the hidden size to be %A but got %A" hiddenSize hidden.shape[1]
+
+    let RNNCellSequenceWithHidden (input:Tensor) (hidden:Tensor) inputSize hiddenSize =
+        // input: [seqLen, batchSize, inputSize]
+        // hidden: [batchSize, hiddenSize]
+        if input.dim <> 3 then failwithf "Expecting the input to be of shape [sequenceLength; batchSize; inputSize] but got %A" input.shape
+        if hidden.dim <> 2 then failwithf "Expecting the hidden to be of shape [batchSize; hiddenSize] but got %A" hidden.shape
+        if input.shape[1] <> hidden.shape[0] then failwithf "Expecting the batch size to be the same for the input and hidden but got %A and %A" input.shape[0] hidden.shape[0]
+        if input.shape[2] <> inputSize then failwithf "Expecting the input size to be %A but got %A" inputSize input.shape[2]
+        if hidden.shape[1] <> hiddenSize then failwithf "Expecting the hidden size to be %A but got %A" hiddenSize hidden.shape[1]
+
+    let RNN (input:Tensor) inputSize batchFirst =
+        // input: [seqLen, batchSize, inputSize] or [batchSize, seqLen, inputSize]
+        if batchFirst then
+            if input.dim <> 3 then failwithf "Expecting the input to be of shape [batchSize; sequenceLength; inputSize] but got %A" input.shape
+        else
+            if input.dim <> 3 then failwithf "Expecting the input to be of shape [sequenceLength; batchSize; inputSize] but got %A" input.shape
+        if input.shape[2] <> inputSize then failwithf "Expecting the input size to be %A but got %A" inputSize input.shape[2]
+
+    let RNNWithHidden (input:Tensor) (hidden:Tensor) inputSize hiddenSize batchFirst numLayers numDirections =
+        // input: [seqLen, batchSize, inputSize] or [batchSize, seqLen, inputSize]
+        // hidden: [numLayers*numDirections, batchSize, hiddenSize]
+        if hidden.dim <> 3 then failwithf "Expecting the hidden to be of shape [numLayers*numDirections; batchSize; hiddenSize] but got %A" hidden.shape
+        if batchFirst then
+            if input.dim <> 3 then failwithf "Expecting the input to be of shape [batchSize; sequenceLength; inputSize] but got %A" input.shape
+            if input.shape[0] <> hidden.shape[1] then failwithf "Expecting the batch size to be the same for the input and hidden but got %A and %A" input.shape[0] hidden.shape[1]
+        else
+            if input.dim <> 3 then failwithf "Expecting the input to be of shape [sequenceLength; batchSize; inputSize] but got %A" input.shape
+            if input.shape[1] <> hidden.shape[1] then failwithf "Expecting the batch size to be the same for the input and hidden but got %A and %A" input.shape[1] hidden.shape[1]
+
+        if input.shape[2] <> inputSize then failwithf "Expecting the input size to be %A but got %A" inputSize input.shape[2]
+        if hidden.shape[2] <> hiddenSize then failwithf "Expecting the hidden size to be %A but got %A" hiddenSize hidden.shape[2]
+        if hidden.shape[0] <> numLayers*numDirections then failwithf "Expecting the hidden shape[0] to be %A but got %A" (numLayers*numDirections) hidden.shape[0]
+
+    let LSTMCellWithHidden (input:Tensor) (hidden:Tensor) (cell:Tensor) inputSize hiddenSize =
+        // input: [batchSize, inputSize]
+        // hidden: [batchSize, hiddenSize]
+        // cell: [batchSize, hiddenSize]
+        if input.dim <> 2 then failwithf "Expecting the input to be of shape [batchSize; inputSize] but got %A" input.shape
+        if hidden.dim <> 2 then failwithf "Expecting the hidden to be of shape [batchSize; hiddenSize] but got %A" hidden.shape
+        if input.shape[0] <> hidden.shape[0] then failwithf "Expecting the batch size to be the same for the input and hidden but got %A and %A" input.shape[0] hidden.shape[0]
+        if input.shape[1] <> inputSize then failwithf "Expecting the input size to be %A but got %A" inputSize input.shape[1]
+        if hidden.shape[1] <> hiddenSize then failwithf "Expecting the hidden size to be %A but got %A" hiddenSize hidden.shape[1]
+        if hidden.shape <> cell.shape then failwithf "Expecting the hidden and cell to have the same shape but got %A and %A" hidden.shape cell.shape
+
+    let LSTMCellSequenceWithHidden (input:Tensor) (hidden:Tensor) (cell:Tensor) inputSize hiddenSize =
+        // input: [seqLen, batchSize, inputSize]
+        // hidden: [batchSize, hiddenSize]
+        // cell: [batchSize, hiddenSize]
+        if input.dim <> 3 then failwithf "Expecting the input to be of shape [sequenceLength; batchSize; inputSize] but got %A" input.shape
+        if hidden.dim <> 2 then failwithf "Expecting the hidden to be of shape [batchSize; hiddenSize] but got %A" hidden.shape
+        if input.shape[1] <> hidden.shape[0] then failwithf "Expecting the batch size to be the same for the input and hidden but got %A and %A" input.shape[0] hidden.shape[0]
+        if input.shape[2] <> inputSize then failwithf "Expecting the input size to be %A but got %A" inputSize input.shape[2]
+        if hidden.shape[1] <> hiddenSize then failwithf "Expecting the hidden size to be %A but got %A" hiddenSize hidden.shape[1]
+        if hidden.shape <> cell.shape then failwithf "Expecting the hidden and cell to have the same shape but got %A and %A" hidden.shape cell.shape
+
+    let LSTMWithHidden (input:Tensor) (hidden:Tensor) (cell:Tensor) inputSize hiddenSize batchFirst numLayers numDirections =
+        // input: [seqLen, batchSize, inputSize] or [batchSize, seqLen, inputSize]
+        // hidden: [numLayers*numDirections, batchSize, hiddenSize]
+        // cell: [numLayers*numDirections, batchSize, hiddenSize]
+        if hidden.dim <> 3 then failwithf "Expecting the hidden to be of shape [numLayers*numDirections; batchSize; hiddenSize] but got %A" hidden.shape
+        if cell.dim <> 3 then failwithf "Expecting the cell to be of shape [numLayers*numDirections; batchSize; hiddenSize] but got %A" cell.shape
+        if batchFirst then
+            if input.dim <> 3 then failwithf "Expecting the input to be of shape [batchSize; sequenceLength; inputSize] but got %A" input.shape
+            if input.shape[0] <> hidden.shape[1] then failwithf "Expecting the batch size to be the same for the input and hidden but got %A and %A" input.shape[0] hidden.shape[1]
+            if input.shape[0] <> cell.shape[1] then failwithf "Expecting the batch size to be the same for the input and cell but got %A and %A" input.shape[0] cell.shape[1]
+        else
+            if input.dim <> 3 then failwithf "Expecting the input to be of shape [sequenceLength; batchSize; inputSize] but got %A" input.shape
+            if input.shape[1] <> hidden.shape[1] then failwithf "Expecting the batch size to be the same for the input and hidden but got %A and %A" input.shape[1] hidden.shape[1]
+            if input.shape[1] <> cell.shape[1] then failwithf "Expecting the batch size to be the same for the input and cell but got %A and %A" input.shape[1] cell.shape[1]
+        if input.shape[2] <> inputSize then failwithf "Expecting the input size to be %A but got %A" inputSize input.shape[2]
+        if hidden.shape[2] <> hiddenSize then failwithf "Expecting the hidden size to be %A but got %A" hiddenSize hidden.shape[2]
+        if hidden.shape[0] <> numLayers*numDirections then failwithf "Expecting the hidden shape[0] to be %A but got %A" (numLayers*numDirections) hidden.shape[0]
+        if cell.shape[2] <> hiddenSize then failwithf "Expecting the cell size to be %A but got %A" hiddenSize cell.shape[2]
+        if cell.shape[0] <> numLayers*numDirections then failwithf "Expecting the cell shape[0] to be %A but got %A" (numLayers*numDirections) cell.shape[0]
 
 
 /// <summary>Unit cell of a recurrent neural network. Prefer using the RNN class instead, which can combine RNNCells in multiple layers.</summary>
-type RNNCell(inFeatures, outFeatures, ?nonlinearity, ?bias, ?batchFirst) =
+type RNNCell(inputSize, hiddenSize, ?nonlinearity, ?bias, ?checkShapes) =
     inherit Model()
+    let checkShapes = defaultArg checkShapes true
     let nonlinearity = defaultArg nonlinearity dsharp.tanh
     let bias = defaultArg bias true
-    let batchFirst = defaultArg batchFirst false
-    let k = 1./sqrt (float outFeatures)
-    let wih = Parameter(Weight.uniform([|inFeatures; outFeatures|], k))
-    let whh = Parameter(Weight.uniform([|outFeatures; outFeatures|], k))
-    let b = Parameter(if bias then Weight.uniform([|outFeatures|], k) else dsharp.tensor([]))
-    let h = Parameter <| dsharp.tensor([]) // Not a paramter to be trained, this is for keeping hidden state
+    let k = 1./sqrt (float hiddenSize)
+    let wih = Parameter(Weight.uniform([inputSize; hiddenSize], k))
+    let whh = Parameter(Weight.uniform([hiddenSize; hiddenSize], k))
+    let b = Parameter(if bias then Weight.uniform([hiddenSize], k) else dsharp.empty())
     do base.addParameter((wih, "RNNCell-weight-ih"), (whh, "RNNCell-weight-hh"), (b, "RNNCell-bias"))
-    do base.addBuffer(h, "RNNCell-hidden")
 
-    member _.hidden 
-        with get () = h.value
-        and set v = h.value <- v
+    member _.inputSize = inputSize
+    member _.hiddenSize = hiddenSize
 
-    override _.ToString() = sprintf "RNNCell(%A, %A)" inFeatures outFeatures
+    member _.newHidden(batchSize) =
+        dsharp.zeros([batchSize; hiddenSize])
 
-    member r.reset() = r.hidden <- dsharp.tensor([])
+    override _.ToString() = sprintf "RNNCell(%A, %A)" inputSize hiddenSize
 
-    override r.forward(value) =
-        let value, seqLen, batchSize = rnnShape value inFeatures batchFirst
-        if r.hidden.nelement = 0 then r.hidden <- dsharp.zeros([batchSize; outFeatures])
-        let output = Array.create seqLen (dsharp.tensor([]))
-        for i in 0..seqLen-1 do
-            let v = value[i]
-            r.hidden <- dsharp.matmul(v, wih.value) + dsharp.matmul(h.value, whh.value)
-            if bias then r.hidden <- r.hidden + b.value
-            r.hidden <- nonlinearity r.hidden
-            output[i] <- r.hidden
-        let output = dsharp.stack output
-        if batchFirst then output.transpose(0, 1) else output
+    override r.forward(input) =
+        // input: [batchSize, inputSize]
+        // returns: [batchSize, hiddenSize]    
+        if checkShapes then RecurrentShape.RNNCell input inputSize
+        let batchSize = input.shape[0]
+        let hidden = r.newHidden(batchSize)
+        r.forwardWithHidden(input, hidden)
+
+    member r.forwardSequence(input) =
+        // input: [seqLen, batchSize, inputSize]
+        // returns: [seqLen, batchSize, hiddenSize]    
+        if checkShapes then RecurrentShape.RNNCellSequence input inputSize
+        let batchSize = input.shape[0]
+        let hidden = r.newHidden(batchSize)
+        r.forwardSequenceWithHidden(input, hidden)
+
+    member _.forwardWithHidden(input:Tensor, hidden:Tensor) =
+        // input: [batchSize, inputSize]
+        // hidden: [batchSize, hiddenSize]
+        // returns: [batchSize, hiddenSize]
+        if checkShapes then RecurrentShape.RNNCellWithHidden input hidden inputSize hiddenSize
+        let h = dsharp.matmul(input, wih.value) + dsharp.matmul(hidden, whh.value)
+        let h = if bias then h + b.value else h
+        let h = nonlinearity(h)
+        h
+
+    member r.forwardSequenceWithHidden(input:Tensor, hidden:Tensor) =
+        // input: [seqLen, batchSize, inputSize]
+        // hidden: [batchSize, hiddenSize]
+        // returns: [seqLen, batchSize, hiddenSize]
+        RecurrentShape.RNNCellSequenceWithHidden input hidden inputSize hiddenSize
+        let seqLen = input.shape[0]
+        let output = Array.create seqLen (dsharp.empty())
+        for i = 0 to seqLen-1 do
+            let h = if i = 0 then hidden else output[i-1]
+            output[i] <- r.forwardWithHidden(input[i], h)
+        dsharp.stack(output)
 
 /// <summary>Unit cell of a long short-term memory (LSTM) recurrent neural network. Prefer using the RNN class instead, which can combine RNNCells in multiple layers.</summary>
-type LSTMCell(inFeatures, outFeatures, ?bias, ?batchFirst) =
+type LSTMCell(inputSize, hiddenSize, ?bias, ?checkShapes) =
     inherit Model()
+    let checkShapes = defaultArg checkShapes true
     let bias = defaultArg bias true
-    let batchFirst = defaultArg batchFirst false
-    let k = 1./sqrt (float outFeatures)
-    let wih = Parameter(Weight.uniform([|inFeatures; outFeatures*4|], k))
-    let whh = Parameter(Weight.uniform([|outFeatures; outFeatures*4|], k))
-    let b = Parameter(if bias then Weight.uniform([|outFeatures*4|], k) else dsharp.tensor([]))
-    let h = Parameter <| dsharp.tensor([]) // Not a paramter to be trained, this is for keeping hidden state
-    let c = Parameter <| dsharp.tensor([]) // Not a paramter to be trained, this is for keeping hidden state
+    let k = 1./sqrt (float hiddenSize)
+    let wih = Parameter(Weight.uniform([inputSize; hiddenSize*4], k))
+    let whh = Parameter(Weight.uniform([hiddenSize; hiddenSize*4], k))
+    let b = Parameter(if bias then Weight.uniform([hiddenSize*4], k) else dsharp.tensor([]))
     do base.addParameter((wih, "LSTMCell-weight-ih"), (whh, "LSTMCell-weight-hh"), (b, "LSTMCell-bias"))
-    do base.addBuffer((h, "LSTMCell-hidden"), (c, "LSTMCell-cell"))
 
-    member _.hidden 
-        with get () = h.value
-        and set v = h.value <- v
+    member _.inputSize = inputSize
+    member _.hiddenSize = hiddenSize
 
-    member _.cell
-        with get () = c.value
-        and set v = c.value <- v
+    member _.newHidden(batchSize) =
+        dsharp.zeros([batchSize; hiddenSize])
 
-    override _.ToString() = sprintf "LSTMCell(%A, %A)" inFeatures outFeatures
+    override _.ToString() = sprintf "LSTMCell(%A, %A)" inputSize hiddenSize
 
-    member r.reset() = r.hidden <- dsharp.tensor([])
+    override r.forward(input) =
+        // input: [batchSize, inputSize]
+        // returns: [batchSize, hiddenSize]    
+        if checkShapes then RecurrentShape.RNNCell input inputSize
+        let batchSize = input.shape[0]
+        let hidden = r.newHidden(batchSize)
+        let cell = r.newHidden(batchSize)
+        r.forwardWithHidden(input, hidden, cell) |> fst
 
-    override r.forward(value) =
-        let value, seqLen, batchSize = rnnShape value inFeatures batchFirst
-        if r.hidden.nelement = 0 then r.hidden <- dsharp.zeros([batchSize; outFeatures])
-        if r.cell.nelement = 0 then r.cell <- dsharp.zeros([batchSize; outFeatures])
-        let output = Array.create seqLen (dsharp.tensor([]))
-        for i in 0..seqLen-1 do
-            let v = value[i]
-            let x2h = dsharp.matmul(v, wih.value)
-            let h2h = dsharp.matmul(h.value, whh.value)
-            let mutable pre = x2h + h2h
-            if bias then pre <- pre + b.value
-            let pretan = pre[*,..outFeatures-1].tanh()
-            let presig = pre[*,outFeatures..].sigmoid()
-            let inputGate = presig[*,..outFeatures-1]
-            let forgetGate = presig[*,outFeatures..(2*outFeatures)-1]
-            let outputGate = presig[*,(2*outFeatures)..]
-            r.cell <- (inputGate*pretan) + (forgetGate*c.value)
-            r.hidden <- outputGate*c.value.tanh()
-            output[i] <- r.hidden
-        let output = dsharp.stack output
-        if batchFirst then output.transpose(0, 1) else output
+    member r.forwardSequence(input) =
+        // input: [seqLen, batchSize, inputSize]
+        // returns: [seqLen, batchSize, hiddenSize]    
+        if checkShapes then RecurrentShape.RNNCellSequence input inputSize
+        let batchSize = input.shape[0]
+        let hidden = r.newHidden(batchSize)
+        let cell = r.newHidden(batchSize)
+        r.forwardSequenceWithHidden(input, hidden, cell)
+
+    member r.forwardWithHidden(input:Tensor, hidden:Tensor, cell:Tensor) =
+        // input: [batchSize, inputSize]
+        // hidden: [batchSize, hiddenSize]
+        // cell: [batchSize, hiddenSize]
+        // returns: [batchSize, hiddenSize], [batchSize, hiddenSize]
+        if checkShapes then RecurrentShape.LSTMCellWithHidden input hidden cell inputSize hiddenSize
+        let x2h = dsharp.matmul(input, wih.value)
+        let h2h = dsharp.matmul(hidden, whh.value)
+        let mutable pre = x2h + h2h
+        if bias then pre <- pre + b.value
+        let pretan = pre[*,..hiddenSize-1].tanh()
+        let presig = pre[*,hiddenSize..].sigmoid()
+        let inputGate = presig[*,..hiddenSize-1]
+        let forgetGate = presig[*,hiddenSize..(2*hiddenSize)-1]
+        let outputGate = presig[*,(2*hiddenSize)..]
+        let cell = (inputGate*pretan) + (forgetGate*cell)
+        let hidden = outputGate*cell.tanh()
+        hidden, cell
+
+    member r.forwardSequenceWithHidden(input:Tensor, hidden:Tensor, cell:Tensor) =
+        // input: [seqLen, batchSize, inputSize]
+        // hidden: [batchSize, hiddenSize]
+        // cell: [batchSize, hiddenSize]
+        // returns: [seqLen, batchSize, hiddenSize], [seqLen, batchSize, hiddenSize]
+        RecurrentShape.LSTMCellSequenceWithHidden input hidden cell inputSize hiddenSize
+        let seqLen = input.shape[0]
+        let hs = Array.create seqLen (dsharp.empty())
+        let cs = Array.create seqLen (dsharp.empty())
+        for i = 0 to seqLen-1 do
+            let h, c = if i = 0 then hidden, cell else hs[i-1], cs[i-1]
+            let h, c = r.forwardWithHidden(input[i], h, c)
+            hs[i] <- h
+            cs[i] <- c
+        dsharp.stack(hs), dsharp.stack(cs) 
+
 
 /// <summary>Recurrent neural network.</summary>
-type RNN(inFeatures, outFeatures, ?numLayers, ?nonlinearity, ?bias, ?batchFirst, ?dropout, ?bidirectional) =
+type RNN(inputSize, hiddenSize, ?numLayers, ?nonlinearity, ?bias, ?batchFirst, ?dropout, ?bidirectional) =
     inherit Model()
     let numLayers = defaultArg numLayers 1
     let dropout = defaultArg dropout 0.
     let bidirectional = defaultArg bidirectional false
     let batchFirst = defaultArg batchFirst false
     let numDirections = if bidirectional then 2 else 1
-    let makeLayers () = Array.init numLayers (fun i -> if i = 0 then RNNCell(inFeatures, outFeatures, ?nonlinearity=nonlinearity, ?bias=bias) else RNNCell(outFeatures, outFeatures, ?nonlinearity=nonlinearity, ?bias=bias))
+    let makeLayers () = Array.init numLayers (fun i -> if i = 0 then RNNCell(inputSize, hiddenSize, ?nonlinearity=nonlinearity, ?bias=bias, checkShapes=false) else RNNCell(hiddenSize, hiddenSize, ?nonlinearity=nonlinearity, ?bias=bias, checkShapes=false))
     let layers = makeLayers()
     let layersReverse = if bidirectional then makeLayers() else [||]
     let dropoutLayer = Dropout(dropout)
-    let hs = Parameter <| dsharp.tensor([]) // Not a parameter to be trained, it is for keeping hidden state
-    do 
-        base.addModel(layers |> Array.mapi (fun i l -> l :>Model, sprintf "RNN-layer-%A" i))
-        if bidirectional then base.addModel(layersReverse |> Array.mapi (fun i l -> l :>Model, sprintf "RNN-layer-reverse-%A" i))
+    do
+        base.addModel(layers |> Array.mapi (fun i l -> l :> ModelBase, sprintf "RNN-layer-%A" i))
+        if bidirectional then base.addModel(layersReverse |> Array.mapi (fun i l -> l :> ModelBase, sprintf "RNN-layer-reverse-%A" i))
         if dropout > 0. then base.addModel(dropoutLayer, "RNN-dropout")
 
-    member _.hidden
-        with get () = hs.value
-        and set v = hs.value <- v
+    member _.inputSize = inputSize
+    member _.hiddenSize = hiddenSize
 
-    override _.ToString() = sprintf "RNN(%A, %A, numLayers:%A, bidirectional:%A)" inFeatures outFeatures numLayers bidirectional
+    member _.newHidden(batchSize) =
+        dsharp.zeros([numLayers*numDirections; batchSize; hiddenSize])
 
-    member r.reset() = r.hidden <- dsharp.tensor([])
+    override _.ToString() = sprintf "RNN(%A, %A, numLayers:%A, bidirectional:%A)" inputSize hiddenSize numLayers bidirectional
 
-    override r.forward(value) =
-        let value, _, batchSize = rnnShape value inFeatures batchFirst
-        if r.hidden.nelement = 0 then r.hidden <- dsharp.zeros([numLayers*numDirections; batchSize; outFeatures])
-        let newhs = Array.create (numLayers*numDirections) (dsharp.tensor([]))
-        let mutable hFwd = value
-        for i in 0..numLayers-1 do 
-            layers[i].hidden <- r.hidden[i]
-            hFwd <- layers[i].forward(hFwd)
+    override r.forward(input) =
+        // input: [seqLen, batchSize, inputSize] or [batchSize, seqLen, inputSize]
+        // returns: [seqLen, batchSize, hiddenSize] or [batchSize, seqLen, hiddenSize]
+        RecurrentShape.RNN input inputSize batchFirst
+        let batchSize = if batchFirst then input.shape[0] else input.shape[1]
+        let hidden = r.newHidden(batchSize)
+        r.forwardWithHidden(input, hidden) |> fst
+
+    member _.forwardWithHidden(input, hidden) =
+        // input: [seqLen, batchSize, inputSize] or [batchSize, seqLen, inputSize]
+        // hidden: [numLayers*numDirections, batchSize, hiddenSize]
+        // returns: {[seqLen, batchSize, hiddenSize] or [batchSize, seqLen, hiddenSize]}, [numLayers*numDirections, batchSize, hiddenSize]
+        RecurrentShape.RNNWithHidden input hidden inputSize hiddenSize batchFirst numLayers numDirections
+        let input = if batchFirst then input.transpose(0, 1) else input
+        // input: [seqLen, batchSize, inputSize]
+        let outHidden = Array.create (numLayers*numDirections) (dsharp.empty())
+        let mutable hFwd = input
+        for i in 0..numLayers-1 do
+            let h = hidden[i]
+            hFwd <- layers[i].forwardSequenceWithHidden(hFwd, h)
             if dropout > 0. && i < numLayers-1 then hFwd <- dropoutLayer.forward(hFwd)
-            newhs[i] <- layers[i].hidden
-        let output = 
+            outHidden[i] <- hFwd[-1]
+        let output =
             if bidirectional then
-                let mutable hRev = value.flip([0])
-                for i in 0..numLayers-1 do 
-                    layersReverse[i].hidden <- r.hidden[numLayers+i]
-                    hRev <- layersReverse[i].forward(hRev)
+                let mutable hRev = input.flip([0])
+                for i in 0..numLayers-1 do
+                    let h = hidden[numLayers+i]
+                    hRev <- layersReverse[i].forwardSequenceWithHidden(hRev, h)
                     if dropout > 0. && i < numLayers-1 then hRev <- dropoutLayer.forward(hRev)
-                    newhs[numLayers+i] <- layersReverse[i].hidden
+                    outHidden[numLayers+i] <- hRev[-1]
                 dsharp.cat([hFwd; hRev], 2)
             else hFwd
-        r.hidden <- dsharp.stack(newhs)
-        if batchFirst then output.transpose(0, 1) else output
+        let output = if batchFirst then output.transpose(0, 1) else output
+        let outHidden = dsharp.stack(outHidden)
+        output, outHidden
 
 
 /// <summary>Long short-term memory (LSTM) recurrent neural network.</summary>
-type LSTM(inFeatures, outFeatures, ?numLayers, ?bias, ?batchFirst, ?dropout, ?bidirectional) =
+type LSTM(inputSize, hiddenSize, ?numLayers, ?bias, ?batchFirst, ?dropout, ?bidirectional) =
     inherit Model()
     let numLayers = defaultArg numLayers 1
     let dropout = defaultArg dropout 0.
     let bidirectional = defaultArg bidirectional false
     let batchFirst = defaultArg batchFirst false
     let numDirections = if bidirectional then 2 else 1
-    let makeLayers () = Array.init numLayers (fun i -> if i = 0 then LSTMCell(inFeatures, outFeatures, ?bias=bias) else LSTMCell(outFeatures, outFeatures, ?bias=bias))
+    let makeLayers () = Array.init numLayers (fun i -> if i = 0 then LSTMCell(inputSize, hiddenSize, ?bias=bias, checkShapes=false) else LSTMCell(hiddenSize, hiddenSize, ?bias=bias, checkShapes=false))
     let layers = makeLayers()
     let layersReverse = if bidirectional then makeLayers() else [||]
     let dropoutLayer = Dropout(dropout)
-    let hs = Parameter <| dsharp.tensor([]) // Not a parameter to be trained, it is for keeping hidden state
-    let cs = Parameter <| dsharp.tensor([]) // Not a parameter to be trained, it is for keeping hidden state
     do 
-        base.addModel(layers |> Array.mapi (fun i l -> l :>Model, sprintf "LSTM-layer-%A" i))
-        if bidirectional then base.addModel(layersReverse |> Array.mapi (fun i l -> l :>Model, sprintf "LSTM-layer-reverse-%A" i))    
+        base.addModel(layers |> Array.mapi (fun i l -> l :>ModelBase, sprintf "LSTM-layer-%A" i))
+        if bidirectional then base.addModel(layersReverse |> Array.mapi (fun i l -> l :>ModelBase, sprintf "LSTM-layer-reverse-%A" i))    
         if dropout > 0. then base.addModel(dropoutLayer, "LSTM-dropout")
 
-    member _.hidden
-        with get () = hs.value
-        and set v = hs.value <- v
+    member _.inputSize = inputSize
+    member _.hiddenSize = hiddenSize
 
-    member _.cell
-        with get () = cs.value
-        and set v = cs.value <- v
+    member _.newHidden(batchSize) =
+        dsharp.zeros([numLayers*numDirections; batchSize; hiddenSize])
 
-    override _.ToString() = sprintf "LSTM(%A, %A, numLayers:%A, bidirectional:%A)" inFeatures outFeatures numLayers bidirectional
+    override _.ToString() = sprintf "LSTM(%A, %A, numLayers:%A, bidirectional:%A)" inputSize hiddenSize numLayers bidirectional
 
-    member r.reset() =
-        r.hidden <- dsharp.tensor([])
-        r.cell <- dsharp.tensor([])
+    override r.forward(input) =
+        // input: [seqLen, batchSize, inputSize] or [batchSize, seqLen, inputSize]
+        // returns: [seqLen, batchSize, hiddenSize] or [batchSize, seqLen, hiddenSize]
+        RecurrentShape.RNN input inputSize batchFirst
+        let batchSize = if batchFirst then input.shape[0] else input.shape[1]
+        let hidden = r.newHidden(batchSize)
+        let cell = r.newHidden(batchSize)
+        let output, _, _ = r.forwardWithHidden(input, hidden, cell)
+        output
 
-    override r.forward(value) =
-        let value, _, batchSize = rnnShape value inFeatures batchFirst
-        if r.hidden.nelement = 0 then r.hidden <- dsharp.zeros([numLayers*numDirections; batchSize; outFeatures])
-        if r.cell.nelement = 0 then r.cell <- dsharp.zeros([numLayers*numDirections; batchSize; outFeatures])
-        let newhs = Array.create (numLayers*numDirections) (dsharp.tensor([]))
-        let newcs = Array.create (numLayers*numDirections) (dsharp.tensor([]))
-        let mutable hFwd = value
-        for i in 0..numLayers-1 do 
-            layers[i].hidden <- r.hidden[i]
-            layers[i].cell <- r.cell[i]
-            hFwd <- layers[i].forward(hFwd)
+    member r.forwardWithHidden(input, hidden, cell) =
+        // input: [seqLen, batchSize, inputSize] or [batchSize, seqLen, inputSize]
+        // hidden: [numLayers*numDirections, batchSize, hiddenSize]
+        // returns: {[seqLen, batchSize, hiddenSize] or [batchSize, seqLen, hiddenSize]}, [numLayers*numDirections, batchSize, hiddenSize], [numLayers*numDirections, batchSize, hiddenSize]
+        RecurrentShape.LSTMWithHidden input hidden cell inputSize hiddenSize batchFirst numLayers numDirections
+        let input = if batchFirst then input.transpose(0, 1) else input
+        // input: [seqLen, batchSize, inputSize]
+        let outHidden = Array.create (numLayers*numDirections) (dsharp.empty())
+        let outCell = Array.create (numLayers*numDirections) (dsharp.empty())
+        let mutable hFwd = input
+        for i in 0..numLayers-1 do
+            let h = hidden[i]
+            let c = cell[i]
+            let h, c = layers[i].forwardSequenceWithHidden(hFwd, h, c)
+            hFwd <-h
             if dropout > 0. && i < numLayers-1 then hFwd <- dropoutLayer.forward(hFwd)
-            newhs[i] <- layers[i].hidden
-            newcs[i] <- layers[i].cell
-        let output = 
+            outHidden[i] <- h[-1]
+            outCell[i] <- c[-1]
+        let output =
             if bidirectional then
-                let mutable hRev = value.flip([0])
-                for i in 0..numLayers-1 do 
-                    layersReverse[i].hidden <- r.hidden[numLayers+i]
-                    layersReverse[i].cell <- r.cell[numLayers+i]
-                    hRev <- layersReverse[i].forward(hRev)
+                let mutable hRev = input.flip([0])
+                for i in 0..numLayers-1 do
+                    let h = hidden[numLayers+i]
+                    let c = cell[numLayers+i]
+                    let h, c = layersReverse[i].forwardSequenceWithHidden(hRev, h, c)
+                    hRev <- h
                     if dropout > 0. && i < numLayers-1 then hRev <- dropoutLayer.forward(hRev)
-                    newhs[numLayers+i] <- layersReverse[i].hidden
-                    newcs[numLayers+i] <- layersReverse[i].cell
+                    outHidden[numLayers+i] <- h[-1]
+                    outCell[numLayers+i] <- c[-1]
                 dsharp.cat([hFwd; hRev], 2)
             else hFwd
-        r.hidden <- dsharp.stack(newhs)
-        r.cell <- dsharp.stack(newcs)
-        if batchFirst then output.transpose(0, 1) else output
+        let output = if batchFirst then output.transpose(0, 1) else output
+        let outHidden = dsharp.stack(outHidden)
+        let outCell = dsharp.stack(outCell)
+        output, outHidden, outCell
