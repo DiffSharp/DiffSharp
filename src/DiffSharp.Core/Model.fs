@@ -502,7 +502,7 @@ type ModelBase() =
         sb.AppendLine(sprintf "Non-trainable params (buffers): %s" (thousandsInt m.nbuffers)) |> ignore
         sb.AppendLine(sprintf "Total params                  : %s" (thousandsInt m.nstate)) |> ignore
         sb.AppendLine("---") |> ignore
-        sb.AppendLine(sprintf "Total params size (MiB)       : %s" (thousandsFloat ((float m.stateVector.memorySize)/(1024.*1024.)))) |> ignore
+        sb.AppendLine(sprintf "Total params size             : %s" (bytesReadable m.stateVector.memorySize)) |> ignore
         sb.AppendLine("---") |> ignore
         sb.ToString()
 

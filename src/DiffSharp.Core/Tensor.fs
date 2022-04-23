@@ -561,7 +561,7 @@ type Tensor =
         bitsPerElement / 8
 
     /// Returns the size in bytes of the total memory used by this tensor. Depending on dtype, backend configuration, this is not guaranteed to be correct and can behave differently in different runtime environments.
-    member t.memorySize = t.nelement * t.elementSize
+    member t.memorySize = (int64 t.nelement) * (int64 t.elementSize)
 
     /// Indicates if two tensors have the same shape and all corresponding elements are equal within the
     /// given tolerances.

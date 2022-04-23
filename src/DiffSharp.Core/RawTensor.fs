@@ -91,6 +91,7 @@ type RawTensor() =
     abstract Dim: int
 
     /// Gets the number of elements in the tensor
+    // TODO: int32 might not be enough for very large tensors
     abstract Nelement: int
 
     /// Gets the element storage type for the tensor
