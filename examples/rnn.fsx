@@ -49,7 +49,7 @@ printfn "%s" (languageModel.summary())
 let modelFileName = "rnn_language_model.params"
 if File.Exists(modelFileName) then 
     printfn "Resuming training from existing model params found: %A" modelFileName
-    languageModel.loadState(modelFileName)
+    languageModel.state <- dsharp.load(modelFileName)
 
 let predict (text:string) len =
     let mutable hidden = rnn.newHidden(1)
@@ -87,7 +87,7 @@ for epoch = 1 to epochs do
         if i % validInterval = 0 then
             printfn "\nSample from language model:\n%A\n" (predict "We " 512)
 
-            languageModel.saveState(modelFileName)
+            dsharp.save(languageModel.state, modelFileName)
 
             let plt = Pyplot()
             plt.plot(losses |> dsharp.tensor)
