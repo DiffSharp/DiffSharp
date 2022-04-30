@@ -7,9 +7,9 @@
 
 // Libtorch binaries
 // Option A: you can use a platform-specific nuget package
-#r "nuget: TorchSharp-cpu, 0.96.0"
-// #r "nuget: TorchSharp-cuda-linux, 0.96.0"
-// #r "nuget: TorchSharp-cuda-windows, 0.96.0"
+#r "nuget: TorchSharp-cpu, 0.96.5"
+// #r "nuget: TorchSharp-cuda-linux, 0.96.5"
+// #r "nuget: TorchSharp-cuda-windows, 0.96.5"
 // Option B: you can use a local libtorch installation
 // System.Runtime.InteropServices.NativeLibrary.Load("/home/gunes/anaconda3/lib/python3.8/site-packages/torch/lib/libtorch.so")
 
@@ -24,7 +24,7 @@ open DiffSharp.Distributions
 
 open System.IO
 
-dsharp.config(backend=Backend.Torch, device=Device.CPU)
+dsharp.config(backend=Backend.Torch, device=Device.GPU)
 dsharp.seed(1)
 
 
