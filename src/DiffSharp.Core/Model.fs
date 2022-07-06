@@ -482,9 +482,10 @@ type ModelBase() =
         sb.Append("Model(") |> ignore
         let mutable prefix = ""
         for mm in m.descendants do
-            if mm.hasOwnParameters then
-                sb.Append(sprintf "%s%A" prefix mm) |> ignore
-                prefix <- ", "
+            if m <> mm then
+                if mm.hasOwnParameters then
+                    sb.Append(sprintf "%s%A" prefix mm) |> ignore
+                    prefix <- ", "
         sb.Append(")") |> ignore
         sb.ToString()
 
