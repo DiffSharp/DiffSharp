@@ -293,7 +293,7 @@ type TorchRawTensor(tt: torch.Tensor, shape: Shape, dtype: Dtype, device: Device
     override t.SplitT(sizes, dim) =
         let shape = t.Shape
         let outShapes = Shape.checkCanSplit shape sizes dim
-        let results = tt.split(int64s sizes, dim)
+        let results = tt.split(int64s sizes, int64 dim)
         (results, outShapes) ||> Array.map2 (fun rvalues outShape -> 
             t.MakeLike(rvalues, shape=outShape))
 
@@ -477,7 +477,7 @@ type TorchRawTensor(tt: torch.Tensor, shape: Shape, dtype: Dtype, device: Device
         t1.MakeLike(result, dtype=Dtype.Bool)
 
     override t.MaxReduceT(dim, keepDim) = 
-        let (struct (maxValues, indexes)) = tt.max(int64 dim, keepDim=keepDim)
+        let (struct (maxValues, indexes)) = tt.max(int64 dim, keepdim=keepDim)
         let newShape = Shape.checkCanMinMaxReduce dim keepDim t.Shape
         let maxValuesResult = t.MakeLike(maxValues, shape=newShape)
         let indexesResult = t.MakeLike(indexes, shape=newShape, dtype=Dtype.Int64).Cast(Dtype.Int32)
@@ -515,7 +515,7 @@ type TorchRawTensor(tt: torch.Tensor, shape: Shape, dtype: Dtype, device: Device
         res |> Array.map int32
 
     override t.MinReduceT(dim, keepDim) = 
-        let (struct (minValues, indexes)) = tt.min(int64 dim, keepDim=keepDim)
+        let (struct (minValues, indexes)) = tt.min(int64 dim, keepdim=keepDim)
         let newShape = Shape.checkCanMinMaxReduce dim keepDim t.Shape
         let minValuesResult = t.MakeLike(minValues, shape=newShape)
         let indexesResult = t.MakeLike(indexes, shape=newShape, dtype=Dtype.Int64).Cast(Dtype.Int32)

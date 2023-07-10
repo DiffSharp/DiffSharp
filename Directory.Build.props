@@ -2,7 +2,7 @@
 
   <PropertyGroup>
 
-    <TorchSharpVersion>0.96.8</TorchSharpVersion>
+    <TorchSharpVersion>0.100.3</TorchSharpVersion>
     <FSharpCoreVersion>6.0.3</FSharpCoreVersion>
 
     <!-- Standard nuget.org location -->
