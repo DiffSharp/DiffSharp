@@ -11,7 +11,7 @@ open DiffSharp.Backends
 open DiffSharp.Util
 open TorchSharp
 
-type type_cuda = torch.cuda
+type torch_cuda = torch.cuda
 type TorchShape = int64[]
 type TorchDevice = Torch.Device
 type Device = DiffSharp.Device
@@ -1441,8 +1441,8 @@ type TorchBackendTensorStatics() =
 
           match deviceType with
           | None | Some DiffSharp.DeviceType.CUDA ->
-              if type_cuda.is_available() then 
-                  let ncuda = type_cuda.device_count()
+              if torch_cuda.is_available() then 
+                  let ncuda = torch_cuda.device_count()
                   for i in 0 .. ncuda - 1 do
                       yield (DiffSharp.Device(DiffSharp.DeviceType.CUDA, i))
           | _ -> ()
@@ -1454,12 +1454,12 @@ type TorchBackendTensorStatics() =
     override _.IsDeviceTypeAvailable (deviceType) =
         match deviceType with 
         | DiffSharp.DeviceType.CPU -> true
-        | DiffSharp.DeviceType.CUDA -> type_cuda.is_available()
+        | DiffSharp.DeviceType.CUDA -> torch_cuda.is_available()
         | _ -> isSupported deviceType
 
     override _.Seed(seed) =
-        if type_cuda.is_available() then
-            torch.cuda.manual_seed(int64 seed)  |> ignore
+        if torch_cuda.is_available() then
+            torch_cuda.manual_seed(int64 seed)  |> ignore
         torch.random.manual_seed(int64 seed)  |> ignore
 
     override _.Zero(dtype, device) =
