@@ -11,6 +11,7 @@ open DiffSharp.Backends
 open DiffSharp.Util
 open TorchSharp
 
+type torch_cuda = torch.cuda
 type TorchShape = int64[]
 type TorchDevice = Torch.Device
 type Device = DiffSharp.Device
@@ -293,7 +294,7 @@ type TorchRawTensor(tt: torch.Tensor, shape: Shape, dtype: Dtype, device: Device
     override t.SplitT(sizes, dim) =
         let shape = t.Shape
         let outShapes = Shape.checkCanSplit shape sizes dim
-        let results = tt.split(int64s sizes, dim)
+        let results = tt.split(int64s sizes, int64 dim)
         (results, outShapes) ||> Array.map2 (fun rvalues outShape -> 
             t.MakeLike(rvalues, shape=outShape))
 
@@ -477,7 +478,7 @@ type TorchRawTensor(tt: torch.Tensor, shape: Shape, dtype: Dtype, device: Device
         t1.MakeLike(result, dtype=Dtype.Bool)
 
     override t.MaxReduceT(dim, keepDim) = 
-        let (struct (maxValues, indexes)) = tt.max(int64 dim, keepDim=keepDim)
+        let (struct (maxValues, indexes)) = tt.max(int64 dim, keepdim=keepDim)
         let newShape = Shape.checkCanMinMaxReduce dim keepDim t.Shape
         let maxValuesResult = t.MakeLike(maxValues, shape=newShape)
         let indexesResult = t.MakeLike(indexes, shape=newShape, dtype=Dtype.Int64).Cast(Dtype.Int32)
@@ -515,7 +516,7 @@ type TorchRawTensor(tt: torch.Tensor, shape: Shape, dtype: Dtype, device: Device
         res |> Array.map int32
 
     override t.MinReduceT(dim, keepDim) = 
-        let (struct (minValues, indexes)) = tt.min(int64 dim, keepDim=keepDim)
+        let (struct (minValues, indexes)) = tt.min(int64 dim, keepdim=keepDim)
         let newShape = Shape.checkCanMinMaxReduce dim keepDim t.Shape
         let minValuesResult = t.MakeLike(minValues, shape=newShape)
         let indexesResult = t.MakeLike(indexes, shape=newShape, dtype=Dtype.Int64).Cast(Dtype.Int32)
@@ -1440,8 +1441,8 @@ type TorchBackendTensorStatics() =
 
           match deviceType with
           | None | Some DiffSharp.DeviceType.CUDA ->
-              if torch.cuda.is_available() then 
-                  let ncuda = torch.cuda.device_count()
+              if torch_cuda.is_available() then 
+                  let ncuda = torch_cuda.device_count()
                   for i in 0 .. ncuda - 1 do
                       yield (DiffSharp.Device(DiffSharp.DeviceType.CUDA, i))
           | _ -> ()
@@ -1453,12 +1454,12 @@ type TorchBackendTensorStatics() =
     override _.IsDeviceTypeAvailable (deviceType) =
         match deviceType with 
         | DiffSharp.DeviceType.CPU -> true
-        | DiffSharp.DeviceType.CUDA -> torch.cuda.is_available()
+        | DiffSharp.DeviceType.CUDA -> torch_cuda.is_available()
         | _ -> isSupported deviceType
 
     override _.Seed(seed) =
-        // TODO (important): we need to do *both* this Torch.SetSeed and CUDA SetSeed when device is GPU. CPU seed and CUDA seed are handled separately in torch and libtorch.
-        // However at the point of writing this comment, Cuda SetSeed was not available in TorchSharp
+        if torch_cuda.is_available() then
+            torch_cuda.manual_seed(int64 seed)  |> ignore
         torch.random.manual_seed(int64 seed)  |> ignore
 
     override _.Zero(dtype, device) =

@@ -2,12 +2,12 @@
 
   <PropertyGroup>
 
-    <TorchSharpVersion>0.96.8</TorchSharpVersion>
+    <TorchSharpVersion>0.100.3</TorchSharpVersion>
     <FSharpCoreVersion>6.0.3</FSharpCoreVersion>
 
     <!-- Standard nuget.org location -->
     <RestoreSources>https://api.nuget.org/v3/index.json</RestoreSources>
-    <DIFFSHARP_TESTGPU Condition="'$(COMPUTERNAME)' == 'MSRC-3617253'">true</DIFFSHARP_TESTGPU>
+    <DIFFSHARP_TESTGPU Condition="'$(COMPUTERNAME)' == 'DESKTOP-RSKK5GT'">true</DIFFSHARP_TESTGPU>
 
     <!-- TorchSharp local build packages -->
     <RestoreSources Condition="Exists('$(MSBuildThisFileDirectory)../TorchSharp/bin/packages/Release')">
@@ -19,12 +19,6 @@
         $(RestoreSources);$(MSBuildThisFileDirectory)../TorchSharp/bin/packages/Debug;
     </RestoreSources>
 
-    <!-- TorchSharp CI build packages 
-    <RestoreSources>
-        $(RestoreSources);
-        https://donsyme.pkgs.visualstudio.com/TorchSharp/_packaging/packages2/nuget/v3/index.json
-    </RestoreSources>
-    -->
     <!-- turn on unused variable warnings -->
     <OtherFlags>--warnon:1182 $(OtherFlags)</OtherFlags>
     <!-- turn on documentation warnings -->

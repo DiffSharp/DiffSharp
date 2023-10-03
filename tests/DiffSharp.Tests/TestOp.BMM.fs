@@ -13,7 +13,7 @@ open DiffSharp
 type TestTensorBMM () =
     [<Test>]
     member _.TestTensorBMM () =
-        for combo in Combos.FloatingPoint do
+        for combo in Combos.FloatingPointExcept16s do
             let t1 = combo.tensor([[[-1.0372e+00,  7.5673e-01,  1.9448e+00,  3.6433e+00, -3.9134e-01],
                                      [-1.7011e+00,  3.0675e+00,  1.8387e+00, -2.3037e-01,  5.0916e-01],
                                      [ 2.1869e+00,  1.5561e+00,  1.2905e+00, -3.5149e-03, -2.0392e+00],

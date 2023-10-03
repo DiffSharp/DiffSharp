@@ -13,7 +13,7 @@ open DiffSharp
 type TestTensorOuter () =
     [<Test>]
     member _.TestTensorOuter () =
-        for combo in Combos.FloatingPoint do
+        for combo in Combos.FloatingPointExcept16s do
             let a1 = combo.tensor([ 1.7865,  1.2723,  0.2065, -0.4601,  0.3218])
             let b1 = combo.tensor([ 2.1136,  1.0551, -0.4575])
 

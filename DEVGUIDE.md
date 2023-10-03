@@ -78,14 +78,11 @@ By default in-branch testing is only done on CPU.  To enable on GPU/CUDA you mus
 
 1. Make sure you have a device eligible for CUDA 11.1 and all device drivers installed (e.g. install the appropriate NVIDIA CUDA SDK)
 
-2. Manually enable Torch CUDA binaries in `DiffSharp.Tests.fsproj` or set the `DIFFSHARP_TESTGPU` environment variable to `true` (e.g. `dotnet test /p:DIFFSHARP_TESTGPU=true`)
+2. Use `dotnet test /p:DIFFSHARP_TESTGPU=true`
 
-3. Verify that `dsharp.isCudaEnabled()` is returning true and GPU testing is enabled in `TestUtil.fs`.
-
-
+3. Verify that `dsharp.isCudaEnabled(Device.GPU)` is returning true and GPU testing is enabled in `TestUtil.fs`.
 
 ## Micro Performance Benchmarking 
-
 
 Python numbers must be collected in a separate run, they are currently injected back into source code (ugh)
 to get figures in one report.  There are better ways to do this.
