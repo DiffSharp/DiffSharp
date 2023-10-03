@@ -131,6 +131,7 @@ dsharp.diff (fun x -> x * dsharp.diff (fun y -> x * y) y0) x0
 Define a model and optimize it:
 *)
 (*** do-not-eval-file ***)
+open DiffSharp
 open DiffSharp.Data
 open DiffSharp.Model
 open DiffSharp.Compose
