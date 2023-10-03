@@ -127,6 +127,7 @@ type TestDiffSharp () =
     [<Test>]
     member this.TestSeed () =
         for combo in Combos.FloatingPointExcept16s do
+            printfn "%A" (combo.device, combo.backend, combo.dtype)
             use _holder = dsharp.useConfig(combo.dtype, combo.device, combo.backend)
             dsharp.seed(123)
             let t = combo.randint(0,10,[25])

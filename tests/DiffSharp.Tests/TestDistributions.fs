@@ -108,6 +108,7 @@ type TestDistributions () =
     [<Test>]
     member _.TestDistributionsUniformBatched () =
         for combo in Combos.AllDevicesAndBackendsFloat32 do
+            printfn "%A" (combo.device, combo.backend, combo.dtype)
             let lowCorrect = combo.tensor([0.5, 0., -5.])
             let highCorrect = combo.tensor([10.5, 1., 5.])
             let rangeCorrect = highCorrect - lowCorrect

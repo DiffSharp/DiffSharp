@@ -1458,8 +1458,8 @@ type TorchBackendTensorStatics() =
         | _ -> isSupported deviceType
 
     override _.Seed(seed) =
-        // TODO (important): we need to do *both* this Torch.SetSeed and CUDA SetSeed when device is GPU. CPU seed and CUDA seed are handled separately in torch and libtorch.
-        // However at the point of writing this comment, Cuda SetSeed was not available in TorchSharp
+        if type_cuda.is_available() then
+            torch.cuda.manual_seed(int64 seed)  |> ignore
         torch.random.manual_seed(int64 seed)  |> ignore
 
     override _.Zero(dtype, device) =
