@@ -9,6 +9,8 @@ namespace DiffSharp
 module OpOuterExtensions =
 
     type Tensor with
+        /// <summary>Outer product of two tensors.</summary>
+        /// <param name="b">The second tensor.</param>
         member a.outer(b:Tensor) =
             match a.dim, b.dim with
             | 1, 1 -> a.unsqueeze(1).matmul(b.unsqueeze(0))
@@ -16,4 +18,7 @@ module OpOuterExtensions =
             | _ -> failwithf "Outer product unsupported for tensor shapes %A %A" a.shape b.shape
 
     type dsharp with
+        /// <summary>Outer product of two tensors.</summary>
+        /// <param name="a">The first tensor.</param>
+        /// <param name="b">The second tensor.</param>
         static member outer(a:Tensor, b:Tensor) = a.outer(b)

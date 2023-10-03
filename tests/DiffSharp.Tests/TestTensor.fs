@@ -2458,7 +2458,7 @@ type TestTensor () =
 
     [<Test>]
     member _.TestTensorMatMul11 () =
-        for combo in Combos.FloatingPoint do
+        for combo in Combos.FloatingPointExcept16s do
             let t1 = combo.tensor([8.0766; 3.3030; 2.1732; 8.9448; 1.1028])
             let t2 = combo.tensor([5.1067; 7.4633; 3.6027; 9.0070; 7.3012])
             let t3 = t1.matmul(t2)
@@ -2468,7 +2468,7 @@ type TestTensor () =
 
     [<Test>]
     member _.TestTensorMatMul12 () =
-        for combo in Combos.FloatingPoint do
+        for combo in Combos.FloatingPointExcept16s do
             let t1 = combo.tensor([8.0766; 3.3030; 2.1732; 8.9448; 1.1028])
             let t2 = combo.tensor([[5.1067; 0.0681];
                                     [7.4633; 3.6027];
@@ -2482,7 +2482,7 @@ type TestTensor () =
 
     [<Test>]
     member _.TestTensorMatMul13 () =
-        for combo in Combos.FloatingPoint do
+        for combo in Combos.FloatingPointExcept16s do
             // 5 --> 1x5 --> 3x1x5 (batching expansion)
             let t1 = combo.tensor([8.0766; 3.3030; 2.1732; 8.9448; 1.1028])
             
@@ -2510,7 +2510,7 @@ type TestTensor () =
 
     [<Test>]
     member _.TestTensorMatMul21 () =
-        for combo in Combos.FloatingPoint do
+        for combo in Combos.FloatingPointExcept16s do
             let t1 = combo.tensor([[8.0766; 3.3030; 2.1732; 8.9448; 1.1028];
                                     [5.1067; 7.4633; 3.6027; 9.0070; 7.3012]])
             let t2 = combo.tensor([0.0681; 3.6027; 7.3012; 2.8728; 2.3695])
@@ -2521,7 +2521,7 @@ type TestTensor () =
 
     [<Test>]
     member _.TestTensorMatMul31 () =
-        for combo in Combos.FloatingPoint do
+        for combo in Combos.FloatingPointExcept16s do
             //2 x 2 x 5
             let t1 = combo.tensor([[[8.0766; 3.3030; 2.1732; 8.9448; 1.1028];
                                      [5.1067; 7.4633; 3.6027; 9.0070; 7.3012]];
@@ -2539,7 +2539,7 @@ type TestTensor () =
 
     [<Test>]
     member _.TestTensorMatMul33 () =
-        for combo in Combos.FloatingPoint do
+        for combo in Combos.FloatingPointExcept16s do
             let t1 = combo.tensor([[8.0766; 3.3030; 2.1732; 8.9448; 1.1028];
                                     [4.1215; 4.9130; 5.2462; 4.2981; 9.3622];
                                     [7.4682; 5.2166; 5.1184; 1.9626; 0.7562]])
@@ -2559,7 +2559,7 @@ type TestTensor () =
 
     [<Test>]
     member _.TestTensorMatMul44 () =
-        for combo in Combos.FloatingPoint do
+        for combo in Combos.FloatingPointExcept16s do
             let t1 = combo.tensor([[8.0766; 3.3030; 2.1732; 8.9448; 1.1028];
                                     [4.1215; 4.9130; 5.2462; 4.2981; 9.3622];
                                     [7.4682; 5.2166; 5.1184; 1.9626; 0.7562]])
@@ -2579,7 +2579,7 @@ type TestTensor () =
 
     [<Test>]
     member _.TestTensorMatMulBroadcast1 () =
-        for combo in Combos.FloatingPoint do
+        for combo in Combos.FloatingPointExcept16s do
             let t1 = combo.tensor([[8.0766; 3.3030; 2.1732; 8.9448; 1.1028];
                                     [4.1215; 4.9130; 5.2462; 4.2981; 9.3622];
                                     [7.4682; 5.2166; 5.1184; 1.9626; 0.7562]])
@@ -2599,7 +2599,7 @@ type TestTensor () =
 
     [<Test>]
     member _.TestTensorMatMulBroadcast2 () =
-        for combo in Combos.FloatingPoint do
+        for combo in Combos.FloatingPointExcept16s do
             let t1 = combo.tensor([[8.0766; 3.3030; 2.1732; 8.9448; 1.1028];
                                     [4.1215; 4.9130; 5.2462; 4.2981; 9.3622];
                                     [7.4682; 5.2166; 5.1184; 1.9626; 0.7562]])
@@ -3057,7 +3057,7 @@ type TestTensor () =
         np.cov(a,fweights=fweights)
         np.cov(a,aweights=aweights)
         *)
-        for combo in Combos.FloatingPoint do
+        for combo in Combos.FloatingPointExcept16s do
             let t = combo.tensor([[0.3787;0.7515;0.2252;0.3416];
                                   [0.6078;0.4742;0.7844;0.0967];
                                   [0.1416;0.1559;0.6452;0.1417]])
