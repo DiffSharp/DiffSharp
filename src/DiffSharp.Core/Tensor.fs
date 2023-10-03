@@ -343,6 +343,7 @@ type Tensor =
     ///   The binary format records the elements, backend, element type and shape. It does not record the device.
     ///   The format used may change from version to version of DiffSharp.
     /// </remarks>
+    // Note: We say that this does not record the device because the ISerializable implementation of TorchRawTensor does not record device information and it moves all data to CPU before serialization.
     member t.save(fileName:string) = saveBinary t fileName
 
     /// <summary>Loads the tensor from the given file using the given element type and configuration.</summary>
@@ -353,9 +354,10 @@ type Tensor =
     /// <param name="backend">The device of the resulting tensor. Defaults to the current default backend.</param>
     ///
     /// <remarks>
-    ///    The backend at the time of saving the tensor must be available when the tensor is reloaded.
-    ///    The tensor is first loaded into that backend and then moved. As a result, intermediate tensors may be created
-    ///    in the process of reloading.
+    ///   The backend at the time of saving the tensor must be available when the tensor is reloaded.
+    ///   The tensor is first loaded into that backend and then moved to the current default device, dtype, backend configuration, or to the configuration given by the optional device, dtype, backend argumants.
+    ///   The default device, dtype, backend configuration can be changed using dsharp.config prior to loading the tensor.
+    ///   As a result, intermediate tensors may be created in the process of reloading.
     /// </remarks>
     static member load(fileName:string, ?device: Device, ?dtype: Dtype, ?backend: Backend):Tensor =
         let t : Tensor = loadBinary fileName

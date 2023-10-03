@@ -1073,7 +1073,9 @@ type TorchRawTensor(tt: torch.Tensor, shape: Shape, dtype: Dtype, device: Device
                 let data = info.GetValue("data", typeof<float32[]>)  :?> float32[]
                 torch.tensor(data, dtype=toTorchType Dtype.BFloat16, dimensions=toTorchShape shape) 
 
-        TorchRawTensor(tt, shape, dtype, Device.CPU)
+        let device = Device.Default // We move the deserialized CPU tensor to the default device
+        let tt2 = torchMoveTo tt device
+        TorchRawTensor(tt2, shape, dtype, device)
 
     interface System.Runtime.Serialization.ISerializable with
 
