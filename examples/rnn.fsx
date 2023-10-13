@@ -50,13 +50,14 @@ let modelFileName = "rnn_language_model.params"
 if File.Exists(modelFileName) then 
     printfn "Resuming training from existing model params found: %A" modelFileName
     languageModel.state <- dsharp.load(modelFileName)
+    languageModel.move(Device.Default)
 
 let predict (text:string) len =
     let mutable hidden = rnn.newHidden(1)
     let mutable prediction = text
     let mutable last = text
     for _ in 1..len do
-        let lastTensor = last |> dataset.textToTensor
+        let lastTensor = last |> dataset.textToTensor |> dsharp.move(Device.Default)
         let newOut, newHidden = rnn.forwardWithHidden(lastTensor.unsqueeze(0), hidden)
         hidden <- newHidden
         let nextCharProbs = newOut --> decoder --> dsharp.slice([-1]) --> dsharp.softmax(-1)
