@@ -200,15 +200,15 @@ type optim =
                 elif (iters <> -1) && (i=iters-1) then
                     status <- sprintf "Iters=%d reached" iters
                     stop <- true
+                elif (epochs <> -1) && (epoch=epochs) then
+                    status <- sprintf "Epochs=%d reached" epochs
+                    stop <- true
                 elif lScalar < lMin then
                     lMin <- lScalar
                     status <- "- New min"
                 elif lScalar > lMax then
                     lMax <- lScalar
                     status <- "+ New max"
-                elif (epochs <> -1) && (epoch=epochs) then
-                    status <- sprintf "Epochs=%d reached" epochs
-                    stop <- true
                 elif lScalar < lPrev then
                     status <- "-"
                 elif lScalar > lPrev then
